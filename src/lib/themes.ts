@@ -20,6 +20,13 @@ export interface ThemeColors {
   border: string;
   input: string;
   ring: string;
+  // Enhanced semantic colors
+  success?: string;
+  successForeground?: string;
+  warning?: string;
+  warningForeground?: string;
+  info?: string;
+  infoForeground?: string;
 }
 
 export interface Theme {
@@ -31,7 +38,7 @@ export interface Theme {
   createdAt?: string;
 }
 
-// Built-in light theme
+// Built-in light theme - Enhanced with better contrast and modern colors
 export const lightTheme: Theme = {
   id: 'light',
   name: 'Light',
@@ -56,10 +63,17 @@ export const lightTheme: Theme = {
     border: '214.3 31.8% 91.4%',
     input: '214.3 31.8% 91.4%',
     ring: '221.2 83.2% 53.3%',
+    // Enhanced semantic colors
+    success: '142 76% 36%',
+    successForeground: '0 0% 100%',
+    warning: '38 92% 50%',
+    warningForeground: '0 0% 100%',
+    info: '199 89% 48%',
+    infoForeground: '0 0% 100%',
   },
 };
 
-// Built-in dark theme
+// Built-in dark theme - Enhanced with better contrast and modern colors
 export const darkTheme: Theme = {
   id: 'dark',
   name: 'Dark',
@@ -84,10 +98,17 @@ export const darkTheme: Theme = {
     border: '217.2 32.6% 17.5%',
     input: '217.2 32.6% 17.5%',
     ring: '224.3 76.3% 48%',
+    // Enhanced semantic colors
+    success: '142 76% 36%',
+    successForeground: '0 0% 100%',
+    warning: '38 92% 50%',
+    warningForeground: '0 0% 100%',
+    info: '199 89% 48%',
+    infoForeground: '0 0% 100%',
   },
 };
 
-// Additional preset themes
+// Additional preset themes - Enhanced with modern color palettes
 export const oceanTheme: Theme = {
   id: 'ocean',
   name: 'Ocean',
@@ -112,6 +133,13 @@ export const oceanTheme: Theme = {
     border: '200 30% 20%',
     input: '200 30% 20%',
     ring: '190 95% 45%',
+    // Enhanced semantic colors
+    success: '142 76% 36%',
+    successForeground: '0 0% 100%',
+    warning: '38 92% 50%',
+    warningForeground: '0 0% 100%',
+    info: '199 89% 48%',
+    infoForeground: '0 0% 100%',
   },
 };
 
@@ -139,6 +167,13 @@ export const forestTheme: Theme = {
     border: '140 20% 20%',
     input: '140 20% 20%',
     ring: '145 65% 45%',
+    // Enhanced semantic colors
+    success: '142 76% 36%',
+    successForeground: '0 0% 100%',
+    warning: '38 92% 50%',
+    warningForeground: '0 0% 100%',
+    info: '199 89% 48%',
+    infoForeground: '0 0% 100%',
   },
 };
 
@@ -166,6 +201,13 @@ export const sunsetTheme: Theme = {
     border: '40 40% 85%',
     input: '40 40% 85%',
     ring: '15 90% 55%',
+    // Enhanced semantic colors
+    success: '142 76% 36%',
+    successForeground: '0 0% 100%',
+    warning: '38 92% 50%',
+    warningForeground: '0 0% 100%',
+    info: '199 89% 48%',
+    infoForeground: '0 0% 100%',
   },
 };
 
@@ -193,6 +235,116 @@ export const midnightTheme: Theme = {
     border: '240 20% 18%',
     input: '240 20% 18%',
     ring: '250 80% 60%',
+    // Enhanced semantic colors
+    success: '142 76% 36%',
+    successForeground: '0 0% 100%',
+    warning: '38 92% 50%',
+    warningForeground: '0 0% 100%',
+    info: '199 89% 48%',
+    infoForeground: '0 0% 100%',
+  },
+};
+
+// Modern themes with enhanced color palettes
+export const cyberpunkTheme: Theme = {
+  id: 'cyberpunk',
+  name: 'Cyberpunk',
+  type: 'dark',
+  colors: {
+    background: '280 50% 8%',
+    foreground: '300 20% 95%',
+    card: '280 45% 10%',
+    cardForeground: '300 20% 95%',
+    popover: '280 45% 10%',
+    popoverForeground: '300 20% 95%',
+    primary: '300 100% 60%',
+    primaryForeground: '280 50% 5%',
+    secondary: '280 30% 20%',
+    secondaryForeground: '300 20% 95%',
+    muted: '280 30% 20%',
+    mutedForeground: '300 10% 70%',
+    accent: '320 80% 50%',
+    accentForeground: '0 0% 100%',
+    destructive: '0 70% 50%',
+    destructiveForeground: '0 0% 100%',
+    border: '280 30% 20%',
+    input: '280 30% 20%',
+    ring: '300 100% 60%',
+    // Enhanced semantic colors
+    success: '120 100% 40%',
+    successForeground: '0 0% 100%',
+    warning: '60 100% 50%',
+    warningForeground: '0 0% 100%',
+    info: '200 100% 50%',
+    infoForeground: '0 0% 100%',
+  },
+};
+
+export const nordTheme: Theme = {
+  id: 'nord',
+  name: 'Nord',
+  type: 'dark',
+  colors: {
+    background: '220 16% 8%',
+    foreground: '220 13% 88%',
+    card: '220 16% 10%',
+    cardForeground: '220 13% 88%',
+    popover: '220 16% 10%',
+    popoverForeground: '220 13% 88%',
+    primary: '213 32% 52%',
+    primaryForeground: '220 13% 88%',
+    secondary: '220 16% 15%',
+    secondaryForeground: '220 13% 88%',
+    muted: '220 16% 15%',
+    mutedForeground: '220 9% 46%',
+    accent: '179 25% 65%',
+    accentForeground: '220 16% 8%',
+    destructive: '354 42% 56%',
+    destructiveForeground: '220 13% 88%',
+    border: '220 16% 15%',
+    input: '220 16% 15%',
+    ring: '213 32% 52%',
+    // Enhanced semantic colors
+    success: '92 28% 65%',
+    successForeground: '220 16% 8%',
+    warning: '40 71% 73%',
+    warningForeground: '220 16% 8%',
+    info: '213 32% 52%',
+    infoForeground: '220 13% 88%',
+  },
+};
+
+export const roseTheme: Theme = {
+  id: 'rose',
+  name: 'Rose',
+  type: 'light',
+  colors: {
+    background: '0 0% 100%',
+    foreground: '240 10% 3.9%',
+    card: '0 0% 100%',
+    cardForeground: '240 10% 3.9%',
+    popover: '0 0% 100%',
+    popoverForeground: '240 10% 3.9%',
+    primary: '346 87% 43%',
+    primaryForeground: '0 0% 100%',
+    secondary: '240 4.8% 95.9%',
+    secondaryForeground: '240 5.9% 10%',
+    muted: '240 4.8% 95.9%',
+    mutedForeground: '240 3.8% 46.1%',
+    accent: '240 4.8% 95.9%',
+    accentForeground: '240 5.9% 10%',
+    destructive: '0 84.2% 60.2%',
+    destructiveForeground: '0 0% 98%',
+    border: '240 5.9% 90%',
+    input: '240 5.9% 90%',
+    ring: '346 87% 43%',
+    // Enhanced semantic colors
+    success: '142 76% 36%',
+    successForeground: '0 0% 100%',
+    warning: '38 92% 50%',
+    warningForeground: '0 0% 100%',
+    info: '199 89% 48%',
+    infoForeground: '0 0% 100%',
   },
 };
 
@@ -204,6 +356,9 @@ export const builtInThemes: Theme[] = [
   forestTheme,
   sunsetTheme,
   midnightTheme,
+  cyberpunkTheme,
+  nordTheme,
+  roseTheme,
 ];
 
 // Apply theme to document

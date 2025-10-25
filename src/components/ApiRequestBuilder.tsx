@@ -6,10 +6,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Label } from '../components/ui/label';
-import { Send, Loader2, Clock, Copy, Download, Save } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { 
+  Send, 
+  Loader2, 
+  Clock, 
+  Copy, 
+  Download, 
+  Settings, 
+  Key, 
+  Shield,
+  Plus,
+  Bookmark,
+  Trash2,
+  FileText
+} from 'lucide-react';
 import { useToast } from './ui/use-toast';
 import { MonacoEditor } from './ui/monaco-editor';
-import { MonacoKeyValueEditor } from './ui/monaco-key-value-editor';
+import { KeyValueEditor } from './ui/key-value-editor';
+import { HeadersKeyValueEditor } from './ui/headers-key-value-editor';
+import { ViewToggleButton } from './ui/view-toggle-button';
 
 interface RequestData {
   id?: number;
@@ -36,14 +52,35 @@ interface ResponseData {
   status: number;
   statusText: string;
   headers: Record<string, string>;
-  body: string;
-  responseTime: number;
+  data: any;
+  time: number;
 }
 
-const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+interface RequestPreset {
+  id: string;
+  name: string;
+  description?: string;
+  requestData: {
+    method: RequestData['method'];
+    url: string;
+    headers: Record<string, string>;
+    body: string;
+    queryParams: Array<{ key: string; value: string; enabled: boolean }>;
+    auth: {
+      type: 'none' | 'bearer' | 'basic' | 'apikey';
+      token?: string;
+      username?: string;
+      password?: string;
+      apiKey?: string;
+      apiKeyHeader?: string;
+    };
+  };
+}
+
+const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const;
 
 export function ApiRequestBuilder() {
-  const { currentEnvironment, collections, setRequestHistory, selectedRequest, selectedCollectionForNewRequest, setSelectedCollectionForNewRequest } = useStore();
+  const { selectedRequest } = useStore();
   const { success, error } = useToast();
   
   const [requestData, setRequestData] = useState<RequestData>({
@@ -65,9 +102,22 @@ export function ApiRequestBuilder() {
   
   const [response, setResponse] = useState<ResponseData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'params' | 'headers' | 'body' | 'auth'>('params');
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [bodyContentType, setBodyContentType] = useState<'json' | 'xml' | 'text'>('json');
+  const [activeTab, setActiveTab] = useState<'params' | 'auth' | 'headers' | 'body'>('params');
+  const [bodyType, setBodyType] = useState<'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded'>('raw');
+  const [bodyContentType, setBodyContentType] = useState<'json' | 'text'>('json');
+  const [bodyViewMode, setBodyViewMode] = useState<'table' | 'json'>('table');
+  const [bodyFormData, setBodyFormData] = useState<Array<{ key: string; value: string; enabled: boolean }>>([]);
+  const [paramsViewMode, setParamsViewMode] = useState<'table' | 'json'>('table');
+  const [headersViewMode, setHeadersViewMode] = useState<'table' | 'json'>('table');
+  const [bulkEditJson, setBulkEditJson] = useState('');
+  
+  // Request presets state
+  const [presets, setPresets] = useState<RequestPreset[]>([]);
+  const [showCreatePresetDialog, setShowCreatePresetDialog] = useState(false);
+  const [newPresetName, setNewPresetName] = useState('');
+  const [newPresetDescription, setNewPresetDescription] = useState('');
+  const [isPresetsExpanded, setIsPresetsExpanded] = useState(true);
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
 
   // Load selected request when it changes
   useEffect(() => {
@@ -75,50 +125,143 @@ export function ApiRequestBuilder() {
       setRequestData({
         id: selectedRequest.id,
         name: selectedRequest.name,
-        method: selectedRequest.method as any,
+        method: selectedRequest.method as RequestData['method'],
         url: selectedRequest.url,
-        headers: selectedRequest.headers,
-        body: selectedRequest.body,
-        queryParams: selectedRequest.queryParams,
-        auth: selectedRequest.auth,
+        headers: selectedRequest.headers || {},
+        body: selectedRequest.body || '',
+        queryParams: selectedRequest.queryParams || [],
+        auth: selectedRequest.auth || { type: 'none' },
         collectionId: selectedRequest.collection_id,
-        isFavorite: selectedRequest.is_favorite === 1,
-      });
-    } else {
-      // Reset to default when no request is selected
-      setRequestData({
-        name: '',
-        method: 'GET',
-        url: '',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: '',
-        queryParams: [],
-        auth: {
-          type: 'none'
-        },
-        collectionId: selectedCollectionForNewRequest || undefined,
-        isFavorite: false,
+        folderId: selectedRequest.folder_id,
+        isFavorite: Boolean(selectedRequest.is_favorite),
       });
     }
-  }, [selectedRequest, selectedCollectionForNewRequest]);
+  }, [selectedRequest]);
 
-  // Replace variables in URL and headers
-  const replaceVariables = (text: string): string => {
-    if (!currentEnvironment?.variables) return text;
-    
-    let result = text;
-    Object.entries(currentEnvironment.variables).forEach(([key, value]) => {
-      const regex = new RegExp(`{{${key}}}`, 'g');
-      result = result.replace(regex, value);
-    });
-    return result;
+  const toggleParamsView = () => {
+    if (paramsViewMode === 'table') {
+      const jsonData = requestData.queryParams.reduce((acc, param) => {
+        if (param.key && param.value) {
+          acc[param.key] = param.value;
+        }
+        return acc;
+      }, {} as Record<string, string>);
+      setBulkEditJson(JSON.stringify(jsonData, null, 2));
+    } else {
+      try {
+        const parsed = JSON.parse(bulkEditJson);
+        const newParams = Object.entries(parsed).map(([key, value]) => ({
+          key,
+          value: String(value),
+          enabled: true
+        }));
+        setRequestData({ ...requestData, queryParams: newParams });
+      } catch (e: any) {
+        error('Invalid JSON', 'Please fix JSON syntax errors before switching to table view');
+        return;
+      }
+    }
+    setParamsViewMode(paramsViewMode === 'table' ? 'json' : 'table');
   };
 
-  const handleSendRequest = async () => {
+  const toggleHeadersView = () => {
+    if (headersViewMode === 'table') {
+      setBulkEditJson(JSON.stringify(requestData.headers, null, 2));
+    } else {
+      try {
+        const parsed = JSON.parse(bulkEditJson);
+        setRequestData({ ...requestData, headers: parsed });
+      } catch (e: any) {
+        error('Invalid JSON', 'Please fix JSON syntax errors before switching to table view');
+        return;
+      }
+    }
+    setHeadersViewMode(headersViewMode === 'table' ? 'json' : 'table');
+  };
+
+  const createPreset = () => {
+    if (!newPresetName.trim()) return;
+    
+    // Capture current body data based on body type
+    let capturedBody = '';
+    if (bodyType === 'raw') {
+      capturedBody = requestData.body;
+    } else if (bodyType === 'form-data' || bodyType === 'x-www-form-urlencoded') {
+      // Convert form data to JSON string for storage
+      const formDataObj = bodyFormData.reduce((acc, item) => {
+        if (item.key && item.value) {
+          acc[item.key] = item.value;
+        }
+        return acc;
+      }, {} as Record<string, string>);
+      capturedBody = JSON.stringify(formDataObj);
+    }
+    
+    const preset: RequestPreset = {
+      id: Date.now().toString(),
+      name: newPresetName.trim(),
+      description: newPresetDescription.trim() || undefined,
+      requestData: {
+        method: requestData.method,
+        url: requestData.url,
+        headers: { ...requestData.headers },
+        body: capturedBody,
+        queryParams: [...requestData.queryParams],
+        auth: { ...requestData.auth }
+      }
+    };
+    
+    setPresets([...presets, preset]);
+    setNewPresetName('');
+    setNewPresetDescription('');
+    setShowCreatePresetDialog(false);
+    success('Preset Created', `"${preset.name}" has been saved successfully`);
+  };
+
+  const applyPreset = (preset: RequestPreset) => {
+    // Apply basic request data
+    setRequestData({
+      ...requestData,
+      method: preset.requestData.method,
+      url: preset.requestData.url,
+      headers: { ...preset.requestData.headers },
+      body: preset.requestData.body,
+      queryParams: [...preset.requestData.queryParams],
+      auth: { ...preset.requestData.auth }
+    });
+    
+    // Set active preset
+    setActivePresetId(preset.id);
+    
+    // Try to parse body data and set appropriate body type
+    try {
+      const parsedBody = JSON.parse(preset.requestData.body);
+      if (typeof parsedBody === 'object' && parsedBody !== null) {
+        // If it's a JSON object, convert to form data
+        const formDataArray = Object.entries(parsedBody).map(([key, value]) => ({
+          key,
+          value: String(value),
+          enabled: true
+        }));
+        setBodyFormData(formDataArray);
+        setBodyType('form-data');
+      }
+    } catch {
+      // If not JSON, treat as raw text
+      setBodyType('raw');
+    }
+    
+    success('Preset Applied', `"${preset.name}" configuration has been applied`);
+  };
+
+  const deletePreset = (presetId: string) => {
+    setPresets(presets.filter(p => p.id !== presetId));
+    success('Preset Deleted', 'Preset has been removed successfully');
+  };
+
+  const sendRequest = async () => {
     if (!requestData.url.trim()) {
-      error('URL Required', 'Please enter a URL for the request');
+      error('Invalid URL', 'Please enter a valid URL');
       return;
     }
 
@@ -126,519 +269,827 @@ export function ApiRequestBuilder() {
     setResponse(null);
 
     try {
-      // Build URL with query parameters
-      let processedUrl = replaceVariables(requestData.url);
-      const enabledParams = requestData.queryParams.filter(p => p.enabled && p.key.trim());
-      if (enabledParams.length > 0) {
-        const urlObj = new URL(processedUrl);
-        enabledParams.forEach(param => {
-          urlObj.searchParams.append(param.key, replaceVariables(param.value));
-        });
-        processedUrl = urlObj.toString();
-      }
-
-      // Process headers
-      const processedHeaders = Object.fromEntries(
-        Object.entries(requestData.headers).map(([key, value]) => [
-          key,
-          replaceVariables(value)
-        ])
-      );
-
-      // Add authentication headers
-      if (requestData.auth.type === 'bearer' && requestData.auth.token) {
-        processedHeaders['Authorization'] = `Bearer ${replaceVariables(requestData.auth.token)}`;
-      } else if (requestData.auth.type === 'basic' && requestData.auth.username && requestData.auth.password) {
-        const credentials = btoa(`${replaceVariables(requestData.auth.username)}:${replaceVariables(requestData.auth.password)}`);
-        processedHeaders['Authorization'] = `Basic ${credentials}`;
-      } else if (requestData.auth.type === 'apikey' && requestData.auth.apiKey && requestData.auth.apiKeyHeader) {
-        processedHeaders[requestData.auth.apiKeyHeader] = replaceVariables(requestData.auth.apiKey);
-      }
-
-      const startTime = Date.now();
-      
-      const result = await window.electronAPI.request.send({
+      const response = await window.electronAPI.request.send({
         method: requestData.method,
-        url: processedUrl,
-        headers: processedHeaders,
-        body: requestData.body ? JSON.parse(requestData.body) : undefined
+        url: requestData.url,
+        headers: requestData.headers,
+        body: requestData.body,
+        auth: requestData.auth
       });
 
-      const responseTime = Date.now() - startTime;
-
-      if (result.success) {
-        setResponse({
-          status: result.status || 200,
-          statusText: result.statusText || 'OK',
-          headers: result.headers || {},
-          body: typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2),
-          responseTime: result.responseTime || responseTime
-        });
-
-        const updatedHistory = await window.electronAPI.request.history(100);
-        setRequestHistory(updatedHistory);
-
-        success('Request Sent', `Request completed in ${result.responseTime || responseTime}ms`);
-      } else {
-        setResponse({
-          status: 400,
-          statusText: 'Bad Request',
-          headers: {},
-          body: result.error || 'Request failed',
-          responseTime
-        });
-        error('Request Failed', result.error || 'Unknown error occurred');
-      }
+      setResponse(response);
+      // Note: setRequestHistory is a function that updates the store, not an array
+      success('Request Sent', `Request completed with status ${response.status}`);
     } catch (err: any) {
-      const responseTime = Date.now() - Date.now();
-      setResponse({
-        status: 500,
-        statusText: 'Internal Server Error',
-        headers: {},
-        body: err.message || 'Request failed',
-        responseTime
-      });
-      error('Request Error', err.message || 'Unknown error occurred');
+      error('Request Failed', err.message || 'An error occurred while sending the request');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSaveRequest = async () => {
-    if (!requestData.name.trim()) {
-      error('Name Required', 'Please enter a name for the request');
-      return;
-    }
-
-    try {
-      const result = await window.electronAPI.request.save(requestData);
-      if (result.success) {
-        success('Request Saved', 'Request has been saved successfully');
-        setShowSaveDialog(false);
-        
-        // Clear the selected collection for new requests after saving
-        setSelectedCollectionForNewRequest(null);
-      }
-    } catch (e: any) {
-      console.error('Failed to save request:', e);
-      error('Save Failed', 'Failed to save request');
-    }
-  };
-
   const copyResponse = () => {
     if (response) {
-      navigator.clipboard.writeText(response.body);
-      success('Copied', 'Response copied to clipboard');
+      navigator.clipboard.writeText(JSON.stringify(response.data, null, 2));
+      success('Copied', 'Response data copied to clipboard');
     }
   };
 
-  const getStatusColor = (status: number) => {
-    if (status >= 200 && status < 300) return 'text-green-600 bg-green-50 dark:bg-green-950 dark:text-green-400';
-    if (status >= 400 && status < 500) return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-950 dark:text-yellow-400';
-    if (status >= 500) return 'text-red-600 bg-red-50 dark:bg-red-950 dark:text-red-400';
-    return 'text-gray-600 bg-gray-50 dark:bg-gray-950 dark:text-gray-400';
+  const downloadResponse = () => {
+    if (response) {
+      const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `response-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      success('Downloaded', 'Response data downloaded successfully');
+    }
   };
 
   return (
-    <div className="flex h-[calc(100vh-200px)] bg-background">
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Request Builder */}
-        <div className="flex-1 flex flex-col">
-          {/* URL Bar */}
-          <div className="p-4 border-b bg-card">
-            <div className="flex gap-2 flex-wrap">
-              <Select value={requestData.method} onValueChange={(value: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS') => setRequestData({ ...requestData, method: value })}>
-                <SelectTrigger className="w-24 sm:w-32 bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {HTTP_METHODS.map((method) => (
-                    <SelectItem key={method} value={method}>
+    <div className="flex flex-col h-full bg-background">
+      {/* Request Builder Header */}
+      <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
+        <div className="p-4">
+          <div className="flex items-center gap-4">
+            {/* Method Selector */}
+            <Select value={requestData.method} onValueChange={(value) => setRequestData({ ...requestData, method: value as RequestData['method'] })}>
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {METHODS.map(method => (
+                  <SelectItem key={method} value={method}>
+                    <span className={`font-mono text-sm font-bold ${
+                      method === 'GET' ? 'text-green-600' :
+                      method === 'POST' ? 'text-blue-600' :
+                      method === 'PUT' ? 'text-orange-600' :
+                      method === 'PATCH' ? 'text-purple-600' :
+                      method === 'DELETE' ? 'text-red-600' :
+                      'text-gray-600'
+                    }`}>
                       {method}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* URL Input */}
+            <div className="flex-1">
               <Input
                 value={requestData.url}
                 onChange={(e) => setRequestData({ ...requestData, url: e.target.value })}
-                placeholder="https://api.example.com/users"
-                className="flex-1 min-w-0 bg-background"
+                placeholder="Enter request URL (e.g., https://api.example.com/users)"
+                className="font-mono text-sm"
               />
-              <Button variant="outline" onClick={() => setShowSaveDialog(true)} className="hidden sm:flex">
-                <Save className="h-4 w-4 mr-1" />
-                Save
-              </Button>
-              <Button variant="outline" onClick={() => setShowSaveDialog(true)} className="sm:hidden">
-                <Save className="h-4 w-4" />
-              </Button>
-              <Button onClick={handleSendRequest} disabled={isLoading || !requestData.url.trim()}>
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-                <span className="hidden sm:inline ml-1">Send</span>
-              </Button>
             </div>
-          </div>
 
-          {/* Tabs */}
-          <div className="border-b bg-card">
-            <div className="flex overflow-x-auto">
-              <button
-                onClick={() => setActiveTab('params')}
-                className={`px-3 sm:px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap ${
-                  activeTab === 'params' 
-                    ? 'border-primary text-primary' 
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                Params
-              </button>
-              <button
-                onClick={() => setActiveTab('headers')}
-                className={`px-3 sm:px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap ${
-                  activeTab === 'headers' 
-                    ? 'border-primary text-primary' 
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                Headers
-              </button>
-              <button
-                onClick={() => setActiveTab('body')}
-                className={`px-3 sm:px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap ${
-                  activeTab === 'body' 
-                    ? 'border-primary text-primary' 
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                Body
-              </button>
-              <button
-                onClick={() => setActiveTab('auth')}
-                className={`px-3 sm:px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap ${
-                  activeTab === 'auth' 
-                    ? 'border-primary text-primary' 
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                Auth
-              </button>
+            {/* Send Button */}
+            <Button onClick={sendRequest} disabled={isLoading || !requestData.url.trim()}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Panel - Request Configuration */}
+        <div className="flex-1 flex flex-col">
+          {/* Tab Navigation */}
+          <div className="border-b border-border/50 bg-card/30">
+            <div className="px-4 py-2">
+              <div className="flex items-center gap-1 overflow-x-auto">
+                <button
+                  onClick={() => setActiveTab('params')}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+                    activeTab === 'params' 
+                      ? 'border-primary text-primary bg-primary/5' 
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Params</span>
+                  {requestData.queryParams.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                      {requestData.queryParams.length}
+                    </Badge>
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab('auth')}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+                    activeTab === 'auth' 
+                      ? 'border-primary text-primary bg-primary/5' 
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <Shield className="h-4 w-4" />
+                  <span>Auth</span>
+                  {requestData.auth.type !== 'none' && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                      {requestData.auth.type}
+                    </Badge>
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab('headers')}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+                    activeTab === 'headers' 
+                      ? 'border-primary text-primary bg-primary/5' 
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <Key className="h-4 w-4" />
+                  <span>Headers</span>
+                  {Object.keys(requestData.headers).length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                      {Object.keys(requestData.headers).length}
+                    </Badge>
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab('body')}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+                    activeTab === 'body' 
+                      ? 'border-primary text-primary bg-primary/5' 
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Body</span>
+                  {requestData.body.trim() && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                      {bodyContentType}
+                    </Badge>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 p-4 bg-background">
+          <div className="flex-1 p-3 bg-background/50">
             {activeTab === 'params' && (
-              <MonacoKeyValueEditor
-                data={requestData.queryParams.map(param => ({
-                  key: param.key,
-                  value: param.value,
-                  enabled: param.enabled
-                }))}
-                onChange={(data) => setRequestData({
-                  ...requestData,
-                  queryParams: data.map(item => ({
-                    key: item.key,
-                    value: item.value,
-                    enabled: item.enabled !== false
-                  }))
-                })}
-                title="Query Parameters"
-                description="Add query parameters to your request"
-                height={300}
-                showActions={true}
-                readOnly={false}
-                minimap={false}
-                fontSize={14}
-                keyPlaceholder="Parameter name"
-                valuePlaceholder="Parameter value"
-                allowBulkEdit={true}
-                className="border-0 shadow-none"
-              />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-semibold flex items-center gap-2">
+                      <Settings className="h-4 w-4 text-primary" />
+                      Query Parameters
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Add query parameters to your request URL
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newParams = [...requestData.queryParams, { key: '', value: '', enabled: true }];
+                        setRequestData({ ...requestData, queryParams: newParams });
+                      }}
+                      className="h-7 w-7 p-0"
+                      title="Add Parameter"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                    <ViewToggleButton
+                      currentView={paramsViewMode}
+                      onToggle={toggleParamsView}
+                    />
+                  </div>
+                </div>
+                
+                <div className="border rounded-md bg-card">
+                  {paramsViewMode === 'table' ? (
+                    <div className="p-3">
+                      <KeyValueEditor
+                        items={requestData.queryParams}
+                        onChange={(items) => setRequestData({ ...requestData, queryParams: items })}
+                        placeholder={{ key: 'Parameter name', value: 'Parameter value' }}
+                        showEnabled={true}
+                      />
+                    </div>
+                  ) : (
+                    <MonacoEditor
+                      value={bulkEditJson}
+                      onChange={(value) => setBulkEditJson(value)}
+                      language="json"
+                      placeholder='{"key": "value"}'
+                      title=""
+                      description=""
+                      height={200}
+                      showActions={true}
+                      validateJson={true}
+                      readOnly={false}
+                      minimap={false}
+                      fontSize={13}
+                      className="border-0"
+                    />
+                  )}
+                </div>
+              </div>
             )}
 
             {activeTab === 'headers' && (
-              <MonacoKeyValueEditor
-                data={Object.entries(requestData.headers).map(([key, value]) => ({
-                  key,
-                  value,
-                  enabled: true
-                }))}
-                onChange={(data) => {
-                  const newHeaders = data.reduce((acc, item) => {
-                    if (item.key && item.value) {
-                      acc[item.key] = item.value;
-                    }
-                    return acc;
-                  }, {} as Record<string, string>);
-                  setRequestData({
-                    ...requestData,
-                    headers: newHeaders
-                  });
-                }}
-                title="Headers"
-                description="Add HTTP headers to your request"
-                height={300}
-                showActions={true}
-                readOnly={false}
-                minimap={false}
-                fontSize={14}
-                keyPlaceholder="Header name"
-                valuePlaceholder="Header value"
-                allowBulkEdit={true}
-                className="border-0 shadow-none"
-              />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-semibold flex items-center gap-2">
+                      <Key className="h-4 w-4 text-primary" />
+                      HTTP Headers
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Add HTTP headers to your request
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newHeaders = { ...requestData.headers, '': '' };
+                        setRequestData({ ...requestData, headers: newHeaders });
+                      }}
+                      className="h-7 w-7 p-0"
+                      title="Add Header"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                    <ViewToggleButton
+                      currentView={headersViewMode}
+                      onToggle={toggleHeadersView}
+                    />
+                  </div>
+                </div>
+                
+                <div className="border rounded-md bg-card">
+                  {headersViewMode === 'table' ? (
+                    <div className="p-3">
+                      <HeadersKeyValueEditor
+                        headers={requestData.headers}
+                        onChange={(headers) => setRequestData({ ...requestData, headers })}
+                        placeholder={{ key: 'Header Name', value: 'Header Value' }}
+                      />
+                    </div>
+                  ) : (
+                    <MonacoEditor
+                      value={bulkEditJson}
+                      onChange={(value) => setBulkEditJson(value)}
+                      language="json"
+                      placeholder='{"Content-Type": "application/json"}'
+                      title=""
+                      description=""
+                      height={200}
+                      showActions={true}
+                      validateJson={true}
+                      readOnly={false}
+                      minimap={false}
+                      fontSize={13}
+                      className="border-0"
+                    />
+                  )}
+                </div>
+              </div>
             )}
 
             {activeTab === 'body' && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium">Body</span>
-                  <Select defaultValue="raw">
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="raw">Raw</SelectItem>
-                      <SelectItem value="form-data">Form Data</SelectItem>
-                      <SelectItem value="x-www-form">x-www-form-urlencoded</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={bodyContentType} onValueChange={(value: 'json' | 'xml' | 'text') => setBodyContentType(value)}>
-                    <SelectTrigger className="w-24">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="json">JSON</SelectItem>
-                      <SelectItem value="xml">XML</SelectItem>
-                      <SelectItem value="text">Text</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-semibold flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-primary" />
+                      Request Body
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Define the request payload
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Body Type Dropdown */}
+                    <Select value={bodyType} onValueChange={(value: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded') => setBodyType(value)}>
+                      <SelectTrigger className="w-32 h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none" className="text-muted-foreground">None</SelectItem>
+                        <SelectItem value="raw" className="text-blue-600">Raw</SelectItem>
+                        <SelectItem value="form-data" className="text-green-600">Form Data</SelectItem>
+                        <SelectItem value="x-www-form-urlencoded" className="text-purple-600">URL Encoded</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    {/* Format Dropdown - Only visible when bodyType === 'raw' */}
+                    {bodyType === 'raw' && (
+                      <Select value={bodyContentType} onValueChange={(value: 'json' | 'text') => setBodyContentType(value)}>
+                        <SelectTrigger className="w-20 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="json">JSON</SelectItem>
+                          <SelectItem value="text">Text</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                    
+                    {/* Action Buttons - Conditional based on body type */}
+                    {bodyType !== 'none' && (
+                      <div className="flex gap-1">
+                        {(bodyType === 'form-data' || bodyType === 'x-www-form-urlencoded' || (bodyType === 'raw' && bodyViewMode === 'table')) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setBodyFormData([...bodyFormData, { key: '', value: '', enabled: true }])}
+                            className="h-7 w-7 p-0"
+                            title="Add Field"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        )}
+                        {bodyType === 'raw' && (
+                          <ViewToggleButton
+                            currentView={bodyViewMode}
+                            onToggle={() => setBodyViewMode(bodyViewMode === 'table' ? 'json' : 'table')}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <MonacoEditor
-                  value={requestData.body}
-                  onChange={(value) => setRequestData({ ...requestData, body: value })}
-                  language={bodyContentType}
-                  placeholder={bodyContentType === 'json' ? '{"key": "value"}' : bodyContentType === 'xml' ? '<root></root>' : 'Enter text content...'}
-                  title=""
-                  description=""
-                  height={300}
-                  showActions={true}
-                  validateJson={bodyContentType === 'json'}
-                  readOnly={false}
-                  minimap={false}
-                  fontSize={14}
-                  className="border rounded-md"
-                />
+                
+                {/* Conditional Content Rendering based on bodyType */}
+                {bodyType === 'none' ? (
+                  <div className="border rounded-md bg-card">
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No body data</p>
+                      <p className="text-xs mt-1">Select a body type to add content</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border rounded-md bg-card">
+                    {bodyType === 'raw' ? (
+                      // Raw mode: Show table/JSON toggle
+                      bodyViewMode === 'table' ? (
+                        <div className="p-3">
+                          <KeyValueEditor
+                            items={bodyFormData}
+                            onChange={setBodyFormData}
+                            placeholder={{ key: 'Field Name', value: 'Field Value' }}
+                            showEnabled={true}
+                          />
+                        </div>
+                      ) : (
+                        <MonacoEditor
+                          value={requestData.body}
+                          onChange={(value) => setRequestData({ ...requestData, body: value })}
+                          language={bodyContentType}
+                          placeholder={bodyContentType === 'json' ? '{"key": "value"}' : 'Enter text content'}
+                          title=""
+                          description=""
+                          height={200}
+                          showActions={true}
+                          validateJson={bodyContentType === 'json'}
+                          readOnly={false}
+                          minimap={false}
+                          fontSize={13}
+                          className="border-0"
+                        />
+                      )
+                    ) : (
+                      // Form Data and URL Encoded: Show table view only
+                      <div className="p-3">
+                        <KeyValueEditor
+                          items={bodyFormData}
+                          onChange={setBodyFormData}
+                          placeholder={{ 
+                            key: bodyType === 'form-data' ? 'Field Name' : 'Parameter Name', 
+                            value: bodyType === 'form-data' ? 'Field Value' : 'Parameter Value' 
+                          }}
+                          showEnabled={true}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
             {activeTab === 'auth' && (
               <div className="space-y-4">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium">Type</span>
-                  <Select 
-                    value={requestData.auth.type} 
-                    onValueChange={(value: 'none' | 'bearer' | 'basic' | 'apikey') => 
-                      setRequestData({ ...requestData, auth: { ...requestData.auth, type: value } })
-                    }
-                  >
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No Auth</SelectItem>
-                      <SelectItem value="bearer">Bearer Token</SelectItem>
-                      <SelectItem value="basic">Basic Auth</SelectItem>
-                      <SelectItem value="apikey">API Key</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div>
+                  <h3 className="text-base font-semibold flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-primary" />
+                    Authentication
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Configure authentication for your request
+                  </p>
                 </div>
                 
-                {requestData.auth.type === 'bearer' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="bearer-token">Token</Label>
-                    <Input 
-                      id="bearer-token"
-                      placeholder="Enter bearer token"
-                      value={requestData.auth.token || ''}
-                      onChange={(e) => setRequestData({ 
-                        ...requestData, 
-                        auth: { ...requestData.auth, token: e.target.value } 
-                      })}
-                    />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Label htmlFor="auth-type" className="text-sm font-medium">Authentication Type</Label>
+                    <Select 
+                      value={requestData.auth.type} 
+                      onValueChange={(value: 'none' | 'bearer' | 'basic' | 'apikey') => 
+                        setRequestData({ ...requestData, auth: { ...requestData.auth, type: value } })
+                      }
+                    >
+                      <SelectTrigger className="w-48">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No Authentication</SelectItem>
+                        <SelectItem value="bearer">Bearer Token</SelectItem>
+                        <SelectItem value="basic">Basic Authentication</SelectItem>
+                        <SelectItem value="apikey">API Key</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-                
-                {requestData.auth.type === 'basic' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input 
-                      id="username"
-                      placeholder="Enter username"
-                      value={requestData.auth.username || ''}
-                      onChange={(e) => setRequestData({ 
-                        ...requestData, 
-                        auth: { ...requestData.auth, username: e.target.value } 
-                      })}
-                    />
-                    <Label htmlFor="password">Password</Label>
-                    <Input 
-                      id="password"
-                      type="password"
-                      placeholder="Enter password"
-                      value={requestData.auth.password || ''}
-                      onChange={(e) => setRequestData({ 
-                        ...requestData, 
-                        auth: { ...requestData.auth, password: e.target.value } 
-                      })}
-                    />
-                  </div>
-                )}
-                
-                {requestData.auth.type === 'apikey' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="api-key">API Key</Label>
-                    <Input 
-                      id="api-key"
-                      placeholder="Enter API key"
-                      value={requestData.auth.apiKey || ''}
-                      onChange={(e) => setRequestData({ 
-                        ...requestData, 
-                        auth: { ...requestData.auth, apiKey: e.target.value } 
-                      })}
-                    />
-                    <Label htmlFor="api-key-header">Header Name</Label>
-                    <Input 
-                      id="api-key-header"
-                      placeholder="X-API-Key"
-                      value={requestData.auth.apiKeyHeader || ''}
-                      onChange={(e) => setRequestData({ 
-                        ...requestData, 
-                        auth: { ...requestData.auth, apiKeyHeader: e.target.value } 
-                      })}
-                    />
-                  </div>
-                )}
+                  
+                  {requestData.auth.type === 'bearer' && (
+                    <Card className="p-4">
+                      <div className="space-y-3">
+                        <Label htmlFor="bearer-token" className="text-sm font-medium">Bearer Token</Label>
+                        <Input 
+                          id="bearer-token"
+                          type="password"
+                          value={requestData.auth.token || ''}
+                          onChange={(e) => setRequestData({ 
+                            ...requestData, 
+                            auth: { ...requestData.auth, token: e.target.value } 
+                          })}
+                          placeholder="Enter your bearer token"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Bearer [token] will be sent in the Authorization header
+                        </p>
+                      </div>
+                    </Card>
+                  )}
+                  
+                  {requestData.auth.type === 'basic' && (
+                    <Card className="p-4">
+                      <div className="space-y-3">
+                        <div>
+                          <Label htmlFor="basic-username" className="text-sm font-medium">Username</Label>
+                          <Input 
+                            id="basic-username"
+                            value={requestData.auth.username || ''}
+                            onChange={(e) => setRequestData({ 
+                              ...requestData, 
+                              auth: { ...requestData.auth, username: e.target.value } 
+                            })}
+                            placeholder="Enter username"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="basic-password" className="text-sm font-medium">Password</Label>
+                          <Input 
+                            id="basic-password"
+                            type="password"
+                            value={requestData.auth.password || ''}
+                            onChange={(e) => setRequestData({ 
+                              ...requestData, 
+                              auth: { ...requestData.auth, password: e.target.value } 
+                            })}
+                            placeholder="Enter password"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Credentials will be encoded and sent in the Authorization header
+                        </p>
+                      </div>
+                    </Card>
+                  )}
+                  
+                  {requestData.auth.type === 'apikey' && (
+                    <Card className="p-4">
+                      <div className="space-y-3">
+                        <div>
+                          <Label htmlFor="apikey-key" className="text-sm font-medium">API Key</Label>
+                          <Input 
+                            id="apikey-key"
+                            type="password"
+                            value={requestData.auth.apiKey || ''}
+                            onChange={(e) => setRequestData({ 
+                              ...requestData, 
+                              auth: { ...requestData.auth, apiKey: e.target.value } 
+                            })}
+                            placeholder="Enter your API key"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="apikey-header" className="text-sm font-medium">Header Name</Label>
+                          <Input 
+                            id="apikey-header"
+                            value={requestData.auth.apiKeyHeader || 'X-API-Key'}
+                            onChange={(e) => setRequestData({ 
+                              ...requestData, 
+                              auth: { ...requestData.auth, apiKeyHeader: e.target.value } 
+                            })}
+                            placeholder="e.g., X-API-Key, Authorization"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          API key will be sent in the specified header
+                        </p>
+                      </div>
+                    </Card>
+                  )}
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Response Panel */}
-        {response && (
-          <div className="h-96 border-t bg-card">
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-sm font-medium">Response</span>
-                  <Badge className={getStatusColor(response.status)}>
+        {/* Right Panel - Request Presets */}
+        <div className={`border-l border-border/50 bg-card/30 transition-all duration-300 ${
+          isPresetsExpanded ? 'w-80' : 'w-12'
+        }`}>
+          <div className="p-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setIsPresetsExpanded(!isPresetsExpanded)}
+                  className="flex items-center gap-2 hover:bg-muted/50 rounded py-1 transition-colors"
+                >
+                  {isPresetsExpanded ? (
+                    <>
+                      <h4 className="font-medium text-sm flex items-center gap-2">
+                        <Bookmark className="h-4 w-4" />
+                        Request Presets
+                        {presets.length > 0 && (
+                          <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                            {presets.length}
+                          </Badge>
+                        )}
+                      </h4>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 w-full">
+                      <div className="flex items-center justify-center w-full">
+                        <Bookmark className="h-4 w-4" />
+                      </div>
+                      {presets.length > 0 && (
+                        <Badge variant="secondary" className="h-4 w-4 p-0 text-xs flex items-center justify-center">
+                          {presets.length}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </button>
+                {isPresetsExpanded && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCreatePresetDialog(true)}
+                    className="h-7 w-7 p-0"
+                    title="Create Preset"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+              
+              {isPresetsExpanded ? (
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {presets.length > 0 ? (
+                    presets.map((preset) => (
+                      <Card 
+                        key={preset.id} 
+                        className={`p-3 transition-colors cursor-pointer ${
+                          activePresetId === preset.id 
+                            ? 'bg-primary/10 border-primary/30 hover:bg-primary/15' 
+                            : 'hover:bg-muted/50'
+                        }`}
+                        onClick={() => applyPreset(preset)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h5 className="font-medium text-sm truncate">{preset.name}</h5>
+                              {activePresetId === preset.id && (
+                                <Badge variant="default" className="h-4 px-1.5 text-xs">
+                                  Active
+                                </Badge>
+                              )}
+                            </div>
+                            {preset.description && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                {preset.description}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {preset.requestData.method} • {preset.requestData.url || 'No URL'}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deletePreset(preset.id);
+                            }}
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                            title="Delete Preset"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </Card>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      <Bookmark className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No presets created yet</p>
+                      <p className="text-xs mt-1">Create your first preset to save request configurations</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2 flex flex-col items-center">
+                  {presets.map((preset, index) => (
+                    <TooltipProvider key={preset.id}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => applyPreset(preset)}
+                            className={`w-full h-8 p-0 flex items-center justify-center transition-colors ${
+                              activePresetId === preset.id 
+                                ? 'bg-primary/20 hover:bg-primary/30' 
+                                : 'hover:bg-muted/50'
+                            }`}
+                          >
+                            <Badge 
+                              variant={activePresetId === preset.id ? "default" : "secondary"}
+                              className={`h-6 w-6 p-0 text-xs flex items-center justify-center font-bold ${
+                                activePresetId === preset.id 
+                                  ? 'bg-primary text-primary-foreground border-primary' 
+                                  : ''
+                              }`}
+                            >
+                              {index + 1}
+                            </Badge>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="max-w-xs">
+                          <div className="space-y-1">
+                            <p className="font-medium text-sm">{preset.name}</p>
+                            {preset.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {preset.description}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                              {preset.requestData.method} • {preset.requestData.url || 'No URL'}
+                            </p>
+                            {activePresetId === preset.id && (
+                              <p className="text-xs text-primary font-medium">Currently Active</p>
+                            )}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ))}
+                  {presets.length === 0 && (
+                    <div className="text-center py-4 text-muted-foreground text-xs flex flex-col items-center">
+                      <Bookmark className="h-6 w-6 mb-1 opacity-50" />
+                      <p>No presets</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Response Section */}
+      {response && (
+        <div className="border-t border-border/50 bg-card/30">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <h3 className="text-lg font-semibold">Response</h3>
+                <div className="flex items-center gap-2">
+                  <Badge variant={response.status >= 200 && response.status < 300 ? 'default' : 'destructive'}>
                     {response.status} {response.statusText}
                   </Badge>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Clock className="h-4 w-4" />
-                    {response.responseTime}ms
+                    {response.time}ms
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={copyResponse}>
-                    <Copy className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">Copy</span>
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Download className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">Save</span>
-                  </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={copyResponse}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy
+                </Button>
+                <Button variant="outline" size="sm" onClick={downloadResponse}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium mb-2">Headers</h4>
+                <div className="bg-muted/50 rounded-md p-3 font-mono text-xs overflow-x-auto">
+                  {Object.entries(response.headers).map(([key, value]) => (
+                    <div key={key} className="flex">
+                      <span className="text-muted-foreground w-48 flex-shrink-0">{key}:</span>
+                      <span className="ml-2">{value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-            <div className="p-4 h-full overflow-auto">
-              <MonacoEditor
-                value={response.body}
-                onChange={() => {}} // Read-only for response
-                language="json"
-                placeholder="No response body"
-                title=""
-                description=""
-                height="100%"
-                showActions={false}
-                validateJson={false}
-                readOnly={true}
-                minimap={false}
-                fontSize={12}
-                className="border-0"
-              />
+              
+              <div>
+                <h4 className="text-sm font-medium mb-2">Body</h4>
+                <MonacoEditor
+                  value={JSON.stringify(response.data, null, 2)}
+                  onChange={() => {}}
+                  language="json"
+                  placeholder="No response body"
+                  title=""
+                  description=""
+                  height={300}
+                  showActions={false}
+                  validateJson={false}
+                  readOnly={true}
+                  minimap={false}
+                  fontSize={13}
+                  className="border rounded-md"
+                />
+              </div>
             </div>
           </div>
-        )}
-      </div>
-      
-      {/* Save Request Dialog */}
-      {showSaveDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
+        </div>
+      )}
+
+      {/* Create Preset Dialog */}
+      {showCreatePresetDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-96">
             <CardHeader>
-              <CardTitle>Save Request</CardTitle>
-              <CardDescription>Save this request to a collection</CardDescription>
+              <CardTitle>Create Request Preset</CardTitle>
+              <CardDescription>
+                Save the current request configuration as a reusable preset
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="request-name">Request Name</Label>
+              <div>
+                <Label htmlFor="preset-name">Preset Name</Label>
                 <Input
-                  id="request-name"
-                  placeholder="Enter request name"
-                  value={requestData.name}
-                  onChange={(e) => setRequestData({ ...requestData, name: e.target.value })}
+                  id="preset-name"
+                  value={newPresetName}
+                  onChange={(e) => setNewPresetName(e.target.value)}
+                  placeholder="e.g., Success Case, Error Case"
                 />
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="collection">Collection</Label>
-                <Select 
-                  value={requestData.collectionId?.toString() || ''} 
-                  onValueChange={(value) => setRequestData({ ...requestData, collectionId: value ? parseInt(value) : undefined })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select collection" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {collections.map((collection: any) => (
-                      <SelectItem key={collection.id} value={collection.id.toString()}>
-                        {collection.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="is-favorite"
-                  checked={requestData.isFavorite}
-                  onChange={(e) => setRequestData({ ...requestData, isFavorite: e.target.checked })}
-                  className="h-4 w-4"
+              <div>
+                <Label htmlFor="preset-description">Description (Optional)</Label>
+                <Input
+                  id="preset-description"
+                  value={newPresetDescription}
+                  onChange={(e) => setNewPresetDescription(e.target.value)}
+                  placeholder="Brief description of this preset"
                 />
-                <Label htmlFor="is-favorite">Mark as favorite</Label>
               </div>
-              
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
-                  Cancel
+              <div className="flex gap-2 pt-2">
+                <Button onClick={createPreset} disabled={!newPresetName.trim()}>
+                  Create Preset
                 </Button>
-                <Button onClick={handleSaveRequest}>
-                  Save Request
+                <Button variant="outline" onClick={() => setShowCreatePresetDialog(false)}>
+                  Cancel
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
       )}
-
     </div>
   );
 }

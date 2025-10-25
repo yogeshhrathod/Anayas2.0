@@ -1,7 +1,7 @@
 {
-  "name": "anayas-api-tester",
+  "name": "anayas",
   "version": "1.0.0",
-  "description": "Lightweight REST API Client - Professional Electron desktop app for API testing and development",
+  "description": "Anayas - Professional Electron desktop app for API testing and development",
   "main": "dist-electron/main.js",
   "author": "Anayas",
   "license": "MIT",
@@ -28,6 +28,7 @@
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-tabs": "^1.0.4",
     "@radix-ui/react-toast": "^1.1.5",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "dotenv": "^16.3.1",
@@ -61,8 +62,8 @@
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "com.anayas.api-tester",
-    "productName": "Anayas API Tester",
+    "appId": "com.anayas.app",
+    "productName": "Anayas",
     "directories": {
       "output": "release",
       "buildResources": "build"

@@ -1,4 +1,4 @@
-# Anayas API Tester - Desktop Application
+# Anayas - Desktop Application
 
 A lightweight REST API Client built with Electron, React, TypeScript, and TailwindCSS for professional API testing and development.
 
@@ -54,7 +54,7 @@ A lightweight REST API Client built with Electron, React, TypeScript, and Tailwi
 ### Install Dependencies
 
 ```bash
-cd anayas-api-tester
+cd anayas
 npm install
 # or
 bun install
@@ -92,7 +92,7 @@ Built applications will be in the `release/` directory.
 ## Project Structure
 
 ```
-anayas-api-tester/
+anayas/
 ├── electron/                 # Main Process
 │   ├── main.ts              # Electron entry point
 │   ├── preload.ts           # Preload script (IPC bridge)

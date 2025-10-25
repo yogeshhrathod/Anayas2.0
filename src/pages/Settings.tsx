@@ -266,7 +266,7 @@ export function Settings() {
         <CardContent className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">Application:</span>
-            <span className="text-muted-foreground">Anayas API Tester</span>
+            <span className="text-muted-foreground">Anayas</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">Version:</span>
