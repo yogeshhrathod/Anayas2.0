@@ -21,6 +21,7 @@ import {
   Settings as SettingsIcon,
   ScrollText,
   FolderPlus,
+  Zap,
 } from "lucide-react";
 import { cn } from "./lib/utils";
 
@@ -207,7 +208,15 @@ function App() {
           style={{ width: sidebarOpen ? `${sidebarWidth}px` : '64px' }}
         >
           {/* Header */}
-          <div className="flex h-12 items-center justify-end border-b px-3">
+          <div className="flex h-12 items-center justify-between border-b px-3">
+            {sidebarOpen && (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                  <Zap className="h-4 w-4 text-white" />
+                </div>
+                <h1 className="text-lg font-semibold">Anayas</h1>
+              </div>
+            )}
             <button
               onClick={() => {
                 if (sidebarOpen) {
