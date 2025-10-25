@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, Clock, Globe, FolderPlus, Zap, ArrowRight } from 'lucide-react';
 import { useStore } from '../store/useStore';

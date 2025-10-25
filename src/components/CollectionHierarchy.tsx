@@ -12,6 +12,13 @@ import {
 } from './ui/dropdown-menu';
 import { InputDialog } from './ui/input-dialog';
 import { 
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from './ui/context-menu';
+import { 
   ChevronRight, 
   ChevronDown, 
   Trash2,
@@ -450,18 +457,19 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         return (
           <div key={collection.id}>
             {/* Collection Item */}
-            <div
-              draggable
-              onDragStart={(e) => handleDragStart(e, 'collection', collection.id)}
-              onDragOver={(e) => handleDragOver(e, 'collection', collection.id)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, 'collection', collection.id)}
-              onClick={() => toggleCollection(collection.id)}
-              className={`flex items-center gap-2 px-3 py-1 rounded hover:bg-accent cursor-pointer group transition-colors ${
-                isDraggedOver ? 'bg-primary/20 border border-primary' : ''
-              } ${isDragging ? 'opacity-50' : ''}`}
-            >
-              <div className="p-0.5">
+            <ContextMenu>
+              <ContextMenuTrigger asChild>
+                <div
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, 'collection', collection.id)}
+                  onDragOver={(e) => handleDragOver(e, 'collection', collection.id)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, 'collection', collection.id)}
+                  className={`flex items-center gap-2 px-3 py-1 rounded hover:bg-accent cursor-pointer group transition-colors ${
+                    isDraggedOver ? 'bg-primary/20 border border-primary' : ''
+                  } ${isDragging ? 'opacity-50' : ''}`}
+                >
+              <div className="p-0.5" onClick={() => toggleCollection(collection.id)}>
                 {isExpanded ? (
                   <ChevronDown className="h-3 w-3" />
                 ) : (
@@ -527,7 +535,44 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                   </DropdownMenu>
                 </div>
               </div>
-            </div>
+              </div>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem onClick={() => handleAddRequest(collection.id)}>
+                  <Plus className="h-3 w-3 mr-2" />
+                  Add Request
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => handleAddFolder(collection.id)}>
+                  <Folder className="h-3 w-3 mr-2" />
+                  Add Folder
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem onClick={() => handleEditCollection()}>
+                  <Edit className="h-3 w-3 mr-2" />
+                  Edit
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => handleDuplicateCollection(collection)}>
+                  <Copy className="h-3 w-3 mr-2" />
+                  Duplicate
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => handleExportCollection(collection)}>
+                  <Download className="h-3 w-3 mr-2" />
+                  Export
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => handleImportCollection()}>
+                  <Upload className="h-3 w-3 mr-2" />
+                  Import
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem 
+                  onClick={() => handleDeleteCollection(collection.id)}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="h-3 w-3 mr-2" />
+                  Delete
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
 
             {/* Collection Content */}
             {isExpanded && (
