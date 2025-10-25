@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, Clock, Globe, FolderPlus, Zap, ArrowRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { cn } from '../lib/utils';
@@ -17,6 +18,7 @@ export function GlobalSearch() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -256,8 +258,19 @@ export function GlobalSearch() {
           placeholder="Search requests, collections, environments... (⌘K)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setIsOpen(true)}
-          className="w-80 h-9 pl-10 pr-4 bg-background/50 backdrop-blur-sm border border-input/50 rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring/50 focus:bg-background transition-all duration-200 shadow-sm hover:shadow-md"
+          onFocus={() => {
+            setIsOpen(true);
+            setIsFocused(true);
+          }}
+          onBlur={() => {
+            setIsFocused(false);
+            // Delay closing to allow clicking on results
+            setTimeout(() => setIsOpen(false), 150);
+          }}
+          className={cn(
+            "h-9 pl-10 pr-4 bg-background/50 backdrop-blur-sm border border-input/50 rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring/50 focus:bg-background transition-all duration-300 shadow-sm hover:shadow-md text-center",
+            isFocused ? "w-[500px]" : "w-80"
+          )}
         />
         {query && (
           <button
@@ -272,9 +285,16 @@ export function GlobalSearch() {
         )}
       </div>
 
-      {/* Search Results */}
-      {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-xl z-[9999] max-h-96 overflow-y-auto">
+      {/* Search Results - Portal */}
+      {isOpen && createPortal(
+        <div 
+          className="fixed bg-card/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-xl z-[99999] max-h-96 overflow-y-auto transition-all duration-300"
+          style={{
+            top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 8,
+            left: inputRef.current?.getBoundingClientRect().left ?? 0,
+            width: isFocused ? 500 : 320,
+          }}
+        >
           {results.length > 0 ? (
             <div className="p-2">
               {results.map((result, index) => {
@@ -307,11 +327,10 @@ export function GlobalSearch() {
               No results found for "{query}"
             </div>
           ) : (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              Start typing to search...
-            </div>
+            null
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

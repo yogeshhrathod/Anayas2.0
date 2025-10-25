@@ -584,7 +584,7 @@ export function ApiRequestBuilder() {
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Request Builder Header */}
-      <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm relative z-0">
+      <div className="border-b border-border/50 bg-card/50">
         <div className="p-4">
           {/* Request Name Row */}
           <div className="flex items-center gap-4 mb-2">

@@ -32,7 +32,7 @@ export function TitleBar() {
   return (
     <div
       className={cn(
-        "flex h-12 items-center border-b bg-card/30 backdrop-blur-sm glass select-none relative z-0",
+        "flex h-12 items-center border-b border-border bg-card/30 backdrop-blur-sm glass select-none",
         isMac ? "pl-20 pr-4" : "px-4"
       )}
       style={{ WebkitAppRegion: "drag" } as any}

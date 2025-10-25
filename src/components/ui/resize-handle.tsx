@@ -42,7 +42,6 @@ export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, 
     
     e.preventDefault();
     const deltaX = e.clientX - startX.current;
-    console.log('Mouse move - deltaX:', deltaX);
     // Use deltaX directly - dragging left (negative) shrinks, dragging right (positive) expands
     onResizeRef.current(deltaX);
     startX.current = e.clientX;
@@ -73,7 +72,7 @@ export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, 
   return (
     <div
       className={cn(
-        "w-1 bg-transparent hover:bg-primary/30 transition-colors cursor-col-resize group z-50",
+        "w-1 bg-transparent hover:bg-primary/20 transition-colors cursor-col-resize group z-50",
         "relative",
         disabled && "cursor-default hover:bg-transparent",
         className
@@ -81,9 +80,9 @@ export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, 
       onMouseDown={handleMouseDown}
       onClick={handleClick}
     >
-      {/* Visual indicator - only visible on hover */}
-      <div className="absolute inset-y-0 -left-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="h-full w-1 bg-primary/50 mx-auto" />
+      {/* Subtle visual indicator - only visible on hover */}
+      <div className="absolute inset-y-0 -left-0.5 -right-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="h-full w-0.5 bg-primary/40 mx-auto" />
       </div>
     </div>
   );

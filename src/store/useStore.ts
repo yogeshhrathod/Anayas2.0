@@ -191,7 +191,7 @@ export const useStore = create<AppState>()(
       })),
 
       // Sidebar width state
-      sidebarWidth: 256, // Default width (w-64 = 256px)
+      sidebarWidth: 200, // Default width (reduced from 256px)
       setSidebarWidth: (sidebarWidth) => set({ sidebarWidth }),
 
       // Legacy theme support (for backward compatibility)

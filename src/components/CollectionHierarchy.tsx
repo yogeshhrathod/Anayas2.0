@@ -14,10 +14,7 @@ import { InputDialog } from './ui/input-dialog';
 import { 
   ChevronRight, 
   ChevronDown, 
-  Star, 
-  StarOff, 
   Trash2,
-  GripVertical,
   MoreVertical,
   Plus,
   Folder,
@@ -196,39 +193,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     }
   };
 
-  const handleToggleFavorite = async (collectionId: number) => {
-    try {
-      await window.electronAPI.collection.toggleFavorite(collectionId);
-      const updatedCollections = await window.electronAPI.collection.list();
-      setCollections(updatedCollections);
-    } catch (e: any) {
-      console.error('Failed to toggle favorite:', e);
-      error('Update failed', 'Could not update collection');
-    }
-  };
 
-  const handleToggleFavoriteRequest = async (requestId: number) => {
-    try {
-      // Find the request and toggle its favorite status
-      const request = requests.find(r => r.id === requestId);
-      if (request) {
-        const updatedRequest = { 
-          ...request, 
-          is_favorite: request.is_favorite === 1 ? 0 : 1,
-          headers: request.headers || {},
-          body: request.body || '',
-          queryParams: request.queryParams || [],
-          auth: request.auth || { type: 'none' }
-        };
-        await window.electronAPI.request.save(updatedRequest);
-        await loadRequests();
-        success('Favorite toggled', `Request ${updatedRequest.is_favorite === 1 ? 'added to' : 'removed from'} favorites`);
-      }
-    } catch (e: any) {
-      console.error('Failed to toggle request favorite:', e);
-      error('Toggle failed', 'Could not toggle request favorite status');
-    }
-  };
 
   const handleDeleteCollection = async (collectionId: number) => {
     if (!confirm('Are you sure you want to delete this collection? This will also delete all requests in this collection.')) return;
@@ -496,8 +461,6 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                 isDraggedOver ? 'bg-primary/20 border border-primary' : ''
               } ${isDragging ? 'opacity-50' : ''}`}
             >
-              <GripVertical className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              
               <div className="p-0.5">
                 {isExpanded ? (
                   <ChevronDown className="h-3 w-3" />
@@ -514,27 +477,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                 {collection.name}
               </span>
 
-              {collection.is_favorite === 1 && (
-                <Star className="h-3 w-3 text-yellow-500" />
-              )}
-
               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleFavorite(collection.id);
-                  }}
-                >
-                  {collection.is_favorite === 1 ? (
-                    <StarOff className="h-3 w-3" />
-                  ) : (
-                    <Star className="h-3 w-3" />
-                  )}
-                </Button>
-                
                 <div className="relative">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -616,8 +559,6 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                           )}
                         </div>
 
-                        <GripVertical className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-
                         <Folder className="h-3 w-3 text-muted-foreground" />
                         
                         <span className="text-xs truncate flex-1">
@@ -644,14 +585,12 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                                 onDragOver={(e) => handleDragOver(e, 'request', request.id)}
                                 onDragLeave={handleDragLeave}
                                 onDrop={(e) => handleDrop(e, 'request', request.id)}
-                                className={`flex items-center gap-2 px-2 py-1 rounded hover:bg-accent cursor-pointer group transition-colors ${
+                                className={`flex items-center gap-1.5 px-2 py-1 rounded hover:bg-accent cursor-pointer group transition-colors ${
                                   isRequestDraggedOver ? 'bg-primary/20 border border-primary' : ''
                                 } ${isRequestDragging ? 'opacity-50' : ''}`}
                                 onClick={() => onRequestSelect?.(request)}
                               >
-                                <GripVertical className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                
-                                <Badge variant="outline" className="text-xs font-mono">
+                                <Badge variant="outline" className="text-xs font-mono flex-shrink-0">
                                   {request.method}
                                 </Badge>
                                 
@@ -667,7 +606,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                                   />
                                 ) : (
                                   <span 
-                                    className="text-xs truncate flex-1 cursor-pointer px-1 py-0.5 rounded"
+                                    className="text-sm truncate flex-1 min-w-0 cursor-pointer px-1 py-0.5 rounded"
                                     onDoubleClick={(e) => {
                                       e.stopPropagation();
                                       handleRequestNameDoubleClick(request);
@@ -678,38 +617,31 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                                   </span>
                                 )}
                                 
-                                {request.is_favorite === 1 && (
-                                  <Star className="h-3 w-3 text-yellow-500" />
-                                )}
-
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleToggleFavoriteRequest(request.id);
-                                    }}
-                                  >
-                                    {request.is_favorite === 1 ? (
-                                      <StarOff className="h-3 w-3" />
-                                    ) : (
-                                      <Star className="h-3 w-3" />
-                                    )}
-                                  </Button>
-                                  
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteRequest(request.id);
-                                    }}
-                                  >
-                                    <Trash2 className="h-3 w-3 text-red-500" />
-                                  </Button>
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <MoreVertical className="h-3 w-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteRequest(request.id);
+                                        }}
+                                        className="text-red-600 focus:text-red-600"
+                                      >
+                                        <Trash2 className="h-3 w-3 mr-2" />
+                                        Delete Request
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 </div>
                               </div>
                             );
@@ -733,14 +665,12 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                       onDragOver={(e) => handleDragOver(e, 'request', request.id)}
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, 'request', request.id)}
-                      className={`flex items-center gap-2 px-2 py-1 rounded hover:bg-accent cursor-pointer group transition-colors ${
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded hover:bg-accent cursor-pointer group transition-colors ${
                         isRequestDraggedOver ? 'bg-primary/20 border border-primary' : ''
                       } ${isRequestDragging ? 'opacity-50' : ''}`}
                       onClick={() => onRequestSelect?.(request)}
                     >
-                      <GripVertical className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                      
-                      <Badge variant="outline" className="text-xs font-mono">
+                      <Badge variant="outline" className="text-xs font-mono flex-shrink-0">
                         {request.method}
                       </Badge>
                       
@@ -756,7 +686,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                         />
                       ) : (
                         <span 
-                          className="text-xs truncate flex-1 cursor-pointer px-1 py-0.5 rounded"
+                          className="text-sm truncate flex-1 min-w-0 cursor-pointer px-1 py-0.5 rounded"
                           onDoubleClick={(e) => {
                             e.stopPropagation();
                             handleRequestNameDoubleClick(request);
@@ -767,38 +697,31 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                         </span>
                       )}
                       
-                      {request.is_favorite === 1 && (
-                        <Star className="h-3 w-3 text-yellow-500" />
-                      )}
-
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleToggleFavoriteRequest(request.id);
-                          }}
-                        >
-                          {request.is_favorite === 1 ? (
-                            <StarOff className="h-3 w-3" />
-                          ) : (
-                            <Star className="h-3 w-3" />
-                          )}
-                        </Button>
-                        
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteRequest(request.id);
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3 text-red-500" />
-                        </Button>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreVertical className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteRequest(request.id);
+                              }}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="h-3 w-3 mr-2" />
+                              Delete Request
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   );

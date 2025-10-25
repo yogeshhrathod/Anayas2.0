@@ -78,7 +78,7 @@ function App() {
         } else {
           setSidebarOpen(true);
           // Restore the saved width when reopening
-          setSidebarWidth(Math.max(160, sidebarWidth));
+          setSidebarWidth(Math.max(140, sidebarWidth));
         }
       }
     });
@@ -88,23 +88,19 @@ function App() {
 
   // Handle sidebar resize
   const handleSidebarResize = useCallback((deltaX: number) => {
-    console.log('Resize called with deltaX:', deltaX, 'current width:', sidebarWidth, 'sidebarOpen:', sidebarOpen);
-    
     if (!sidebarOpen) {
       // If sidebar is collapsed, dragging right should expand it
       if (deltaX > 0) {
-        const newWidth = Math.max(160, Math.min(400, 160 + deltaX)); // Start from 160px minimum
-        console.log('Expanding from collapsed, new width:', newWidth);
+        const newWidth = Math.max(140, Math.min(400, 140 + deltaX)); // Start from 140px minimum
         setSidebarOpen(true);
         setSidebarWidth(newWidth);
       }
     } else {
       // If sidebar is open, normal resize behavior
-      const newWidth = Math.max(160, Math.min(400, sidebarWidth + deltaX));
-      console.log('Normal resize, new width:', newWidth);
+      const newWidth = Math.max(140, Math.min(400, sidebarWidth + deltaX));
       
       // If we hit the minimum width, collapse the sidebar
-      if (newWidth <= 160) {
+      if (newWidth <= 140) {
         setSidebarOpen(false);
       } else {
         setSidebarWidth(newWidth);
@@ -211,7 +207,7 @@ function App() {
           style={{ width: sidebarOpen ? `${sidebarWidth}px` : '64px' }}
         >
           {/* Header */}
-          <div className="flex h-16 items-center justify-end border-b px-4">
+          <div className="flex h-12 items-center justify-end border-b px-3">
             <button
               onClick={() => {
                 if (sidebarOpen) {
@@ -219,24 +215,24 @@ function App() {
                 } else {
                   setSidebarOpen(true);
                   // Restore the saved width when reopening
-                  setSidebarWidth(Math.max(160, sidebarWidth));
+                  setSidebarWidth(Math.max(140, sidebarWidth));
                 }
               }}
-              className="rounded-md p-2 hover:bg-accent"
+              className="rounded-md p-1.5 hover:bg-accent transition-colors"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-4 w-4" />
             </button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 flex flex-col p-2">
+          <nav className="flex-1 flex flex-col p-1.5">
             {/* Collections Section - Top */}
             {sidebarOpen && (
-              <div className="mb-6">
-                <div className="flex items-center justify-between px-3 py-2">
+              <div className="mb-4">
+                <div className="flex items-center justify-between px-2 py-1.5">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Collections</span>
                   <button 
-                    className="p-1 hover:bg-accent rounded"
+                    className="p-1 hover:bg-accent rounded transition-colors"
                     onClick={() => setCurrentPage('collections')}
                   >
                     <FolderPlus className="h-3 w-3" />
@@ -275,7 +271,7 @@ function App() {
             
             {/* Main Navigation - Bottom */}
             <div className="flex-1 flex flex-col justify-end">
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -283,14 +279,14 @@ function App() {
                       key={item.id}
                       onClick={() => setCurrentPage(item.id)}
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                        "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm font-medium transition-colors",
                         currentPage === item.id
                           ? "bg-primary text-primary-foreground"
                           : "hover:bg-accent hover:text-accent-foreground"
                       )}
                     >
-                      <Icon className="h-5 w-5" />
-                      {sidebarOpen && <span>{item.label}</span>}
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      {sidebarOpen && <span className="truncate">{item.label}</span>}
                     </button>
                   );
                 })}
