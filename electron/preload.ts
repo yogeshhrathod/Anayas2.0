@@ -20,6 +20,14 @@ export interface Collection {
   createdAt?: string;
 }
 
+export interface Folder {
+  id?: number;
+  name: string;
+  description?: string;
+  collectionId: number;
+  createdAt?: string;
+}
+
 export interface Request {
   id?: number;
   name: string;
@@ -29,6 +37,7 @@ export interface Request {
   body?: string | null;
   auth?: any;
   collectionId?: number;
+  folderId?: number;
   isFavorite?: boolean;
   lastUsed?: string;
   createdAt?: string;
@@ -73,9 +82,16 @@ const api = {
     toggleFavorite: (id: number) => ipcRenderer.invoke('collection:toggleFavorite', id),
   },
 
+  // Folder operations
+  folder: {
+    list: (collectionId?: number) => ipcRenderer.invoke('folder:list', collectionId),
+    save: (folder: Folder) => ipcRenderer.invoke('folder:save', folder),
+    delete: (id: number) => ipcRenderer.invoke('folder:delete', id),
+  },
+
   // Request operations
   request: {
-    list: (collectionId?: number) => ipcRenderer.invoke('request:list', collectionId),
+    list: (collectionId?: number, folderId?: number) => ipcRenderer.invoke('request:list', collectionId, folderId),
     save: (request: Request) => ipcRenderer.invoke('request:save', request),
     delete: (id: number) => ipcRenderer.invoke('request:delete', id),
     send: (options: RequestOptions) => ipcRenderer.invoke('request:send', options),

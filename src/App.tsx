@@ -6,9 +6,11 @@ import { ThemeManager } from "./components/ThemeManager";
 import Toaster from "./components/Toaster";
 import { Homepage } from "./pages/Homepage";
 import { Environments } from "./pages/Environments";
+import { Collections } from "./pages/Collections";
 import { History } from "./pages/History";
 import { Settings } from "./pages/Settings";
 import { Logs } from "./pages/Logs";
+import { CollectionHierarchy } from "./components/CollectionHierarchy";
 import {
   Menu,
   Home,
@@ -17,11 +19,13 @@ import {
   Settings as SettingsIcon,
   ScrollText,
   FolderPlus,
+  Zap,
 } from "lucide-react";
 import { cn } from "./lib/utils";
 
 type Page =
   | "home"
+  | "collections"
   | "environments"
   | "history"
   | "logs"
@@ -34,7 +38,9 @@ function App() {
     setCurrentPage,
     setEnvironments,
     setCurrentEnvironment,
+    setCollections,
     setRequestHistory,
+    setSelectedRequest,
     setSettings,
     setThemeMode,
     setCurrentThemeId,
@@ -50,16 +56,18 @@ function App() {
 
   const loadData = async () => {
     try {
-      const [envs, currentEnv, history, settings] =
+      const [envs, currentEnv, collections, history, settings] =
         await Promise.all([
           window.electronAPI.env.list(),
           window.electronAPI.env.getCurrent(),
+          window.electronAPI.collection.list(),
           window.electronAPI.request.history(100),
           window.electronAPI.settings.getAll(),
         ]);
 
       setEnvironments(envs);
       setCurrentEnvironment(currentEnv);
+      setCollections(collections);
       setRequestHistory(history);
       setSettings(settings);
 
@@ -94,6 +102,8 @@ function App() {
     switch (currentPage) {
       case "home":
         return <Homepage />;
+      case "collections":
+        return <Collections />;
       case "environments":
         return <Environments />;
       case "history":
@@ -109,6 +119,7 @@ function App() {
 
   const navItems = [
     { id: "home" as Page, label: "Home", icon: Home },
+    { id: "collections" as Page, label: "Collections", icon: FolderPlus },
     { id: "environments" as Page, label: "Environments", icon: Globe },
     { id: "history" as Page, label: "History", icon: HistoryIcon },
     { id: "logs" as Page, label: "Logs", icon: ScrollText },
@@ -135,7 +146,12 @@ function App() {
           {/* Header */}
           <div className="flex h-16 items-center justify-between border-b px-4">
             {sidebarOpen && (
-              <h1 className="text-lg font-semibold">API Tester</h1>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                  <Zap className="h-4 w-4 text-white" />
+                </div>
+                <h1 className="text-lg font-semibold">Anayas</h1>
+              </div>
             )}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -152,36 +168,41 @@ function App() {
               <div className="mb-6">
                 <div className="flex items-center justify-between px-3 py-2">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Collections</span>
-                  <button className="p-1 hover:bg-accent rounded">
+                  <button 
+                    className="p-1 hover:bg-accent rounded"
+                    onClick={() => setCurrentPage('collections')}
+                  >
                     <FolderPlus className="h-3 w-3" />
                   </button>
                 </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 px-3 py-1 rounded hover:bg-accent cursor-pointer">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span className="text-sm">My Collection</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1 rounded hover:bg-accent cursor-pointer">
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <span className="text-sm">API Tests</span>
-                  </div>
-                </div>
-                
-                {/* Requests in Collections */}
-                <div className="mt-2 ml-4 space-y-1">
-                  <div className="flex items-center gap-2 px-2 py-1 rounded hover:bg-accent cursor-pointer text-xs">
-                    <span className="text-muted-foreground">GET</span>
-                    <span>Get Users</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-1 rounded hover:bg-accent cursor-pointer text-xs">
-                    <span className="text-muted-foreground">POST</span>
-                    <span>Create User</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-1 rounded hover:bg-accent cursor-pointer text-xs">
-                    <span className="text-muted-foreground">PUT</span>
-                    <span>Update User</span>
-                  </div>
-                </div>
+                <CollectionHierarchy 
+                  onRequestSelect={async (request) => {
+                    setCurrentPage('home');
+                    // Load request data and set it as selected
+                    try {
+                      const requestData = await window.electronAPI.request.list(request.collection_id);
+                      const fullRequest = requestData.find((r: any) => r.id === request.id);
+                      if (fullRequest) {
+                        setSelectedRequest({
+                          id: fullRequest.id,
+                          name: fullRequest.name || '',
+                          method: fullRequest.method,
+                          url: fullRequest.url,
+                          headers: typeof fullRequest.headers === 'string' 
+                            ? JSON.parse(fullRequest.headers) 
+                            : (fullRequest.headers || {}),
+                          body: fullRequest.body || '',
+                          queryParams: [],
+                          auth: { type: 'none' },
+                          collection_id: fullRequest.collection_id,
+                          is_favorite: fullRequest.is_favorite
+                        });
+                      }
+                    } catch (e) {
+                      console.error('Failed to load request:', e);
+                    }
+                  }}
+                />
               </div>
             )}
             
@@ -213,14 +234,18 @@ function App() {
 
         {/* Main Content */}
         <div className="flex flex-1 flex-col">
-          {/* Top Bar */}
-          <div className="flex h-16 items-center justify-between border-b bg-card px-6">
-            <h2 className="text-xl font-semibold capitalize">{currentPage}</h2>
-            <EnvironmentSwitcher />
-          </div>
+          {/* Top Bar - Only show for non-home pages */}
+          {currentPage !== 'home' && (
+            <div className="flex h-12 items-center justify-between border-b bg-card px-4">
+              <h2 className="text-lg font-semibold capitalize">{currentPage}</h2>
+              <EnvironmentSwitcher />
+            </div>
+          )}
 
           {/* Page Content */}
-          <div className="flex-1 overflow-auto p-6">{renderPage()}</div>
+          <div className={`flex-1 overflow-auto ${currentPage === 'home' ? 'p-0' : 'p-4'}`}>
+            {renderPage()}
+          </div>
         </div>
       </div>
     </div>

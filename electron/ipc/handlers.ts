@@ -8,6 +8,9 @@ import {
   addCollection,
   updateCollection,
   deleteCollection,
+  addFolder,
+  updateFolder,
+  deleteFolder,
   addRequest,
   updateRequest,
   deleteRequest,
@@ -165,10 +168,47 @@ export function registerIpcHandlers() {
     return { success: true };
   });
 
-  // Request operations
-  ipcMain.handle('request:list', async (_, collectionId) => {
+  // Folder operations
+  ipcMain.handle('folder:list', async (_, collectionId) => {
     const db = getDatabase();
-    return db.requests.filter(r => !collectionId || r.collection_id === collectionId);
+    return db.folders.filter(f => !collectionId || f.collection_id === collectionId);
+  });
+
+  ipcMain.handle('folder:save', async (_, folder) => {
+    if (folder.id) {
+      updateFolder(folder.id, {
+        name: folder.name,
+        description: folder.description,
+        collection_id: folder.collectionId,
+      });
+      return { success: true, id: folder.id };
+    } else {
+      const id = addFolder({
+        name: folder.name,
+        description: folder.description,
+        collection_id: folder.collectionId,
+      });
+      return { success: true, id };
+    }
+  });
+
+  ipcMain.handle('folder:delete', async (_, id) => {
+    deleteFolder(id);
+    return { success: true };
+  });
+
+  // Request operations
+  ipcMain.handle('request:list', async (_, collectionId, folderId) => {
+    const db = getDatabase();
+    return db.requests.filter(r => {
+      if (folderId) {
+        return r.folder_id === folderId;
+      }
+      if (collectionId) {
+        return r.collection_id === collectionId && !r.folder_id;
+      }
+      return true;
+    });
   });
 
   ipcMain.handle('request:save', async (_, request) => {
@@ -181,6 +221,7 @@ export function registerIpcHandlers() {
         body: request.body || null,
         auth: request.auth || null,
         collection_id: request.collectionId,
+        folder_id: request.folderId || null,
         is_favorite: request.isFavorite ? 1 : 0,
       });
       return { success: true, id: request.id };
@@ -193,6 +234,7 @@ export function registerIpcHandlers() {
         body: request.body || null,
         auth: request.auth || null,
         collection_id: request.collectionId,
+        folder_id: request.folderId || null,
         is_favorite: request.isFavorite ? 1 : 0,
       });
       return { success: true, id };
@@ -214,22 +256,27 @@ export function registerIpcHandlers() {
       }
 
       // Execute HTTP request using apiService
-      const startTime = Date.now();
       const result = await apiService.getJson(options.url, options.headers);
-      const responseTime = Date.now() - startTime;
 
       // Save to history
       addRequestHistory({
         method: options.method || 'GET',
         url: options.url,
-        status: 200, // Assuming success for now
-        response_time: responseTime,
-        response_body: JSON.stringify(result),
+        status: result.status,
+        response_time: result.responseTime,
+        response_body: typeof result.body === 'string' ? result.body : JSON.stringify(result.body),
         headers: JSON.stringify(options.headers || {}),
         created_at: new Date().toISOString(),
       });
 
-      return { success: true, data: result, responseTime };
+      return { 
+        success: true, 
+        data: result.body, 
+        responseTime: result.responseTime,
+        status: result.status,
+        statusText: result.statusText,
+        headers: result.headers
+      };
     } catch (error: any) {
       return { success: false, error: error.message };
     }

@@ -4,7 +4,8 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, FileText } from 'lucide-react';
+import { BulkEditModal } from './ui/bulk-edit-modal';
 
 interface EnvironmentVariable {
   key: string;
@@ -30,6 +31,7 @@ export function EnvironmentVariable({
   const [newKey, setNewKey] = useState('');
   const [newValue, setNewValue] = useState('');
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false);
 
   const variableEntries = Object.entries(variables);
 
@@ -81,6 +83,10 @@ export function EnvironmentVariable({
     setIsAddingNew(false);
   };
 
+  const handleBulkEditVariables = (newVariables: Record<string, string>) => {
+    onVariablesChange(newVariables);
+  };
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -89,15 +95,25 @@ export function EnvironmentVariable({
             <CardTitle className="text-lg">{title}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">{description}</p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsAddingNew(true)}
-            disabled={isAddingNew}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Variable
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowBulkEditModal(true)}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Bulk Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAddingNew(true)}
+              disabled={isAddingNew}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Variable
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -234,6 +250,18 @@ export function EnvironmentVariable({
           </div>
         )}
       </CardContent>
+
+      {/* Bulk Edit Modal */}
+      <BulkEditModal
+        isOpen={showBulkEditModal}
+        onClose={() => setShowBulkEditModal(false)}
+        onSave={handleBulkEditVariables}
+        title="Bulk Edit Environment Variables"
+        description="Edit environment variables as JSON. Each key-value pair will become an environment variable."
+        initialData={variables}
+        dataType="envVars"
+        placeholder='{\n  "base_url": "https://api.example.com",\n  "api_key": "your-api-key"\n}'
+      />
     </Card>
   );
 }

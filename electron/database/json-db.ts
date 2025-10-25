@@ -5,6 +5,7 @@ import { app } from 'electron';
 interface Database {
   environments: any[];
   collections: any[];
+  folders: any[];
   requests: any[];
   request_history: any[];
   settings: Record<string, any>;
@@ -13,6 +14,7 @@ interface Database {
 let db: Database = {
   environments: [],
   collections: [],
+  folders: [],
   requests: [],
   request_history: [],
   settings: {},
@@ -36,11 +38,19 @@ export async function initDatabase(): Promise<void> {
     try {
       const data = fs.readFileSync(dbPath, 'utf-8');
       db = JSON.parse(data);
+      
+      // Migration: Add folders table if it doesn't exist
+      if (!db.folders) {
+        db.folders = [];
+        console.log('Migrated database: Added folders table');
+        saveDatabase();
+      }
     } catch (error) {
       console.error('Failed to load database, creating new one:', error);
       db = {
         environments: [],
         collections: [],
+        folders: [],
         requests: [],
         request_history: [],
         settings: {},
@@ -171,8 +181,32 @@ export function updateCollection(id: number, collection: any): void {
 
 export function deleteCollection(id: number): void {
   db.collections = db.collections.filter((c) => c.id !== id);
-  // Also delete all requests in this collection
+  // Also delete all folders and requests in this collection
+  db.folders = db.folders.filter((f) => f.collection_id !== id);
   db.requests = db.requests.filter((r) => r.collection_id !== id);
+  saveDatabase();
+}
+
+// Folder CRUD operations
+export function addFolder(folder: any): number {
+  const id = Date.now();
+  db.folders.push({ ...folder, id, created_at: new Date().toISOString() });
+  saveDatabase();
+  return id;
+}
+
+export function updateFolder(id: number, folder: any): void {
+  const index = db.folders.findIndex((f) => f.id === id);
+  if (index !== -1) {
+    db.folders[index] = { ...db.folders[index], ...folder, id };
+    saveDatabase();
+  }
+}
+
+export function deleteFolder(id: number): void {
+  db.folders = db.folders.filter((f) => f.id !== id);
+  // Also delete all requests in this folder
+  db.requests = db.requests.filter((r) => r.folder_id !== id);
   saveDatabase();
 }
 
