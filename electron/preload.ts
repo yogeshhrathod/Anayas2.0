@@ -1,0 +1,126 @@
+import { contextBridge, ipcRenderer } from 'electron';
+
+export interface Environment {
+  id?: number;
+  name: string;
+  displayName: string;
+  variables: Record<string, string>;
+  isDefault?: boolean;
+  lastUsed?: string;
+  createdAt?: string;
+}
+
+export interface Collection {
+  id?: number;
+  name: string;
+  description?: string;
+  variables: Record<string, string>;
+  isFavorite?: boolean;
+  lastUsed?: string;
+  createdAt?: string;
+}
+
+export interface Request {
+  id?: number;
+  name: string;
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
+  url: string;
+  headers: Record<string, string>;
+  body?: string | null;
+  auth?: any;
+  collectionId?: number;
+  isFavorite?: boolean;
+  lastUsed?: string;
+  createdAt?: string;
+}
+
+export interface RequestHistory {
+  id?: number;
+  method: string;
+  url: string;
+  status: number;
+  responseTime: number;
+  responseBody?: string;
+  headers?: string;
+  createdAt?: string;
+}
+
+export interface RequestOptions {
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
+  url: string;
+  headers?: Record<string, string>;
+  body?: string;
+  auth?: any;
+}
+
+const api = {
+  // Environment operations
+  env: {
+    list: () => ipcRenderer.invoke('env:list'),
+    save: (env: Environment) => ipcRenderer.invoke('env:save', env),
+    delete: (id: number) => ipcRenderer.invoke('env:delete', id),
+    test: (env: Environment) => ipcRenderer.invoke('env:test', env),
+    import: (filePath: string) => ipcRenderer.invoke('env:import', filePath),
+    getCurrent: () => ipcRenderer.invoke('env:getCurrent'),
+    setCurrent: (id: number) => ipcRenderer.invoke('env:setCurrent', id),
+  },
+
+  // Collection operations
+  collection: {
+    list: () => ipcRenderer.invoke('collection:list'),
+    save: (collection: Collection) => ipcRenderer.invoke('collection:save', collection),
+    delete: (id: number) => ipcRenderer.invoke('collection:delete', id),
+    toggleFavorite: (id: number) => ipcRenderer.invoke('collection:toggleFavorite', id),
+  },
+
+  // Request operations
+  request: {
+    list: (collectionId?: number) => ipcRenderer.invoke('request:list', collectionId),
+    save: (request: Request) => ipcRenderer.invoke('request:save', request),
+    delete: (id: number) => ipcRenderer.invoke('request:delete', id),
+    send: (options: RequestOptions) => ipcRenderer.invoke('request:send', options),
+    history: (limit?: number) => ipcRenderer.invoke('request:history', limit),
+    deleteHistory: (id: number) => ipcRenderer.invoke('request:deleteHistory', id),
+  },
+
+  // Settings operations
+  settings: {
+    get: (key: string) => ipcRenderer.invoke('settings:get', key),
+    set: (key: string, value: any) => ipcRenderer.invoke('settings:set', key, value),
+    getAll: () => ipcRenderer.invoke('settings:getAll'),
+    reset: () => ipcRenderer.invoke('settings:reset'),
+  },
+
+  // File operations
+  file: {
+    selectFile: (filters?: any) => ipcRenderer.invoke('file:select', filters),
+    selectDirectory: () => ipcRenderer.invoke('file:selectDirectory'),
+    saveFile: (defaultPath: string, content: string) => ipcRenderer.invoke('file:save', defaultPath, content),
+    readFile: (filePath: string) => ipcRenderer.invoke('file:read', filePath),
+    writeFile: (filePath: string, content: string) => ipcRenderer.invoke('file:write', filePath, content),
+  },
+
+  // App operations
+  app: {
+    getVersion: () => ipcRenderer.invoke('app:getVersion'),
+    getPath: (name: string) => ipcRenderer.invoke('app:getPath', name),
+  },
+
+  // Window controls
+  window: {
+    minimize: () => ipcRenderer.invoke('window:minimize'),
+    maximize: () => ipcRenderer.invoke('window:maximize'),
+    close: () => ipcRenderer.invoke('window:close'),
+    isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
+  },
+
+  // Notification operations
+  notification: {
+    show: (options: { title: string; body: string; filePath?: string }) => 
+      ipcRenderer.invoke('notification:show', options),
+  },
+};
+
+contextBridge.exposeInMainWorld('electronAPI', api);
+
+export type ElectronAPI = typeof api;

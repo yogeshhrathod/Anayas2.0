@@ -1,0 +1,45 @@
+# Cursor Rules
+
+## Project Summary
+- Desktop application built with Electron 28, Vite 5, React 18, and TypeScript for Qualys report automation.@package.json#1-61 @vite.config.ts#1-47 @README.md#1-128
+- Electron main process initializes a JSON-backed datastore, registers IPC handlers, and loads the renderer. Node integration is disabled; preload exposes a typed bridge via `contextBridge`.@electron/main.ts#1-79 @electron/database/json-db.ts#27-65 @electron/ipc/index.ts#1-1 @electron/preload.ts#1-150
+- Renderer is a React/Tailwind UI living under `src/` with Zustand for state management and Monaco-based editors for JSON templates.@src/main.tsx#1-10 @README.md#92-128
+
+## Development Workflow
+1. Install dependencies: `npm install`.
+2. Run desktop dev mode: `npm run electron:dev` (starts Vite + Electron with hot reload).@package.json#8-17 @README.md#63-88
+3. Type-check: `npm run type-check` before shipping changes.@package.json#8-18
+4. Production build: `npm run build` (or platform-specific `build:mac|win|linux`).@package.json#8-18 @README.md#78-90
+
+## Coding Guidelines
+- Keep TypeScript strictness; prefer typed APIs in preload and IPC layers. Extend interfaces in `electron/preload.ts` when exposing new functionality.@electron/preload.ts#1-150
+- All renderer-to-main communication must go through `window.electronAPI` helpers created in preload. Do **not** enable Node integration or access `ipcRenderer` directly from React components.@electron/preload.ts#61-150
+- Register IPC handlers in `electron/ipc/handlers.ts` and export updates via `electron/ipc/index.ts`. Ensure handlers validate inputs and surface errors with descriptive logs.@electron/ipc/handlers.ts#22-31 @electron/ipc/index.ts#1-1 @electron/services/logger.ts#1-47
+- Use the Winston logger for background services; avoid `console.log` in production paths. Configure module-specific loggers via `createLogger` helper.@electron/services/logger.ts#1-47
+- Persist application state through the JSON DB helpers in `electron/database`. Add schema migrations or default seeding within `initDatabase` when required.@electron/database/json-db.ts#27-65
+- Maintain strict separation between UI state (Zustand) and IPC contracts. Update shared types under `src/types/` when introducing new data structures.@README.md#92-128
+
+## UI Conventions
+- TailwindCSS governs styling with shadcn/ui primitives; respect existing utility classes and component patterns.
+- Place shared UI pieces under `src/components/` and domain screens under `src/pages/`.
+- Favor composition and hooks aligned with current store setup in `src/store/useStore.ts`.
+
+## Feature Implementation Checklist
+1. Define or update IPC handlers for new capabilities in `electron/ipc/handlers.ts` and expose them through preload APIs.@electron/ipc/handlers.ts#22-31 @electron/preload.ts#61-150
+2. Wire renderer calls to `window.electronAPI` methods; keep contracts typed in both preload and React code.
+3. Persist data through database helpers; add migrations/defaults in `initDatabase` as needed.@electron/database/json-db.ts#27-65
+4. Log important lifecycle events and errors using Winston logger instances.@electron/services/logger.ts#1-47
+5. Validate behavior in development (`npm run electron:dev`) and ensure type checks pass.
+
+## Packaging & Distribution
+- `electron-builder` outputs installers to `release/` with icons from `build/icons/`. Update branding before distribution.@package.json#63-95
+- Keep `main` entry pointing to `dist-electron/main.js`; verify build emits both `dist/` (renderer) and `dist-electron/` (main/preload).@package.json#1-6 @vite.config.ts#1-47
+
+## Operational Notes
+- Logs live under the Electron user data path inside a rotating `logs/` directory; consult `error.log` for production issues.@electron/services/logger.ts#6-35 @README.md#211-223
+- Database defaults (timezone, formats, polling) are seeded on first run—review these when cloning the project to new environments.@electron/database/json-db.ts#51-63 @README.md#196-210
+
+## PR & Review Expectations
+- Ensure new functionality includes IPC-to-renderer wiring, data persistence, and UI updates where applicable.
+- Provide reproducible steps, reference relevant scripts, and attach log excerpts if bug fixes are involved.
+- Run `npm run type-check` and applicable tests (add tests if introducing logic-heavy modules).

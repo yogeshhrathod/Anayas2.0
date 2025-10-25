@@ -1,0 +1,22 @@
+// Export all functions from json-db
+export {
+  getDatabase,
+  initDatabase,
+  closeDatabase,
+  saveDatabase,
+  addEnvironment,
+  updateEnvironment,
+  deleteEnvironment,
+  addCollection,
+  updateCollection,
+  deleteCollection,
+  addRequest,
+  updateRequest,
+  deleteRequest,
+  addRequestHistory,
+  deleteRequestHistory,
+  setSetting,
+  getSetting,
+  getAllSettings,
+  resetSettings,
+} from './json-db';
