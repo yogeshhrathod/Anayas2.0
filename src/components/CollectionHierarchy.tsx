@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { 
   DropdownMenu,
@@ -56,7 +57,7 @@ interface CollectionHierarchyProps {
 }
 
 export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProps) {
-  const { collections, setCollections, expandedCollections, setExpandedCollections, setCurrentPage, setSelectedRequest, setSelectedCollectionForNewRequest } = useStore();
+  const { collections, setCollections, expandedCollections, setExpandedCollections, setCurrentPage, setSelectedRequest, setSelectedCollectionForNewRequest, sidebarRefreshTrigger } = useStore();
   const { success, error } = useToast();
   const [requests, setRequests] = useState<Request[]>([]);
   const [folders, setFolders] = useState<any[]>([]);
@@ -64,6 +65,10 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
   const [dragOverItem, setDragOverItem] = useState<{ type: 'collection' | 'request' | 'folder'; id: number } | null>(null);
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   const [folderCollectionId, setFolderCollectionId] = useState<number | null>(null);
+  
+  // Inline editing state
+  const [editingRequestId, setEditingRequestId] = useState<number | null>(null);
+  const [tempRequestName, setTempRequestName] = useState('');
 
   const loadRequests = async () => {
     try {
@@ -87,6 +92,13 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     loadRequests();
     loadFolders();
   }, []);
+
+  // Refresh when sidebar refresh trigger changes
+  useEffect(() => {
+    if (sidebarRefreshTrigger > 0) {
+      loadRequests();
+    }
+  }, [sidebarRefreshTrigger]);
 
   const toggleCollection = (collectionId: number) => {
     const newExpanded = new Set(expandedCollections);
@@ -345,6 +357,67 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     input.click();
   };
 
+  // Inline editing functions for requests
+  const handleRequestNameDoubleClick = (request: Request) => {
+    setEditingRequestId(request.id);
+    setTempRequestName(request.name);
+  };
+
+  const handleRequestNameSave = async (request: Request) => {
+    if (!tempRequestName.trim()) {
+      setTempRequestName(request.name);
+      setEditingRequestId(null);
+      return;
+    }
+
+    if (tempRequestName.trim() === request.name) {
+      setEditingRequestId(null);
+      return;
+    }
+
+    try {
+      await window.electronAPI.request.save({
+        id: request.id,
+        name: tempRequestName.trim(),
+        method: request.method,
+        url: request.url,
+        headers: request.headers || {},
+        body: request.body || '',
+        queryParams: request.queryParams || [],
+        auth: request.auth || { type: 'none' },
+        collectionId: request.collection_id,
+        folderId: request.folder_id,
+        isFavorite: request.is_favorite === 1,
+      });
+      
+      // Update local state
+      setRequests(requests.map(r => 
+        r.id === request.id ? { ...r, name: tempRequestName.trim() } : r
+      ));
+      
+      success('Request updated', 'Request name has been updated');
+    } catch (e: any) {
+      console.error('Failed to update request name:', e);
+      error('Update failed', 'Failed to update request name');
+      setTempRequestName(request.name);
+    }
+    
+    setEditingRequestId(null);
+  };
+
+  const handleRequestNameCancel = (request: Request) => {
+    setTempRequestName(request.name);
+    setEditingRequestId(null);
+  };
+
+  const handleRequestNameKeyDown = (e: React.KeyboardEvent, request: Request) => {
+    if (e.key === 'Enter') {
+      handleRequestNameSave(request);
+    } else if (e.key === 'Escape') {
+      handleRequestNameCancel(request);
+    }
+  };
+
   const handleDuplicateCollection = async (collection: any) => {
     try {
       const duplicatedCollection = {
@@ -582,7 +655,28 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                                   {request.method}
                                 </Badge>
                                 
-                                <span className="text-xs truncate flex-1">{request.name || request.url}</span>
+                                {editingRequestId === request.id ? (
+                                  <Input
+                                    value={tempRequestName}
+                                    onChange={(e) => setTempRequestName(e.target.value)}
+                                    onBlur={() => handleRequestNameSave(request)}
+                                    onKeyDown={(e) => handleRequestNameKeyDown(e, request)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-xs h-6 flex-1"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span 
+                                    className="text-xs truncate flex-1 cursor-pointer px-1 py-0.5 rounded"
+                                    onDoubleClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRequestNameDoubleClick(request);
+                                    }}
+                                    title="Double-click to edit name"
+                                  >
+                                    {request.name || request.url}
+                                  </span>
+                                )}
                                 
                                 {request.is_favorite === 1 && (
                                   <Star className="h-3 w-3 text-yellow-500" />
@@ -650,7 +744,28 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                         {request.method}
                       </Badge>
                       
-                      <span className="text-xs truncate flex-1">{request.name || request.url}</span>
+                      {editingRequestId === request.id ? (
+                        <Input
+                          value={tempRequestName}
+                          onChange={(e) => setTempRequestName(e.target.value)}
+                          onBlur={() => handleRequestNameSave(request)}
+                          onKeyDown={(e) => handleRequestNameKeyDown(e, request)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs h-6 flex-1"
+                          autoFocus
+                        />
+                      ) : (
+                        <span 
+                          className="text-xs truncate flex-1 cursor-pointer px-1 py-0.5 rounded"
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            handleRequestNameDoubleClick(request);
+                          }}
+                          title="Double-click to edit name"
+                        >
+                          {request.name || request.url}
+                        </span>
+                      )}
                       
                       {request.is_favorite === 1 && (
                         <Star className="h-3 w-3 text-yellow-500" />

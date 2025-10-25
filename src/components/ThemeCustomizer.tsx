@@ -342,7 +342,7 @@ export function ThemeCustomizer() {
 
       {/* Theme Editor Modal */}
       {editingTheme && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
           <Card className="max-h-[80vh] w-full max-w-2xl overflow-auto">
             <CardHeader>
               <CardTitle>Edit Theme: {editingTheme.name}</CardTitle>

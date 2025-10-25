@@ -253,6 +253,24 @@ export function Settings() {
                 Verify SSL certificates
               </Label>
             </div>
+
+            <div className="flex items-center space-x-2 pt-8">
+              <input
+                type="checkbox"
+                id="autoSaveRequests"
+                checked={localSettings.autoSaveRequests || false}
+                onChange={(e) => updateSetting('autoSaveRequests', e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <Label htmlFor="autoSaveRequests" className="cursor-pointer">
+                Auto-save requests
+              </Label>
+            </div>
+          </div>
+          
+          {/* Auto-save description */}
+          <div className="text-xs text-muted-foreground">
+            When enabled, request changes will be automatically saved every few seconds while editing
           </div>
         </CardContent>
       </Card>

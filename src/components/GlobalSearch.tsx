@@ -274,7 +274,7 @@ export function GlobalSearch() {
 
       {/* Search Results */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-xl z-[9999] max-h-96 overflow-y-auto">
           {results.length > 0 ? (
             <div className="p-2">
               {results.map((result, index) => {

@@ -113,6 +113,14 @@ interface AppState {
   currentPage: 'home' | 'collections' | 'environments' | 'history' | 'logs' | 'settings';
   setCurrentPage: (page: 'home' | 'collections' | 'environments' | 'history' | 'logs' | 'settings') => void;
   
+  // Sidebar refresh trigger
+  sidebarRefreshTrigger: number;
+  triggerSidebarRefresh: () => void;
+  
+  // Sidebar width state
+  sidebarWidth: number;
+  setSidebarWidth: (width: number) => void;
+  
   // Legacy theme support (for backward compatibility)
   theme: 'light' | 'dark' | 'system';
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
@@ -176,6 +184,16 @@ export const useStore = create<AppState>()(
       currentPage: 'home',
       setCurrentPage: (currentPage) => set({ currentPage }),
 
+      // Sidebar refresh trigger
+      sidebarRefreshTrigger: 0,
+      triggerSidebarRefresh: () => set((state) => ({ 
+        sidebarRefreshTrigger: state.sidebarRefreshTrigger + 1 
+      })),
+
+      // Sidebar width state
+      sidebarWidth: 256, // Default width (w-64 = 256px)
+      setSidebarWidth: (sidebarWidth) => set({ sidebarWidth }),
+
       // Legacy theme support (for backward compatibility)
       theme: 'system',
       setTheme: (theme) => set({ theme, themeMode: theme }),
@@ -188,6 +206,7 @@ export const useStore = create<AppState>()(
         themeMode: state.themeMode,
         currentThemeId: state.currentThemeId,
         customThemes: state.customThemes,
+        sidebarWidth: state.sidebarWidth,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

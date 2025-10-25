@@ -35,6 +35,7 @@ export interface Request {
   url: string;
   headers: Record<string, string>;
   body?: string | null;
+  queryParams?: Array<{ key: string; value: string; enabled: boolean }>;
   auth?: any;
   collectionId?: number;
   folderId?: number;

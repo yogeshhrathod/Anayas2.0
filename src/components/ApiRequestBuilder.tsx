@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -19,13 +19,16 @@ import {
   Plus,
   Bookmark,
   Trash2,
-  FileText
+  FileText,
+  Check
 } from 'lucide-react';
 import { useToast } from './ui/use-toast';
 import { MonacoEditor } from './ui/monaco-editor';
 import { KeyValueEditor } from './ui/key-value-editor';
 import { HeadersKeyValueEditor } from './ui/headers-key-value-editor';
 import { ViewToggleButton } from './ui/view-toggle-button';
+import { SaveRequestDialog } from './ui/save-request-dialog';
+import { KEYMAP, createKeymapHandler, getShortcutDisplay } from '../lib/keymap';
 
 interface RequestData {
   id?: number;
@@ -80,8 +83,9 @@ interface RequestPreset {
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const;
 
 export function ApiRequestBuilder() {
-  const { selectedRequest } = useStore();
+  const { selectedRequest, selectedCollectionForNewRequest, settings, triggerSidebarRefresh, setSelectedRequest } = useStore();
   const { success, error } = useToast();
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const [requestData, setRequestData] = useState<RequestData>({
     name: '',
@@ -99,6 +103,15 @@ export function ApiRequestBuilder() {
     folderId: undefined,
     isFavorite: false,
   });
+  
+  // Save dialog state
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  
+  // Inline name editing state
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState('');
   
   const [response, setResponse] = useState<ResponseData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -135,8 +148,103 @@ export function ApiRequestBuilder() {
         folderId: selectedRequest.folder_id,
         isFavorite: Boolean(selectedRequest.is_favorite),
       });
+      setIsSaved(true);
+      setLastSavedAt(new Date());
+    } else if (selectedCollectionForNewRequest) {
+      // Clear form for new request with pre-selected collection
+      setRequestData({
+        name: '',
+        method: 'GET',
+        url: '',
+        headers: { 'Content-Type': 'application/json' },
+        body: '',
+        queryParams: [],
+        auth: { type: 'none' },
+        collectionId: selectedCollectionForNewRequest,
+        folderId: undefined,
+        isFavorite: false,
+      });
+      setIsSaved(false);
+      setLastSavedAt(null);
     }
-  }, [selectedRequest]);
+  }, [selectedRequest, selectedCollectionForNewRequest]);
+
+  // Auto-save functionality
+  const autoSave = useCallback(async () => {
+    if (!settings.autoSaveRequests || !requestData.name.trim() || !requestData.collectionId) {
+      return;
+    }
+
+    try {
+      await window.electronAPI.request.save({
+        id: requestData.id,
+        name: requestData.name,
+        method: requestData.method,
+        url: requestData.url,
+        headers: requestData.headers,
+        body: requestData.body,
+        queryParams: requestData.queryParams,
+        auth: requestData.auth,
+        collectionId: requestData.collectionId,
+        folderId: requestData.folderId,
+        isFavorite: requestData.isFavorite,
+      });
+      
+      setIsSaved(true);
+      setLastSavedAt(new Date());
+    } catch (e: any) {
+      console.error('Auto-save failed:', e);
+    }
+  }, [requestData, settings.autoSaveRequests]);
+
+  // Debounced auto-save
+  useEffect(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    if (settings.autoSaveRequests && requestData.name.trim() && requestData.collectionId) {
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        autoSave();
+      }, 2000); // Auto-save after 2 seconds of inactivity
+    }
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [requestData, autoSave]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleSaveRequest = createKeymapHandler(KEYMAP.SAVE_REQUEST, () => {
+      handleSaveShortcut();
+    });
+
+    const handleSendRequest = createKeymapHandler(KEYMAP.SEND_REQUEST, () => {
+      sendRequest();
+    });
+
+    const handleFocusUrl = createKeymapHandler(KEYMAP.FOCUS_URL, () => {
+      // Focus URL input - we'll need to add a ref for this
+      const urlInput = document.querySelector('input[placeholder*="URL"]') as HTMLInputElement;
+      if (urlInput) {
+        urlInput.focus();
+        urlInput.select();
+      }
+    });
+
+    document.addEventListener('keydown', handleSaveRequest);
+    document.addEventListener('keydown', handleSendRequest);
+    document.addEventListener('keydown', handleFocusUrl);
+
+    return () => {
+      document.removeEventListener('keydown', handleSaveRequest);
+      document.removeEventListener('keydown', handleSendRequest);
+      document.removeEventListener('keydown', handleFocusUrl);
+    };
+  }, [requestData]);
 
   const toggleParamsView = () => {
     if (paramsViewMode === 'table') {
@@ -287,6 +395,170 @@ export function ApiRequestBuilder() {
     }
   };
 
+  const handleSaveRequestClick = () => {
+    if (requestData.id) {
+      // Update existing request
+      handleUpdateRequest();
+    } else {
+      // Show save dialog for new request
+      setShowSaveDialog(true);
+    }
+  };
+
+  // Keyboard shortcut handler for save
+  const handleSaveShortcut = () => {
+    handleSaveRequestClick();
+  };
+
+  const handleUpdateRequest = async () => {
+    if (!requestData.name.trim()) {
+      error('Validation failed', 'Request name is required');
+      return;
+    }
+
+    try {
+      await window.electronAPI.request.save({
+        id: requestData.id,
+        name: requestData.name,
+        method: requestData.method,
+        url: requestData.url,
+        headers: requestData.headers,
+        body: requestData.body,
+        queryParams: requestData.queryParams,
+        auth: requestData.auth,
+        collectionId: requestData.collectionId,
+        folderId: requestData.folderId,
+        isFavorite: requestData.isFavorite,
+      });
+      
+      setIsSaved(true);
+      setLastSavedAt(new Date());
+      success('Request saved', `${requestData.name} has been updated`);
+    } catch (e: any) {
+      console.error('Failed to save request:', e);
+      error('Save failed', 'Failed to save request');
+    }
+  };
+
+  const handleSaveDialogSave = async (data: { name: string; collectionId: number; folderId?: number }) => {
+    try {
+      const result = await window.electronAPI.request.save({
+        name: data.name,
+        method: requestData.method,
+        url: requestData.url,
+        headers: requestData.headers,
+        body: requestData.body,
+        queryParams: requestData.queryParams,
+        auth: requestData.auth,
+        collectionId: data.collectionId,
+        folderId: data.folderId,
+        isFavorite: requestData.isFavorite,
+      });
+      
+      // Update the request data with the new ID and collection info
+      setRequestData({
+        ...requestData,
+        id: result.id,
+        name: data.name,
+        collectionId: data.collectionId,
+        folderId: data.folderId,
+      });
+      
+      setIsSaved(true);
+      setLastSavedAt(new Date());
+      success('Request saved', `${data.name} has been saved to collection`);
+      
+      // Trigger sidebar refresh
+      triggerSidebarRefresh();
+      
+      // Update the selected request in store
+      if (selectedRequest) {
+        setSelectedRequest({
+          ...selectedRequest,
+          id: result.id,
+          name: data.name,
+          collection_id: data.collectionId,
+          folder_id: data.folderId,
+        });
+      }
+    } catch (e: any) {
+      console.error('Failed to save request:', e);
+      error('Save failed', 'Failed to save request');
+    }
+  };
+
+  // Inline name editing functions
+  const handleNameDoubleClick = () => {
+    if (!requestData.id) return; // Only allow editing for saved requests
+    setIsEditingName(true);
+    setTempName(requestData.name);
+  };
+
+  const handleNameSave = async () => {
+    if (!tempName.trim()) {
+      setTempName(requestData.name);
+      setIsEditingName(false);
+      return;
+    }
+
+    if (tempName.trim() === requestData.name) {
+      setIsEditingName(false);
+      return;
+    }
+
+    try {
+      await window.electronAPI.request.save({
+        id: requestData.id,
+        name: tempName.trim(),
+        method: requestData.method,
+        url: requestData.url,
+        headers: requestData.headers,
+        body: requestData.body,
+        queryParams: requestData.queryParams,
+        auth: requestData.auth,
+        collectionId: requestData.collectionId,
+        folderId: requestData.folderId,
+        isFavorite: requestData.isFavorite,
+      });
+      
+      setRequestData({ ...requestData, name: tempName.trim() });
+      setIsSaved(true);
+      setLastSavedAt(new Date());
+      
+      // Trigger sidebar refresh
+      triggerSidebarRefresh();
+      
+      // Update sidebar immediately
+      if (selectedRequest) {
+        setSelectedRequest({
+          ...selectedRequest,
+          name: tempName.trim(),
+        });
+      }
+      
+      success('Request updated', 'Request name has been updated');
+    } catch (e: any) {
+      console.error('Failed to update request name:', e);
+      error('Update failed', 'Failed to update request name');
+      setTempName(requestData.name);
+    }
+    
+    setIsEditingName(false);
+  };
+
+  const handleNameCancel = () => {
+    setTempName(requestData.name);
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleNameSave();
+    } else if (e.key === 'Escape') {
+      handleNameCancel();
+    }
+  };
+
   const copyResponse = () => {
     if (response) {
       navigator.clipboard.writeText(JSON.stringify(response.data, null, 2));
@@ -312,8 +584,53 @@ export function ApiRequestBuilder() {
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Request Builder Header */}
-      <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
+      <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm relative z-0">
         <div className="p-4">
+          {/* Request Name Row */}
+          <div className="flex items-center gap-4 mb-2">
+            <div className="flex-1">
+              {isEditingName ? (
+                <Input
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  onBlur={handleNameSave}
+                  onKeyDown={handleNameKeyDown}
+                  placeholder="Enter request name"
+                  className="text-sm font-medium h-8 w-auto min-w-0 max-w-xs"
+                  autoFocus
+                />
+              ) : (
+                <div
+                  className={`text-sm font-medium py-1 px-2 rounded border border-transparent hover:border-border cursor-pointer transition-colors inline-block ${
+                    requestData.id ? 'hover:bg-muted/30' : ''
+                  } ${!requestData.name ? 'text-muted-foreground' : ''}`}
+                  onDoubleClick={handleNameDoubleClick}
+                  title={requestData.id ? "Double-click to edit name" : "Save request first to enable name editing"}
+                >
+                  {requestData.name || 'Untitled Request'}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Save Status Indicator */}
+              {isSaved && lastSavedAt && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center">
+                        <Check className="h-4 w-4 text-green-500" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Saved at {lastSavedAt.toLocaleTimeString()}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+          </div>
+          
+          {/* Method and URL Row */}
           <div className="flex items-center gap-4">
             {/* Method Selector */}
             <Select value={requestData.method} onValueChange={(value) => setRequestData({ ...requestData, method: value as RequestData['method'] })}>
@@ -343,13 +660,18 @@ export function ApiRequestBuilder() {
               <Input
                 value={requestData.url}
                 onChange={(e) => setRequestData({ ...requestData, url: e.target.value })}
-                placeholder="Enter request URL (e.g., https://api.example.com/users)"
-                className="font-mono text-sm"
+                placeholder="Enter request URL"
+                className="font-mono text-xs"
+                title={`Focus URL (${getShortcutDisplay(KEYMAP.FOCUS_URL)})`}
               />
             </div>
 
             {/* Send Button */}
-            <Button onClick={sendRequest} disabled={isLoading || !requestData.url.trim()}>
+            <Button 
+              onClick={sendRequest} 
+              disabled={isLoading || !requestData.url.trim()}
+              title={`Send Request (${getShortcutDisplay(KEYMAP.SEND_REQUEST)})`}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -1051,7 +1373,7 @@ export function ApiRequestBuilder() {
 
       {/* Create Preset Dialog */}
       {showCreatePresetDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <Card className="w-96">
             <CardHeader>
               <CardTitle>Create Request Preset</CardTitle>
@@ -1090,6 +1412,16 @@ export function ApiRequestBuilder() {
           </Card>
         </div>
       )}
+      
+      {/* Save Request Dialog */}
+      <SaveRequestDialog
+        open={showSaveDialog}
+        onOpenChange={setShowSaveDialog}
+        onSave={handleSaveDialogSave}
+        currentRequestName={requestData.name}
+        currentCollectionId={requestData.collectionId}
+        currentFolderId={requestData.folderId}
+      />
     </div>
   );
 }

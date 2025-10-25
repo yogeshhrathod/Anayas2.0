@@ -32,18 +32,11 @@ export function TitleBar() {
   return (
     <div
       className={cn(
-        "flex h-12 items-center border-b bg-card/30 backdrop-blur-sm glass select-none",
+        "flex h-12 items-center border-b bg-card/30 backdrop-blur-sm glass select-none relative z-0",
         isMac ? "pl-20 pr-4" : "px-4"
       )}
       style={{ WebkitAppRegion: "drag" } as any}
     >
-      {/* Title */}
-      <div className="flex items-center gap-2">
-        <span className="text-lg font-semibold text-foreground">
-          Anayas
-        </span>
-      </div>
-
       {/* Centered Search */}
       <div className="flex-1 flex justify-center">
         <div style={{ WebkitAppRegion: "no-drag" } as any}>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useStore } from "./store/useStore";
 import { EnvironmentSwitcher } from "./components/EnvironmentSwitcher";
 import { TitleBar } from "./components/TitleBar";
@@ -11,6 +11,8 @@ import { History } from "./pages/History";
 import { Settings } from "./pages/Settings";
 import { Logs } from "./pages/Logs";
 import { CollectionHierarchy } from "./components/CollectionHierarchy";
+import { ResizeHandle } from "./components/ui/resize-handle";
+import { KEYMAP, registerGlobalShortcuts } from "./lib/keymap";
 import {
   Menu,
   Home,
@@ -19,7 +21,6 @@ import {
   Settings as SettingsIcon,
   ScrollText,
   FolderPlus,
-  Zap,
 } from "lucide-react";
 import { cn } from "./lib/utils";
 
@@ -33,6 +34,7 @@ type Page =
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isResizing, setIsResizing] = useState(false);
   const {
     currentPage,
     setCurrentPage,
@@ -45,6 +47,8 @@ function App() {
     setThemeMode,
     setCurrentThemeId,
     setCustomThemes,
+    sidebarWidth,
+    setSidebarWidth,
   } = useStore();
 
   useEffect(() => {
@@ -52,6 +56,68 @@ function App() {
     loadData().catch((error) => {
       console.error('[App] Critical error during initialization:', error);
     });
+  }, []);
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const cleanup = registerGlobalShortcuts({
+      [KEYMAP.GLOBAL_SEARCH.action]: () => {
+        // Global search is handled by GlobalSearch component
+        const searchInput = document.querySelector('[data-global-search]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      },
+      [KEYMAP.NEW_REQUEST.action]: () => {
+        setSelectedRequest(null);
+        setCurrentPage('collections');
+      },
+      [KEYMAP.TOGGLE_SIDEBAR.action]: () => {
+        if (sidebarOpen) {
+          setSidebarOpen(false);
+        } else {
+          setSidebarOpen(true);
+          // Restore the saved width when reopening
+          setSidebarWidth(Math.max(160, sidebarWidth));
+        }
+      }
+    });
+
+    return cleanup;
+  }, [setSelectedRequest, setCurrentPage, sidebarOpen, sidebarWidth, setSidebarWidth]);
+
+  // Handle sidebar resize
+  const handleSidebarResize = useCallback((deltaX: number) => {
+    console.log('Resize called with deltaX:', deltaX, 'current width:', sidebarWidth, 'sidebarOpen:', sidebarOpen);
+    
+    if (!sidebarOpen) {
+      // If sidebar is collapsed, dragging right should expand it
+      if (deltaX > 0) {
+        const newWidth = Math.max(160, Math.min(400, 160 + deltaX)); // Start from 160px minimum
+        console.log('Expanding from collapsed, new width:', newWidth);
+        setSidebarOpen(true);
+        setSidebarWidth(newWidth);
+      }
+    } else {
+      // If sidebar is open, normal resize behavior
+      const newWidth = Math.max(160, Math.min(400, sidebarWidth + deltaX));
+      console.log('Normal resize, new width:', newWidth);
+      
+      // If we hit the minimum width, collapse the sidebar
+      if (newWidth <= 160) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarWidth(newWidth);
+      }
+    }
+  }, [sidebarWidth, setSidebarWidth, sidebarOpen]);
+
+  const handleResizeStart = useCallback(() => {
+    setIsResizing(true);
+  }, []);
+
+  const handleResizeEnd = useCallback(() => {
+    setIsResizing(false);
   }, []);
 
   const loadData = async () => {
@@ -139,22 +205,23 @@ function App() {
         {/* Sidebar */}
         <div
           className={cn(
-            "flex flex-col border-r bg-card transition-all duration-300",
-            sidebarOpen ? "w-64" : "w-16"
+            "flex flex-col border-r bg-card",
+            !isResizing && "transition-all duration-300"
           )}
+          style={{ width: sidebarOpen ? `${sidebarWidth}px` : '64px' }}
         >
           {/* Header */}
-          <div className="flex h-16 items-center justify-between border-b px-4">
-            {sidebarOpen && (
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
-                  <Zap className="h-4 w-4 text-white" />
-                </div>
-                <h1 className="text-lg font-semibold">Anayas</h1>
-              </div>
-            )}
+          <div className="flex h-16 items-center justify-end border-b px-4">
             <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+              onClick={() => {
+                if (sidebarOpen) {
+                  setSidebarOpen(false);
+                } else {
+                  setSidebarOpen(true);
+                  // Restore the saved width when reopening
+                  setSidebarWidth(Math.max(160, sidebarWidth));
+                }
+              }}
               className="rounded-md p-2 hover:bg-accent"
             >
               <Menu className="h-5 w-5" />
@@ -231,6 +298,14 @@ function App() {
             </div>
           </nav>
         </div>
+
+        {/* Resize Handle - Always visible */}
+        <ResizeHandle 
+          onResize={handleSidebarResize}
+          onResizeStart={handleResizeStart}
+          onResizeEnd={handleResizeEnd}
+          className="h-full"
+        />
 
         {/* Main Content */}
         <div className="flex flex-1 flex-col">
