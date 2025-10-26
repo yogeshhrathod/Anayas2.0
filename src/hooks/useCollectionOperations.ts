@@ -25,6 +25,7 @@ import { Collection } from '../types/entities';
 import { CollectionFormData } from '../types/forms';
 import { useToastNotifications } from './useToastNotifications';
 import { useDebounce } from './useDebounce';
+import { useStore } from '../store/useStore';
 
 export function useCollectionOperations() {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -35,6 +36,9 @@ export function useCollectionOperations() {
   
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const { showSuccess, showError } = useToastNotifications();
+  
+  // Get global store functions for real-time updates
+  const { setCollections: setGlobalCollections, triggerSidebarRefresh } = useStore();
 
   // Load collections and requests
   const loadData = useCallback(async () => {
@@ -47,12 +51,15 @@ export function useCollectionOperations() {
       
       setCollections(collectionsData);
       setRequests(requestsData);
+      
+      // Also update global store for real-time sidebar updates
+      setGlobalCollections(collectionsData);
     } catch (error: any) {
       showError('Failed to load data', error.message);
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [showError, setGlobalCollections]);
 
   // Calculate request counts for each collection
   const getRequestCounts = useCallback(() => {
@@ -94,11 +101,13 @@ export function useCollectionOperations() {
         name: data.name,
         description: data.description,
         variables: data.variables,
-        is_favorite: data.is_favorite
+        isFavorite: data.isFavorite
       });
 
       if (result.success) {
         await loadData();
+        // Trigger sidebar refresh for real-time updates
+        triggerSidebarRefresh();
         showSuccess('Collection created', { description: `${data.name} has been created successfully` });
         return result;
       }
@@ -106,7 +115,7 @@ export function useCollectionOperations() {
       showError('Failed to create collection', error.message);
       throw error;
     }
-  }, [loadData, showSuccess, showError]);
+  }, [loadData, showSuccess, showError, triggerSidebarRefresh]);
 
   const updateCollection = useCallback(async (id: number, data: CollectionFormData) => {
     try {
@@ -115,11 +124,13 @@ export function useCollectionOperations() {
         name: data.name,
         description: data.description,
         variables: data.variables,
-        is_favorite: data.is_favorite
+        isFavorite: data.isFavorite
       });
 
       if (result.success) {
         await loadData();
+        // Trigger sidebar refresh for real-time updates
+        triggerSidebarRefresh();
         showSuccess('Collection updated', { description: `${data.name} has been updated successfully` });
         return result;
       }
@@ -127,42 +138,76 @@ export function useCollectionOperations() {
       showError('Failed to update collection', error.message);
       throw error;
     }
-  }, [loadData, showSuccess, showError]);
+  }, [loadData, showSuccess, showError, triggerSidebarRefresh]);
 
   const deleteCollection = useCallback(async (id: number) => {
     try {
       await window.electronAPI.collection.delete(id);
       await loadData();
+      // Trigger sidebar refresh for real-time updates
+      triggerSidebarRefresh();
       showSuccess('Collection deleted', { description: 'Collection has been deleted successfully' });
     } catch (error: any) {
       showError('Failed to delete collection', error.message);
       throw error;
     }
-  }, [loadData, showSuccess, showError]);
+  }, [loadData, showSuccess, showError, triggerSidebarRefresh]);
 
   const duplicateCollection = useCallback(async (collection: Collection) => {
     try {
-      const duplicatedData = {
+      // Create the duplicate collection
+      const result = await createCollection({
         name: `${collection.name} (Copy)`,
-        description: collection.description,
+        description: collection.description || '',
         variables: collection.variables,
-        is_favorite: false
-      };
+        isFavorite: false
+      });
 
-      await createCollection(duplicatedData);
+      if (!result.success) {
+        showError('Failed to create duplicate collection');
+        return;
+      }
+
+      const newCollectionId = result.id;
+
+      // Get all requests for the original collection
+      const originalRequests = await window.electronAPI.request.list(collection.id);
+      
+      // Duplicate all requests for the new collection
+      for (const request of originalRequests) {
+        const duplicateRequest = {
+          name: `${request.name} (Copy)`,
+          method: request.method,
+          url: request.url,
+          headers: request.headers,
+          body: request.body,
+          queryParams: request.queryParams || [],
+          auth: request.auth,
+          collectionId: newCollectionId,
+          folderId: undefined, // Reset folder association for simplicity
+          isFavorite: false
+        };
+        
+        await window.electronAPI.request.save(duplicateRequest);
+        
+        // Small delay to ensure unique IDs
+        await new Promise(resolve => setTimeout(resolve, 1));
+      }
+
+      showSuccess('Collection and requests duplicated successfully');
     } catch (error: any) {
       showError('Failed to duplicate collection', error.message);
       throw error;
     }
-  }, [createCollection, showError]);
+  }, [createCollection, showError, showSuccess]);
 
   const toggleFavorite = useCallback(async (collection: Collection) => {
     try {
       await updateCollection(collection.id!, {
         name: collection.name,
-        description: collection.description,
+        description: collection.description || '',
         variables: collection.variables,
-        is_favorite: !collection.is_favorite
+        isFavorite: !collection.isFavorite
       });
     } catch (error: any) {
       showError('Failed to update collection', error.message);
@@ -210,7 +255,7 @@ export function useCollectionOperations() {
               name: collection.name,
               description: collection.description,
               variables: collection.variables,
-              is_favorite: false
+              isFavorite: false
             });
           }
           showSuccess('Import successful', { description: `${importedCollections.length} collections imported successfully` });

@@ -83,7 +83,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
               onClick={onToggleFavorite}
               className="p-1 h-8 w-8"
             >
-              {collection.is_favorite ? (
+              {collection.isFavorite ? (
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
               ) : (
                 <StarOff className="h-4 w-4" />
@@ -104,7 +104,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
               </div>
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4" />
-                <span>Created {formatDate(collection.created_at)}</span>
+                <span>Created {formatDate(collection.createdAt)}</span>
               </div>
             </div>
           </div>

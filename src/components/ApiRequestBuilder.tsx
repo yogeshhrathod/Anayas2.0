@@ -27,7 +27,7 @@ import { ResponsePanel } from './request/ResponsePanel';
 import { RequestPresets } from './request/RequestPresets';
 
 export function ApiRequestBuilder() {
-  const { selectedRequest, triggerSidebarRefresh, setSelectedRequest } = useStore();
+  const { selectedRequest, triggerSidebarRefresh, setSelectedRequest, setFocusedContext } = useStore();
   
   // Use custom hooks for state and actions
   const requestState = useRequestState(selectedRequest);
@@ -108,8 +108,15 @@ export function ApiRequestBuilder() {
           ...selectedRequest,
           id: result.id,
           name: data.name,
-          collection_id: data.collectionId,
-          folder_id: data.folderId,
+          method: requestState.requestData.method,
+          url: requestState.requestData.url,
+          headers: requestState.requestData.headers,
+          body: requestState.requestData.body,
+          queryParams: requestState.requestData.queryParams,
+          auth: requestState.requestData.auth,
+          collectionId: data.collectionId,
+          folderId: data.folderId,
+          isFavorite: requestState.requestData.isFavorite ? 1 : 0,
         });
       }
     } catch (e: any) {
@@ -169,7 +176,11 @@ export function ApiRequestBuilder() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div 
+      className="flex flex-col h-full bg-background"
+      onFocus={() => setFocusedContext('editor')}
+      onBlur={() => setFocusedContext(null)}
+    >
       {/* Request Builder Header */}
       <RequestHeader
         requestData={requestState.requestData}

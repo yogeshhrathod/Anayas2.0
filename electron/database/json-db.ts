@@ -22,6 +22,18 @@ let db: Database = {
 
 let dbPath: string;
 
+// Helper function to generate unique IDs
+let lastId = Date.now();
+function generateUniqueId(): number {
+  const now = Date.now();
+  if (now <= lastId) {
+    lastId += 1;
+  } else {
+    lastId = now;
+  }
+  return lastId;
+}
+
 export function getDatabase(): Database {
   return db;
 }
@@ -78,12 +90,12 @@ export async function initDatabase(): Promise<void> {
     // Add sample environment
     addEnvironment({
       name: 'development',
-      display_name: 'Development',
+      displayName: 'Development',
       variables: {
         base_url: 'https://jsonplaceholder.typicode.com',
         api_key: 'dev-key-123'
       },
-      is_default: 1,
+      isDefault: 1,
     });
 
     // Add sample collection
@@ -94,7 +106,7 @@ export async function initDatabase(): Promise<void> {
         base_url: 'https://jsonplaceholder.typicode.com',
         user_id: '1'
       },
-      is_favorite: 1,
+      isFavorite: 1,
     });
 
     // Add sample request
@@ -106,8 +118,13 @@ export async function initDatabase(): Promise<void> {
         'Content-Type': 'application/json'
       },
       body: null,
-      collection_id: 1,
-      is_favorite: 0,
+      queryParams: [
+        { key: 'page', value: '1', enabled: true },
+        { key: 'limit', value: '10', enabled: true }
+      ],
+      auth: { type: 'none' },
+      collectionId: 1,
+      isFavorite: 0,
     });
 
     // Add sample request history
@@ -145,8 +162,8 @@ export function closeDatabase(): void {
 
 // Helper functions for CRUD operations
 export function addEnvironment(env: any): number {
-  const id = Date.now();
-  db.environments.push({ ...env, id, created_at: new Date().toISOString() });
+  const id = generateUniqueId();
+  db.environments.push({ ...env, id, createdAt: new Date().toISOString() });
   saveDatabase();
   return id;
 }
@@ -165,8 +182,8 @@ export function deleteEnvironment(id: number): void {
 }
 
 export function addCollection(collection: any): number {
-  const id = Date.now();
-  db.collections.push({ ...collection, id, created_at: new Date().toISOString() });
+  const id = generateUniqueId();
+  db.collections.push({ ...collection, id, createdAt: new Date().toISOString() });
   saveDatabase();
   return id;
 }
@@ -182,15 +199,15 @@ export function updateCollection(id: number, collection: any): void {
 export function deleteCollection(id: number): void {
   db.collections = db.collections.filter((c) => c.id !== id);
   // Also delete all folders and requests in this collection
-  db.folders = db.folders.filter((f) => f.collection_id !== id);
-  db.requests = db.requests.filter((r) => r.collection_id !== id);
+  db.folders = db.folders.filter((f) => f.collectionId !== id);
+  db.requests = db.requests.filter((r) => r.collectionId !== id);
   saveDatabase();
 }
 
 // Folder CRUD operations
 export function addFolder(folder: any): number {
-  const id = Date.now();
-  db.folders.push({ ...folder, id, created_at: new Date().toISOString() });
+  const id = generateUniqueId();
+  db.folders.push({ ...folder, id, createdAt: new Date().toISOString() });
   saveDatabase();
   return id;
 }
@@ -206,13 +223,71 @@ export function updateFolder(id: number, folder: any): void {
 export function deleteFolder(id: number): void {
   db.folders = db.folders.filter((f) => f.id !== id);
   // Also delete all requests in this folder
-  db.requests = db.requests.filter((r) => r.folder_id !== id);
+  db.requests = db.requests.filter((r) => r.folderId !== id);
   saveDatabase();
 }
 
 export function addRequest(request: any): number {
-  const id = Date.now();
-  db.requests.push({ ...request, id, created_at: new Date().toISOString() });
+  const id = generateUniqueId();
+  
+  // Generate order value - if not provided, use a large number to append to end
+  let order = request.order;
+  if (order === undefined) {
+    const db = getDatabase();
+    const maxOrder = Math.max(...db.requests.map(r => r.order || 0), 0);
+    order = maxOrder + 1000; // Add 1000 to ensure it goes to the end
+  }
+  
+  db.requests.push({ 
+    ...request, 
+    id, 
+    order,
+    queryParams: request.queryParams || [],
+    createdAt: new Date().toISOString() 
+  });
+  saveDatabase();
+  return id;
+}
+
+export function addRequestAfter(request: any, afterRequestId: number): number {
+  const id = generateUniqueId();
+  const db = getDatabase();
+  
+  // Find the request to insert after
+  const afterRequest = db.requests.find(r => r.id === afterRequestId);
+  if (!afterRequest) {
+    // Fallback to regular addRequest if afterRequest not found
+    return addRequest(request);
+  }
+  
+  // Calculate order value - insert between afterRequest and the next request
+  const afterOrder = afterRequest.order || 0;
+  const nextRequest = db.requests
+    .filter(r => r.collectionId === afterRequest.collectionId && r.folderId === afterRequest.folderId)
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .find(r => (r.order || 0) > afterOrder);
+  
+  let order;
+  if (nextRequest) {
+    // Insert between afterRequest and nextRequest
+    order = afterOrder + Math.floor(((nextRequest.order || 0) - afterOrder) / 2);
+    if (order === afterOrder) {
+      order = afterOrder + 1;
+    }
+  } else {
+    // Insert after afterRequest
+    order = afterOrder + 1000;
+  }
+  
+  const newRequest = { 
+    ...request, 
+    id, 
+    order,
+    queryParams: request.queryParams || [],
+    createdAt: new Date().toISOString() 
+  };
+  
+  db.requests.push(newRequest);
   saveDatabase();
   return id;
 }
@@ -220,7 +295,12 @@ export function addRequest(request: any): number {
 export function updateRequest(id: number, request: any): void {
   const index = db.requests.findIndex((r) => r.id === id);
   if (index !== -1) {
-    db.requests[index] = { ...db.requests[index], ...request, id };
+    db.requests[index] = { 
+      ...db.requests[index], 
+      ...request, 
+      id,
+      queryParams: request.queryParams || db.requests[index].queryParams || []
+    };
     saveDatabase();
   }
 }
@@ -231,8 +311,8 @@ export function deleteRequest(id: number): void {
 }
 
 export function addRequestHistory(history: any): number {
-  const id = Date.now();
-  db.request_history.push({ ...history, id, created_at: new Date().toISOString() });
+  const id = generateUniqueId();
+  db.request_history.push({ ...history, id, createdAt: new Date().toISOString() });
   saveDatabase();
   return id;
 }

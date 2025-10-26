@@ -19,38 +19,39 @@ export interface Request {
     apiKey?: string;
     apiKeyHeader?: string;
   };
-  collection_id?: number;
-  folder_id?: number;
-  is_favorite: number;
-  created_at?: string;
+  collectionId?: number;
+  folderId?: number;
+  isFavorite: number;
+  order?: number;
+  createdAt?: string;
 }
 
 export interface Environment {
   id?: number;
   name: string;
-  display_name: string;
+  displayName: string;
   variables: Record<string, string>;
-  is_default?: number;
-  last_used?: string;
-  created_at?: string;
+  isDefault?: number;
+  lastUsed?: string;
+  createdAt?: string;
 }
 
 export interface Collection {
   id?: number;
   name: string;
-  description: string;
+  description?: string;
   variables: Record<string, string>;
-  is_favorite: boolean;
-  created_at?: string;
-  last_used?: string;
+  isFavorite: number;
+  createdAt?: string;
+  lastUsed?: string;
 }
 
 export interface Folder {
   id?: number;
   name: string;
-  description: string;
-  collection_id: number;
-  created_at?: string;
+  description?: string;
+  collectionId: number;
+  createdAt?: string;
 }
 
 export interface RequestHistory {
@@ -61,7 +62,7 @@ export interface RequestHistory {
   responseTime: number;
   response_body?: string;
   headers?: string;
-  created_at?: string;
+  createdAt?: string;
 }
 
 export interface RequestPreset {

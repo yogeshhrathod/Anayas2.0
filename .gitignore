@@ -40,6 +40,12 @@ Thumbs.db
 *.db-shm
 *.db-wal
 
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+test-artifacts/
+
 # Misc
 *.pem
 .cache/

@@ -10,16 +10,16 @@ import { useToast } from './use-toast';
 interface Collection {
   id: number;
   name: string;
-  description: string;
+  description?: string;
   variables: Record<string, string>;
-  is_favorite: number;
+  isFavorite: number;
 }
 
 interface Folder {
   id: number;
   name: string;
-  description: string;
-  collection_id: number;
+  description?: string;
+  collectionId: number;
 }
 
 interface SaveRequestDialogProps {
@@ -127,7 +127,7 @@ export function SaveRequestDialog({
   };
 
   const getFoldersForCollection = (collectionId: number) => {
-    return folders.filter(folder => folder.collection_id === collectionId);
+    return folders.filter(folder => folder.collectionId === collectionId);
   };
 
   const handleCollectionChange = (collectionId: string) => {
@@ -146,6 +146,13 @@ export function SaveRequestDialog({
     setSelectedFolderId(id);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      handleSave();
+    }
+  };
+
   const handleNameChange = (value: string) => {
     setRequestName(value);
     // Clear name validation error when user starts typing
@@ -157,7 +164,10 @@ export function SaveRequestDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+      onKeyDown={handleKeyDown}
+    >
       <Card className="w-96 max-h-[80vh] overflow-y-auto">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -199,16 +209,20 @@ export function SaveRequestDialog({
                 <SelectValue placeholder="Select a collection" />
               </SelectTrigger>
               <SelectContent>
-                {collections.map((collection) => (
-                  <SelectItem key={collection.id} value={collection.id.toString()}>
-                    <div className="flex items-center gap-2">
-                      <span>{collection.name}</span>
-                      {collection.is_favorite === 1 && (
-                        <span className="text-yellow-500">★</span>
-                      )}
-                    </div>
-                  </SelectItem>
-                ))}
+                {collections.length === 0 ? (
+                  <div className="p-2 text-sm text-muted-foreground">No collections available</div>
+                ) : (
+                  collections.map((collection) => (
+                    <SelectItem key={collection.id} value={collection.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <span>{collection.name}</span>
+                        {collection.isFavorite === 1 && (
+                          <span className="text-yellow-500">★</span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             {validationErrors.collection && (

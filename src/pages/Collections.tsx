@@ -20,6 +20,7 @@ import { CollectionGrid } from '../components/collection/CollectionGrid';
 import { CollectionActions } from '../components/collection/CollectionActions';
 import { useCollectionOperations } from '../hooks/useCollectionOperations';
 import { useConfirmation } from '../hooks/useConfirmation';
+import { useStore } from '../store/useStore';
 import { Collection } from '../types/entities';
 import { CollectionFormData } from '../types/forms';
 
@@ -27,6 +28,8 @@ export function Collections() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const { setCurrentPage, setSelectedRequest } = useStore();
 
   const {
     collections,
@@ -48,6 +51,25 @@ export function Collections() {
   const handleNewCollection = () => {
     setEditingCollection(null);
     setIsEditing(true);
+  };
+
+  const handleNewRequest = () => {
+    // Create a new empty request and set it as selected
+    const newRequest = {
+      name: '',
+      method: 'GET' as const,
+      url: '',
+      headers: { 'Content-Type': 'application/json' },
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' as const },
+      collectionId: undefined,
+      folderId: undefined,
+      isFavorite: 0,
+    };
+    
+    setSelectedRequest(newRequest);
+    setCurrentPage('home');
   };
 
   const handleEditCollection = (collection: Collection) => {
@@ -134,6 +156,7 @@ export function Collections() {
           onSearch={setSearchTerm}
           searchValue={searchTerm}
           onNewCollection={handleNewCollection}
+          onNewRequest={handleNewRequest}
         />
 
         <CollectionGrid

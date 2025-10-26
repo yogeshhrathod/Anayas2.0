@@ -25,6 +25,7 @@ import { Badge } from '../ui/badge';
 import { Folder } from 'lucide-react';
 import { ActionMenu } from '../shared/ActionMenu';
 import { Folder as FolderType } from '../../types/entities';
+import { useStore } from '../../store/useStore';
 
 export interface FolderItemProps {
   folder: FolderType;
@@ -32,6 +33,7 @@ export interface FolderItemProps {
   onEdit: () => void;
   onDelete: () => void;
   onAddRequest: () => void;
+  onSelect?: () => void;
   dragProps?: {
     draggable: boolean;
     onDragStart: (e: React.DragEvent) => void;
@@ -47,19 +49,29 @@ export const FolderItem: React.FC<FolderItemProps> = ({
   onEdit,
   onDelete,
   onAddRequest,
+  onSelect,
   dragProps
 }) => {
+  const { selectedItem } = useStore();
+  const isSelected = selectedItem.type === 'folder' && selectedItem.id === folder.id;
   const actions = [
-    { label: 'Add Request', icon: <span>+</span>, onClick: onAddRequest },
+    { label: 'Add Request', onClick: onAddRequest, shortcut: '⌘R' },
     { type: 'separator' as const },
-    { label: 'Edit', icon: <span>✏️</span>, onClick: onEdit },
+    { label: 'Edit', onClick: onEdit, shortcut: '⌘E' },
     { type: 'separator' as const },
-    { label: 'Delete', icon: <span>🗑️</span>, onClick: onDelete, destructive: true },
+    { label: 'Delete', onClick: onDelete, destructive: true, shortcut: '⌘⌫' },
   ];
 
   return (
     <div
-      className="group flex items-center gap-2 p-2 pl-8 hover:bg-muted/50 rounded-md transition-colors"
+      className={`group flex items-center gap-2 p-2 pl-8 hover:bg-muted/50 rounded-md transition-colors cursor-pointer ${
+        isSelected ? 'bg-primary/10 border border-primary/20' : ''
+      }`}
+      onClick={() => {
+        if (onSelect) {
+          onSelect();
+        }
+      }}
       {...dragProps}
     >
       {/* Folder Icon */}

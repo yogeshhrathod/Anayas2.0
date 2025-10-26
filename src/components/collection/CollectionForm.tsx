@@ -59,7 +59,7 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({
     name: '',
     description: '',
     variables: {},
-    is_favorite: false
+    isFavorite: false
   });
 
   const { errors, validateField, validateForm, clearFieldError } = useFormValidation(validationSchema);
@@ -68,9 +68,9 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({
     if (collection) {
       setFormData({
         name: collection.name,
-        description: collection.description,
+        description: collection.description || '',
         variables: collection.variables || {},
-        is_favorite: collection.is_favorite || false
+        isFavorite: collection.isFavorite === 1 || false
       });
     }
   }, [collection]);

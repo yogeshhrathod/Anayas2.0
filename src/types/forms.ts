@@ -21,15 +21,15 @@ export interface CollectionFormData {
   name: string;
   description: string;
   variables: Record<string, string>;
-  is_favorite: boolean;
+  isFavorite: boolean;
 }
 
 export interface EnvironmentFormData {
   name: string;
-  displayName: string;
-  baseUrl: string;
+  display_name: string;
+  base_url: string;
   variables: Record<string, string>;
-  isDefault: boolean;
+  is_default: boolean;
 }
 
 export interface RequestFormData {

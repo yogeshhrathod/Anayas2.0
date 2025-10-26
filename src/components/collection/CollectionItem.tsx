@@ -3,7 +3,7 @@
  * 
  * Displays a collection with:
  * - Expand/collapse functionality
- * - Collection name and metadata
+ * - Collection name (no description shown)
  * - Action menu
  * - Drag and drop support
  * 
@@ -27,6 +27,7 @@ import { Badge } from '../ui/badge';
 import { ChevronRight, ChevronDown, FolderOpen } from 'lucide-react';
 import { ActionMenu } from '../shared/ActionMenu';
 import { Collection } from '../../types/entities';
+import { useStore } from '../../store/useStore';
 
 export interface CollectionItemProps {
   collection: Collection;
@@ -40,6 +41,7 @@ export interface CollectionItemProps {
   onDuplicate: () => void;
   onExport: () => void;
   onImport: () => void;
+  onSelect?: () => void;
   dragProps?: {
     draggable: boolean;
     onDragStart: (e: React.DragEvent) => void;
@@ -61,32 +63,42 @@ export const CollectionItem: React.FC<CollectionItemProps> = ({
   onDuplicate,
   onExport,
   onImport,
+  onSelect,
   dragProps
 }) => {
+  const { selectedItem } = useStore();
+  const isSelected = selectedItem.type === 'collection' && selectedItem.id === collection.id;
   const actions = [
-    { label: 'Add Request', icon: <span>+</span>, onClick: onAddRequest },
-    { label: 'Add Folder', icon: <span>📁</span>, onClick: onAddFolder },
+    { label: 'Add Request', onClick: onAddRequest, shortcut: '⌘R' },
+    { label: 'Add Folder', onClick: onAddFolder, shortcut: '⌘⇧N' },
     { type: 'separator' as const },
-    { label: 'Edit', icon: <span>✏️</span>, onClick: onEdit },
-    { label: 'Duplicate', icon: <span>📋</span>, onClick: onDuplicate },
+    { label: 'Edit', onClick: onEdit, shortcut: '⌘E' },
+    { label: 'Duplicate', onClick: onDuplicate, shortcut: '⌘D' },
     { type: 'separator' as const },
-    { label: 'Export', icon: <span>📤</span>, onClick: onExport },
-    { label: 'Import', icon: <span>📥</span>, onClick: onImport },
+    { label: 'Export', onClick: onExport, shortcut: '⌘⇧E' },
+    { label: 'Import', onClick: onImport, shortcut: '⌘⇧I' },
     { type: 'separator' as const },
-    { label: 'Delete', icon: <span>🗑️</span>, onClick: onDelete, destructive: true },
+    { label: 'Delete', onClick: onDelete, destructive: true, shortcut: '⌘⌫' },
   ];
 
   return (
     <div
-      className="group flex items-center gap-2 p-2 hover:bg-muted/50 rounded-md transition-colors"
+      className={`group flex items-center gap-2 p-2 hover:bg-muted/50 rounded-md transition-colors cursor-pointer ${
+        isSelected ? 'bg-primary/10 border border-primary/20' : ''
+      }`}
+      onClick={() => {
+        onToggle();
+        if (onSelect) {
+          onSelect();
+        }
+      }}
       {...dragProps}
     >
       {/* Expand/Collapse Button */}
       <Button
         variant="ghost"
         size="sm"
-        onClick={onToggle}
-        className="h-6 w-6 p-0"
+        className="h-6 w-6 p-0 pointer-events-none"
       >
         {isExpanded ? (
           <ChevronDown className="h-4 w-4" />
@@ -104,17 +116,12 @@ export const CollectionItem: React.FC<CollectionItemProps> = ({
           <span className="text-sm font-medium truncate">
             {collection.name}
           </span>
-          {collection.is_favorite && (
+          {collection.isFavorite === 1 && (
             <Badge variant="secondary" className="h-4 px-1 text-xs">
               ★
             </Badge>
           )}
         </div>
-        {collection.description && (
-          <p className="text-xs text-muted-foreground truncate">
-            {collection.description}
-          </p>
-        )}
       </div>
 
       {/* Request Count */}
@@ -125,10 +132,12 @@ export const CollectionItem: React.FC<CollectionItemProps> = ({
       )}
 
       {/* Action Menu */}
-      <ActionMenu
-        actions={actions}
-        size="sm"
-      />
+      <div onClick={(e) => e.stopPropagation()}>
+        <ActionMenu
+          actions={actions}
+          size="sm"
+        />
+      </div>
     </div>
   );
 };

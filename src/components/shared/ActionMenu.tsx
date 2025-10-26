@@ -3,18 +3,19 @@
  * 
  * Provides a consistent action menu with:
  * - Trigger button with icon
- * - Dropdown menu with actions
+ * - Dropdown menu with actions and keyboard shortcuts
  * - Consistent styling and behavior
  * - Support for destructive actions
+ * - shadcn-style layout with shortcuts on the right
  * 
  * @example
  * ```tsx
  * <ActionMenu
  *   actions={[
- *     { label: 'Edit', icon: <Edit className="h-4 w-4" />, onClick: handleEdit },
- *     { label: 'Duplicate', icon: <Copy className="h-4 w-4" />, onClick: handleDuplicate },
+ *     { label: 'Edit', onClick: handleEdit, shortcut: '⌘E' },
+ *     { label: 'Duplicate', onClick: handleDuplicate, shortcut: '⌘D' },
  *     { type: 'separator' },
- *     { label: 'Delete', icon: <Trash2 className="h-4 w-4" />, onClick: handleDelete, destructive: true }
+ *     { label: 'Delete', onClick: handleDelete, destructive: true, shortcut: '⌘⌫' }
  *   ]}
  * />
  * ```
@@ -38,6 +39,7 @@ export interface ActionMenuItem {
   onClick: () => void;
   destructive?: boolean;
   disabled?: boolean;
+  shortcut?: string;
 }
 
 export interface ActionMenuSeparator {
@@ -98,10 +100,12 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
                 menuAction.destructive && 'text-red-600 focus:text-red-600'
               )}
             >
-              {menuAction.icon && (
-                <span className="mr-2">{menuAction.icon}</span>
+              <span className="flex-1">{menuAction.label}</span>
+              {menuAction.shortcut && (
+                <span className="ml-auto text-xs tracking-widest text-muted-foreground">
+                  {menuAction.shortcut}
+                </span>
               )}
-              {menuAction.label}
             </DropdownMenuItem>
           );
         })}

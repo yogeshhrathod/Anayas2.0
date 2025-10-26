@@ -55,6 +55,58 @@ export const KEYMAP: Record<string, KeymapConfig> = {
     ctrlKey: true, // Ctrl+B on Windows/Linux
     description: 'Toggle Sidebar',
     action: 'toggle-sidebar'
+  },
+  EDIT_ITEM: {
+    key: 'e',
+    metaKey: true, // Cmd+E on Mac
+    ctrlKey: true, // Ctrl+E on Windows/Linux
+    description: 'Edit Selected Item',
+    action: 'edit-item'
+  },
+  DUPLICATE_ITEM: {
+    key: 'd',
+    metaKey: true, // Cmd+D on Mac
+    ctrlKey: true, // Ctrl+D on Windows/Linux
+    description: 'Duplicate Selected Item',
+    action: 'duplicate-item'
+  },
+  DELETE_ITEM: {
+    key: 'Backspace',
+    metaKey: true, // Cmd+Backspace on Mac
+    ctrlKey: true, // Ctrl+Backspace on Windows/Linux
+    description: 'Delete Selected Item',
+    action: 'delete-item'
+  },
+  EXPORT_ITEM: {
+    key: 'e',
+    metaKey: true, // Cmd+Shift+E on Mac
+    ctrlKey: true, // Ctrl+Shift+E on Windows/Linux
+    shiftKey: true,
+    description: 'Export Selected Item',
+    action: 'export-item'
+  },
+  ADD_REQUEST: {
+    key: 'r',
+    metaKey: true, // Cmd+R on Mac
+    ctrlKey: true, // Ctrl+R on Windows/Linux
+    description: 'Add New Request',
+    action: 'add-request'
+  },
+  ADD_FOLDER: {
+    key: 'n',
+    metaKey: true, // Cmd+Shift+N on Mac
+    ctrlKey: true, // Ctrl+Shift+N on Windows/Linux
+    shiftKey: true,
+    description: 'Add New Folder',
+    action: 'add-folder'
+  },
+  IMPORT_ITEM: {
+    key: 'i',
+    metaKey: true, // Cmd+Shift+I on Mac
+    ctrlKey: true, // Ctrl+Shift+I on Windows/Linux
+    shiftKey: true,
+    description: 'Import Item',
+    action: 'import-item'
   }
 };
 
@@ -138,11 +190,14 @@ export const registerGlobalShortcuts = (
 ) => {
   const handleKeyDown = (event: KeyboardEvent) => {
     // Check each keymap against the event
-    Object.entries(KEYMAP).forEach(([action, keymap]) => {
-      if (matchesKeymap(event, keymap) && handlers[action]) {
+    Object.entries(KEYMAP).forEach(([_, keymap]) => {
+      const hasHandler = !!handlers[keymap.action];
+      const matches = matchesKeymap(event, keymap);
+      
+      if (matches && hasHandler) {
         event.preventDefault();
         event.stopPropagation();
-        handlers[action](event);
+        handlers[keymap.action](event);
       }
     });
   };

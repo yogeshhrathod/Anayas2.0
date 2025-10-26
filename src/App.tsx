@@ -10,9 +10,12 @@ import { Collections } from "./pages/Collections";
 import { History } from "./pages/History";
 import { Settings } from "./pages/Settings";
 import { Logs } from "./pages/Logs";
+import { ShortcutHelp } from "./components/ShortcutHelp";
 import { CollectionHierarchy } from "./components/CollectionHierarchy";
 import { ResizeHandle } from "./components/ui/resize-handle";
-import { KEYMAP, registerGlobalShortcuts } from "./lib/keymap";
+import { useShortcuts } from "./hooks/useShortcuts";
+import { ContextState } from "./lib/shortcuts/types";
+import { Request } from "./types/entities";
 import {
   Menu,
   Home,
@@ -36,6 +39,7 @@ type Page =
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isResizing, setIsResizing] = useState(false);
+  const [_requests, setRequests] = useState<any[]>([]);
   const {
     currentPage,
     setCurrentPage,
@@ -50,6 +54,10 @@ function App() {
     setCustomThemes,
     sidebarWidth,
     setSidebarWidth,
+    // @ts-ignore - selectedItem is used in shortcut handlers
+    selectedItem,
+    setSelectedItem,
+    triggerSidebarRefresh,
   } = useStore();
 
   useEffect(() => {
@@ -59,33 +67,202 @@ function App() {
     });
   }, []);
 
-  // Global keyboard shortcuts
-  useEffect(() => {
-    const cleanup = registerGlobalShortcuts({
-      [KEYMAP.GLOBAL_SEARCH.action]: () => {
-        // Global search is handled by GlobalSearch component
-        const searchInput = document.querySelector('[data-global-search]') as HTMLInputElement;
-        if (searchInput) {
-          searchInput.focus();
+  // Single centralized shortcut handler
+  useShortcuts({
+    'global-search': () => {
+      const input = document.querySelector('[data-global-search]') as HTMLInputElement;
+      input?.focus();
+    },
+    
+    'toggle-sidebar': () => {
+      setSidebarOpen(!sidebarOpen);
+    },
+    
+    'show-shortcuts': () => {
+      // TODO: Implement shortcut help dialog
+      console.log('Show shortcuts help');
+    },
+    
+    'edit-item': (_: KeyboardEvent, context: ContextState) => {
+      if (context.selectedItem.type === 'request') {
+        // Load and edit request
+        setSelectedRequest(context.selectedItem.data);
+        setCurrentPage('home');
+      } else if (context.selectedItem.type === 'collection') {
+        // TODO: Implement collection editing
+        console.log('Collection edit not implemented yet');
+      } else if (context.selectedItem.type === 'folder') {
+        // TODO: Implement folder editing
+        console.log('Folder edit not implemented yet');
+      }
+    },
+    
+    'duplicate-item': async (_: KeyboardEvent, context: ContextState) => {
+      if (context.selectedItem.type === 'request') {
+        try {
+          const duplicate = {
+            name: `${context.selectedItem.data.name} (Copy)`,
+            method: context.selectedItem.data.method,
+            url: context.selectedItem.data.url,
+            headers: context.selectedItem.data.headers || {},
+            body: context.selectedItem.data.body || '',
+            queryParams: context.selectedItem.data.queryParams || [],
+            auth: context.selectedItem.data.auth || { type: 'none' },
+            collectionId: context.selectedItem.data.collectionId,
+            folderId: context.selectedItem.data.folderId,
+            isFavorite: false
+          };
+          
+          // Use saveAfter to insert the duplicate right after the original request
+          await window.electronAPI.request.saveAfter(duplicate, context.selectedItem.id!);
+          
+          // Refresh both collections and requests
+          const [updatedCollections, updatedRequests] = await Promise.all([
+            window.electronAPI.collection.list(),
+            window.electronAPI.request.list()
+          ]);
+          setCollections(updatedCollections);
+          setRequests(updatedRequests);
+        } catch (error) {
+          console.error('Failed to duplicate request:', error);
         }
-      },
-      [KEYMAP.NEW_REQUEST.action]: () => {
-        setSelectedRequest(null);
-        setCurrentPage('collections');
-      },
-      [KEYMAP.TOGGLE_SIDEBAR.action]: () => {
-        if (sidebarOpen) {
-          setSidebarOpen(false);
-        } else {
-          setSidebarOpen(true);
-          // Restore the saved width when reopening
-          setSidebarWidth(Math.max(140, sidebarWidth));
+      } else if (context.selectedItem.type === 'collection') {
+        try {
+          const duplicate = {
+            name: `${context.selectedItem.data.name} (Copy)`,
+            description: context.selectedItem.data.description || '',
+            variables: context.selectedItem.data.variables || {},
+            isFavorite: false
+          };
+          
+          const result = await window.electronAPI.collection.save(duplicate);
+          if (!result.success) {
+            console.error('Failed to create duplicate collection');
+            return;
+          }
+
+          const newCollectionId = result.id;
+
+          // Get all requests for the original collection
+          const originalRequests = await window.electronAPI.request.list(context.selectedItem.id!);
+          
+          // Duplicate all requests for the new collection
+          for (const request of originalRequests) {
+            const duplicateRequest = {
+              name: `${request.name} (Copy)`,
+              method: request.method,
+              url: request.url,
+              headers: request.headers,
+              body: request.body,
+              queryParams: request.queryParams || [],
+              auth: request.auth,
+              collectionId: newCollectionId,
+              folderId: undefined, // Reset folder association for simplicity
+              isFavorite: false
+            };
+            
+            await window.electronAPI.request.save(duplicateRequest);
+            
+            // Small delay to ensure unique IDs
+            await new Promise(resolve => setTimeout(resolve, 1));
+          }
+
+          const updated = await window.electronAPI.collection.list();
+          setCollections(updated);
+          
+          // Trigger sidebar refresh for real-time updates
+          triggerSidebarRefresh();
+        } catch (error) {
+          console.error('Failed to duplicate collection:', error);
         }
       }
-    });
-
-    return cleanup;
-  }, [setSelectedRequest, setCurrentPage, sidebarOpen, sidebarWidth, setSidebarWidth]);
+    },
+    
+    'delete-item': async (_: KeyboardEvent, context: ContextState) => {
+      if (context.selectedItem.type === 'request') {
+        try {
+          await window.electronAPI.request.delete(context.selectedItem.id!);
+          const updated = await window.electronAPI.collection.list();
+          setCollections(updated);
+          setSelectedItem({ type: null, id: null, data: null });
+          
+          // Trigger sidebar refresh for real-time updates
+          triggerSidebarRefresh();
+        } catch (error) {
+          console.error('Failed to delete request:', error);
+        }
+      } else if (context.selectedItem.type === 'collection') {
+        try {
+          await window.electronAPI.collection.delete(context.selectedItem.id!);
+          const updated = await window.electronAPI.collection.list();
+          setCollections(updated);
+          setSelectedItem({ type: null, id: null, data: null });
+          
+          // Trigger sidebar refresh for real-time updates
+          triggerSidebarRefresh();
+        } catch (error) {
+          console.error('Failed to delete collection:', error);
+        }
+      } else if (context.selectedItem.type === 'folder') {
+        try {
+          await window.electronAPI.folder.delete(context.selectedItem.id!);
+          const updated = await window.electronAPI.collection.list();
+          setCollections(updated);
+          setSelectedItem({ type: null, id: null, data: null });
+          
+          // Trigger sidebar refresh for real-time updates
+          triggerSidebarRefresh();
+        } catch (error) {
+          console.error('Failed to delete folder:', error);
+        }
+      }
+    },
+    
+    'send-request': () => {
+      // TODO: Trigger send request action
+      console.log('Send request');
+    },
+    
+    'save-request': () => {
+      // TODO: Trigger save request action
+      console.log('Save request');
+    },
+    
+    'focus-url': () => {
+      const urlInput = document.querySelector('input[placeholder*="URL"]') as HTMLInputElement;
+      urlInput?.focus();
+    },
+    
+    'add-request': () => {
+      setSelectedRequest(null);
+      setCurrentPage('home');
+    },
+    
+    'add-folder': () => {
+      // TODO: Implement new folder creation
+      console.log('Add folder');
+    },
+    
+    'new-collection': () => {
+      // TODO: Implement new collection creation
+      console.log('New collection');
+    },
+    
+    'export-collection': () => {
+      // TODO: Implement collection export
+      console.log('Export collection');
+    },
+    
+    'export-request': () => {
+      // TODO: Implement request export
+      console.log('Export request');
+    },
+    
+    'import-collection': () => {
+      // TODO: Implement collection import
+      console.log('Import collection');
+    }
+  });
 
   // Handle sidebar resize
   const handleSidebarResize = useCallback((deltaX: number) => {
@@ -119,13 +296,14 @@ function App() {
 
   const loadData = async () => {
     try {
-      const [envs, currentEnv, collections, history, settings] =
+      const [envs, currentEnv, collections, history, settings, requests] =
         await Promise.all([
           window.electronAPI.env.list(),
           window.electronAPI.env.getCurrent(),
           window.electronAPI.collection.list(),
           window.electronAPI.request.history(100),
           window.electronAPI.settings.getAll(),
+          window.electronAPI.request.list(),
         ]);
 
       setEnvironments(envs);
@@ -133,6 +311,7 @@ function App() {
       setCollections(collections);
       setRequestHistory(history);
       setSettings(settings);
+      setRequests(requests);
 
       // Load theme settings
       if (settings.themeMode) {
@@ -208,7 +387,10 @@ function App() {
           style={{ width: sidebarOpen ? `${sidebarWidth}px` : '64px' }}
         >
           {/* Header */}
-          <div className="flex h-12 items-center justify-between border-b px-3">
+          <div className={cn(
+            "flex h-12 items-center border-b px-3",
+            sidebarOpen ? "justify-between" : "justify-center"
+          )}>
             {sidebarOpen && (
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-md bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
@@ -227,14 +409,17 @@ function App() {
                   setSidebarWidth(Math.max(140, sidebarWidth));
                 }
               }}
-              className="rounded-md p-1.5 hover:bg-accent transition-colors"
+              className="rounded-md p-2 hover:bg-accent transition-colors"
             >
-              <Menu className="h-4 w-4" />
+              <Menu className="h-5 w-5" />
             </button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 flex flex-col p-1.5">
+          <nav className={cn(
+            "flex-1 flex flex-col",
+            sidebarOpen ? "p-1.5" : "p-1"
+          )}>
             {/* Collections Section - Top */}
             {sidebarOpen && (
               <div className="mb-4">
@@ -244,15 +429,15 @@ function App() {
                     className="p-1 hover:bg-accent rounded transition-colors"
                     onClick={() => setCurrentPage('collections')}
                   >
-                    <FolderPlus className="h-3 w-3" />
+                    <FolderPlus className="h-4 w-4" />
                   </button>
                 </div>
                 <CollectionHierarchy 
-                  onRequestSelect={async (request) => {
+                  onRequestSelect={async (request: Request) => {
                     setCurrentPage('home');
                     // Load request data and set it as selected
                     try {
-                      const requestData = await window.electronAPI.request.list(request.collection_id);
+                      const requestData = await window.electronAPI.request.list(request.collectionId);
                       const fullRequest = requestData.find((r: any) => r.id === request.id);
                       if (fullRequest) {
                         setSelectedRequest({
@@ -266,8 +451,8 @@ function App() {
                           body: fullRequest.body || '',
                           queryParams: [],
                           auth: { type: 'none' },
-                          collection_id: fullRequest.collection_id,
-                          is_favorite: fullRequest.is_favorite
+                          collectionId: fullRequest.collectionId,
+                          isFavorite: fullRequest.isFavorite
                         });
                       }
                     } catch (e) {
@@ -288,17 +473,25 @@ function App() {
                       key={item.id}
                       onClick={() => setCurrentPage(item.id)}
                       className={cn(
-                        "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm font-medium transition-colors",
+                        "flex w-full items-center rounded-md text-sm font-medium transition-colors",
+                        sidebarOpen 
+                          ? "gap-2.5 px-3 py-2 justify-start" 
+                          : "gap-0 px-0 py-2 justify-center",
                         currentPage === item.id
                           ? "bg-primary text-primary-foreground"
                           : "hover:bg-accent hover:text-accent-foreground"
                       )}
                     >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <Icon className="h-5 w-5 flex-shrink-0" />
                       {sidebarOpen && <span className="truncate">{item.label}</span>}
                     </button>
                   );
                 })}
+                
+                {/* Shortcut Help */}
+                <div className="pt-2 border-t border-border/50">
+                  <ShortcutHelp />
+                </div>
               </div>
             </div>
           </nav>

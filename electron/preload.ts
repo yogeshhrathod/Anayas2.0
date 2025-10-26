@@ -40,6 +40,7 @@ export interface Request {
   collectionId?: number;
   folderId?: number;
   isFavorite?: boolean;
+  order?: number;
   lastUsed?: string;
   createdAt?: string;
 }
@@ -94,6 +95,7 @@ const api = {
   request: {
     list: (collectionId?: number, folderId?: number) => ipcRenderer.invoke('request:list', collectionId, folderId),
     save: (request: Request) => ipcRenderer.invoke('request:save', request),
+    saveAfter: (request: Request, afterRequestId: number) => ipcRenderer.invoke('request:saveAfter', request, afterRequestId),
     delete: (id: number) => ipcRenderer.invoke('request:delete', id),
     send: (options: RequestOptions) => ipcRenderer.invoke('request:send', options),
     history: (limit?: number) => ipcRenderer.invoke('request:history', limit),

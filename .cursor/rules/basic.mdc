@@ -2,4 +2,5 @@
 alwaysApply: true
 ---
 
-## dont run electron app unless I tell you to
+## DO NO RUN electron app unless I tell you to
+## USE STABLE NPM LIBRARY IF POSSIBLE INSTEAD OF WRITING WHOLE CODE OURSELF

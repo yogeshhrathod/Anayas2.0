@@ -12,6 +12,7 @@ import {
   updateFolder,
   deleteFolder,
   addRequest,
+  addRequestAfter,
   updateRequest,
   deleteRequest,
   addRequestHistory,
@@ -30,8 +31,8 @@ export function registerIpcHandlers() {
   ipcMain.handle('env:list', async () => {
     const db = getDatabase();
     return db.environments.sort((a, b) => {
-      const aTime = a.last_used ? new Date(a.last_used).getTime() : 0;
-      const bTime = b.last_used ? new Date(b.last_used).getTime() : 0;
+      const aTime = a.lastUsed ? new Date(a.lastUsed).getTime() : 0;
+      const bTime = b.lastUsed ? new Date(b.lastUsed).getTime() : 0;
       return bTime - aTime;
     });
   });
@@ -40,17 +41,17 @@ export function registerIpcHandlers() {
     if (env.id) {
       updateEnvironment(env.id, {
         name: env.name,
-        display_name: env.displayName,
+        displayName: env.displayName,
         variables: env.variables || {},
-        is_default: env.isDefault ? 1 : 0,
+        isDefault: env.isDefault ? 1 : 0,
       });
       return { success: true, id: env.id };
     } else {
       const id = addEnvironment({
         name: env.name,
-        display_name: env.displayName,
+        displayName: env.displayName,
         variables: env.variables || {},
-        is_default: env.isDefault ? 1 : 0,
+        isDefault: env.isDefault ? 1 : 0,
       });
       return { success: true, id };
     }
@@ -104,7 +105,7 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('env:getCurrent', async () => {
     const db = getDatabase();
-    const defaultEnv = db.environments.find((e) => e.is_default === 1);
+    const defaultEnv = db.environments.find((e) => e.isDefault === 1);
     if (!defaultEnv && db.environments.length > 0) {
       return db.environments[0];
     }
@@ -114,9 +115,9 @@ export function registerIpcHandlers() {
   ipcMain.handle('env:setCurrent', async (_, id) => {
     const db = getDatabase();
     db.environments.forEach((env) => {
-      env.is_default = env.id === id ? 1 : 0;
+      env.isDefault = env.id === id ? 1 : 0;
       if (env.id === id) {
-        env.last_used = new Date().toISOString();
+        env.lastUsed = new Date().toISOString();
       }
     });
     saveDatabase();
@@ -127,8 +128,8 @@ export function registerIpcHandlers() {
   ipcMain.handle('collection:list', async () => {
     const db = getDatabase();
     return db.collections.sort((a, b) => {
-      const aTime = a.last_used ? new Date(a.last_used).getTime() : 0;
-      const bTime = b.last_used ? new Date(b.last_used).getTime() : 0;
+      const aTime = a.lastUsed ? new Date(a.lastUsed).getTime() : 0;
+      const bTime = b.lastUsed ? new Date(b.lastUsed).getTime() : 0;
       return bTime - aTime;
     });
   });
@@ -139,7 +140,7 @@ export function registerIpcHandlers() {
         name: collection.name,
         description: collection.description,
         variables: collection.variables || {},
-        is_favorite: collection.isFavorite ? 1 : 0,
+        isFavorite: collection.isFavorite ? 1 : 0,
       });
       return { success: true, id: collection.id };
     } else {
@@ -147,7 +148,7 @@ export function registerIpcHandlers() {
         name: collection.name,
         description: collection.description,
         variables: collection.variables || {},
-        is_favorite: collection.isFavorite ? 1 : 0,
+        isFavorite: collection.isFavorite ? 1 : 0,
       });
       return { success: true, id };
     }
@@ -162,7 +163,7 @@ export function registerIpcHandlers() {
     const db = getDatabase();
     const collection = db.collections.find((c) => c.id === id);
     if (collection) {
-      collection.is_favorite = collection.is_favorite ? 0 : 1;
+      collection.isFavorite = collection.isFavorite ? 0 : 1;
       saveDatabase();
     }
     return { success: true };
@@ -171,7 +172,7 @@ export function registerIpcHandlers() {
   // Folder operations
   ipcMain.handle('folder:list', async (_, collectionId) => {
     const db = getDatabase();
-    return db.folders.filter(f => !collectionId || f.collection_id === collectionId);
+    return db.folders.filter(f => !collectionId || f.collectionId === collectionId);
   });
 
   ipcMain.handle('folder:save', async (_, folder) => {
@@ -179,14 +180,14 @@ export function registerIpcHandlers() {
       updateFolder(folder.id, {
         name: folder.name,
         description: folder.description,
-        collection_id: folder.collectionId,
+        collectionId: folder.collectionId,
       });
       return { success: true, id: folder.id };
     } else {
       const id = addFolder({
         name: folder.name,
         description: folder.description,
-        collection_id: folder.collectionId,
+        collectionId: folder.collectionId,
       });
       return { success: true, id };
     }
@@ -200,14 +201,24 @@ export function registerIpcHandlers() {
   // Request operations
   ipcMain.handle('request:list', async (_, collectionId, folderId) => {
     const db = getDatabase();
-    return db.requests.filter(r => {
+    const filteredRequests = db.requests.filter(r => {
       if (folderId) {
-        return r.folder_id === folderId;
+        return r.folderId === folderId;
       }
       if (collectionId) {
-        return r.collection_id === collectionId && !r.folder_id;
+        return r.collectionId === collectionId && !r.folderId;
       }
       return true;
+    });
+    
+    // Sort by order field, then by id as fallback
+    return filteredRequests.sort((a, b) => {
+      const orderA = a.order || 0;
+      const orderB = b.order || 0;
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      return (a.id || 0) - (b.id || 0);
     });
   });
 
@@ -219,10 +230,12 @@ export function registerIpcHandlers() {
         url: request.url,
         headers: request.headers || {},
         body: request.body || null,
+        queryParams: request.queryParams || [],
         auth: request.auth || null,
-        collection_id: request.collectionId,
-        folder_id: request.folderId || null,
-        is_favorite: request.isFavorite ? 1 : 0,
+        collectionId: request.collectionId,
+        folderId: request.folderId || null,
+        isFavorite: request.isFavorite ? 1 : 0,
+        order: request.order,
       });
       return { success: true, id: request.id };
     } else {
@@ -232,13 +245,31 @@ export function registerIpcHandlers() {
         url: request.url,
         headers: request.headers || {},
         body: request.body || null,
+        queryParams: request.queryParams || [],
         auth: request.auth || null,
-        collection_id: request.collectionId,
-        folder_id: request.folderId || null,
-        is_favorite: request.isFavorite ? 1 : 0,
+        collectionId: request.collectionId,
+        folderId: request.folderId || null,
+        isFavorite: request.isFavorite ? 1 : 0,
+        order: request.order,
       });
       return { success: true, id };
     }
+  });
+
+  ipcMain.handle('request:saveAfter', async (_, request, afterRequestId) => {
+    const id = addRequestAfter({
+      name: request.name,
+      method: request.method,
+      url: request.url,
+      headers: request.headers || {},
+      body: request.body || null,
+      queryParams: request.queryParams || [],
+      auth: request.auth || null,
+      collectionId: request.collectionId,
+      folderId: request.folderId || null,
+      isFavorite: request.isFavorite ? 1 : 0,
+    }, afterRequestId);
+    return { success: true, id };
   });
 
   ipcMain.handle('request:delete', async (_, id) => {
@@ -249,7 +280,7 @@ export function registerIpcHandlers() {
   ipcMain.handle('request:send', async (_, options) => {
     try {
       const db = getDatabase();
-      const env = db.environments.find((e) => e.is_default === 1) || db.environments[0];
+      const env = db.environments.find((e) => e.isDefault === 1) || db.environments[0];
 
       if (!env) {
         throw new Error('No environment selected');
@@ -266,7 +297,7 @@ export function registerIpcHandlers() {
         response_time: result.responseTime,
         response_body: typeof result.body === 'string' ? result.body : JSON.stringify(result.body),
         headers: JSON.stringify(options.headers || {}),
-        created_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       });
 
       return { 
@@ -287,8 +318,8 @@ export function registerIpcHandlers() {
     const db = getDatabase();
     return db.request_history
       .sort((a, b) => {
-        const aTime = new Date(a.created_at).getTime();
-        const bTime = new Date(b.created_at).getTime();
+        const aTime = new Date(a.createdAt).getTime();
+        const bTime = new Date(b.createdAt).getTime();
         return bTime - aTime;
       })
       .slice(0, limit);

@@ -77,7 +77,7 @@ const defaultRequestData: RequestFormData = {
 };
 
 export function useRequestState(selectedRequest: Request | null) {
-  const { settings } = useStore();
+  const { settings, triggerSidebarRefresh } = useStore();
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [state, setState] = useState<RequestState>({
@@ -110,9 +110,9 @@ export function useRequestState(selectedRequest: Request | null) {
           body: selectedRequest.body || '',
           queryParams: selectedRequest.queryParams || [],
           auth: selectedRequest.auth || { type: 'none' },
-          collectionId: selectedRequest.collection_id,
-          folderId: selectedRequest.folder_id,
-          isFavorite: Boolean(selectedRequest.is_favorite),
+          collectionId: selectedRequest.collectionId,
+          folderId: selectedRequest.folderId,
+          isFavorite: Boolean(selectedRequest.isFavorite),
         },
         isSaved: true,
         lastSavedAt: new Date(),
@@ -248,6 +248,9 @@ export function useRequestState(selectedRequest: Request | null) {
           lastSavedAt: new Date(),
           isEditingName: false,
         }));
+        
+        // Trigger sidebar refresh for real-time updates
+        triggerSidebarRefresh();
       } catch (e: any) {
         console.error('Failed to update request name:', e);
         actions.cancelNameEdit();

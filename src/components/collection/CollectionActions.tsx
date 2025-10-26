@@ -28,6 +28,7 @@ export interface CollectionActionsProps {
   onSearch: (value: string) => void;
   searchValue: string;
   onNewCollection: () => void;
+  onNewRequest?: () => void;
 }
 
 export const CollectionActions: React.FC<CollectionActionsProps> = ({
@@ -35,7 +36,8 @@ export const CollectionActions: React.FC<CollectionActionsProps> = ({
   onExport,
   onSearch,
   searchValue,
-  onNewCollection
+  onNewCollection,
+  onNewRequest
 }) => {
   return (
     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
@@ -60,6 +62,12 @@ export const CollectionActions: React.FC<CollectionActionsProps> = ({
           <Download className="h-4 w-4" />
           Export
         </Button>
+        {onNewRequest && (
+          <Button variant="outline" onClick={onNewRequest} className="flex items-center gap-2">
+            <span>+</span>
+            New Request
+          </Button>
+        )}
         <Button onClick={onNewCollection} className="flex items-center gap-2">
           <span>+</span>
           New Collection

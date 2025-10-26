@@ -35,6 +35,18 @@ interface AppState {
   selectedCollectionForNewRequest: number | null;
   setSelectedCollectionForNewRequest: (collectionId: number | null) => void;
 
+  // Selected Item for keyboard shortcuts
+  selectedItem: {
+    type: 'collection' | 'request' | 'folder' | null;
+    id: number | null;
+    data: any;
+  };
+  setSelectedItem: (item: { type: 'collection' | 'request' | 'folder' | null; id: number | null; data: any }) => void;
+
+  // Enhanced context tracking for shortcuts
+  focusedContext: 'sidebar' | 'editor' | 'page' | null;
+  setFocusedContext: (context: 'sidebar' | 'editor' | 'page' | null) => void;
+
   // Request History
   requestHistory: RequestHistory[];
   setRequestHistory: (history: RequestHistory[]) => void;
@@ -99,6 +111,16 @@ export const useStore = create<AppState>()(
       // Selected Collection for new requests
       selectedCollectionForNewRequest: null,
       setSelectedCollectionForNewRequest: (selectedCollectionForNewRequest) => set({ selectedCollectionForNewRequest }),
+
+      // Selected Item for keyboard shortcuts
+      selectedItem: { type: null, id: null, data: null },
+      setSelectedItem: (selectedItem) => {
+        set({ selectedItem });
+      },
+
+      // Enhanced context tracking for shortcuts
+      focusedContext: null,
+      setFocusedContext: (focusedContext) => set({ focusedContext }),
 
       // Request History
       requestHistory: [],

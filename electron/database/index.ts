@@ -14,6 +14,7 @@ export {
   updateFolder,
   deleteFolder,
   addRequest,
+  addRequestAfter,
   updateRequest,
   deleteRequest,
   addRequestHistory,

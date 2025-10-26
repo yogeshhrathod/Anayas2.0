@@ -63,7 +63,7 @@ export function GlobalSearch() {
       const matchesMethod = request.method?.toLowerCase().includes(searchTerm);
 
       if (matchesName || matchesUrl || matchesMethod) {
-        const collection = collections.find(c => c.id === request.collection_id);
+        const collection = collections.find(c => c.id === request.collectionId);
         searchResults.push({
           id: `request-${request.id}`,
           type: 'request',
@@ -83,8 +83,8 @@ export function GlobalSearch() {
               body: request.body || '',
               queryParams: [],
               auth: { type: 'none' },
-              collection_id: request.collection_id,
-              is_favorite: request.is_favorite
+              collectionId: request.collectionId,
+              isFavorite: request.isFavorite
             });
             setIsOpen(false);
             setQuery('');
@@ -117,13 +117,13 @@ export function GlobalSearch() {
     // Search environments
     environments.forEach((env) => {
       const matchesName = env.name?.toLowerCase().includes(searchTerm);
-      const matchesDisplayName = env.display_name?.toLowerCase().includes(searchTerm);
+      const matchesDisplayName = env.displayName?.toLowerCase().includes(searchTerm);
 
       if (matchesName || matchesDisplayName) {
         searchResults.push({
           id: `environment-${env.id}`,
           type: 'environment',
-          title: env.display_name || env.name,
+          title: env.displayName || env.name,
           subtitle: `${Object.keys(env.variables || {}).length} variables`,
           icon: Globe,
           action: () => {

@@ -32,8 +32,10 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     setExpandedCollections, 
     setCurrentPage, 
     setSelectedRequest, 
-    setSelectedCollectionForNewRequest, 
-    sidebarRefreshTrigger 
+    setSelectedItem,
+    setFocusedContext,
+    sidebarRefreshTrigger,
+    triggerSidebarRefresh
   } = useStore();
   
   const { showSuccess, showError } = useToastNotifications();
@@ -72,7 +74,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
           auth: requests.find(r => r.id === requestId)?.auth || { type: 'none' },
           collectionId: targetCollectionId,
           folderId: targetFolderId,
-          isFavorite: Boolean(requests.find(r => r.id === requestId)?.is_favorite),
+          isFavorite: Boolean(requests.find(r => r.id === requestId)?.isFavorite),
         });
         showSuccess('Request moved successfully');
         // Refresh data
@@ -82,6 +84,9 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         ]);
         setRequests(requestsData);
         setFolders(foldersData);
+        
+        // Trigger sidebar refresh for real-time updates
+        triggerSidebarRefresh();
       } catch (error: any) {
         showError('Failed to move request', error.message);
       }
@@ -98,6 +103,9 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         // Refresh data
         const foldersData = await window.electronAPI.folder.list();
         setFolders(foldersData);
+        
+        // Trigger sidebar refresh for real-time updates
+        triggerSidebarRefresh();
       } catch (error: any) {
         showError('Failed to move folder', error.message);
       }
@@ -115,24 +123,49 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
   };
 
   const getRequestsForCollection = (collectionId: number) => {
-    return requests.filter(r => r.collection_id === collectionId);
+    return requests.filter(r => r.collectionId === collectionId);
   };
 
   const getRequestsForFolder = (folderId: number) => {
-    return requests.filter(r => r.folder_id === folderId);
+    return requests.filter(r => r.folderId === folderId);
   };
 
   const getFoldersForCollection = (collectionId: number) => {
-    return folders.filter(f => f.collection_id === collectionId);
+    return folders.filter(f => f.collectionId === collectionId);
   };
 
   const handleAddRequest = (collectionId: number) => {
-    setSelectedCollectionForNewRequest(collectionId);
-    setCurrentPage('collections');
-    setSelectedRequest(null);
+    // Set selected collection for keyboard shortcuts
+    const collection = collections.find(c => c.id === collectionId);
+    if (collection) {
+      setSelectedItem({ type: 'collection', id: collectionId, data: collection });
+    }
+    
+    // Create a new empty request and set it as selected
+    const newRequest: Request = {
+      name: '',
+      method: 'GET',
+      url: '',
+      headers: { 'Content-Type': 'application/json' },
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: collectionId,
+      folderId: undefined,
+      isFavorite: 0,
+    };
+    
+    setSelectedRequest(newRequest);
+    setCurrentPage('home');
   };
 
   const handleAddFolder = (collectionId: number) => {
+    // Set selected collection for keyboard shortcuts
+    const collection = collections.find(c => c.id === collectionId);
+    if (collection) {
+      setSelectedItem({ type: 'collection', id: collectionId, data: collection });
+    }
+    
     // TODO: Implement folder creation dialog
     console.log('Add folder to collection:', collectionId);
   };
@@ -142,8 +175,73 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       await window.electronAPI.collection.delete(collectionId);
       showSuccess('Collection deleted successfully');
       setCollections(collections.filter(c => c.id !== collectionId));
+      // Trigger sidebar refresh for real-time updates
+      triggerSidebarRefresh();
     } catch (error: any) {
       showError('Failed to delete collection', error.message);
+    }
+  };
+
+  const handleDuplicateCollection = async (collectionId: number) => {
+    try {
+      const collection = collections.find(c => c.id === collectionId);
+      if (!collection) {
+        showError('Collection not found');
+        return;
+      }
+
+      // Create the duplicate collection
+      const duplicateCollection = {
+        name: `${collection.name} (Copy)`,
+        description: collection.description || '',
+        variables: collection.variables || {},
+        isFavorite: false
+      };
+
+      const result = await window.electronAPI.collection.save(duplicateCollection);
+      if (!result.success) {
+        showError('Failed to create duplicate collection');
+        return;
+      }
+
+      const newCollectionId = result.id;
+
+      // Get all requests for the original collection
+      const originalRequests = await window.electronAPI.request.list(collectionId);
+      
+      // Duplicate all requests for the new collection
+      for (const request of originalRequests) {
+        const duplicateRequest = {
+          name: `${request.name} (Copy)`,
+          method: request.method,
+          url: request.url,
+          headers: request.headers,
+          body: request.body,
+          queryParams: request.queryParams || [],
+          auth: request.auth,
+          collectionId: newCollectionId,
+          folderId: undefined, // Reset folder association for simplicity
+          isFavorite: false
+        };
+        
+        await window.electronAPI.request.save(duplicateRequest);
+        
+        // Small delay to ensure unique IDs
+        await new Promise(resolve => setTimeout(resolve, 1));
+      }
+
+      showSuccess('Collection and requests duplicated successfully');
+      
+      // Refresh collections and requests
+      const updatedCollections = await window.electronAPI.collection.list();
+      const updatedRequests = await window.electronAPI.request.list();
+      setCollections(updatedCollections);
+      setRequests(updatedRequests);
+      
+      // Trigger sidebar refresh for real-time updates
+      triggerSidebarRefresh();
+    } catch (error: any) {
+      showError('Failed to duplicate collection', error.message);
     }
   };
 
@@ -152,6 +250,8 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       await window.electronAPI.folder.delete(folderId);
       showSuccess('Folder deleted successfully');
       setFolders(folders.filter(f => f.id !== folderId));
+      // Trigger sidebar refresh for real-time updates
+      triggerSidebarRefresh();
     } catch (error: any) {
       showError('Failed to delete folder', error.message);
     }
@@ -162,13 +262,52 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       await window.electronAPI.request.delete(requestId);
       showSuccess('Request deleted successfully');
       setRequests(requests.filter(r => r.id !== requestId));
+      // Trigger sidebar refresh for real-time updates
+      triggerSidebarRefresh();
     } catch (error: any) {
       showError('Failed to delete request', error.message);
     }
   };
 
+  const handleDuplicateRequest = async (requestId: number) => {
+    try {
+      const originalRequest = requests.find(r => r.id === requestId);
+      if (!originalRequest) return;
+
+      const duplicatedRequest = {
+        name: `${originalRequest.name} (Copy)`,
+        method: originalRequest.method,
+        url: originalRequest.url,
+        headers: originalRequest.headers,
+        body: originalRequest.body,
+        queryParams: originalRequest.queryParams || [],
+        auth: originalRequest.auth,
+        collectionId: originalRequest.collectionId,
+        folderId: originalRequest.folderId,
+        isFavorite: false,
+      };
+
+      // Use saveAfter to insert the duplicate right after the original request
+      await window.electronAPI.request.saveAfter(duplicatedRequest, requestId);
+      showSuccess('Request duplicated successfully');
+      
+      // Refresh requests
+      const requestsData = await window.electronAPI.request.list();
+      setRequests(requestsData);
+      
+      // Trigger sidebar refresh for real-time updates
+      triggerSidebarRefresh();
+    } catch (error: any) {
+      showError('Failed to duplicate request', error.message);
+    }
+  };
+
   return (
-    <div className="space-y-1">
+    <div 
+      className="space-y-1"
+      onFocus={() => setFocusedContext('sidebar')}
+      onBlur={() => setFocusedContext(null)}
+    >
       {collections.map((collection) => {
         const isExpanded = expandedCollections.has(collection.id!);
         const collectionRequests = getRequestsForCollection(collection.id!);
@@ -183,6 +322,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
               isExpanded={isExpanded}
               requestCount={totalRequests}
               onToggle={() => toggleCollection(collection.id!)}
+              onSelect={() => setSelectedItem({ type: 'collection', id: collection.id!, data: collection })}
               onEdit={() => {
                 // Handle edit collection
                 console.log('Edit collection:', collection.id);
@@ -190,10 +330,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
               onDelete={() => handleDeleteCollection(collection.id!)}
               onAddRequest={() => handleAddRequest(collection.id!)}
               onAddFolder={() => handleAddFolder(collection.id!)}
-              onDuplicate={() => {
-                // Handle duplicate collection
-                console.log('Duplicate collection:', collection.id);
-              }}
+              onDuplicate={() => handleDuplicateCollection(collection.id!)}
               onExport={() => {
                 // Handle export collection
                 console.log('Export collection:', collection.id);
@@ -222,6 +359,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                       <FolderItem
                         folder={folder}
                         requestCount={folderRequests.length}
+                        onSelect={() => setSelectedItem({ type: 'folder', id: folder.id!, data: folder })}
                         onEdit={() => {
                           // Handle edit folder
                           console.log('Edit folder:', folder.id);
@@ -243,15 +381,13 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                           key={request.id}
                           request={request}
                           onSelect={onRequestSelect}
+                          onItemSelect={() => setSelectedItem({ type: 'request', id: request.id!, data: request })}
                           onEdit={() => {
                             // Handle edit request
                             console.log('Edit request:', request.id);
                           }}
                           onDelete={() => handleDeleteRequest(request.id!)}
-                          onDuplicate={() => {
-                            // Handle duplicate request
-                            console.log('Duplicate request:', request.id);
-                          }}
+                          onDuplicate={() => handleDuplicateRequest(request.id!)}
                           onExport={() => {
                             // Handle export request
                             console.log('Export request:', request.id);
@@ -270,20 +406,18 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                 })}
 
                 {/* Collection Requests (not in folders) */}
-                {collectionRequests.filter(r => !r.folder_id).map((request) => (
+                {collectionRequests.filter(r => !r.folderId).map((request) => (
                   <RequestItem
                     key={request.id}
                     request={request}
                     onSelect={onRequestSelect}
+                    onItemSelect={() => setSelectedItem({ type: 'request', id: request.id!, data: request })}
                     onEdit={() => {
                       // Handle edit request
                       console.log('Edit request:', request.id);
                     }}
                     onDelete={() => handleDeleteRequest(request.id!)}
-                    onDuplicate={() => {
-                      // Handle duplicate request
-                      console.log('Duplicate request:', request.id);
-                    }}
+                    onDuplicate={() => handleDuplicateRequest(request.id!)}
                     onExport={() => {
                       // Handle export request
                       console.log('Export request:', request.id);

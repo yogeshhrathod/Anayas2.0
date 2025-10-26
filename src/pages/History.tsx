@@ -30,7 +30,7 @@ export function History() {
     // Date filtering
     let matchesDate = true;
     if (filterDate !== 'all') {
-      const requestDate = new Date(request.created_at);
+      const requestDate = new Date(request.createdAt);
       const now = new Date();
       
       switch (filterDate) {
@@ -243,7 +243,7 @@ export function History() {
                       </div>
                       <p className="font-medium text-sm mb-1 break-all">{request.url}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(request.created_at).toLocaleString()}
+                        {new Date(request.createdAt).toLocaleString()}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 ml-4">

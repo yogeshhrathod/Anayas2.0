@@ -125,8 +125,15 @@ export function useRequestActions(requestData: RequestFormData) {
           ...selectedRequest,
           id: result.id,
           name: requestData.name,
-          collection_id: requestData.collectionId,
-          folder_id: requestData.folderId,
+          method: requestData.method,
+          url: requestData.url,
+          headers: requestData.headers,
+          body: requestData.body,
+          queryParams: requestData.queryParams,
+          auth: requestData.auth,
+          collectionId: requestData.collectionId,
+          folderId: requestData.folderId,
+          isFavorite: requestData.isFavorite ? 1 : 0,
         });
       }
     } catch (e: any) {
