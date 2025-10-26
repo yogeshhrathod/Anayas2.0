@@ -18,7 +18,6 @@ import { useToastNotifications } from '../hooks/useToastNotifications';
 import { CollectionItem } from './collection/CollectionItem';
 import { FolderItem } from './collection/FolderItem';
 import { RequestItem } from './collection/RequestItem';
-import { UnsavedRequestsSection } from './collection/UnsavedRequestsSection';
 import { Request, Folder } from '../types/entities';
 
 export interface CollectionHierarchyProps {
@@ -368,9 +367,6 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       onFocus={() => setFocusedContext('sidebar')}
       onBlur={() => setFocusedContext(null)}
     >
-      {/* Unsaved Requests Section */}
-      <UnsavedRequestsSection />
-      
       {collections.map((collection) => {
         const isExpanded = expandedCollections.has(collection.id!);
         const collectionRequests = getRequestsForCollection(collection.id!);

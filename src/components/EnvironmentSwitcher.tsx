@@ -29,7 +29,7 @@ export function EnvironmentSwitcher() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-md border bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
+        className="flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent/50 hover:scale-[1.02] transition-all duration-200"
       >
         <Globe className="h-4 w-4" />
         <span>{(currentEnvironment as any)?.display_name || 'No Environment'}</span>

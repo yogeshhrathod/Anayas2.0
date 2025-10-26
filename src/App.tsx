@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useStore } from "./store/useStore";
-import { EnvironmentSwitcher } from "./components/EnvironmentSwitcher";
 import { TitleBar } from "./components/TitleBar";
+import { NavigationBar } from "./components/NavigationBar";
 import { ThemeManager } from "./components/ThemeManager";
 import Toaster from "./components/Toaster";
 import { Homepage } from "./pages/Homepage";
@@ -10,32 +10,19 @@ import { Collections } from "./pages/Collections";
 import { History } from "./pages/History";
 import { Settings } from "./pages/Settings";
 import { Logs } from "./pages/Logs";
-import { ShortcutHelp } from "./components/ShortcutHelp";
 import { CollectionHierarchy } from "./components/CollectionHierarchy";
+import { UnsavedRequestsSection } from "./components/collection/UnsavedRequestsSection";
 import { ResizeHandle } from "./components/ui/resize-handle";
+import { VerticalResizeHandle } from "./components/ui/vertical-resize-handle";
 import { useShortcuts } from "./hooks/useShortcuts";
 import { useSessionRecovery } from "./hooks/useSessionRecovery";
 import { ContextState } from "./lib/shortcuts/types";
 import { Request } from "./types/entities";
 import {
   Menu,
-  Home,
-  Globe,
-  History as HistoryIcon,
-  Settings as SettingsIcon,
-  ScrollText,
-  FolderPlus,
   Zap,
 } from "lucide-react";
 import { cn } from "./lib/utils";
-
-type Page =
-  | "home"
-  | "collections"
-  | "environments"
-  | "history"
-  | "logs"
-  | "settings";
 
 function App() {
   // Session recovery - load unsaved requests on startup
@@ -58,6 +45,9 @@ function App() {
     setCustomThemes,
     sidebarWidth,
     setSidebarWidth,
+    unsavedSectionHeight,
+    setUnsavedSectionHeight,
+    unsavedRequests,
     // @ts-ignore - selectedItem is used in shortcut handlers
     selectedItem,
     setSelectedItem,
@@ -317,6 +307,19 @@ function App() {
     }
   }, [sidebarWidth, setSidebarWidth, sidebarOpen]);
 
+  // Handle vertical resize for unsaved section
+  const handleVerticalResize = useCallback((deltaY: number) => {
+    const MIN_HEIGHT = 80;  // Minimum height for unsaved section (small enough to show header + some content)
+    const MAX_HEIGHT = 600; // Maximum height to prevent taking all space
+    
+    const newHeight = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, unsavedSectionHeight + deltaY));
+    
+    // Only update if the height actually changed
+    if (newHeight !== unsavedSectionHeight) {
+      setUnsavedSectionHeight(newHeight);
+    }
+  }, [unsavedSectionHeight, setUnsavedSectionHeight]);
+
   const handleResizeStart = useCallback(() => {
     setIsResizing(true);
   }, []);
@@ -390,14 +393,6 @@ function App() {
     }
   };
 
-  const navItems = [
-    { id: "home" as Page, label: "Home", icon: Home },
-    { id: "collections" as Page, label: "Collections", icon: FolderPlus },
-    { id: "environments" as Page, label: "Environments", icon: Globe },
-    { id: "history" as Page, label: "History", icon: HistoryIcon },
-    { id: "logs" as Page, label: "Logs", icon: ScrollText },
-    { id: "settings" as Page, label: "Settings", icon: SettingsIcon },
-  ];
 
   return (
     <>
@@ -406,6 +401,9 @@ function App() {
       <div className="flex h-screen flex-col bg-background">
       {/* Title Bar */}
       <TitleBar />
+      
+      {/* Navigation Bar */}
+      <NavigationBar />
 
       {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden">
@@ -451,80 +449,66 @@ function App() {
             "flex-1 flex flex-col",
             sidebarOpen ? "p-1.5" : "p-1"
           )}>
-            {/* Collections Section - Top */}
+            {/* Collections Section - Contains Unsaved + Collections */}
             {sidebarOpen && (
-              <div className="mb-4">
-                <div className="flex items-center justify-between px-2 py-1.5">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Collections</span>
-                  <button 
-                    className="p-1 hover:bg-accent rounded transition-colors"
-                    onClick={() => setCurrentPage('collections')}
-                  >
-                    <FolderPlus className="h-4 w-4" />
-                  </button>
-                </div>
-                <CollectionHierarchy 
-                  onRequestSelect={async (request: Request) => {
-                    setCurrentPage('home');
-                    // Load request data and set it as selected
-                    try {
-                      const requestData = await window.electronAPI.request.list(request.collectionId);
-                      const fullRequest = requestData.find((r: any) => r.id === request.id);
-                      if (fullRequest) {
-                        setSelectedRequest({
-                          id: fullRequest.id,
-                          name: fullRequest.name || '',
-                          method: fullRequest.method,
-                          url: fullRequest.url,
-                          headers: typeof fullRequest.headers === 'string' 
-                            ? JSON.parse(fullRequest.headers) 
-                            : (fullRequest.headers || {}),
-                          body: fullRequest.body || '',
-                          queryParams: [],
-                          auth: { type: 'none' },
-                          collectionId: fullRequest.collectionId,
-                          isFavorite: fullRequest.isFavorite
-                        });
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Unsaved Requests Section - Only render if there are unsaved requests */}
+                {unsavedRequests.length > 0 && (
+                  <>
+                    <div 
+                      style={{ 
+                        height: `${unsavedSectionHeight}px`, 
+                        minHeight: '80px', 
+                        maxHeight: '600px',
+                        flexShrink: 0 
+                      }}
+                      className="overflow-hidden"
+                    >
+                      <UnsavedRequestsSection />
+                    </div>
+
+                    {/* Vertical Resize Handle - Only show if unsaved section exists */}
+                    <VerticalResizeHandle
+                      onResize={handleVerticalResize}
+                      onResizeStart={handleResizeStart}
+                      onResizeEnd={handleResizeEnd}
+                    />
+                  </>
+                )}
+
+                {/* Collections Section - Takes Remaining Space */}
+                <div className="flex-1 overflow-y-auto min-h-0">
+                  <CollectionHierarchy 
+                    onRequestSelect={async (request: Request) => {
+                      setCurrentPage('home');
+                      // Load request data and set it as selected
+                      try {
+                        const requestData = await window.electronAPI.request.list(request.collectionId);
+                        const fullRequest = requestData.find((r: any) => r.id === request.id);
+                        if (fullRequest) {
+                          setSelectedRequest({
+                            id: fullRequest.id,
+                            name: fullRequest.name || '',
+                            method: fullRequest.method,
+                            url: fullRequest.url,
+                            headers: typeof fullRequest.headers === 'string' 
+                              ? JSON.parse(fullRequest.headers) 
+                              : (fullRequest.headers || {}),
+                            body: fullRequest.body || '',
+                            queryParams: [],
+                            auth: { type: 'none' },
+                            collectionId: fullRequest.collectionId,
+                            isFavorite: fullRequest.isFavorite
+                          });
+                        }
+                      } catch (e) {
+                        console.error('Failed to load request:', e);
                       }
-                    } catch (e) {
-                      console.error('Failed to load request:', e);
-                    }
-                  }}
-                />
+                    }}
+                  />
+                </div>
               </div>
             )}
-            
-            {/* Main Navigation - Bottom */}
-            <div className="flex-1 flex flex-col justify-end">
-              <div className="space-y-0.5">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setCurrentPage(item.id)}
-                      className={cn(
-                        "flex w-full items-center rounded-md text-sm font-medium transition-colors",
-                        sidebarOpen 
-                          ? "gap-2.5 px-3 py-2 justify-start" 
-                          : "gap-0 px-0 py-2 justify-center",
-                        currentPage === item.id
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-accent hover:text-accent-foreground"
-                      )}
-                    >
-                      <Icon className="h-5 w-5 flex-shrink-0" />
-                      {sidebarOpen && <span className="truncate">{item.label}</span>}
-                    </button>
-                  );
-                })}
-                
-                {/* Shortcut Help */}
-                <div className="pt-2 border-t border-border/50">
-                  <ShortcutHelp />
-                </div>
-              </div>
-            </div>
           </nav>
         </div>
 
@@ -540,9 +524,8 @@ function App() {
         <div className="flex flex-1 flex-col">
           {/* Top Bar - Only show for non-home pages */}
           {currentPage !== 'home' && (
-            <div className="flex h-12 items-center justify-between border-b bg-card px-4">
-              <h2 className="text-lg font-semibold capitalize">{currentPage}</h2>
-              <EnvironmentSwitcher />
+            <div className="flex h-10 items-center border-b bg-card px-4">
+              <h2 className="text-base font-semibold capitalize">{currentPage}</h2>
             </div>
           )}
 

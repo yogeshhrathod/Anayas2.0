@@ -101,6 +101,10 @@ interface AppState {
   sidebarWidth: number;
   setSidebarWidth: (width: number) => void;
   
+  // Unsaved section height state for vertical resizing
+  unsavedSectionHeight: number;
+  setUnsavedSectionHeight: (height: number) => void;
+  
   // Legacy theme support (for backward compatibility)
   theme: 'light' | 'dark' | 'system';
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
@@ -190,6 +194,10 @@ export const useStore = create<AppState>()(
       sidebarWidth: 200, // Default width (reduced from 256px)
       setSidebarWidth: (sidebarWidth) => set({ sidebarWidth }),
 
+      // Unsaved section height state for vertical resizing
+      unsavedSectionHeight: 200,
+      setUnsavedSectionHeight: (unsavedSectionHeight) => set({ unsavedSectionHeight }),
+
       // Legacy theme support (for backward compatibility)
       theme: 'system',
       setTheme: (theme) => set({ theme, themeMode: theme }),
@@ -203,6 +211,7 @@ export const useStore = create<AppState>()(
         currentThemeId: state.currentThemeId,
         customThemes: state.customThemes,
         sidebarWidth: state.sidebarWidth,
+        unsavedSectionHeight: state.unsavedSectionHeight,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

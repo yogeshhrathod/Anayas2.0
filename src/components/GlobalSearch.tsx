@@ -255,7 +255,7 @@ export function GlobalSearch() {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search requests, collections, environments... (⌘K)"
+          placeholder="Search... (⌘K)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => {
@@ -268,8 +268,8 @@ export function GlobalSearch() {
             setTimeout(() => setIsOpen(false), 150);
           }}
           className={cn(
-            "h-9 pl-10 pr-4 bg-background/50 backdrop-blur-sm border border-input/50 rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring/50 focus:bg-background transition-all duration-300 shadow-sm hover:shadow-md text-center",
-            isFocused ? "w-[500px]" : "w-80"
+            "h-8 pl-10 pr-4 bg-background/80 backdrop-blur-sm border border-input/50 rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring/50 focus:bg-background transition-all duration-300 shadow-sm hover:shadow",
+            isFocused ? "w-[420px]" : "w-64"
           )}
         />
         {query && (
@@ -291,8 +291,8 @@ export function GlobalSearch() {
           className="fixed bg-card/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-xl z-[99999] max-h-96 overflow-y-auto transition-all duration-300"
           style={{
             top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 8,
-            left: inputRef.current?.getBoundingClientRect().left ?? 0,
-            width: isFocused ? 500 : 320,
+            left: (inputRef.current?.getBoundingClientRect().left ?? 0),
+            width: isFocused ? 420 : 260,
           }}
         >
           {results.length > 0 ? (

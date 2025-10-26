@@ -103,10 +103,10 @@ export function UnsavedRequestsSection() {
   }
 
   return (
-    <div className="border-b border-border/50 pb-2 mb-2">
+    <div className="h-full flex flex-col border-b border-border/50 overflow-hidden">
       {/* Header - Collapsible */}
       <div 
-        className="flex items-center gap-2 px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted/30 rounded-md transition-colors"
+        className="flex items-center gap-2 px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted/30 rounded-md transition-colors flex-shrink-0"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {isExpanded ? (
@@ -123,7 +123,7 @@ export function UnsavedRequestsSection() {
 
       {/* Unsaved Requests List - With overflow handling */}
       {isExpanded && (
-        <div className="space-y-0.5 mt-1 max-h-48 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto space-y-0.5 mt-1 px-2 pb-2 min-h-0">
           {unsavedRequests.map((unsaved) => {
             const isActive = unsaved.id === activeUnsavedRequestId;
             

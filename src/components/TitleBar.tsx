@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Minus, Square, X, Maximize2 } from "lucide-react";
+import { Minus, Square, X, Maximize2, Zap } from "lucide-react";
 import { cn } from "../lib/utils";
 import { GlobalSearch } from "./GlobalSearch";
 
@@ -32,31 +32,53 @@ export function TitleBar() {
   return (
     <div
       className={cn(
-        "flex h-12 items-center border-b border-border bg-card/30 backdrop-blur-sm glass select-none",
+        "flex h-10 items-center justify-between border-b border-border bg-card/60 backdrop-blur-md glass select-none",
         isMac ? "pl-20 pr-4" : "px-4"
       )}
       style={{ WebkitAppRegion: "drag" } as any}
     >
-      {/* Centered Search */}
-      <div className="flex-1 flex justify-center">
-        <div style={{ WebkitAppRegion: "no-drag" } as any}>
-          <GlobalSearch />
-        </div>
+      {/* Left Side - App Branding (macOS) or Window Controls (Windows/Linux) */}
+      <div className="flex items-center gap-3" style={{ WebkitAppRegion: "no-drag" } as any}>
+        {isMac ? (
+          // macOS: Show app logo + name
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+              <Zap className="h-3 w-3 text-white" />
+            </div>
+            <span className="text-sm font-semibold">Anayas</span>
+          </div>
+        ) : (
+          // Windows/Linux: Show app logo + name
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+              <Zap className="h-3 w-3 text-white" />
+            </div>
+            <span className="text-sm font-semibold">Anayas</span>
+          </div>
+        )}
       </div>
 
-      {/* Window Controls - Only show on Windows/Linux, macOS uses native traffic lights */}
+      {/* Center - Empty (drag region) */}
+      <div className="flex-1" />
+
+      {/* Right Side - Search */}
+      <div className="flex items-center gap-2" style={{ WebkitAppRegion: "no-drag" } as any}>
+        <GlobalSearch />
+      </div>
+
+      {/* Window Controls - Only show on Windows/Linux */}
       {!isMac && (
-        <div className="flex" style={{ WebkitAppRegion: "no-drag" } as any}>
+        <div className="flex items-center" style={{ WebkitAppRegion: "no-drag" } as any}>
           <button
             onClick={handleMinimize}
-            className="h-12 w-12 flex items-center justify-center hover:bg-accent transition-all duration-200 focus-ring rounded-sm"
+            className="h-10 w-10 flex items-center justify-center hover:bg-accent transition-all duration-200 focus-ring rounded-sm"
             aria-label="Minimize"
           >
             <Minus className="h-4 w-4" />
           </button>
           <button
             onClick={handleMaximize}
-            className="h-12 w-12 flex items-center justify-center hover:bg-accent transition-all duration-200 focus-ring rounded-sm"
+            className="h-10 w-10 flex items-center justify-center hover:bg-accent transition-all duration-200 focus-ring rounded-sm"
             aria-label={isMaximized ? "Restore" : "Maximize"}
           >
             {isMaximized ? (
@@ -67,7 +89,7 @@ export function TitleBar() {
           </button>
           <button
             onClick={handleClose}
-            className="h-12 w-12 flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 focus-ring rounded-sm"
+            className="h-10 w-10 flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 focus-ring rounded-sm"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
