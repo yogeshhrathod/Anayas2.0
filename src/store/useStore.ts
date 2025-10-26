@@ -1,58 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Theme } from '../lib/themes';
-
-interface Request {
-  id: number;
-  name: string;
-  method: string;
-  url: string;
-  headers: Record<string, string>;
-  body: string;
-  queryParams: Array<{ key: string; value: string; enabled: boolean }>;
-  auth: {
-    type: 'none' | 'bearer' | 'basic' | 'apikey';
-    token?: string;
-    username?: string;
-    password?: string;
-    apiKey?: string;
-    apiKeyHeader?: string;
-  };
-  collection_id?: number;
-  folder_id?: number;
-  is_favorite: number;
-}
-
-interface Environment {
-  id?: number;
-  name: string;
-  displayName: string;
-  variables: Record<string, string>;
-  isDefault?: boolean;
-  lastUsed?: string;
-  createdAt?: string;
-}
-
-interface Collection {
-  id?: number;
-  name: string;
-  description: string;
-  variables: Record<string, string>;
-  isFavorite: boolean;
-  createdAt?: string;
-  lastUsed?: string;
-}
-
-interface RequestHistory {
-  id?: number;
-  method: string;
-  url: string;
-  status: number;
-  responseTime: number;
-  responseBody?: string;
-  headers?: string;
-  createdAt?: string;
-}
+import { Request, Environment, Collection, RequestHistory } from '../types/entities';
 
 interface RequestProgress {
   step: string;

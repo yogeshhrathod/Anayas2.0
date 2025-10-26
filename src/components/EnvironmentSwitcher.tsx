@@ -32,7 +32,7 @@ export function EnvironmentSwitcher() {
         className="flex items-center gap-2 rounded-md border bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
       >
         <Globe className="h-4 w-4" />
-        <span>{(currentEnvironment as any)?.display_name || currentEnvironment?.displayName || 'No Environment'}</span>
+        <span>{(currentEnvironment as any)?.display_name || 'No Environment'}</span>
         <ChevronDown className="h-4 w-4" />
       </button>
 

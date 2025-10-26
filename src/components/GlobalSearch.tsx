@@ -117,13 +117,13 @@ export function GlobalSearch() {
     // Search environments
     environments.forEach((env) => {
       const matchesName = env.name?.toLowerCase().includes(searchTerm);
-      const matchesDisplayName = env.displayName?.toLowerCase().includes(searchTerm);
+      const matchesDisplayName = env.display_name?.toLowerCase().includes(searchTerm);
 
       if (matchesName || matchesDisplayName) {
         searchResults.push({
           id: `environment-${env.id}`,
           type: 'environment',
-          title: env.displayName || env.name,
+          title: env.display_name || env.name,
           subtitle: `${Object.keys(env.variables || {}).length} variables`,
           icon: Globe,
           action: () => {

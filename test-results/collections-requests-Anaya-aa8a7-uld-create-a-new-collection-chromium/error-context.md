@@ -1,0 +1,99 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e3]:
+    - generic [ref=e8]:
+      - img [ref=e9]
+      - textbox "Search requests, collections, environments... (⌘K)" [ref=e12]
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - img [ref=e18]
+            - heading "Anayas" [level=1] [ref=e20]
+          - button [ref=e21] [cursor=pointer]:
+            - img [ref=e22]
+        - navigation [ref=e23]:
+          - generic [ref=e25]:
+            - generic [ref=e26]: Collections
+            - button [ref=e27] [cursor=pointer]:
+              - img [ref=e28]
+          - generic [ref=e31]:
+            - button "Home" [ref=e32] [cursor=pointer]:
+              - img [ref=e33]
+              - generic [ref=e36]: Home
+            - button "Collections" [ref=e37] [cursor=pointer]:
+              - img [ref=e38]
+              - generic [ref=e40]: Collections
+            - button "Environments" [ref=e41] [cursor=pointer]:
+              - img [ref=e42]
+              - generic [ref=e45]: Environments
+            - button "History" [ref=e46] [cursor=pointer]:
+              - img [ref=e47]
+              - generic [ref=e51]: History
+            - button "Logs" [ref=e52] [cursor=pointer]:
+              - img [ref=e53]
+              - generic [ref=e56]: Logs
+            - button "Settings" [ref=e57] [cursor=pointer]:
+              - img [ref=e58]
+              - generic [ref=e61]: Settings
+      - generic [ref=e65]:
+        - generic [ref=e66]:
+          - heading "collections" [level=2] [ref=e67]
+          - button "No Environment" [ref=e69] [cursor=pointer]:
+            - img [ref=e70]
+            - generic [ref=e73]: No Environment
+            - img [ref=e74]
+        - generic [ref=e77]:
+          - generic [ref=e79]:
+            - heading "New Collection" [level=1] [ref=e80]
+            - paragraph [ref=e81]: Create a new collection with variables
+          - generic [ref=e83]:
+            - generic [ref=e84]:
+              - heading "New Collection" [level=3] [ref=e85]
+              - paragraph [ref=e86]: Create a new collection with variables
+            - generic [ref=e88]:
+              - generic [ref=e89]:
+                - generic [ref=e90]:
+                  - heading "Basic Information" [level=3] [ref=e91]
+                  - paragraph [ref=e92]: Collection name and description
+                - generic [ref=e94]:
+                  - generic [ref=e95]:
+                    - text: Name *
+                    - textbox "Name *" [ref=e96]:
+                      - /placeholder: Enter collection name
+                    - paragraph
+                  - generic [ref=e97]:
+                    - text: Description
+                    - textbox "Description" [ref=e98]:
+                      - /placeholder: Enter collection description
+              - generic [ref=e99]:
+                - generic [ref=e100]:
+                  - heading "Environment Variables" [level=3] [ref=e101]
+                  - paragraph [ref=e102]: Variables available for requests in this collection
+                - generic [ref=e104]:
+                  - generic [ref=e106]:
+                    - generic [ref=e107]:
+                      - heading "Environment Variables" [level=3] [ref=e108]
+                      - paragraph [ref=e109]: Manage key-value pairs for your environment
+                    - generic [ref=e110]:
+                      - button "Add Variable" [ref=e111] [cursor=pointer]:
+                        - img [ref=e112]
+                      - button "Switch to JSON" [ref=e113] [cursor=pointer]:
+                        - img [ref=e114]
+                  - generic [ref=e121]:
+                    - generic [ref=e122]:
+                      - textbox "Variable Name" [ref=e123]
+                      - textbox "Variable Value" [ref=e124]
+                      - button [ref=e125] [cursor=pointer]:
+                        - img [ref=e126]
+                    - button "Add Variable" [active] [ref=e129] [cursor=pointer]:
+                      - img [ref=e130]
+                      - text: Add Variable
+              - generic [ref=e131]:
+                - button "Cancel" [ref=e132] [cursor=pointer]
+                - button "Save Collection" [ref=e133] [cursor=pointer]
+```
