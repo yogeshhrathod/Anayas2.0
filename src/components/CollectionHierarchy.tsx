@@ -18,6 +18,7 @@ import { useToastNotifications } from '../hooks/useToastNotifications';
 import { CollectionItem } from './collection/CollectionItem';
 import { FolderItem } from './collection/FolderItem';
 import { RequestItem } from './collection/RequestItem';
+import { UnsavedRequestsSection } from './collection/UnsavedRequestsSection';
 import { Request, Folder } from '../types/entities';
 
 export interface CollectionHierarchyProps {
@@ -58,6 +59,65 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     };
     loadData();
   }, [collections, sidebarRefreshTrigger]);
+
+  // Handle drop on collection (including unsaved requests)
+  const handleCollectionDrop = async (e: React.DragEvent, collectionId: number) => {
+    e.preventDefault();
+    
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      
+      if (data.type === 'unsaved-request') {
+        // Promote unsaved request to this collection
+        const result = await window.electronAPI.unsavedRequest.promote(data.id, {
+          name: data.data.name,
+          collectionId: collectionId,
+          folderId: undefined,
+          isFavorite: false,
+        });
+        
+        if (result.success) {
+          showSuccess('Unsaved request saved to collection');
+          
+          // Load the newly saved request and set it as selected
+          const savedRequest = {
+            id: result.id,
+            name: data.data.name,
+            method: data.data.method as any,
+            url: data.data.url,
+            headers: data.data.headers,
+            body: data.data.body,
+            queryParams: data.data.queryParams,
+            auth: data.data.auth,
+            collectionId: collectionId,
+            folderId: undefined,
+            isFavorite: 0,
+          };
+          
+          setSelectedRequest(savedRequest);
+          
+          // Refresh data including unsaved requests
+          const [requestsData, foldersData, unsavedData] = await Promise.all([
+            window.electronAPI.request.list(),
+            window.electronAPI.folder.list(),
+            window.electronAPI.unsavedRequest.getAll()
+          ]);
+          setRequests(requestsData);
+          setFolders(foldersData);
+          
+          // Update unsaved requests in store
+          const { setUnsavedRequests } = useStore.getState();
+          setUnsavedRequests(unsavedData);
+          
+          // Trigger sidebar refresh
+          triggerSidebarRefresh();
+        }
+      }
+    } catch (error: any) {
+      console.error('Drop failed:', error);
+      showError('Failed to save request', error.message);
+    }
+  };
 
   // Drag and drop functionality
   const dragDrop = useCollectionDragDrop({
@@ -308,6 +368,9 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       onFocus={() => setFocusedContext('sidebar')}
       onBlur={() => setFocusedContext(null)}
     >
+      {/* Unsaved Requests Section */}
+      <UnsavedRequestsSection />
+      
       {collections.map((collection) => {
         const isExpanded = expandedCollections.has(collection.id!);
         const collectionRequests = getRequestsForCollection(collection.id!);
@@ -342,8 +405,14 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
               dragProps={{
                 draggable: true,
                 onDragStart: (e) => dragDrop.handleDragStart(e, { type: 'collection', id: collection.id! }),
-                onDragOver: (e) => dragDrop.handleDragOver(e, { type: 'collection', id: collection.id! }),
-                onDrop: (e) => dragDrop.handleDrop(e, { type: 'collection', id: collection.id! }),
+                onDragOver: (e) => {
+                  e.preventDefault();
+                  dragDrop.handleDragOver(e, { type: 'collection', id: collection.id! });
+                },
+                onDrop: (e) => {
+                  handleCollectionDrop(e, collection.id!);
+                  dragDrop.handleDrop(e, { type: 'collection', id: collection.id! });
+                },
                 onDragEnd: dragDrop.handleDragEnd,
               }}
             />

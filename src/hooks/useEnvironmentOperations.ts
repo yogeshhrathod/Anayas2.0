@@ -60,7 +60,7 @@ export function useEnvironmentOperations() {
 
     const filtered = environments.filter(environment =>
       environment.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      environment.display_name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      environment.displayName.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     );
     
     setFilteredEnvironments(filtered);
@@ -76,12 +76,12 @@ export function useEnvironmentOperations() {
     try {
       const envData = {
         name: data.name,
-        display_name: data.display_name,
+        displayName: data.display_name,
         variables: {
           ...data.variables,
           base_url: data.base_url,
         },
-        is_default: data.is_default ? 1 : 0,
+        isDefault: data.is_default,
       };
 
       const result = await window.electronAPI.env.save(envData);
@@ -102,12 +102,12 @@ export function useEnvironmentOperations() {
       const envData = {
         id,
         name: data.name,
-        display_name: data.display_name,
+        displayName: data.display_name,
         variables: {
           ...data.variables,
           base_url: data.base_url,
         },
-        is_default: data.is_default ? 1 : 0,
+        isDefault: data.is_default,
       };
 
       const result = await window.electronAPI.env.save(envData);
@@ -138,7 +138,7 @@ export function useEnvironmentOperations() {
     try {
       const duplicatedData = {
         name: `${environment.name}_copy`,
-        display_name: `${environment.display_name} (Copy)`,
+        display_name: `${environment.displayName} (Copy)`,
         base_url: environment.variables?.base_url || '',
         variables: environment.variables || {},
         is_default: false
@@ -156,13 +156,13 @@ export function useEnvironmentOperations() {
       // First, unset all environments as default
       const updatedEnvs = environments.map(env => ({
         ...env,
-        is_default: 0
+        isDefault: false
       }));
 
       // Then set the selected environment as default
       const targetEnv = updatedEnvs.find(env => env.id === environment.id);
       if (targetEnv) {
-        targetEnv.is_default = 1;
+        targetEnv.isDefault = true;
       }
 
       // Save all environments
@@ -171,7 +171,7 @@ export function useEnvironmentOperations() {
       }
 
       await loadEnvironments();
-      showSuccess('Default environment set', { description: `${environment.display_name} is now the default environment` });
+      showSuccess('Default environment set', { description: `${environment.displayName} is now the default environment` });
     } catch (error: any) {
       showError('Failed to set default environment', error.message);
       throw error;
@@ -189,9 +189,9 @@ export function useEnvironmentOperations() {
           mode: 'no-cors'
         });
         
-        showSuccess('Connection test passed', { description: `${environment.display_name} is reachable` });
+        showSuccess('Connection test passed', { description: `${environment.displayName} is reachable` });
       } else {
-        showSuccess('Environment test completed', { description: `${environment.display_name} configuration is valid` });
+        showSuccess('Environment test completed', { description: `${environment.displayName} configuration is valid` });
       }
     } catch (error: any) {
       showError('Connection test failed', error.message);

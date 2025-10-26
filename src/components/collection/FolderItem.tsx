@@ -22,7 +22,7 @@
 
 import React from 'react';
 import { Badge } from '../ui/badge';
-import { Folder } from 'lucide-react';
+import { Folder, Plus, Edit, Trash2 } from 'lucide-react';
 import { ActionMenu } from '../shared/ActionMenu';
 import { Folder as FolderType } from '../../types/entities';
 import { useStore } from '../../store/useStore';
@@ -55,11 +55,11 @@ export const FolderItem: React.FC<FolderItemProps> = ({
   const { selectedItem } = useStore();
   const isSelected = selectedItem.type === 'folder' && selectedItem.id === folder.id;
   const actions = [
-    { label: 'Add Request', onClick: onAddRequest, shortcut: '⌘R' },
+    { label: 'Add Request', icon: <Plus className="h-3 w-3" />, onClick: onAddRequest, shortcut: '⌘R' },
     { type: 'separator' as const },
-    { label: 'Edit', onClick: onEdit, shortcut: '⌘E' },
+    { label: 'Edit', icon: <Edit className="h-3 w-3" />, onClick: onEdit, shortcut: '⌘E' },
     { type: 'separator' as const },
-    { label: 'Delete', onClick: onDelete, destructive: true, shortcut: '⌘⌫' },
+    { label: 'Delete', icon: <Trash2 className="h-3 w-3" />, onClick: onDelete, destructive: true, shortcut: '⌘⌫' },
   ];
 
   return (

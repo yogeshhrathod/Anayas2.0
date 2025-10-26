@@ -23,7 +23,7 @@
  */
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Globe, Check, Edit, Trash2, Copy, TestTube } from 'lucide-react';
@@ -61,45 +61,36 @@ export const EnvironmentCard: React.FC<EnvironmentCardProps> = ({
     { label: 'Delete', icon: <Trash2 className="h-4 w-4" />, onClick: onDelete, destructive: true }
   ];
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString();
-  };
-
   const variableCount = Object.keys(environment.variables || {}).length;
+  const variableKeys = Object.keys(environment.variables || {})
+    .filter(key => key !== 'base_url')
+    .slice(0, 3);
 
   return (
     <Card className={`hover:shadow-md transition-shadow ${isCurrent ? 'ring-2 ring-blue-500' : ''}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2">
-              <CardTitle className="text-lg font-semibold truncate">
-                {environment.display_name}
-              </CardTitle>
-              {environment.is_default === 1 && (
-                <Badge variant="default" className="text-xs">
-                  Default
-                </Badge>
+      <CardContent className="p-4">
+        {/* Header: Title with badges inline */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1 min-w-0 pr-2">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-base font-semibold truncate">{environment.displayName}</h3>
+              {environment.isDefault && (
+                <Badge variant="default" className="text-xs flex-shrink-0">Default</Badge>
               )}
               {isCurrent && (
-                <Badge variant="secondary" className="text-xs">
-                  Current
-                </Badge>
+                <Badge variant="secondary" className="text-xs flex-shrink-0">Current</Badge>
               )}
             </div>
-            <CardDescription className="mt-1">
-              {environment.name}
-            </CardDescription>
+            <p className="text-xs text-muted-foreground truncate">{environment.name}</p>
           </div>
-          <div className="flex items-center space-x-2 ml-4">
+          <div className="flex items-center gap-1 flex-shrink-0">
             {onTest && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onTest}
                 disabled={isTesting}
-                className="p-1 h-8 w-8"
+                className="h-8 w-8 p-0"
               >
                 {isTesting ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
@@ -111,54 +102,35 @@ export const EnvironmentCard: React.FC<EnvironmentCardProps> = ({
             <ActionMenu actions={actions} />
           </div>
         </div>
-      </CardHeader>
-      
-      <CardContent className="pt-0">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-1">
-                <Globe className="h-4 w-4" />
-                <span>{variableCount} variables</span>
-              </div>
-              {environment.variables?.base_url && (
-                <div className="flex items-center space-x-1">
-                  <span className="truncate max-w-32">
-                    {environment.variables.base_url}
-                  </span>
+
+        {/* Variables Focus */}
+        <div className="space-y-2">
+          {environment.variables?.base_url && (
+            <div className="text-sm truncate text-muted-foreground">
+              <span className="font-medium">URL:</span> {environment.variables.base_url}
+            </div>
+          )}
+          
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="flex-1">
+              <span className="text-sm font-medium">{variableCount} variables</span>
+              {variableKeys.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {variableKeys.map((key) => (
+                    <Badge key={key} variant="secondary" className="text-xs font-mono">
+                      {key}
+                    </Badge>
+                  ))}
+                  {variableCount - variableKeys.length > 0 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{variableCount - variableKeys.length - (environment.variables?.base_url ? 1 : 0)}
+                    </Badge>
+                  )}
                 </div>
               )}
             </div>
           </div>
-
-          {variableCount > 0 && (
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground">
-                Variables
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {Object.keys(environment.variables || {})
-                  .filter(key => key !== 'base_url')
-                  .slice(0, 3)
-                  .map((key) => (
-                    <Badge key={key} variant="secondary" className="text-xs">
-                      {key}
-                    </Badge>
-                  ))}
-                {Object.keys(environment.variables || {}).filter(key => key !== 'base_url').length > 3 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{Object.keys(environment.variables || {}).filter(key => key !== 'base_url').length - 3} more
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
-
-          {environment.last_used && (
-            <div className="text-xs text-muted-foreground">
-              Last used: {formatDate(environment.last_used)}
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>

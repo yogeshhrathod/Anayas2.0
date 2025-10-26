@@ -2,12 +2,26 @@ import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
 
+export interface UnsavedRequest {
+  id: string; // UUID for unsaved requests
+  name: string; // Auto-generated draft name
+  method: string;
+  url: string;
+  headers: Record<string, string>;
+  body: string;
+  queryParams: Array<{ key: string; value: string; enabled: boolean }>;
+  auth: any;
+  lastModified: string;
+  createdAt: string;
+}
+
 interface Database {
   environments: any[];
   collections: any[];
   folders: any[];
   requests: any[];
   request_history: any[];
+  unsaved_requests: UnsavedRequest[];
   settings: Record<string, any>;
 }
 
@@ -17,6 +31,7 @@ let db: Database = {
   folders: [],
   requests: [],
   request_history: [],
+  unsaved_requests: [],
   settings: {},
 };
 
@@ -55,6 +70,15 @@ export async function initDatabase(): Promise<void> {
       if (!db.folders) {
         db.folders = [];
         console.log('Migrated database: Added folders table');
+      }
+      
+      // Migration: Add unsaved_requests table if it doesn't exist
+      if (!db.unsaved_requests) {
+        db.unsaved_requests = [];
+        console.log('Migrated database: Added unsaved_requests table');
+      }
+      
+      if (!db.folders || !db.unsaved_requests) {
         saveDatabase();
       }
     } catch (error) {
@@ -65,6 +89,7 @@ export async function initDatabase(): Promise<void> {
         folders: [],
         requests: [],
         request_history: [],
+        unsaved_requests: [],
         settings: {},
       };
     }
@@ -347,4 +372,70 @@ export function resetSettings(): void {
     debugMode: false,
   };
   saveDatabase();
+}
+
+// Unsaved Request CRUD operations
+export function addUnsavedRequest(request: Omit<UnsavedRequest, 'id' | 'createdAt'>): string {
+  const id = `unsaved-${generateUniqueId()}`;
+  db.unsaved_requests.push({ 
+    ...request, 
+    id, 
+    createdAt: new Date().toISOString() 
+  });
+  saveDatabase();
+  return id;
+}
+
+export function updateUnsavedRequest(id: string, request: Partial<UnsavedRequest>): void {
+  const index = db.unsaved_requests.findIndex((r) => r.id === id);
+  if (index !== -1) {
+    db.unsaved_requests[index] = { 
+      ...db.unsaved_requests[index], 
+      ...request, 
+      id,
+      lastModified: new Date().toISOString()
+    };
+    saveDatabase();
+  }
+}
+
+export function deleteUnsavedRequest(id: string): void {
+  db.unsaved_requests = db.unsaved_requests.filter((r) => r.id !== id);
+  saveDatabase();
+}
+
+export function getAllUnsavedRequests(): UnsavedRequest[] {
+  return [...db.unsaved_requests];
+}
+
+export function clearUnsavedRequests(): void {
+  db.unsaved_requests = [];
+  saveDatabase();
+}
+
+export function promoteUnsavedRequest(id: string, requestData: any): number {
+  // Convert unsaved request to saved request
+  const unsaved = db.unsaved_requests.find(r => r.id === id);
+  if (!unsaved) {
+    throw new Error('Unsaved request not found');
+  }
+  
+  // Create saved request
+  const savedId = addRequest({
+    name: requestData.name || unsaved.name,
+    method: unsaved.method,
+    url: unsaved.url,
+    headers: unsaved.headers,
+    body: unsaved.body,
+    queryParams: unsaved.queryParams,
+    auth: unsaved.auth,
+    collectionId: requestData.collectionId,
+    folderId: requestData.folderId,
+    isFavorite: requestData.isFavorite ? 1 : 0,
+  });
+  
+  // Delete unsaved request
+  deleteUnsavedRequest(id);
+  
+  return savedId;
 }

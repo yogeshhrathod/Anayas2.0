@@ -23,6 +23,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { RequestFormData } from '../types/forms';
 import { Request } from '../types/entities';
 import { useStore } from '../store/useStore';
+import { generateDraftName } from '../lib/draftNaming';
 
 export interface RequestState {
   requestData: RequestFormData;
@@ -77,8 +78,9 @@ const defaultRequestData: RequestFormData = {
 };
 
 export function useRequestState(selectedRequest: Request | null) {
-  const { settings, triggerSidebarRefresh } = useStore();
+  const { settings, triggerSidebarRefresh, setUnsavedRequests, activeUnsavedRequestId, setActiveUnsavedRequestId } = useStore();
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const unsavedSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [state, setState] = useState<RequestState>({
     requestData: defaultRequestData,
@@ -127,7 +129,7 @@ export function useRequestState(selectedRequest: Request | null) {
     }
   }, [selectedRequest]);
 
-  // Auto-save functionality
+  // Auto-save functionality for saved requests
   const autoSave = useCallback(async () => {
     if (!settings.autoSaveRequests || !state.requestData.name.trim() || !state.requestData.collectionId) {
       return;
@@ -158,7 +160,46 @@ export function useRequestState(selectedRequest: Request | null) {
     }
   }, [state.requestData, settings.autoSaveRequests]);
 
-  // Debounced auto-save
+  // Auto-save unsaved requests
+  const autoSaveUnsaved = useCallback(async () => {
+    // Only auto-save if request is unsaved (no id or collectionId)
+    if (state.requestData.id || state.requestData.collectionId) {
+      return;
+    }
+
+    // Don't save completely empty requests
+    if (!state.requestData.url && !state.requestData.body && state.requestData.queryParams.length === 0) {
+      return;
+    }
+
+    try {
+      const draftName = state.requestData.name || generateDraftName(state.requestData.method, state.requestData.url);
+      
+      const result = await window.electronAPI.unsavedRequest.save({
+        id: activeUnsavedRequestId || undefined,
+        name: draftName,
+        method: state.requestData.method,
+        url: state.requestData.url,
+        headers: state.requestData.headers,
+        body: state.requestData.body || '',
+        queryParams: state.requestData.queryParams,
+        auth: state.requestData.auth,
+      });
+      
+      // Update active unsaved request ID only if it was newly created
+      if (!activeUnsavedRequestId && result.id) {
+        setActiveUnsavedRequestId(result.id);
+      }
+      
+      // Reload unsaved requests
+      const allUnsaved = await window.electronAPI.unsavedRequest.getAll();
+      setUnsavedRequests(allUnsaved);
+    } catch (e: any) {
+      console.error('Auto-save unsaved request failed:', e);
+    }
+  }, [state.requestData, activeUnsavedRequestId, setActiveUnsavedRequestId, setUnsavedRequests]);
+
+  // Debounced auto-save for saved requests
   useEffect(() => {
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
@@ -175,7 +216,25 @@ export function useRequestState(selectedRequest: Request | null) {
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [state.requestData, autoSave]);
+  }, [state.requestData, autoSave, settings.autoSaveRequests]);
+
+  // Debounced auto-save for unsaved requests (1 second)
+  useEffect(() => {
+    if (unsavedSaveTimeoutRef.current) {
+      clearTimeout(unsavedSaveTimeoutRef.current);
+    }
+
+    // Auto-save unsaved requests after 1 second of inactivity
+    unsavedSaveTimeoutRef.current = setTimeout(() => {
+      autoSaveUnsaved();
+    }, 1000);
+
+    return () => {
+      if (unsavedSaveTimeoutRef.current) {
+        clearTimeout(unsavedSaveTimeoutRef.current);
+      }
+    };
+  }, [state.requestData, autoSaveUnsaved]);
 
   const actions: RequestStateActions = {
     setRequestData: (data) => {

@@ -3,6 +3,19 @@ import { persist } from 'zustand/middleware';
 import { Theme } from '../lib/themes';
 import { Request, Environment, Collection, RequestHistory } from '../types/entities';
 
+export interface UnsavedRequest {
+  id: string;
+  name: string;
+  method: string;
+  url: string;
+  headers: Record<string, string>;
+  body: string;
+  queryParams: Array<{ key: string; value: string; enabled: boolean }>;
+  auth: any;
+  lastModified: string;
+  createdAt: string;
+}
+
 interface RequestProgress {
   step: string;
   message: string;
@@ -58,6 +71,12 @@ interface AppState {
   // Settings
   settings: Record<string, any>;
   setSettings: (settings: Record<string, any>) => void;
+
+  // Unsaved Requests
+  unsavedRequests: UnsavedRequest[];
+  setUnsavedRequests: (requests: UnsavedRequest[]) => void;
+  activeUnsavedRequestId: string | null;
+  setActiveUnsavedRequestId: (id: string | null) => void;
 
   // UI State - Theme Management
   themeMode: 'light' | 'dark' | 'system';
@@ -133,6 +152,12 @@ export const useStore = create<AppState>()(
       // Settings
       settings: {},
       setSettings: (settings) => set({ settings }),
+
+      // Unsaved Requests
+      unsavedRequests: [],
+      setUnsavedRequests: (unsavedRequests) => set({ unsavedRequests }),
+      activeUnsavedRequestId: null,
+      setActiveUnsavedRequestId: (activeUnsavedRequestId) => set({ activeUnsavedRequestId }),
 
       // UI State - Theme Management
       themeMode: 'system',

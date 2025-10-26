@@ -102,6 +102,15 @@ const api = {
     deleteHistory: (id: number) => ipcRenderer.invoke('request:deleteHistory', id),
   },
 
+  // Unsaved Request operations
+  unsavedRequest: {
+    save: (request: any) => ipcRenderer.invoke('unsaved-request:save', request),
+    getAll: () => ipcRenderer.invoke('unsaved-request:get-all'),
+    delete: (id: string) => ipcRenderer.invoke('unsaved-request:delete', id),
+    clear: () => ipcRenderer.invoke('unsaved-request:clear'),
+    promote: (id: string, data: any) => ipcRenderer.invoke('unsaved-request:promote', id, data),
+  },
+
   // Settings operations
   settings: {
     get: (key: string) => ipcRenderer.invoke('settings:get', key),

@@ -13,7 +13,7 @@
  * ```
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { PageLayout } from '../components/shared/PageLayout';
 import { CollectionForm } from '../components/collection/CollectionForm';
 import { CollectionGrid } from '../components/collection/CollectionGrid';
@@ -23,11 +23,13 @@ import { useConfirmation } from '../hooks/useConfirmation';
 import { useStore } from '../store/useStore';
 import { Collection } from '../types/entities';
 import { CollectionFormData } from '../types/forms';
+import { Button } from '../components/ui/button';
 
 export function Collections() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const formRef = useRef<React.ElementRef<typeof CollectionForm>>(null);
 
   const { setCurrentPage, setSelectedRequest } = useStore();
 
@@ -133,8 +135,19 @@ export function Collections() {
       <PageLayout
         title={editingCollection ? 'Edit Collection' : 'New Collection'}
         description={editingCollection ? 'Update collection details and variables' : 'Create a new collection with variables'}
+        actions={
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
+              Cancel
+            </Button>
+            <Button onClick={() => formRef.current?.submit()} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        }
       >
         <CollectionForm
+          ref={formRef}
           collection={editingCollection}
           onSave={handleSaveCollection}
           onCancel={handleCancelEdit}

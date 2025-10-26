@@ -19,12 +19,9 @@
  * ```
  */
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { FormSection } from '../shared/FormSection';
 import { EnvironmentVariable } from '../EnvironmentVariable';
 import { Environment } from '../../types/entities';
 import { EnvironmentFormData } from '../../types/forms';
@@ -35,6 +32,10 @@ export interface EnvironmentFormProps {
   onSave: (data: EnvironmentFormData) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
+}
+
+export interface EnvironmentFormRef {
+  submit: () => void;
 }
 
 const validationSchema = {
@@ -55,12 +56,12 @@ const validationSchema = {
   }
 };
 
-export const EnvironmentForm: React.FC<EnvironmentFormProps> = ({
+export const EnvironmentForm = forwardRef<EnvironmentFormRef, EnvironmentFormProps>(({
   environment,
   onSave,
   onCancel,
   isLoading = false
-}) => {
+}, ref) => {
   const [formData, setFormData] = useState<EnvironmentFormData>({
     name: '',
     display_name: '',
@@ -75,10 +76,10 @@ export const EnvironmentForm: React.FC<EnvironmentFormProps> = ({
     if (environment) {
       setFormData({
         name: environment.name,
-        display_name: environment.display_name,
+        display_name: environment.displayName,
         base_url: environment.variables?.base_url || '',
         variables: environment.variables || {},
-        is_default: environment.is_default === 1
+        is_default: !!environment.isDefault
       });
     }
   }, [environment]);
@@ -100,93 +101,88 @@ export const EnvironmentForm: React.FC<EnvironmentFormProps> = ({
     setFormData(prev => ({ ...prev, variables }));
   };
 
+  // Expose submit handler for parent component
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+    }
+  }));
+
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>{environment ? 'Edit Environment' : 'New Environment'}</CardTitle>
-        <CardDescription>
-          {environment ? 'Update environment details and variables' : 'Create a new environment with variables'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <FormSection title="Basic Information" description="Environment name and display information">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  onBlur={() => validateField('name', formData.name)}
-                  className={errors.name ? 'border-red-500' : ''}
-                  placeholder="e.g., production, staging, development"
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-500 mt-1">{errors.name}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="display_name">Display Name *</Label>
-                <Input
-                  id="display_name"
-                  value={formData.display_name}
-                  onChange={(e) => handleInputChange('display_name', e.target.value)}
-                  onBlur={() => validateField('display_name', formData.display_name)}
-                  className={errors.display_name ? 'border-red-500' : ''}
-                  placeholder="e.g., Production API, Staging Environment"
-                />
-                {errors.display_name && (
-                  <p className="text-sm text-red-500 mt-1">{errors.display_name}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="base_url">Base URL</Label>
-                <Input
-                  id="base_url"
-                  value={formData.base_url}
-                  onChange={(e) => handleInputChange('base_url', e.target.value)}
-                  onBlur={() => validateField('base_url', formData.base_url)}
-                  className={errors.base_url ? 'border-red-500' : ''}
-                  placeholder="https://api.example.com"
-                />
-                {errors.base_url && (
-                  <p className="text-sm text-red-500 mt-1">{errors.base_url}</p>
-                )}
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="is_default"
-                  checked={formData.is_default}
-                  onChange={(e) => handleInputChange('is_default', e.target.checked)}
-                  className="rounded"
-                />
-                <Label htmlFor="is_default">Set as default environment</Label>
-              </div>
-            </div>
-          </FormSection>
-
-          <FormSection title="Environment Variables" description="Variables available for requests in this environment">
-            <EnvironmentVariable
-              variables={formData.variables}
-              onVariablesChange={handleVariableChange}
+    <form onSubmit={handleSubmit} className="w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
+        {/* Left Column: Basic Info */}
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="name">Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              onBlur={() => validateField('name', formData.name)}
+              className={errors.name ? 'border-red-500' : ''}
+              placeholder="e.g., production, staging"
             />
-          </FormSection>
-
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving...' : 'Save Environment'}
-            </Button>
+            {errors.name && (
+              <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+            )}
           </div>
-        </form>
-      </CardContent>
-    </Card>
+
+          <div>
+            <Label htmlFor="display_name">Display Name *</Label>
+            <Input
+              id="display_name"
+              value={formData.display_name}
+              onChange={(e) => handleInputChange('display_name', e.target.value)}
+              onBlur={() => validateField('display_name', formData.display_name)}
+              className={errors.display_name ? 'border-red-500' : ''}
+              placeholder="e.g., Production API"
+            />
+            {errors.display_name && (
+              <p className="text-sm text-red-500 mt-1">{errors.display_name}</p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="base_url">Base URL</Label>
+            <Input
+              id="base_url"
+              value={formData.base_url}
+              onChange={(e) => handleInputChange('base_url', e.target.value)}
+              onBlur={() => validateField('base_url', formData.base_url)}
+              className={errors.base_url ? 'border-red-500' : ''}
+              placeholder="https://api.example.com"
+            />
+            {errors.base_url && (
+              <p className="text-sm text-red-500 mt-1">{errors.base_url}</p>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="is_default"
+              checked={formData.is_default}
+              onChange={(e) => handleInputChange('is_default', e.target.checked)}
+              className="rounded"
+            />
+            <Label htmlFor="is_default">Set as default</Label>
+          </div>
+        </div>
+
+        {/* Right Column: Environment Variables */}
+        <div className="flex-1">
+          <EnvironmentVariable
+            variables={formData.variables}
+            onVariablesChange={handleVariableChange}
+            title=""
+            description=""
+          />
+        </div>
+      </div>
+
+    </form>
   );
-};
+});
+
+EnvironmentForm.displayName = 'EnvironmentForm';

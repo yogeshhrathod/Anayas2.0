@@ -24,6 +24,7 @@
 import React from 'react';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
+import { Edit, Copy, Download, Trash2 } from 'lucide-react';
 import { ActionMenu } from '../shared/ActionMenu';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import { Request } from '../../types/entities';
@@ -102,12 +103,12 @@ export const RequestItem: React.FC<RequestItemProps> = ({
   });
 
   const actions = [
-    { label: 'Edit', onClick: onEdit, shortcut: '⌘E' },
-    { label: 'Duplicate', onClick: onDuplicate, shortcut: '⌘D' },
+    { label: 'Edit', icon: <Edit className="h-3 w-3" />, onClick: onEdit, shortcut: '⌘E' },
+    { label: 'Duplicate', icon: <Copy className="h-3 w-3" />, onClick: onDuplicate, shortcut: '⌘D' },
     { type: 'separator' as const },
-    { label: 'Export', onClick: onExport, shortcut: '⌘⇧E' },
+    { label: 'Export', icon: <Download className="h-3 w-3" />, onClick: onExport, shortcut: '⌘⇧E' },
     { type: 'separator' as const },
-    { label: 'Delete', onClick: onDelete, destructive: true, shortcut: '⌘⌫' },
+    { label: 'Delete', icon: <Trash2 className="h-3 w-3" />, onClick: onDelete, destructive: true, shortcut: '⌘⌫' },
   ];
 
   return (

@@ -53,10 +53,10 @@ export const EnvironmentGrid: React.FC<EnvironmentGridProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 6 }).map((_, index) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {Array.from({ length: 8 }).map((_, index) => (
           <div key={index} className="animate-pulse">
-            <div className="bg-gray-200 rounded-lg h-48"></div>
+            <div className="bg-gray-200 rounded-lg h-32"></div>
           </div>
         ))}
       </div>
@@ -75,7 +75,7 @@ export const EnvironmentGrid: React.FC<EnvironmentGridProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {environments.map((environment) => (
         <EnvironmentCard
           key={environment.id}

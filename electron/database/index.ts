@@ -23,4 +23,11 @@ export {
   getSetting,
   getAllSettings,
   resetSettings,
+  addUnsavedRequest,
+  updateUnsavedRequest,
+  deleteUnsavedRequest,
+  getAllUnsavedRequests,
+  clearUnsavedRequests,
+  promoteUnsavedRequest,
+  type UnsavedRequest,
 } from './json-db';

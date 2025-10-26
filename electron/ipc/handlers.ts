@@ -21,6 +21,12 @@ import {
   getSetting,
   getAllSettings,
   resetSettings,
+  addUnsavedRequest,
+  updateUnsavedRequest,
+  deleteUnsavedRequest,
+  getAllUnsavedRequests,
+  clearUnsavedRequests,
+  promoteUnsavedRequest,
 } from '../database';
 import { apiService } from '../services/api';
 import fs from 'fs';
@@ -448,6 +454,73 @@ export function registerIpcHandlers() {
 
       notification.show();
       return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Unsaved Request operations
+  ipcMain.handle('unsaved-request:save', async (_, request) => {
+    try {
+      if (request.id) {
+        updateUnsavedRequest(request.id, {
+          name: request.name,
+          method: request.method,
+          url: request.url,
+          headers: request.headers || {},
+          body: request.body || '',
+          queryParams: request.queryParams || [],
+          auth: request.auth || null,
+        });
+        return { success: true, id: request.id };
+      } else {
+        const id = addUnsavedRequest({
+          name: request.name,
+          method: request.method,
+          url: request.url,
+          headers: request.headers || {},
+          body: request.body || '',
+          queryParams: request.queryParams || [],
+          auth: request.auth || null,
+          lastModified: new Date().toISOString(),
+        });
+        return { success: true, id };
+      }
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('unsaved-request:get-all', async () => {
+    try {
+      return getAllUnsavedRequests();
+    } catch (error: any) {
+      return [];
+    }
+  });
+
+  ipcMain.handle('unsaved-request:delete', async (_, id) => {
+    try {
+      deleteUnsavedRequest(id);
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('unsaved-request:clear', async () => {
+    try {
+      clearUnsavedRequests();
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('unsaved-request:promote', async (_, id, data) => {
+    try {
+      const savedId = promoteUnsavedRequest(id, data);
+      return { success: true, id: savedId };
     } catch (error: any) {
       return { success: false, error: error.message };
     }

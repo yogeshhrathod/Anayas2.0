@@ -17,13 +17,10 @@
  * ```
  */
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { FormSection } from '../shared/FormSection';
 import { EnvironmentVariable } from '../EnvironmentVariable';
 import { Collection } from '../../types/entities';
 import { CollectionFormData } from '../../types/forms';
@@ -34,6 +31,10 @@ export interface CollectionFormProps {
   onSave: (data: CollectionFormData) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
+}
+
+export interface CollectionFormRef {
+  submit: () => void;
 }
 
 const validationSchema = {
@@ -49,12 +50,12 @@ const validationSchema = {
   }
 };
 
-export const CollectionForm: React.FC<CollectionFormProps> = ({
+export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>(({
   collection,
   onSave,
   onCancel,
   isLoading = false
-}) => {
+}, ref) => {
   const [formData, setFormData] = useState<CollectionFormData>({
     name: '',
     description: '',
@@ -70,7 +71,7 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({
         name: collection.name,
         description: collection.description || '',
         variables: collection.variables || {},
-        isFavorite: collection.isFavorite === 1 || false
+        isFavorite: !!collection.isFavorite
       });
     }
   }, [collection]);
@@ -88,68 +89,66 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({
     clearFieldError(field);
   };
 
+  const handleVariableChange = (variables: Record<string, string>) => {
+    setFormData(prev => ({ ...prev, variables }));
+  };
+
+  // Expose submit handler for parent component
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+    }
+  }));
+
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>{collection ? 'Edit Collection' : 'New Collection'}</CardTitle>
-        <CardDescription>
-          {collection ? 'Update collection details and variables' : 'Create a new collection with variables'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <FormSection title="Basic Information" description="Collection name and description">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  onBlur={() => validateField('name', formData.name)}
-                  className={errors.name ? 'border-red-500' : ''}
-                  placeholder="Enter collection name"
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-500 mt-1">{errors.description}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  onBlur={() => validateField('description', formData.description)}
-                  className={errors.description ? 'border-red-500' : ''}
-                  placeholder="Enter collection description"
-                  rows={3}
-                />
-                {errors.description && (
-                  <p className="text-sm text-red-500 mt-1">{errors.description}</p>
-                )}
-              </div>
-            </div>
-          </FormSection>
-
-          <FormSection title="Environment Variables" description="Variables available for requests in this collection">
-            <EnvironmentVariable
-              variables={formData.variables}
-              onVariablesChange={(variables) => handleInputChange('variables', variables)}
+    <form onSubmit={handleSubmit} className="w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
+        {/* Left Column: Basic Info */}
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="name">Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              onBlur={() => validateField('name', formData.name)}
+              className={errors.name ? 'border-red-500' : ''}
+              placeholder="Enter collection name"
             />
-          </FormSection>
-
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving...' : 'Save Collection'}
-            </Button>
+            {errors.name && (
+              <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+            )}
           </div>
-        </form>
-      </CardContent>
-    </Card>
+
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              onBlur={() => validateField('description', formData.description)}
+              className={errors.description ? 'border-red-500' : ''}
+              placeholder="Enter collection description"
+              rows={3}
+            />
+            {errors.description && (
+              <p className="text-sm text-red-500 mt-1">{errors.description}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Environment Variables */}
+        <div className="flex-1">
+          <EnvironmentVariable
+            variables={formData.variables}
+            onVariablesChange={handleVariableChange}
+            title=""
+            description=""
+          />
+        </div>
+      </div>
+    </form>
   );
-};
+});
+
+CollectionForm.displayName = 'CollectionForm';

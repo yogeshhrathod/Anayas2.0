@@ -14,6 +14,7 @@ import { ShortcutHelp } from "./components/ShortcutHelp";
 import { CollectionHierarchy } from "./components/CollectionHierarchy";
 import { ResizeHandle } from "./components/ui/resize-handle";
 import { useShortcuts } from "./hooks/useShortcuts";
+import { useSessionRecovery } from "./hooks/useSessionRecovery";
 import { ContextState } from "./lib/shortcuts/types";
 import { Request } from "./types/entities";
 import {
@@ -37,6 +38,9 @@ type Page =
   | "settings";
 
 function App() {
+  // Session recovery - load unsaved requests on startup
+  useSessionRecovery();
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isResizing, setIsResizing] = useState(false);
   const [_requests, setRequests] = useState<any[]>([]);
@@ -236,6 +240,33 @@ function App() {
     'add-request': () => {
       setSelectedRequest(null);
       setCurrentPage('home');
+    },
+    
+    'new-request': (_: KeyboardEvent, context: ContextState) => {
+      // Clear active unsaved request ID to create a new one
+      const { setActiveUnsavedRequestId } = useStore.getState();
+      setActiveUnsavedRequestId(null);
+      
+      // Create a new empty request
+      const newRequest: Request = {
+        name: '',
+        method: 'GET',
+        url: '',
+        headers: { 'Content-Type': 'application/json' },
+        body: '',
+        queryParams: [],
+        auth: { type: 'none' },
+        collectionId: undefined,
+        folderId: undefined,
+        isFavorite: 0,
+      };
+      
+      setSelectedRequest(newRequest);
+      
+      // Navigate to home page if not already there
+      if (context.page !== 'home') {
+        setCurrentPage('home');
+      }
     },
     
     'add-folder': () => {

@@ -97,12 +97,18 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
               onClick={menuAction.onClick}
               disabled={menuAction.disabled}
               className={cn(
-                menuAction.destructive && 'text-red-600 focus:text-red-600'
+                menuAction.destructive && 'text-red-600 focus:text-red-600',
+                'flex items-center'
               )}
             >
-              <span className="flex-1">{menuAction.label}</span>
+              <div className="flex items-center flex-1 min-w-0">
+                {menuAction.icon && (
+                  <span className="mr-2 flex-shrink-0">{menuAction.icon}</span>
+                )}
+                <span className="flex-1">{menuAction.label}</span>
+              </div>
               {menuAction.shortcut && (
-                <span className="ml-auto text-xs tracking-widest text-muted-foreground">
+                <span className="ml-8 text-xs tracking-widest text-muted-foreground flex-shrink-0">
                   {menuAction.shortcut}
                 </span>
               )}

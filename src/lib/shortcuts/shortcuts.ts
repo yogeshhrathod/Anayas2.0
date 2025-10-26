@@ -89,6 +89,15 @@ export const SHORTCUTS: Record<string, ShortcutDefinition> = {
     description: 'Focus URL input'
   },
   
+  NEW_REQUEST: {
+    key: 'n',
+    metaKey: true,
+    ctrlKey: true,
+    contexts: ['global', 'editor'],
+    action: 'new-request',
+    description: 'Create new request'
+  },
+  
   // Collection-specific shortcuts
   ADD_REQUEST: {
     key: 'r',

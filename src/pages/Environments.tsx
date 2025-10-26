@@ -14,7 +14,7 @@
  * ```
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { PageLayout } from '../components/shared/PageLayout';
 import { EnvironmentForm } from '../components/environment/EnvironmentForm';
 import { EnvironmentGrid } from '../components/environment/EnvironmentGrid';
@@ -24,11 +24,13 @@ import { useConfirmation } from '../hooks/useConfirmation';
 import { useStore } from '../store/useStore';
 import { Environment } from '../types/entities';
 import { EnvironmentFormData } from '../types/forms';
+import { Button } from '../components/ui/button';
 
 export function Environments() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingEnvironment, setEditingEnvironment] = useState<Environment | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const formRef = useRef<React.ElementRef<typeof EnvironmentForm>>(null);
 
   const { currentEnvironment, setCurrentEnvironment } = useStore();
 
@@ -87,7 +89,7 @@ export function Environments() {
   const handleDeleteEnvironment = async (environment: Environment) => {
     const confirmed = await confirm({
       title: 'Delete Environment',
-      message: `Are you sure you want to delete "${environment.display_name}"? This action cannot be undone.`
+      message: `Are you sure you want to delete "${environment.displayName}"? This action cannot be undone.`
     });
 
     if (confirmed) {
@@ -130,8 +132,19 @@ export function Environments() {
       <PageLayout
         title={editingEnvironment ? 'Edit Environment' : 'New Environment'}
         description={editingEnvironment ? 'Update environment details and variables' : 'Create a new environment with variables'}
+        actions={
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
+              Cancel
+            </Button>
+            <Button onClick={() => formRef.current?.submit()} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        }
       >
         <EnvironmentForm
+          ref={formRef}
           environment={editingEnvironment}
           onSave={handleSaveEnvironment}
           onCancel={handleCancelEdit}
