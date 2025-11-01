@@ -18,7 +18,7 @@
 
 import React from 'react';
 import { Card } from '../ui/card';
-import { Input } from '../ui/input';
+import { OverlayVariableInput } from '../ui/overlay-variable-input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Shield } from 'lucide-react';
@@ -70,15 +70,13 @@ export const AuthTab: React.FC<AuthTabProps> = ({
           <Card className="p-4">
             <div className="space-y-3">
               <Label htmlFor="bearer-token" className="text-sm font-medium">Bearer Token</Label>
-              <Input 
-                id="bearer-token"
-                type="password"
+              <OverlayVariableInput
                 value={requestData.auth.token || ''}
-                onChange={(e) => setRequestData({ 
+                onChange={(token) => setRequestData({ 
                   ...requestData, 
-                  auth: { ...requestData.auth, token: e.target.value } 
+                  auth: { ...requestData.auth, token } 
                 })}
-                placeholder="Enter your bearer token"
+                placeholder="Enter your bearer token or use {{variable}}"
               />
               <p className="text-xs text-muted-foreground">
                 Bearer [token] will be sent in the Authorization header
@@ -92,27 +90,24 @@ export const AuthTab: React.FC<AuthTabProps> = ({
             <div className="space-y-3">
               <div>
                 <Label htmlFor="basic-username" className="text-sm font-medium">Username</Label>
-                <Input 
-                  id="basic-username"
+                <OverlayVariableInput
                   value={requestData.auth.username || ''}
-                  onChange={(e) => setRequestData({ 
+                  onChange={(username) => setRequestData({ 
                     ...requestData, 
-                    auth: { ...requestData.auth, username: e.target.value } 
+                    auth: { ...requestData.auth, username } 
                   })}
-                  placeholder="Enter username"
+                  placeholder="Enter username or use {{variable}}"
                 />
               </div>
               <div>
                 <Label htmlFor="basic-password" className="text-sm font-medium">Password</Label>
-                <Input 
-                  id="basic-password"
-                  type="password"
+                <OverlayVariableInput
                   value={requestData.auth.password || ''}
-                  onChange={(e) => setRequestData({ 
+                  onChange={(password) => setRequestData({ 
                     ...requestData, 
-                    auth: { ...requestData.auth, password: e.target.value } 
+                    auth: { ...requestData.auth, password } 
                   })}
-                  placeholder="Enter password"
+                  placeholder="Enter password or use {{variable}}"
                 />
               </div>
               <p className="text-xs text-muted-foreground">
@@ -127,27 +122,24 @@ export const AuthTab: React.FC<AuthTabProps> = ({
             <div className="space-y-3">
               <div>
                 <Label htmlFor="apikey-key" className="text-sm font-medium">API Key</Label>
-                <Input 
-                  id="apikey-key"
-                  type="password"
+                <OverlayVariableInput
                   value={requestData.auth.apiKey || ''}
-                  onChange={(e) => setRequestData({ 
+                  onChange={(apiKey) => setRequestData({ 
                     ...requestData, 
-                    auth: { ...requestData.auth, apiKey: e.target.value } 
+                    auth: { ...requestData.auth, apiKey } 
                   })}
-                  placeholder="Enter your API key"
+                  placeholder="Enter your API key or use {{variable}}"
                 />
               </div>
               <div>
                 <Label htmlFor="apikey-header" className="text-sm font-medium">Header Name</Label>
-                <Input 
-                  id="apikey-header"
+                <OverlayVariableInput
                   value={requestData.auth.apiKeyHeader || 'X-API-Key'}
-                  onChange={(e) => setRequestData({ 
+                  onChange={(apiKeyHeader) => setRequestData({ 
                     ...requestData, 
-                    auth: { ...requestData.auth, apiKeyHeader: e.target.value } 
+                    auth: { ...requestData.auth, apiKeyHeader } 
                   })}
-                  placeholder="e.g., X-API-Key, Authorization"
+                  placeholder="e.g., X-API-Key, Authorization or use {{variable}}"
                 />
               </div>
               <p className="text-xs text-muted-foreground">

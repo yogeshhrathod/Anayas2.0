@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from './button';
 import { Input } from './input';
+import { OverlayVariableInput } from './overlay-variable-input';
 import { Trash2, Plus } from 'lucide-react';
 
 interface KeyValueItem {
@@ -74,10 +75,10 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
                 onChange={(e) => updateItem(index, 'key', e.target.value)}
                 className="flex-1"
               />
-              <Input
+              <OverlayVariableInput
                 placeholder={placeholder.value}
                 value={item.value}
-                onChange={(e) => updateItem(index, 'value', e.target.value)}
+                onChange={(value) => updateItem(index, 'value', value)}
                 className="flex-1"
               />
               <Button
