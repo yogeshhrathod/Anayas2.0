@@ -78,6 +78,7 @@ export interface RequestPreset {
   id: string;
   name: string;
   description?: string;
+  requestId?: number; // The request this preset belongs to
   requestData: {
     method: Request['method'];
     url: string;

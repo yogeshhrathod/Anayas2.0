@@ -27,6 +27,9 @@ import {
   getAllUnsavedRequests,
   clearUnsavedRequests,
   promoteUnsavedRequest,
+  addPreset,
+  getAllPresets,
+  deletePreset,
   generateUniqueId,
 } from '../database';
 import { apiService } from '../services/api';
@@ -835,6 +838,36 @@ export function registerIpcHandlers() {
       const savedId = promoteUnsavedRequest(id, data);
       return { success: true, id: savedId };
     } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Preset operations
+  ipcMain.handle('preset:list', async (_, requestId?: number) => {
+    try {
+      return getAllPresets(requestId);
+    } catch (error: any) {
+      console.error('Failed to list presets:', error);
+      return [];
+    }
+  });
+
+  ipcMain.handle('preset:save', async (_, preset) => {
+    try {
+      const id = addPreset(preset);
+      return { success: true, id };
+    } catch (error: any) {
+      console.error('Failed to save preset:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('preset:delete', async (_, id) => {
+    try {
+      deletePreset(id);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Failed to delete preset:', error);
       return { success: false, error: error.message };
     }
   });

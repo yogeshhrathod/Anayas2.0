@@ -33,6 +33,12 @@ export function ApiRequestBuilder() {
   const requestState = useRequestState(selectedRequest);
   const requestActions = useRequestActions(requestState.requestData);
 
+  // Reload presets when request ID changes (when switching between requests)
+  useEffect(() => {
+    // This is handled inside useRequestActions, but we trigger a refresh here if needed
+    // The effect in useRequestActions will handle loading presets for the new request
+  }, [requestState.requestData.id]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleSaveRequest = createKeymapHandler(KEYMAP.SAVE_REQUEST, () => {
@@ -51,16 +57,101 @@ export function ApiRequestBuilder() {
       }
     });
 
+    const handleCreatePreset = createKeymapHandler(KEYMAP.CREATE_PRESET, () => {
+      requestActions.setShowCreatePresetDialog(true);
+    });
+
+    // Handlers for selecting presets 1-9
+    const applyPresetToForm = (preset: any) => {
+      requestActions.applyPreset(preset, (data) => {
+        requestState.setRequestData({
+          ...requestState.requestData,
+          method: data.method,
+          url: data.url,
+          headers: { ...data.headers },
+          body: data.body,
+          queryParams: [...data.queryParams],
+          auth: { ...data.auth },
+        });
+      });
+    };
+
+    const handleSelectPreset1 = createKeymapHandler(KEYMAP.SELECT_PRESET_1, () => {
+      if (requestActions.presets[0]) {
+        applyPresetToForm(requestActions.presets[0]);
+      }
+    });
+    const handleSelectPreset2 = createKeymapHandler(KEYMAP.SELECT_PRESET_2, () => {
+      if (requestActions.presets[1]) {
+        applyPresetToForm(requestActions.presets[1]);
+      }
+    });
+    const handleSelectPreset3 = createKeymapHandler(KEYMAP.SELECT_PRESET_3, () => {
+      if (requestActions.presets[2]) {
+        applyPresetToForm(requestActions.presets[2]);
+      }
+    });
+    const handleSelectPreset4 = createKeymapHandler(KEYMAP.SELECT_PRESET_4, () => {
+      if (requestActions.presets[3]) {
+        applyPresetToForm(requestActions.presets[3]);
+      }
+    });
+    const handleSelectPreset5 = createKeymapHandler(KEYMAP.SELECT_PRESET_5, () => {
+      if (requestActions.presets[4]) {
+        applyPresetToForm(requestActions.presets[4]);
+      }
+    });
+    const handleSelectPreset6 = createKeymapHandler(KEYMAP.SELECT_PRESET_6, () => {
+      if (requestActions.presets[5]) {
+        applyPresetToForm(requestActions.presets[5]);
+      }
+    });
+    const handleSelectPreset7 = createKeymapHandler(KEYMAP.SELECT_PRESET_7, () => {
+      if (requestActions.presets[6]) {
+        applyPresetToForm(requestActions.presets[6]);
+      }
+    });
+    const handleSelectPreset8 = createKeymapHandler(KEYMAP.SELECT_PRESET_8, () => {
+      if (requestActions.presets[7]) {
+        applyPresetToForm(requestActions.presets[7]);
+      }
+    });
+    const handleSelectPreset9 = createKeymapHandler(KEYMAP.SELECT_PRESET_9, () => {
+      if (requestActions.presets[8]) {
+        applyPresetToForm(requestActions.presets[8]);
+      }
+    });
+
     document.addEventListener('keydown', handleSaveRequest);
     document.addEventListener('keydown', handleSendRequest);
     document.addEventListener('keydown', handleFocusUrl);
+    document.addEventListener('keydown', handleCreatePreset);
+    document.addEventListener('keydown', handleSelectPreset1);
+    document.addEventListener('keydown', handleSelectPreset2);
+    document.addEventListener('keydown', handleSelectPreset3);
+    document.addEventListener('keydown', handleSelectPreset4);
+    document.addEventListener('keydown', handleSelectPreset5);
+    document.addEventListener('keydown', handleSelectPreset6);
+    document.addEventListener('keydown', handleSelectPreset7);
+    document.addEventListener('keydown', handleSelectPreset8);
+    document.addEventListener('keydown', handleSelectPreset9);
 
     return () => {
       document.removeEventListener('keydown', handleSaveRequest);
       document.removeEventListener('keydown', handleSendRequest);
       document.removeEventListener('keydown', handleFocusUrl);
+      document.removeEventListener('keydown', handleCreatePreset);
+      document.removeEventListener('keydown', handleSelectPreset1);
+      document.removeEventListener('keydown', handleSelectPreset2);
+      document.removeEventListener('keydown', handleSelectPreset3);
+      document.removeEventListener('keydown', handleSelectPreset4);
+      document.removeEventListener('keydown', handleSelectPreset5);
+      document.removeEventListener('keydown', handleSelectPreset6);
+      document.removeEventListener('keydown', handleSelectPreset7);
+      document.removeEventListener('keydown', handleSelectPreset8);
+      document.removeEventListener('keydown', handleSelectPreset9);
     };
-  }, [requestState.requestData]);
+  }, [requestState.requestData, requestActions]);
 
   const handleSaveRequestClick = () => {
     if (requestState.requestData.id) {
@@ -68,7 +159,7 @@ export function ApiRequestBuilder() {
       requestActions.saveRequest();
     } else {
       // Show save dialog for new request
-      requestActions.setShowCreatePresetDialog(true);
+      requestActions.setShowSaveRequestDialog(true);
     }
   };
 
@@ -227,7 +318,19 @@ export function ApiRequestBuilder() {
           newPresetDescription={requestActions.newPresetDescription}
           onToggleExpanded={requestActions.setIsPresetsExpanded}
           onCreatePreset={requestActions.createPreset}
-          onApplyPreset={requestActions.applyPreset}
+          onApplyPreset={(preset) => {
+            requestActions.applyPreset(preset, (data) => {
+              requestState.setRequestData({
+                ...requestState.requestData,
+                method: data.method,
+                url: data.url,
+                headers: { ...data.headers },
+                body: data.body,
+                queryParams: [...data.queryParams],
+                auth: { ...data.auth },
+              });
+            });
+          }}
           onDeletePreset={requestActions.deletePreset}
           onShowCreateDialog={requestActions.setShowCreatePresetDialog}
           onSetNewPresetName={requestActions.setNewPresetName}
@@ -244,8 +347,8 @@ export function ApiRequestBuilder() {
       
       {/* Save Request Dialog */}
       <SaveRequestDialog
-        open={requestActions.showCreatePresetDialog}
-        onOpenChange={requestActions.setShowCreatePresetDialog}
+        open={requestActions.showSaveRequestDialog}
+        onOpenChange={requestActions.setShowSaveRequestDialog}
         onSave={handleSaveDialogSave}
         currentRequestName={requestState.requestData.name}
         currentCollectionId={requestState.requestData.collectionId}

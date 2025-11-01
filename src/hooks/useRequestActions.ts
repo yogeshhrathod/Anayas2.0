@@ -20,7 +20,7 @@
  * ```
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { RequestFormData } from '../types/forms';
 import { RequestPreset, ResponseData } from '../types/entities';
 import { useToastNotifications } from './useToastNotifications';
@@ -31,6 +31,7 @@ export interface RequestActionsState {
   isLoading: boolean;
   presets: RequestPreset[];
   showCreatePresetDialog: boolean;
+  showSaveRequestDialog: boolean;
   newPresetName: string;
   newPresetDescription: string;
   isPresetsExpanded: boolean;
@@ -43,9 +44,10 @@ export interface RequestActionsActions {
   copyResponse: () => void;
   downloadResponse: () => void;
   createPreset: () => void;
-  applyPreset: (preset: RequestPreset) => void;
+  applyPreset: (preset: RequestPreset, onApply?: (data: RequestPreset['requestData']) => void) => void;
   deletePreset: (presetId: string) => void;
   setShowCreatePresetDialog: (show: boolean) => void;
+  setShowSaveRequestDialog: (show: boolean) => void;
   setNewPresetName: (name: string) => void;
   setNewPresetDescription: (description: string) => void;
   setIsPresetsExpanded: (expanded: boolean) => void;
@@ -56,16 +58,43 @@ export function useRequestActions(requestData: RequestFormData) {
   const { triggerSidebarRefresh, setSelectedRequest, selectedRequest } = useStore();
   const { showSuccess, showError } = useToastNotifications();
 
+  const { presetsExpanded, setPresetsExpanded } = useStore();
+
   const [state, setState] = useState<RequestActionsState>({
     response: null,
     isLoading: false,
     presets: [],
     showCreatePresetDialog: false,
+    showSaveRequestDialog: false,
     newPresetName: '',
     newPresetDescription: '',
-    isPresetsExpanded: true,
+    isPresetsExpanded: presetsExpanded ?? false,
     activePresetId: null,
   });
+
+  // Load presets from database when request changes
+  useEffect(() => {
+    const loadPresets = async () => {
+      try {
+        const requestId = requestData.id;
+        const loadedPresets = await window.electronAPI.preset.list(requestId);
+        setState(prev => {
+          // Reset active preset if it doesn't belong to the current request
+          const activePresetStillValid = prev.activePresetId && 
+            loadedPresets.some(p => p.id === prev.activePresetId);
+          
+          return {
+            ...prev,
+            presets: loadedPresets,
+            activePresetId: activePresetStillValid ? prev.activePresetId : null,
+          };
+        });
+      } catch (error) {
+        console.error('Failed to load presets:', error);
+      }
+    };
+    loadPresets();
+  }, [requestData.id]);
 
   const sendRequest = useCallback(async () => {
     if (!requestData.url.trim()) {
@@ -165,8 +194,15 @@ export function useRequestActions(requestData: RequestFormData) {
     }
   }, [state.response, showSuccess]);
 
-  const createPreset = useCallback(() => {
-    if (!state.newPresetName.trim()) return;
+  const createPreset = useCallback(async () => {
+    // Presets can only be created for saved requests (requests with an ID)
+    if (!requestData.id) {
+      showError('Request Not Saved', 'Please save the request first before creating presets');
+      return;
+    }
+
+    // Generate a default name if none provided
+    const presetName = state.newPresetName.trim() || `Preset ${state.presets.length + 1}`;
     
     // Capture current body data based on body type
     let capturedBody = '';
@@ -176,8 +212,9 @@ export function useRequestActions(requestData: RequestFormData) {
     
     const preset: RequestPreset = {
       id: Date.now().toString(),
-      name: state.newPresetName.trim(),
+      name: presetName,
       description: state.newPresetDescription.trim() || undefined,
+      requestId: requestData.id, // Associate preset with current request
       requestData: {
         method: requestData.method,
         url: requestData.url,
@@ -188,29 +225,46 @@ export function useRequestActions(requestData: RequestFormData) {
       }
     };
     
-    setState(prev => ({
-      ...prev,
-      presets: [...prev.presets, preset],
-      newPresetName: '',
-      newPresetDescription: '',
-      showCreatePresetDialog: false,
-    }));
-    
-    showSuccess('Preset Created', { description: `"${preset.name}" has been saved successfully` });
-  }, [state.newPresetName, state.newPresetDescription, requestData, showSuccess]);
+    try {
+      const result = await window.electronAPI.preset.save(preset);
+      preset.id = result.id;
+      
+      setState(prev => ({
+        ...prev,
+        presets: [...prev.presets, preset],
+        newPresetName: '',
+        newPresetDescription: '',
+        showCreatePresetDialog: false,
+      }));
+      
+      showSuccess('Preset Created', { description: `"${preset.name}" has been saved successfully` });
+    } catch (error: any) {
+      console.error('Failed to save preset:', error);
+      showError('Save Failed', 'Failed to save preset to database');
+    }
+  }, [state.newPresetName, state.newPresetDescription, state.presets.length, requestData, showSuccess, showError]);
 
-  const applyPreset = useCallback((preset: RequestPreset) => {
+  const applyPreset = useCallback((preset: RequestPreset, onApply?: (data: RequestPreset['requestData']) => void) => {
     setState(prev => ({ ...prev, activePresetId: preset.id }));
+    if (onApply) {
+      onApply(preset.requestData);
+    }
     showSuccess('Preset Applied', { description: `"${preset.name}" configuration has been applied` });
   }, [showSuccess]);
 
-  const deletePreset = useCallback((presetId: string) => {
-    setState(prev => ({
-      ...prev,
-      presets: prev.presets.filter(p => p.id !== presetId),
-    }));
-    showSuccess('Preset Deleted', { description: 'Preset has been removed successfully' });
-  }, [showSuccess]);
+  const deletePreset = useCallback(async (presetId: string) => {
+    try {
+      await window.electronAPI.preset.delete(presetId);
+      setState(prev => ({
+        ...prev,
+        presets: prev.presets.filter(p => p.id !== presetId),
+      }));
+      showSuccess('Preset Deleted', { description: 'Preset has been removed successfully' });
+    } catch (error: any) {
+      console.error('Failed to delete preset:', error);
+      showError('Delete Failed', 'Failed to delete preset from database');
+    }
+  }, [showSuccess, showError]);
 
   const actions: RequestActionsActions = {
     sendRequest,
@@ -221,9 +275,13 @@ export function useRequestActions(requestData: RequestFormData) {
     applyPreset,
     deletePreset,
     setShowCreatePresetDialog: (show) => setState(prev => ({ ...prev, showCreatePresetDialog: show })),
+    setShowSaveRequestDialog: (show) => setState(prev => ({ ...prev, showSaveRequestDialog: show })),
     setNewPresetName: (name) => setState(prev => ({ ...prev, newPresetName: name })),
     setNewPresetDescription: (description) => setState(prev => ({ ...prev, newPresetDescription: description })),
-    setIsPresetsExpanded: (expanded) => setState(prev => ({ ...prev, isPresetsExpanded: expanded })),
+    setIsPresetsExpanded: (expanded) => {
+      setPresetsExpanded(expanded);
+      setState(prev => ({ ...prev, isPresetsExpanded: expanded }));
+    },
     setActivePresetId: (id) => setState(prev => ({ ...prev, activePresetId: id })),
   };
 

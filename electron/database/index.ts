@@ -30,5 +30,8 @@ export {
   getAllUnsavedRequests,
   clearUnsavedRequests,
   promoteUnsavedRequest,
+  addPreset,
+  getAllPresets,
+  deletePreset,
   type UnsavedRequest,
 } from './json-db';
