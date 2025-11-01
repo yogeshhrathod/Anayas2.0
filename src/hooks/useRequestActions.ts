@@ -81,7 +81,8 @@ export function useRequestActions(requestData: RequestFormData) {
         url: requestData.url,
         headers: requestData.headers,
         body: requestData.body,
-        auth: requestData.auth
+        auth: requestData.auth,
+        collectionId: selectedRequest?.collectionId
       });
 
       setState(prev => ({ ...prev, response }));

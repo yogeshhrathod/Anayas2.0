@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Home, FolderPlus, Globe, History as HistoryIcon, Settings as SettingsIcon, ScrollText, Plus, Upload } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useStore } from "../store/useStore";
-import { EnvironmentSwitcher } from "./EnvironmentSwitcher";
+import { EnvironmentSelector } from "./EnvironmentSelector";
 import { Request } from "../types/entities";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { getShortcutDisplay, KEYMAP } from "../lib/keymap";
@@ -216,9 +216,9 @@ export function NavigationBar() {
           );
         })}
         
-        {/* Environment Switcher */}
+        {/* Environment Selector */}
         <div className="ml-2">
-          <EnvironmentSwitcher />
+          <EnvironmentSelector />
         </div>
       </div>
     </div>

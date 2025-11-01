@@ -4,6 +4,7 @@ export {
   initDatabase,
   closeDatabase,
   saveDatabase,
+  generateUniqueId,
   addEnvironment,
   updateEnvironment,
   deleteEnvironment,

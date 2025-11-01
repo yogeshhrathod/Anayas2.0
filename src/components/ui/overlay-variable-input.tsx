@@ -1,0 +1,353 @@
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { VariableAutocomplete } from './variable-autocomplete';
+import { VariableContextMenu } from './variable-context-menu';
+import { useAvailableVariables, useVariableResolution } from '../../hooks/useVariableResolution';
+import { cn } from '../../lib/utils';
+
+interface Segment {
+  type: 'text' | 'variable';
+  content?: string;
+  name?: string;
+  resolved?: boolean;
+}
+
+const SHARED_STYLES: React.CSSProperties = {
+  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+  fontSize: '14px',
+  lineHeight: '20px',
+  padding: '8px 12px', // py-2 px-3 = 8px vertical, 12px horizontal
+  letterSpacing: 'normal',
+  wordSpacing: 'normal',
+  fontWeight: '400',
+  boxSizing: 'border-box',
+  margin: 0,
+};
+
+export interface OverlayVariableInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
+}
+
+function parseTextToSegments(text: string, resolvedVariables: Array<{ name: string; value: string }>): Segment[] {
+  const VARIABLE_REGEX = /\{\{[\w.]+\}\}/g;
+  const segments: Segment[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = VARIABLE_REGEX.exec(text)) !== null) {
+    // Add text before variable
+    if (match.index > lastIndex) {
+      segments.push({
+        type: 'text',
+        content: text.substring(lastIndex, match.index),
+      });
+    }
+
+    // Add variable
+    const varName = match[0].slice(2, -2); // Remove {{}}
+    const variable = resolvedVariables.find(v => v.name === varName);
+    segments.push({
+      type: 'variable',
+      name: varName,
+      resolved: !!variable && variable.value !== '',
+    });
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    segments.push({
+      type: 'text',
+      content: text.substring(lastIndex),
+    });
+  }
+
+  return segments;
+}
+
+export function OverlayVariableInput({
+  value = '',
+  onChange,
+  placeholder,
+  className,
+  disabled = false,
+}: OverlayVariableInputProps) {
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const [contextMenuVariable, setContextMenuVariable] = useState<string>('');
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [autocompletePosition, setAutocompletePosition] = useState({ top: 0, left: 0 });
+  
+  const inputRef = useRef<HTMLInputElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  
+  const variables = useAvailableVariables();
+  const { variables: resolvedVariables } = useVariableResolution(value);
+  
+  // Parse text into segments
+  const segments = useMemo(() => parseTextToSegments(value, resolvedVariables), [value, resolvedVariables]);
+
+  const updateAutocompletePosition = () => {
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setAutocompletePosition({
+        top: rect.bottom + 4,
+        left: rect.left
+      });
+    }
+  };
+
+  // Detect when user types {{ to show autocomplete
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    onChange(newValue);
+
+    // Check if typing after {{
+    const lastBraces = newValue.lastIndexOf('{{');
+    if (lastBraces !== -1) {
+      const afterBraces = newValue.substring(lastBraces + 2);
+      if (!afterBraces.includes('}}')) {
+        // Still typing variable name
+        setSearchTerm(afterBraces);
+        updateAutocompletePosition();
+        setShowAutocomplete(true);
+      } else {
+        setShowAutocomplete(false);
+      }
+    } else {
+      setShowAutocomplete(false);
+    }
+  };
+
+  const handleAutocompleteSelect = (variableName: string) => {
+    if (!inputRef.current) return;
+    
+    const lastBraces = value.lastIndexOf('{{');
+    if (lastBraces === -1) return;
+
+    const beforeBraces = value.substring(0, lastBraces);
+    const afterCurrentVar = value.substring(lastBraces + 2 + searchTerm.length);
+    const newValue = beforeBraces + `{{${variableName}}}` + afterCurrentVar;
+    
+    onChange(newValue);
+    setShowAutocomplete(false);
+
+    // Focus input after selection
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        const newCursorPos = beforeBraces.length + variableName.length + 4;
+        inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    }, 0);
+  };
+
+  const handleClose = () => {
+    setShowAutocomplete(false);
+  };
+
+  // Handle double-click on capsule
+  const handleDoubleClick = (varName: string) => {
+    if (!inputRef.current) return;
+    
+    const varText = `{{${varName}}}`;
+    const index = value.indexOf(varText);
+    
+    if (index !== -1) {
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(index, index + varText.length);
+    }
+  };
+
+  // Handle right-click on capsule
+  const handleContextMenu = (e: React.MouseEvent, varName: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Focus the input to maintain keyboard interaction
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+    
+    setContextMenuVariable(varName);
+    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+    setShowContextMenu(true);
+  };
+
+
+  // Close autocomplete on escape or click outside
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowAutocomplete(false);
+        setShowContextMenu(false);
+      }
+    };
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowAutocomplete(false);
+        setShowContextMenu(false);
+      }
+    };
+
+    if (showAutocomplete || showContextMenu) {
+      window.addEventListener('keydown', handleEscape);
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        window.removeEventListener('keydown', handleEscape);
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showAutocomplete, showContextMenu]);
+
+  return (
+    <div 
+      ref={wrapperRef} 
+      className={cn(
+        "relative w-full flex h-10 rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+        disabled && "cursor-not-allowed opacity-50",
+        className
+      )}
+    >
+      {/* Overlay Layer - Visual (BELOW input so input captures clicks) */}
+      <div
+        ref={overlayRef}
+        style={{
+          ...SHARED_STYLES,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1,
+          pointerEvents: 'none', // Don't block input clicks
+          whiteSpace: 'pre',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          color: 'inherit',
+          border: 'none',
+          outline: 'none',
+        }}
+      >
+        {segments.map((seg, i) => 
+          seg.type === 'variable' ? (
+            <span
+              key={i}
+              className={cn(
+                'rounded font-medium transition-colors',
+                seg.resolved
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+              )}
+              style={{ 
+                pointerEvents: 'auto', // Only capsules receive pointer events
+                verticalAlign: 'baseline',
+                cursor: 'pointer',
+                padding: '2px 4px',
+                display: 'inline-block',
+                lineHeight: 'inherit',
+              }}
+              onContextMenu={(e) => handleContextMenu(e, seg.name!)}
+              onDoubleClick={() => handleDoubleClick(seg.name!)}
+            >
+              {`{{${seg.name}}}`}
+            </span>
+          ) : (
+            <span key={i}>{seg.content}</span>
+          )
+        )}
+        {!value && placeholder && (
+          <span className="text-muted-foreground">{placeholder}</span>
+        )}
+      </div>
+
+      {/* Input Layer - Interaction (ON TOP, captures all clicks) */}
+      <input
+        ref={inputRef}
+        value={value}
+        onChange={handleChange}
+        onContextMenu={(e) => {
+          // Check if we're clicking on a capsule by examining click position
+          const clickX = e.clientX;
+          const rect = inputRef.current?.getBoundingClientRect();
+          if (!rect) return;
+          
+          // Find which segment is at the click position
+          let charPos = 0;
+          for (const seg of segments) {
+            if (seg.type === 'variable') {
+              const varText = `{{${seg.name}}}`;
+              // Estimate if click is in this variable's capsule area
+              const startPos = charPos;
+              const endPos = charPos + varText.length;
+              const charWidth = 8;
+              const relativeX = clickX - rect.left - 12;
+              const clickedChar = Math.floor(relativeX / charWidth);
+              
+              if (clickedChar >= startPos && clickedChar <= endPos) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleContextMenu(e, seg.name!);
+                return;
+              }
+              charPos += varText.length;
+            } else if (seg.content) {
+              charPos += seg.content.length;
+            }
+          }
+        }}
+        placeholder={placeholder}
+        disabled={disabled}
+        style={{
+          ...SHARED_STYLES,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 2,
+          color: 'transparent', // Hide text
+          caretColor: 'inherit', // Show cursor with theme color
+          background: 'transparent',
+          border: 'none',
+          outline: 'none',
+          width: '100%',
+          height: '100%',
+          resize: 'none',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          boxShadow: 'none', // Remove any shadow effects
+        }}
+        className="placeholder:text-muted-foreground"
+      />
+
+      {/* Autocomplete */}
+      {showAutocomplete && (
+        <VariableAutocomplete
+          variables={variables}
+          searchTerm={searchTerm}
+          onSelect={handleAutocompleteSelect}
+          onClose={handleClose}
+          position={autocompletePosition}
+        />
+      )}
+
+      {/* Context Menu */}
+      {showContextMenu && (
+        <VariableContextMenu
+          variableName={contextMenuVariable}
+          position={contextMenuPosition}
+          onClose={() => setShowContextMenu(false)}
+        />
+      )}
+    </div>
+  );
+}
+

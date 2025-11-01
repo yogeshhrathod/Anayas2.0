@@ -36,11 +36,19 @@ export interface Environment {
   createdAt?: string;
 }
 
+export interface CollectionEnvironment {
+  id?: number;
+  name: string;
+  variables: Record<string, string>;
+}
+
 export interface Collection {
   id?: number;
   name: string;
   description?: string;
-  variables: Record<string, string>;
+  variables: Record<string, string>; // DEPRECATED - use environments array
+  environments?: CollectionEnvironment[]; // NEW - collection-specific environments
+  activeEnvironmentId?: number; // NEW - currently selected environment for this collection
   isFavorite: number;
   createdAt?: string;
   lastUsed?: string;

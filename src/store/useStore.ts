@@ -31,6 +31,10 @@ interface AppState {
   currentEnvironment: Environment | null;
   setEnvironments: (environments: Environment[]) => void;
   setCurrentEnvironment: (env: Environment | null) => void;
+  
+  // Collection-Environment selection (stores which env is selected per collection)
+  collectionEnvironmentSelection: Record<number, number>;
+  setCollectionEnvironmentSelection: (collectionId: number, environmentId: number) => void;
 
   // Collections
   collections: Collection[];
@@ -118,6 +122,15 @@ export const useStore = create<AppState>()(
       currentEnvironment: null,
       setEnvironments: (environments) => set({ environments }),
       setCurrentEnvironment: (currentEnvironment) => set({ currentEnvironment }),
+      
+      // Collection-Environment selection
+      collectionEnvironmentSelection: {},
+      setCollectionEnvironmentSelection: (collectionId, environmentId) => set((state) => ({
+        collectionEnvironmentSelection: {
+          ...state.collectionEnvironmentSelection,
+          [collectionId]: environmentId
+        }
+      })),
 
       // Collections
       collections: [],

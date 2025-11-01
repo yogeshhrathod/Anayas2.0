@@ -39,7 +39,7 @@ let dbPath: string;
 
 // Helper function to generate unique IDs
 let lastId = Date.now();
-function generateUniqueId(): number {
+export function generateUniqueId(): number {
   const now = Date.now();
   if (now <= lastId) {
     lastId += 1;
@@ -78,7 +78,22 @@ export async function initDatabase(): Promise<void> {
         console.log('Migrated database: Added unsaved_requests table');
       }
       
-      if (!db.folders || !db.unsaved_requests) {
+      // Migration: Convert collection.variables to collection.environments
+      let needsMigration = false;
+      for (const collection of db.collections) {
+        if (!collection.environments && collection.variables && Object.keys(collection.variables).length > 0) {
+          collection.environments = [{
+            id: generateUniqueId(),
+            name: 'Default',
+            variables: collection.variables
+          }];
+          collection.activeEnvironmentId = collection.environments[0].id;
+          needsMigration = true;
+          console.log(`Migrated collection ${collection.id}: Converted variables to environments`);
+        }
+      }
+      
+      if (!db.folders || !db.unsaved_requests || needsMigration) {
         saveDatabase();
       }
     } catch (error) {

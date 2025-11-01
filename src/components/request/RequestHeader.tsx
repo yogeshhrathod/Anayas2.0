@@ -27,6 +27,7 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { OverlayVariableInput } from '../ui/overlay-variable-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Badge } from '../ui/badge';
@@ -157,14 +158,13 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
             </SelectContent>
           </Select>
 
-          {/* URL Input */}
+          {/* URL Input with Variable Support */}
           <div className="flex-1">
-            <Input
+            <OverlayVariableInput
               value={requestData.url}
-              onChange={(e) => setRequestData({ ...requestData, url: e.target.value })}
-              placeholder="Enter request URL"
+              onChange={(url) => setRequestData({ ...requestData, url })}
+              placeholder="Enter request URL or use {{variable}}"
               className="font-mono text-xs"
-              title={`Focus URL (${getShortcutDisplay(KEYMAP.FOCUS_URL)})`}
             />
           </div>
 

@@ -10,11 +10,19 @@ export interface Environment {
   createdAt?: string;
 }
 
+export interface CollectionEnvironment {
+  id?: number;
+  name: string;
+  variables: Record<string, string>;
+}
+
 export interface Collection {
   id?: number;
   name: string;
   description?: string;
   variables: Record<string, string>;
+  environments?: CollectionEnvironment[];
+  activeEnvironmentId?: number;
   isFavorite?: boolean;
   lastUsed?: string;
   createdAt?: string;
@@ -62,6 +70,8 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   body?: string;
   auth?: any;
+  collectionId?: number;
+  queryParams?: Array<{ key: string; value: string; enabled: boolean }>;
 }
 
 const api = {
@@ -82,6 +92,14 @@ const api = {
     save: (collection: Collection) => ipcRenderer.invoke('collection:save', collection),
     delete: (id: number) => ipcRenderer.invoke('collection:delete', id),
     toggleFavorite: (id: number) => ipcRenderer.invoke('collection:toggleFavorite', id),
+    addEnvironment: (collectionId: number, environment: { name: string; variables: Record<string, string> }) => 
+      ipcRenderer.invoke('collection:addEnvironment', collectionId, environment),
+    updateEnvironment: (collectionId: number, environmentId: number, updates: Partial<CollectionEnvironment>) => 
+      ipcRenderer.invoke('collection:updateEnvironment', collectionId, environmentId, updates),
+    deleteEnvironment: (collectionId: number, environmentId: number) => 
+      ipcRenderer.invoke('collection:deleteEnvironment', collectionId, environmentId),
+    setActiveEnvironment: (collectionId: number, environmentId: number | null) => 
+      ipcRenderer.invoke('collection:setActiveEnvironment', collectionId, environmentId),
   },
 
   // Folder operations
