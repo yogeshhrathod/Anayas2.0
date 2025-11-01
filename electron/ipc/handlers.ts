@@ -147,6 +147,7 @@ export function registerIpcHandlers() {
       updateCollection(collection.id, {
         name: collection.name,
         description: collection.description,
+        documentation: collection.documentation || '',
         variables: collection.variables || {},
         isFavorite: collection.isFavorite ? 1 : 0,
       });
@@ -155,6 +156,7 @@ export function registerIpcHandlers() {
       const id = addCollection({
         name: collection.name,
         description: collection.description,
+        documentation: collection.documentation || '',
         variables: collection.variables || {},
         isFavorite: collection.isFavorite ? 1 : 0,
       });
@@ -409,11 +411,38 @@ export function registerIpcHandlers() {
       }));
 
       // Execute HTTP request using apiService with resolved values
-      const result = await apiService.getJson(resolvedUrl, resolvedHeaders);
+      let result: any;
+      const method = options.method || 'GET';
+      
+      switch (method) {
+        case 'GET':
+          result = await apiService.getJson(resolvedUrl, resolvedHeaders);
+          break;
+        case 'POST':
+          result = await apiService.postJson(resolvedUrl, resolvedBody, resolvedHeaders);
+          break;
+        case 'PUT':
+          result = await apiService.putJson(resolvedUrl, resolvedBody, resolvedHeaders);
+          break;
+        case 'PATCH':
+          result = await apiService.patchJson(resolvedUrl, resolvedBody, resolvedHeaders);
+          break;
+        case 'DELETE':
+          result = await apiService.deleteJson(resolvedUrl, resolvedHeaders);
+          break;
+        case 'HEAD':
+          result = await apiService.headJson(resolvedUrl, resolvedHeaders);
+          break;
+        case 'OPTIONS':
+          result = await apiService.optionsJson(resolvedUrl, resolvedHeaders);
+          break;
+        default:
+          throw new Error(`Unsupported HTTP method: ${method}`);
+      }
 
       // Save to history with original URL for reference
       addRequestHistory({
-        method: options.method || 'GET',
+        method: method,
         url: resolvedUrl,
         status: result.status,
         response_time: result.responseTime,
@@ -429,6 +458,174 @@ export function registerIpcHandlers() {
         status: result.status,
         statusText: result.statusText,
         headers: result.headers
+      };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Collection Runner - Execute all requests in a collection sequentially
+  ipcMain.handle('collection:run', async (_, collectionId, onProgress) => {
+    try {
+      const db = getDatabase();
+      
+      // Get collection
+      const collection = db.collections.find(c => c.id === collectionId);
+      if (!collection) {
+        throw new Error('Collection not found');
+      }
+
+      // Get global environment
+      const globalEnv = db.environments.find((e) => e.isDefault === 1) || db.environments[0];
+      if (!globalEnv) {
+        throw new Error('No environment selected');
+      }
+
+      // Get collection variables
+      let collectionVariables: Record<string, string> = {};
+      if (collection.environments && collection.activeEnvironmentId) {
+        const activeEnv = collection.environments.find(e => e.id === collection.activeEnvironmentId);
+        if (activeEnv) {
+          collectionVariables = activeEnv.variables || {};
+        }
+      }
+
+      // Create variable context
+      const variableContext = {
+        globalVariables: globalEnv.variables || {},
+        collectionVariables
+      };
+
+      // Get all requests in this collection (including folders)
+      const allRequests = db.requests.filter(r => r.collectionId === collectionId);
+      
+      // Sort by order or id
+      const sortedRequests = allRequests.sort((a, b) => {
+        const orderA = a.order || 0;
+        const orderB = b.order || 0;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        return (a.id || 0) - (b.id || 0);
+      });
+
+      if (sortedRequests.length === 0) {
+        return { success: true, results: [], message: 'No requests found in collection' };
+      }
+
+      const results: Array<{
+        requestId: number;
+        requestName: string;
+        success: boolean;
+        status?: number;
+        responseTime?: number;
+        error?: string;
+      }> = [];
+
+      // Execute requests sequentially
+      for (let i = 0; i < sortedRequests.length; i++) {
+        const request = sortedRequests[i];
+        
+        try {
+          // Resolve variables in request
+          const resolvedUrl = variableResolver.resolve(request.url, variableContext);
+          const resolvedHeaders = variableResolver.resolveObject(request.headers || {}, variableContext);
+          const resolvedBody = typeof request.body === 'string' 
+            ? variableResolver.resolve(request.body, variableContext)
+            : request.body;
+          
+          const resolvedQueryParams = (request.queryParams || []).map(param => ({
+            ...param,
+            value: variableResolver.resolve(param.value, variableContext)
+          }));
+
+          // Execute request
+          let result: any;
+          switch (request.method) {
+            case 'GET':
+              result = await apiService.getJson(resolvedUrl, resolvedHeaders);
+              break;
+            case 'POST':
+              result = await apiService.postJson(resolvedUrl, resolvedBody, resolvedHeaders);
+              break;
+            case 'PUT':
+              result = await apiService.putJson(resolvedUrl, resolvedBody, resolvedHeaders);
+              break;
+            case 'PATCH':
+              result = await apiService.patchJson(resolvedUrl, resolvedBody, resolvedHeaders);
+              break;
+            case 'DELETE':
+              result = await apiService.deleteJson(resolvedUrl, resolvedHeaders);
+              break;
+            case 'HEAD':
+              result = await apiService.headJson(resolvedUrl, resolvedHeaders);
+              break;
+            case 'OPTIONS':
+              result = await apiService.optionsJson(resolvedUrl, resolvedHeaders);
+              break;
+            default:
+              throw new Error(`Unsupported HTTP method: ${request.method}`);
+          }
+
+          // Save to history
+          addRequestHistory({
+            method: request.method,
+            url: resolvedUrl,
+            status: result.status,
+            response_time: result.responseTime,
+            response_body: typeof result.body === 'string' ? result.body : JSON.stringify(result.body),
+            headers: JSON.stringify(resolvedHeaders),
+            createdAt: new Date().toISOString(),
+          });
+
+          results.push({
+            requestId: request.id!,
+            requestName: request.name,
+            success: true,
+            status: result.status,
+            responseTime: result.responseTime
+          });
+
+          // Send progress update
+          if (onProgress && typeof onProgress === 'function') {
+            onProgress({
+              current: i + 1,
+              total: sortedRequests.length,
+              requestName: request.name,
+              requestId: request.id,
+              status: 'completed'
+            });
+          }
+        } catch (error: any) {
+          results.push({
+            requestId: request.id!,
+            requestName: request.name,
+            success: false,
+            error: error.message
+          });
+
+          // Send progress update for error
+          if (onProgress && typeof onProgress === 'function') {
+            onProgress({
+              current: i + 1,
+              total: sortedRequests.length,
+              requestName: request.name,
+              requestId: request.id,
+              status: 'error',
+              error: error.message
+            });
+          }
+        }
+      }
+
+      return {
+        success: true,
+        results,
+        summary: {
+          total: sortedRequests.length,
+          passed: results.filter(r => r.success && r.status && r.status < 400).length,
+          failed: results.filter(r => !r.success || (r.status && r.status >= 400)).length
+        }
       };
     } catch (error: any) {
       return { success: false, error: error.message };

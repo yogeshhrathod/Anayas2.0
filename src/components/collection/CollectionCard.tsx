@@ -24,7 +24,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Star, StarOff, FolderOpen, Calendar, Edit, Trash2, Copy } from 'lucide-react';
+import { Star, StarOff, FolderOpen, Calendar, Edit, Trash2, Copy, Play } from 'lucide-react';
 import { ActionMenu } from '../shared/ActionMenu';
 import { Collection } from '../../types/entities';
 
@@ -37,6 +37,7 @@ export interface CollectionCardProps {
   onToggleFavorite: () => void;
   onExport?: () => void;
   onImport?: () => void;
+  onRun?: () => void;
 }
 
 export const CollectionCard: React.FC<CollectionCardProps> = ({
@@ -47,9 +48,12 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
   onDuplicate,
   onToggleFavorite,
   onExport,
-  onImport
+  onImport,
+  onRun
 }) => {
   const actions = [
+    ...(onRun ? [{ label: 'Run Collection', icon: <Play className="h-4 w-4" />, onClick: onRun }] : []),
+    { type: 'separator' as const },
     { label: 'Edit', icon: <Edit className="h-4 w-4" />, onClick: onEdit },
     { label: 'Duplicate', icon: <Copy className="h-4 w-4" />, onClick: onDuplicate },
     { type: 'separator' as const },

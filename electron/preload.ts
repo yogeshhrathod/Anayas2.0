@@ -20,6 +20,7 @@ export interface Collection {
   id?: number;
   name: string;
   description?: string;
+  documentation?: string; // Markdown documentation for the collection
   variables: Record<string, string>;
   environments?: CollectionEnvironment[];
   activeEnvironmentId?: number;
@@ -100,6 +101,7 @@ const api = {
       ipcRenderer.invoke('collection:deleteEnvironment', collectionId, environmentId),
     setActiveEnvironment: (collectionId: number, environmentId: number | null) => 
       ipcRenderer.invoke('collection:setActiveEnvironment', collectionId, environmentId),
+    run: (collectionId: number) => ipcRenderer.invoke('collection:run', collectionId),
   },
 
   // Folder operations

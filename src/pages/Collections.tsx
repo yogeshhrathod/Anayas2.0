@@ -18,6 +18,7 @@ import { PageLayout } from '../components/shared/PageLayout';
 import { CollectionForm } from '../components/collection/CollectionForm';
 import { CollectionGrid } from '../components/collection/CollectionGrid';
 import { CollectionActions } from '../components/collection/CollectionActions';
+import { CollectionRunner } from '../components/collection/CollectionRunner';
 import { useCollectionOperations } from '../hooks/useCollectionOperations';
 import { useConfirmation } from '../hooks/useConfirmation';
 import { useStore } from '../store/useStore';
@@ -29,6 +30,7 @@ export function Collections() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [runningCollection, setRunningCollection] = useState<Collection | null>(null);
   const formRef = useRef<React.ElementRef<typeof CollectionForm>>(null);
 
   const { setCurrentPage, setSelectedRequest } = useStore();
@@ -122,6 +124,14 @@ export function Collections() {
     await toggleFavorite(collection);
   };
 
+  const handleRunCollection = (collection: Collection) => {
+    setRunningCollection(collection);
+  };
+
+  const handleCloseRunner = () => {
+    setRunningCollection(null);
+  };
+
   const handleExport = () => {
     exportCollections();
   };
@@ -182,8 +192,18 @@ export function Collections() {
           onToggleFavorite={handleToggleFavorite}
           onExport={handleExport}
           onImport={handleImport}
+          onRun={handleRunCollection}
         />
       </div>
+
+      {runningCollection && (
+        <CollectionRunner
+          collectionId={runningCollection.id!}
+          collectionName={runningCollection.name}
+          onClose={handleCloseRunner}
+          open={!!runningCollection}
+        />
+      )}
     </PageLayout>
   );
 }

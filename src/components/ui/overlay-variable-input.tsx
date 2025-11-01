@@ -35,7 +35,7 @@ export interface OverlayVariableInputProps {
 }
 
 function parseTextToSegments(text: string, resolvedVariables: Array<{ name: string; value: string }>): Segment[] {
-  const VARIABLE_REGEX = /\{\{[\w.]+\}\}/g;
+  const VARIABLE_REGEX = /\{\{(\$)?[\w.]+\}\}/g; // Allow $ for dynamic variables
   const segments: Segment[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -50,12 +50,15 @@ function parseTextToSegments(text: string, resolvedVariables: Array<{ name: stri
     }
 
     // Add variable
+    // Extract variable name, keeping $ prefix for dynamic variables
     const varName = match[0].slice(2, -2); // Remove {{}}
     const variable = resolvedVariables.find(v => v.name === varName);
+    // Dynamic variables are always considered resolved
+    const isDynamic = varName.startsWith('$');
     segments.push({
       type: 'variable',
       name: varName,
-      resolved: !!variable && variable.value !== '',
+      resolved: isDynamic || (!!variable && variable.value !== ''),
     });
 
     lastIndex = match.index + match[0].length;
@@ -81,6 +84,7 @@ export function OverlayVariableInput({
 }: OverlayVariableInputProps) {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showOnlyDynamic, setShowOnlyDynamic] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuVariable, setContextMenuVariable] = useState<string>('');
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
@@ -117,14 +121,22 @@ export function OverlayVariableInput({
       const afterBraces = newValue.substring(lastBraces + 2);
       if (!afterBraces.includes('}}')) {
         // Still typing variable name
-        setSearchTerm(afterBraces);
+        // Check if user typed {{$ (wants dynamic variables)
+        const isDynamicSearch = afterBraces.startsWith('$') && afterBraces.length === 1;
+        setShowOnlyDynamic(isDynamicSearch);
+        
+        // Remove $ prefix from search term if present (for dynamic variables)
+        const search = afterBraces.startsWith('$') ? afterBraces.substring(1) : afterBraces;
+        setSearchTerm(search);
         updateAutocompletePosition();
         setShowAutocomplete(true);
       } else {
         setShowAutocomplete(false);
+        setShowOnlyDynamic(false);
       }
     } else {
       setShowAutocomplete(false);
+      setShowOnlyDynamic(false);
     }
   };
 
@@ -135,7 +147,12 @@ export function OverlayVariableInput({
     if (lastBraces === -1) return;
 
     const beforeBraces = value.substring(0, lastBraces);
-    const afterCurrentVar = value.substring(lastBraces + 2 + searchTerm.length);
+    // Calculate the actual length of what was typed after {{ (including $ if present)
+    const afterBraces = value.substring(lastBraces + 2);
+    const actualTypedLength = afterBraces.includes('}}') 
+      ? afterBraces.indexOf('}}') 
+      : afterBraces.length;
+    const afterCurrentVar = value.substring(lastBraces + 2 + actualTypedLength);
     const newValue = beforeBraces + `{{${variableName}}}` + afterCurrentVar;
     
     onChange(newValue);
@@ -358,6 +375,7 @@ export function OverlayVariableInput({
           onSelect={handleAutocompleteSelect}
           onClose={handleClose}
           position={autocompletePosition}
+          showOnlyDynamic={showOnlyDynamic}
         />
       )}
 
