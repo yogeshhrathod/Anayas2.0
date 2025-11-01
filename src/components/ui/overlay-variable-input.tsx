@@ -14,13 +14,16 @@ interface Segment {
 const SHARED_STYLES: React.CSSProperties = {
   fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
   fontSize: '14px',
-  lineHeight: '20px',
+  lineHeight: '20px', // Matches h-10 (40px) with py-2 (8px top/bottom) = 24px available, centers 20px line-height
   padding: '8px 12px', // py-2 px-3 = 8px vertical, 12px horizontal
   letterSpacing: 'normal',
   wordSpacing: 'normal',
   fontWeight: '400',
   boxSizing: 'border-box',
   margin: 0,
+  // Ensure text is vertically centered like input elements
+  display: 'flex',
+  alignItems: 'center',
 };
 
 export interface OverlayVariableInputProps {
@@ -228,44 +231,58 @@ export function OverlayVariableInput({
           bottom: 0,
           zIndex: 1,
           pointerEvents: 'none', // Don't block input clicks
-          whiteSpace: 'pre',
+          whiteSpace: 'pre', // Match input text exactly
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           color: 'inherit',
           border: 'none',
           outline: 'none',
+          // Ensure exact text rendering match
+          textRendering: 'auto',
+          WebkitFontSmoothing: 'antialiased',
+          MozOsxFontSmoothing: 'grayscale',
         }}
       >
-        {segments.map((seg, i) => 
-          seg.type === 'variable' ? (
-            <span
-              key={i}
-              className={cn(
-                'rounded font-medium transition-colors',
-                seg.resolved
-                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-              )}
-              style={{ 
-                pointerEvents: 'auto', // Only capsules receive pointer events
-                verticalAlign: 'baseline',
-                cursor: 'pointer',
-                padding: '2px 4px',
-                display: 'inline-block',
-                lineHeight: 'inherit',
-              }}
-              onContextMenu={(e) => handleContextMenu(e, seg.name!)}
-              onDoubleClick={() => handleDoubleClick(seg.name!)}
-            >
-              {`{{${seg.name}}}`}
-            </span>
-          ) : (
-            <span key={i}>{seg.content}</span>
-          )
-        )}
-        {!value && placeholder && (
-          <span className="text-muted-foreground">{placeholder}</span>
-        )}
+        <span style={{ display: 'inline-block', width: '100%', lineHeight: '20px' }}>
+          {segments.map((seg, i) => 
+            seg.type === 'variable' ? (
+              <span
+                key={i}
+                className={cn(
+                  'font-medium transition-colors',
+                  seg.resolved
+                    ? 'text-green-700 dark:text-green-400'
+                    : 'text-red-700 dark:text-red-400'
+                )}
+                style={{ 
+                  pointerEvents: 'auto', // Only capsules receive pointer events
+                  verticalAlign: 'baseline',
+                  cursor: 'pointer',
+                  display: 'inline',
+                  lineHeight: 'inherit',
+                  backgroundColor: seg.resolved 
+                    ? 'rgba(34, 197, 94, 0.2)' // green-500 with opacity
+                    : 'rgba(239, 68, 68, 0.2)', // red-500 with opacity
+                  borderRadius: '3px',
+                  padding: '0',
+                  margin: '0',
+                  // Ensure no extra spacing
+                  border: 'none',
+                  outline: 'none',
+                }}
+                onContextMenu={(e) => handleContextMenu(e, seg.name!)}
+                onDoubleClick={() => handleDoubleClick(seg.name!)}
+              >
+                {`{{${seg.name}}}`}
+              </span>
+            ) : (
+              <span key={i} style={{ display: 'inline' }}>{seg.content}</span>
+            )
+          )}
+          {!value && placeholder && (
+            <span className="text-muted-foreground">{placeholder}</span>
+          )}
+        </span>
       </div>
 
       {/* Input Layer - Interaction (ON TOP, captures all clicks) */}
@@ -303,7 +320,7 @@ export function OverlayVariableInput({
             }
           }
         }}
-        placeholder={placeholder}
+        placeholder={!value && placeholder ? placeholder : ''}
         disabled={disabled}
         style={{
           ...SHARED_STYLES,
@@ -314,7 +331,7 @@ export function OverlayVariableInput({
           bottom: 0,
           zIndex: 2,
           color: 'transparent', // Hide text
-          caretColor: 'inherit', // Show cursor with theme color
+          caretColor: 'hsl(var(--foreground))', // Show cursor with theme foreground color
           background: 'transparent',
           border: 'none',
           outline: 'none',
@@ -324,8 +341,13 @@ export function OverlayVariableInput({
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           boxShadow: 'none', // Remove any shadow effects
+          // Ensure exact text rendering match with overlay
+          textRendering: 'auto',
+          WebkitFontSmoothing: 'antialiased',
+          MozOsxFontSmoothing: 'grayscale',
+          // Center text vertically - input naturally centers with proper padding/line-height
         }}
-        className="placeholder:text-muted-foreground"
+        className="placeholder:text-transparent"
       />
 
       {/* Autocomplete */}
