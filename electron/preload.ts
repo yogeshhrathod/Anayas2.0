@@ -75,6 +75,21 @@ export interface RequestOptions {
   queryParams?: Array<{ key: string; value: string; enabled: boolean }>;
 }
 
+export interface RequestPreset {
+  id?: string;
+  name: string;
+  description?: string;
+  requestId?: number; // The request this preset belongs to
+  requestData: {
+    method: Request['method'];
+    url: string;
+    headers: Record<string, string>;
+    body: string;
+    queryParams: Array<{ key: string; value: string; enabled: boolean }>;
+    auth: Request['auth'];
+  };
+}
+
 const api = {
   // Environment operations
   env: {
@@ -129,6 +144,13 @@ const api = {
     delete: (id: string) => ipcRenderer.invoke('unsaved-request:delete', id),
     clear: () => ipcRenderer.invoke('unsaved-request:clear'),
     promote: (id: string, data: any) => ipcRenderer.invoke('unsaved-request:promote', id, data),
+  },
+
+  // Preset operations
+  preset: {
+    list: (requestId?: number) => ipcRenderer.invoke('preset:list', requestId),
+    save: (preset: RequestPreset) => ipcRenderer.invoke('preset:save', preset),
+    delete: (id: string) => ipcRenderer.invoke('preset:delete', id),
   },
 
   // Settings operations

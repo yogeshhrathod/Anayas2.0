@@ -59,7 +59,7 @@
 
 ---
 
-## Phase 2: Essential Features 🔄 IN PROGRESS (80% Complete)
+## Phase 2: Essential Features 🔄 IN PROGRESS (85% Complete)
 
 ### 2.1 Collections Management ✅ COMPLETED
 - [x] **Create Collection** - CRUD operations
@@ -69,7 +69,8 @@
 - [x] **Collection Variables** - Variable management per collection
 - [x] **Duplicate Collection**
 - [x] **Delete Collection** (with confirmation)
-- [ ] **Collection Runner** - Execute all requests in sequence
+- [x] **Collection Runner** - Execute all requests in sequence
+- [x] **Collection Export/Import** - Export and import collections as JSON
 - [ ] **Collection Documentation** - Markdown notes
 - [ ] **Bulk Operations** - Select multiple requests
 
@@ -186,14 +187,21 @@
 - [x] **Settings** (Cmd+,)
 - [x] **Toggle Sidebar** (Cmd+B)
 - [x] **Focus URL** (Cmd+L)
-- [ ] **Focus Environment** (Cmd+E)
+- [x] **Edit Item** (Cmd+E) - Edit selected collection/folder/request
+- [x] **Duplicate Request/Collection** (Cmd+D) - Duplicate selected item
+- [x] **Delete Item** (Cmd+Backspace) - Delete selected item
+- [x] **Export Item** (Cmd+Shift+E) - Export collection or request
+- [x] **Import Item** (Cmd+Shift+I) - Import collection
+- [x] **Add Request** (Cmd+R) - Add new request to collection
+- [x] **Add Folder** (Cmd+Shift+N) - Add new folder
+- [x] **New Collection** (Cmd+Shift+N) - Create new collection
+- [ ] **Focus Environment** (Cmd+E) - Focus environment selector
 - [ ] **Close Tab** (Cmd+W)
 - [ ] **Close All Tabs** (Cmd+Shift+W)
 - [ ] **Search in Response** (Cmd+F)
 - [ ] **Switch Tabs** (Cmd+1-9)
 - [ ] **Next Tab** (Cmd+Shift+])
 - [ ] **Previous Tab** (Cmd+Shift+[)
-- [ ] **Duplicate Request** (Cmd+D)
 - [ ] **Split View** (Cmd+\)
 - [ ] **Shortcuts Customization** - Let users change shortcuts
 
@@ -436,7 +444,7 @@
 
 ### **Phase 2** (Essential Features) - 🔄 IN PROGRESS
 - Duration: ~2-3 weeks
-- Status: **80% Complete**
+- Status: **85% Complete**
 - Priority: HIGH
 
 ### **Phase 3** (Import/Export) - 📋 PLANNED
@@ -445,7 +453,7 @@
 
 ### **Phase 4** (Advanced Features) - 🔄 IN PROGRESS
 - Duration: ~2-3 weeks
-- Status: **40% Complete**
+- Status: **50% Complete**
 - Priority: MEDIUM
 
 ### **Phase 5** (Premium Features) - 📋 PLANNED
@@ -463,7 +471,7 @@
 ---
 
 ## **Total Estimated Timeline**: 12-16 weeks for MVP
-## **Current Progress**: ~65% Complete
+## **Current Progress**: ~70% Complete
 
 ---
 
@@ -502,16 +510,24 @@
 - **Database**: JSON-based storage with full CRUD operations
 - **UI/UX**: Modern Arc-inspired interface with theming
 - **Request Builder**: Complete HTTP client with all methods
-- **Collections**: Full collection and folder management
+- **Collections**: Full collection and folder management with drag-and-drop
+- **Collection Runner**: Execute all requests in a collection sequentially
+- **Collection Export/Import**: Export and import collections as JSON
 - **Environments**: Complete environment and variable system
 - **History**: Full request history with search and filtering
 - **Theming**: Advanced VS Code-style theme system
 - **Basic Settings**: Core application settings
+- **Keyboard Shortcuts**: Comprehensive shortcut system including:
+  - Global shortcuts (Cmd+K, Cmd+N, Cmd+B, etc.)
+  - Item operations (Cmd+E edit, Cmd+D duplicate, Cmd+Backspace delete)
+  - Export/Import (Cmd+Shift+E, Cmd+Shift+I)
+  - Collection operations (Cmd+R add request, Cmd+Shift+N new folder/collection)
 
 ### 🔄 **IN PROGRESS**
-- **Keyboard Shortcuts**: Basic shortcuts implemented, advanced ones pending
-- **Settings Panel**: Core settings done, advanced settings pending
-- **Performance**: Basic optimizations done, advanced features pending
+- **Keyboard Shortcuts**: Core shortcuts implemented (duplicate, edit, export/import), tab navigation and advanced shortcuts pending
+- **Settings Panel**: Core settings done, editor/network/privacy/advanced settings pending
+- **Performance**: Basic optimizations done, virtual scrolling and worker threads pending
+- **Collections**: Collection runner and export/import complete, documentation and bulk operations pending
 
 ### 📋 **NEXT PRIORITIES**
 1. **cURL Import/Export** - Critical for interoperability

@@ -28,7 +28,7 @@
  * ```
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
@@ -69,6 +69,18 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
   onSetNewPresetName,
   onSetNewPresetDescription
 }) => {
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus the name input when dialog opens
+  useEffect(() => {
+    if (showCreateDialog && nameInputRef.current) {
+      // Small delay to ensure the dialog is fully rendered
+      setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 100);
+    }
+  }, [showCreateDialog]);
+
   return (
     <>
       <div className={`border-l border-border/50 bg-card/30 transition-all duration-300 ${
@@ -235,21 +247,37 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
 
       {/* Create Preset Dialog */}
       {showCreateDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              onShowCreateDialog(false);
+            }
+          }}
+        >
           <Card className="w-96">
-            <div className="p-6">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                onCreatePreset();
+              }}
+              className="p-6"
+            >
               <h3 className="text-lg font-semibold mb-2">Create Request Preset</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Save the current request configuration as a reusable preset
               </p>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="preset-name">Preset Name</Label>
+                  <Label htmlFor="preset-name">Preset Name (Optional)</Label>
                   <Input
+                    ref={nameInputRef}
                     id="preset-name"
                     value={newPresetName}
                     onChange={(e) => onSetNewPresetName(e.target.value)}
-                    placeholder="e.g., Success Case, Error Case"
+                    placeholder="e.g., Success Case, Error Case (auto-generated if empty)"
+                    autoFocus
                   />
                 </div>
                 <div>
@@ -262,15 +290,19 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                   />
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Button onClick={onCreatePreset} disabled={!newPresetName.trim()}>
+                  <Button type="submit">
                     Create Preset
                   </Button>
-                  <Button variant="outline" onClick={() => onShowCreateDialog(false)}>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={() => onShowCreateDialog(false)}
+                  >
                     Cancel
                   </Button>
                 </div>
               </div>
-            </div>
+            </form>
           </Card>
         </div>
       )}

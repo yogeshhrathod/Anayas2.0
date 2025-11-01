@@ -22,6 +22,7 @@ interface Database {
   requests: any[];
   request_history: any[];
   unsaved_requests: UnsavedRequest[];
+  presets: any[];
   settings: Record<string, any>;
 }
 
@@ -32,6 +33,7 @@ let db: Database = {
   requests: [],
   request_history: [],
   unsaved_requests: [],
+  presets: [],
   settings: {},
 };
 
@@ -78,6 +80,12 @@ export async function initDatabase(): Promise<void> {
         console.log('Migrated database: Added unsaved_requests table');
       }
       
+      // Migration: Add presets table if it doesn't exist
+      if (!db.presets) {
+        db.presets = [];
+        console.log('Migrated database: Added presets table');
+      }
+      
       // Migration: Convert collection.variables to collection.environments
       let needsMigration = false;
       for (const collection of db.collections) {
@@ -93,7 +101,7 @@ export async function initDatabase(): Promise<void> {
         }
       }
       
-      if (!db.folders || !db.unsaved_requests || needsMigration) {
+      if (!db.folders || !db.unsaved_requests || !db.presets || needsMigration) {
         saveDatabase();
       }
     } catch (error) {
@@ -105,6 +113,7 @@ export async function initDatabase(): Promise<void> {
         requests: [],
         request_history: [],
         unsaved_requests: [],
+        presets: [],
         settings: {},
       };
     }
@@ -453,4 +462,42 @@ export function promoteUnsavedRequest(id: string, requestData: any): number {
   deleteUnsavedRequest(id);
   
   return savedId;
+}
+
+// Preset CRUD operations
+export function addPreset(preset: any): string {
+  const id = preset.id || `preset-${Date.now()}`;
+  const existingIndex = db.presets.findIndex((p) => p.id === id);
+  
+  if (existingIndex !== -1) {
+    // Update existing preset
+    db.presets[existingIndex] = { 
+      ...preset, 
+      id,
+      updatedAt: new Date().toISOString()
+    };
+    saveDatabase();
+    return id;
+  } else {
+    // Add new preset
+    db.presets.push({ 
+      ...preset, 
+      id, 
+      createdAt: new Date().toISOString() 
+    });
+    saveDatabase();
+    return id;
+  }
+}
+
+export function getAllPresets(requestId?: number): any[] {
+  if (requestId === undefined) {
+    return [...db.presets];
+  }
+  return db.presets.filter(p => p.requestId === requestId);
+}
+
+export function deletePreset(id: string): void {
+  db.presets = db.presets.filter((p) => p.id !== id);
+  saveDatabase();
 }
