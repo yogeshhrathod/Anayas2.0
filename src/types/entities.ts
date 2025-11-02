@@ -100,9 +100,18 @@ export interface RequestProgress {
 export interface ResponseData {
   status: number;
   statusText: string;
-  headers: Record<string, string>;
+  headers: Record<string, string>; // Response headers
+  requestHeaders?: Record<string, string>; // Request headers that were sent
   data: any;
   time: number;
+  error?: {
+    message: string;
+    type?: 'network' | 'timeout' | 'http' | 'parse' | 'unknown';
+    code?: string;
+  };
+  size?: number; // Response size in bytes
+  contentType?: string;
+  requestUrl?: string; // Original request URL for resolving relative resources
 }
 
 // Utility types for API operations

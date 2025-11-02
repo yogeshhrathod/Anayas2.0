@@ -238,6 +238,7 @@ export function ApiRequestBuilder() {
       {/* Response Section */}
       <ResponsePanel
         response={requestActions.response}
+        isLoading={requestActions.isLoading}
         onCopy={requestActions.copyResponse}
         onDownload={requestActions.downloadResponse}
       />

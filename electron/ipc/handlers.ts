@@ -371,13 +371,30 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('request:send', async (_, options) => {
+    const startTime = Date.now();
+    let resolvedUrl = '';
+    let resolvedHeaders: Record<string, string> = {};
+    
     try {
       const db = getDatabase();
       
       // Get global environment
       const globalEnv = db.environments.find((e) => e.isDefault === 1) || db.environments[0];
       if (!globalEnv) {
-        throw new Error('No environment selected');
+        const responseTime = Date.now() - startTime;
+        return { 
+          success: false, 
+          error: {
+            message: 'No environment selected',
+            type: 'unknown',
+            code: 'NO_ENV'
+          },
+          responseTime,
+          status: 0,
+          statusText: 'Error',
+          headers: {},
+          data: null
+        };
       }
 
       // Get collection variables if request has a collection
@@ -399,8 +416,8 @@ export function registerIpcHandlers() {
       };
 
       // Resolve variables in all request parts
-      const resolvedUrl = variableResolver.resolve(options.url, variableContext);
-      const resolvedHeaders = variableResolver.resolveObject(options.headers || {}, variableContext);
+      resolvedUrl = variableResolver.resolve(options.url, variableContext);
+      resolvedHeaders = variableResolver.resolveObject(options.headers || {}, variableContext);
       const resolvedBody = typeof options.body === 'string' 
         ? variableResolver.resolve(options.body, variableContext)
         : options.body;
@@ -414,53 +431,167 @@ export function registerIpcHandlers() {
       let result: any;
       const method = options.method || 'GET';
       
-      switch (method) {
-        case 'GET':
-          result = await apiService.getJson(resolvedUrl, resolvedHeaders);
-          break;
-        case 'POST':
-          result = await apiService.postJson(resolvedUrl, resolvedBody, resolvedHeaders);
-          break;
-        case 'PUT':
-          result = await apiService.putJson(resolvedUrl, resolvedBody, resolvedHeaders);
-          break;
-        case 'PATCH':
-          result = await apiService.patchJson(resolvedUrl, resolvedBody, resolvedHeaders);
-          break;
-        case 'DELETE':
-          result = await apiService.deleteJson(resolvedUrl, resolvedHeaders);
-          break;
-        case 'HEAD':
-          result = await apiService.headJson(resolvedUrl, resolvedHeaders);
-          break;
-        case 'OPTIONS':
-          result = await apiService.optionsJson(resolvedUrl, resolvedHeaders);
-          break;
-        default:
-          throw new Error(`Unsupported HTTP method: ${method}`);
-      }
+      try {
+        switch (method) {
+          case 'GET':
+            result = await apiService.getJson(resolvedUrl, resolvedHeaders);
+            break;
+          case 'POST':
+            result = await apiService.postJson(resolvedUrl, resolvedBody, resolvedHeaders);
+            break;
+          case 'PUT':
+            result = await apiService.putJson(resolvedUrl, resolvedBody, resolvedHeaders);
+            break;
+          case 'PATCH':
+            result = await apiService.patchJson(resolvedUrl, resolvedBody, resolvedHeaders);
+            break;
+          case 'DELETE':
+            result = await apiService.deleteJson(resolvedUrl, resolvedHeaders);
+            break;
+          case 'HEAD':
+            result = await apiService.headJson(resolvedUrl, resolvedHeaders);
+            break;
+          case 'OPTIONS':
+            result = await apiService.optionsJson(resolvedUrl, resolvedHeaders);
+            break;
+          default:
+            throw new Error(`Unsupported HTTP method: ${method}`);
+        }
 
-      // Save to history with original URL for reference
-      addRequestHistory({
-        method: method,
-        url: resolvedUrl,
-        status: result.status,
-        response_time: result.responseTime,
-        response_body: typeof result.body === 'string' ? result.body : JSON.stringify(result.body),
-        headers: JSON.stringify(resolvedHeaders),
-        createdAt: new Date().toISOString(),
+        // Calculate size and content type
+        let size: number | undefined;
+        let contentType: string | undefined;
+        if (result.headers) {
+          contentType = result.headers['content-type'] || result.headers['Content-Type'];
+          const contentLength = result.headers['content-length'] || result.headers['Content-Length'];
+          if (contentLength) {
+            size = parseInt(contentLength, 10);
+          } else if (result.body) {
+            // Estimate size using Buffer
+            const bodyStr = typeof result.body === 'string' ? result.body : JSON.stringify(result.body);
+            size = Buffer.byteLength(bodyStr, 'utf8');
+          }
+        }
+
+        // Save to history with original URL for reference
+        addRequestHistory({
+          method: method,
+          url: resolvedUrl,
+          status: result.status,
+          response_time: result.responseTime,
+          response_body: typeof result.body === 'string' ? result.body : JSON.stringify(result.body),
+          headers: JSON.stringify(resolvedHeaders),
+          createdAt: new Date().toISOString(),
+        });
+
+        return { 
+          success: true, 
+          data: result.body, 
+          responseTime: result.responseTime,
+          status: result.status,
+          statusText: result.statusText,
+          headers: result.headers || {},
+          requestHeaders: resolvedHeaders,
+          requestUrl: resolvedUrl,
+          size,
+          contentType
+        };
+      } catch (apiError: any) {
+        const responseTime = Date.now() - startTime;
+        let errorType: 'network' | 'timeout' | 'http' | 'parse' | 'unknown' = 'unknown';
+        let errorCode = 'UNKNOWN_ERROR';
+        
+        if (apiError.name === 'AbortError' || apiError.message?.includes('timeout')) {
+          errorType = 'timeout';
+          errorCode = 'TIMEOUT';
+        } else if (apiError.message?.includes('fetch') || apiError.message?.includes('network')) {
+          errorType = 'network';
+          errorCode = 'NETWORK_ERROR';
+        } else if (apiError.message?.includes('JSON') || apiError.message?.includes('parse')) {
+          errorType = 'parse';
+          errorCode = 'PARSE_ERROR';
+        }
+
+        // Try to extract any partial response if available
+        let partialData: any = null;
+        let partialHeaders: Record<string, string> = {};
+        if (result) {
+          partialData = result.body;
+          partialHeaders = result.headers || {};
+        }
+
+        return {
+          success: false,
+          error: {
+            message: apiError.message || 'Request failed',
+            type: errorType,
+            code: errorCode
+          },
+          responseTime,
+          status: 0,
+          statusText: 'Error',
+          headers: partialHeaders,
+          requestHeaders: resolvedHeaders,
+          requestUrl: resolvedUrl,
+          data: partialData
+        };
+      }
+    } catch (error: any) {
+      const responseTime = Date.now() - startTime;
+      return { 
+        success: false, 
+        error: {
+          message: error.message || 'Unknown error occurred',
+          type: 'unknown',
+          code: 'UNKNOWN_ERROR'
+        },
+        responseTime,
+        status: 0,
+        statusText: 'Error',
+        headers: {},
+        requestHeaders: resolvedHeaders,
+        requestUrl: resolvedUrl || '',
+        data: null
+      };
+    }
+  });
+
+  // Fetch external resource (bypasses CORS in main process)
+  ipcMain.handle('resource:fetch', async (_, url: string) => {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
       });
 
-      return { 
-        success: true, 
-        data: result.body, 
-        responseTime: result.responseTime,
-        status: result.status,
-        statusText: result.statusText,
-        headers: result.headers
-      };
+      const contentType = response.headers.get('content-type') || '';
+      
+      if (contentType.includes('text/css') || contentType.includes('text/') || contentType.includes('application/json')) {
+        const text = await response.text();
+        return {
+          success: true,
+          data: text,
+          contentType: contentType,
+          isBinary: false
+        };
+      } else {
+        // Binary content (images, etc.)
+        const buffer = await response.arrayBuffer();
+        const base64 = Buffer.from(buffer).toString('base64');
+        return {
+          success: true,
+          data: base64,
+          contentType: contentType,
+          isBinary: true
+        };
+      }
     } catch (error: any) {
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: error.message || 'Failed to fetch resource'
+      };
     }
   });
 

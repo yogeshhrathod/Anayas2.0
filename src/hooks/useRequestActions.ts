@@ -76,7 +76,7 @@ export function useRequestActions(requestData: RequestFormData) {
     setState(prev => ({ ...prev, isLoading: true, response: null }));
 
     try {
-      const response = await window.electronAPI.request.send({
+      const result = await window.electronAPI.request.send({
         method: requestData.method,
         url: requestData.url,
         headers: requestData.headers,
@@ -85,14 +85,57 @@ export function useRequestActions(requestData: RequestFormData) {
         collectionId: selectedRequest?.collectionId
       });
 
-      setState(prev => ({ ...prev, response }));
-      showSuccess('Request completed', { description: `Status: ${response.status}` });
+      if (result.success) {
+        const response: ResponseData = {
+          status: result.status,
+          statusText: result.statusText,
+          headers: result.headers || {},
+          requestHeaders: result.requestHeaders || {},
+          requestUrl: result.requestUrl,
+          data: result.data,
+          time: result.responseTime,
+          size: result.size,
+          contentType: result.contentType
+        };
+        setState(prev => ({ ...prev, response }));
+        showSuccess('Request completed', { description: `Status: ${response.status}` });
+      } else {
+        // Handle error response
+        const errorResponse: ResponseData = {
+          status: result.status || 0,
+          statusText: result.statusText || 'Error',
+          headers: result.headers || {},
+          requestHeaders: result.requestHeaders || {},
+          requestUrl: result.requestUrl,
+          data: result.data || null,
+          time: result.responseTime || 0,
+          error: result.error,
+          size: result.size,
+          contentType: result.contentType
+        };
+        setState(prev => ({ ...prev, response: errorResponse }));
+        showError('Request Failed', result.error?.message || 'An error occurred while sending the request');
+      }
     } catch (err: any) {
+      // Fallback error handling if IPC call itself fails
+      const errorResponse: ResponseData = {
+        status: 0,
+        statusText: 'Error',
+        headers: {},
+        data: null,
+        time: 0,
+        error: {
+          message: err.message || 'An error occurred while sending the request',
+          type: 'unknown',
+          code: 'IPC_ERROR'
+        }
+      };
+      setState(prev => ({ ...prev, response: errorResponse }));
       showError('Request Failed', err.message || 'An error occurred while sending the request');
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [requestData, showSuccess, showError]);
+  }, [requestData, showSuccess, showError, selectedRequest]);
 
   const saveRequest = useCallback(async () => {
     if (!requestData.name.trim()) {
@@ -145,18 +188,59 @@ export function useRequestActions(requestData: RequestFormData) {
 
   const copyResponse = useCallback(() => {
     if (state.response) {
-      navigator.clipboard.writeText(JSON.stringify(state.response.data, null, 2));
+      let textToCopy = '';
+      if (state.response.error) {
+        textToCopy = `Error: ${state.response.error.message}\nStatus: ${state.response.status}\nTime: ${state.response.time}ms`;
+      } else {
+        try {
+          textToCopy = typeof state.response.data === 'string' 
+            ? state.response.data 
+            : JSON.stringify(state.response.data, null, 2);
+        } catch (e) {
+          textToCopy = String(state.response.data);
+        }
+      }
+      navigator.clipboard.writeText(textToCopy);
       showSuccess('Copied', { description: 'Response data copied to clipboard' });
     }
   }, [state.response, showSuccess]);
 
   const downloadResponse = useCallback(() => {
     if (state.response) {
-      const blob = new Blob([JSON.stringify(state.response.data, null, 2)], { type: 'application/json' });
+      let content = '';
+      let mimeType = 'application/json';
+      let extension = 'json';
+      
+      if (state.response.contentType) {
+        mimeType = state.response.contentType;
+        const contentTypeParts = state.response.contentType.split(';')[0].split('/');
+        extension = contentTypeParts[1] || 'txt';
+      }
+      
+      try {
+        if (state.response.error) {
+          content = JSON.stringify({
+            error: state.response.error,
+            status: state.response.status,
+            statusText: state.response.statusText,
+            time: state.response.time,
+            headers: state.response.headers,
+            data: state.response.data
+          }, null, 2);
+        } else {
+          content = typeof state.response.data === 'string' 
+            ? state.response.data 
+            : JSON.stringify(state.response.data, null, 2);
+        }
+      } catch (e) {
+        content = String(state.response.data);
+      }
+      
+      const blob = new Blob([content], { type: mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `response-${Date.now()}.json`;
+      a.download = `response-${Date.now()}.${extension}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

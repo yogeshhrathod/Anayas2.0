@@ -122,6 +122,11 @@ const api = {
     deleteHistory: (id: number) => ipcRenderer.invoke('request:deleteHistory', id),
   },
 
+  // Resource fetching (bypasses CORS via main process)
+  resource: {
+    fetch: (url: string) => ipcRenderer.invoke('resource:fetch', url),
+  },
+
   // Unsaved Request operations
   unsavedRequest: {
     save: (request: any) => ipcRenderer.invoke('unsaved-request:save', request),

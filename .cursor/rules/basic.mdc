@@ -4,3 +4,23 @@ alwaysApply: true
 
 ## DO NO RUN electron app unless I tell you to
 ## USE STABLE NPM LIBRARY IF POSSIBLE INSTEAD OF WRITING WHOLE CODE OURSELF
+
+## Testing & Verification
+- If possible and easy, verify changes using CLI commands
+- Run relevant tests before considering a task complete
+- Use `npm run type-check` to validate TypeScript correctness
+
+## Code Quality Philosophy
+- **NO PATCHING** - Provide proper, complete solutions
+- Code is not in production, so complete rewrites are acceptable if needed
+- Prioritize maintainability and readability over quick fixes
+- Code must be easy to understand when reviewing after weeks/months
+- Keep performance optimal while maintaining clarity
+- Write code as if someone else (including future you) needs to understand it without context
+
+## Development Approach
+- Prefer refactoring and proper architecture over workarounds
+- Don't accumulate technical debt - fix root causes
+- Write self-documenting code with clear naming
+- Add comments for complex logic or non-obvious decisions
+- Balance readability with performance - optimize only where needed
