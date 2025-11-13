@@ -20,11 +20,12 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Upload, Download, Search } from 'lucide-react';
+import { Upload, Download, Search, Terminal } from 'lucide-react';
 
 export interface CollectionActionsProps {
   onImport: () => void;
   onExport: () => void;
+  onCurlImport?: () => void;
   onSearch: (value: string) => void;
   searchValue: string;
   onNewCollection: () => void;
@@ -34,6 +35,7 @@ export interface CollectionActionsProps {
 export const CollectionActions: React.FC<CollectionActionsProps> = ({
   onImport,
   onExport,
+  onCurlImport,
   onSearch,
   searchValue,
   onNewCollection,
@@ -58,6 +60,12 @@ export const CollectionActions: React.FC<CollectionActionsProps> = ({
           <Upload className="h-4 w-4" />
           Import
         </Button>
+        {onCurlImport && (
+          <Button variant="outline" onClick={onCurlImport} className="flex items-center gap-2">
+            <Terminal className="h-4 w-4" />
+            Import cURL
+          </Button>
+        )}
         <Button variant="outline" onClick={onExport} className="flex items-center gap-2">
           <Download className="h-4 w-4" />
           Export

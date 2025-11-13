@@ -34,6 +34,8 @@ import {
 } from '../database';
 import { apiService } from '../services/api';
 import { variableResolver } from '../services/variable-resolver';
+import { parseCurlCommand, parseCurlCommands } from '../lib/curl-parser';
+import { generateCurlCommand } from '../lib/curl-generator';
 import fs from 'fs';
 
 export function registerIpcHandlers() {
@@ -868,6 +870,37 @@ export function registerIpcHandlers() {
       return { success: true };
     } catch (error: any) {
       console.error('Failed to delete preset:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // cURL operations
+  ipcMain.handle('curl:parse', async (_, command: string) => {
+    try {
+      const request = parseCurlCommand(command);
+      return { success: true, request };
+    } catch (error: any) {
+      console.error('Failed to parse cURL command:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('curl:generate', async (_, request: any) => {
+    try {
+      const curlCommand = generateCurlCommand(request);
+      return { success: true, command: curlCommand };
+    } catch (error: any) {
+      console.error('Failed to generate cURL command:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('curl:import-bulk', async (_, commands: string[]) => {
+    try {
+      const results = parseCurlCommands(commands);
+      return { success: true, results };
+    } catch (error: any) {
+      console.error('Failed to parse bulk cURL commands:', error);
       return { success: false, error: error.message };
     }
   });

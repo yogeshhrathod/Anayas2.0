@@ -24,12 +24,49 @@
 - Place shared UI pieces under `src/components/` and domain screens under `src/pages/`.
 - Favor composition and hooks aligned with current store setup in `src/store/useStore.ts`.
 
+## Feature Tracking & Spec-Driven Development
+
+This project uses a **spec-driven development** workflow. All new features and bugs MUST follow this process:
+
+### For Features:
+1. **Create Feature**: Use `./scripts/create-feature.sh <feature-name>` to create a new feature in `specs/XXX-feature-name/`
+2. **Write Spec**: Complete `spec.md` with user stories, acceptance criteria, and technical requirements
+3. **Create Plan**: Complete `plan.md` with architecture decisions and implementation phases
+4. **Break Down Tasks**: Complete `tasks.md` with specific, actionable tasks
+5. **Implement**: Follow tasks.md, updating task status as you progress
+
+### For Bugs:
+1. **Create Bug**: Use `./scripts/create-bug.sh <bug-name>` to create a new bug in `specs/bug-XXX-bug-name/`
+2. **Write Bug Report**: Complete `spec.md` with reproduction steps, expected/actual behavior, and environment details
+3. **Create Fix Plan**: Complete `plan.md` with root cause analysis and fix strategy
+4. **Break Down Fix Tasks**: Complete `tasks.md` with specific fix tasks and verification steps
+5. **Implement Fix**: Follow tasks.md, updating bug status (reported → investigating → fixing → testing → resolved)
+
+**ALWAYS** reference the feature/bug's spec.md, plan.md, and tasks.md when implementing. See `.cursor/rules/feature-tracking.mdc` for detailed workflow rules.
+
+Link features to phases in `plan-timeline.md` using the `Phase` field in spec.md. Bug fixes can be linked to maintenance phases.
+
 ## Feature Implementation Checklist
-1. Define or update IPC handlers for new capabilities in `electron/ipc/handlers.ts` and expose them through preload APIs.@electron/ipc/handlers.ts#22-31 @electron/preload.ts#61-150
-2. Wire renderer calls to `window.electronAPI` methods; keep contracts typed in both preload and React code.
-3. Persist data through database helpers; add migrations/defaults in `initDatabase` as needed.@electron/database/json-db.ts#27-65
-4. Log important lifecycle events and errors using Winston logger instances.@electron/services/logger.ts#1-47
-5. Validate behavior in development (`npm run electron:dev`) and ensure type checks pass.
+1. **Check for existing feature/bug spec**: Look in `specs/` directory for related features or bugs. If none exists, create one using the workflow above.
+2. **Read feature/bug documentation**: Review `spec.md`, `plan.md`, and `tasks.md` before starting implementation.
+3. **Search existing codebase FIRST**: Before creating anything new, search for:
+   - Existing feature specs in `specs/` directory for similar implementations
+   - Existing components in `src/components/` that can be reused or extended
+   - Existing hooks in `src/hooks/` with similar logic
+   - Existing utilities in `src/lib/` (parsers, generators, formatters, etc.)
+   - Existing types in `src/types/` that can be extended
+   - Existing pages in `src/pages/` where the feature should be integrated
+   - Existing buttons/actions that can be extended
+   - Existing services in `electron/services/` that can be reused
+   - Existing IPC handlers in `electron/ipc/handlers.ts` for similar functionality
+4. **Identify integration points**: Determine where to add the feature (existing button, component, page, etc.) before creating new ones
+5. **Reuse over create**: Always prefer extending existing components/utilities over creating duplicates
+6. Define or update IPC handlers for new capabilities in `electron/ipc/handlers.ts` and expose them through preload APIs.@electron/ipc/handlers.ts#22-31 @electron/preload.ts#61-150
+7. Wire renderer calls to `window.electronAPI` methods; keep contracts typed in both preload and React code.
+8. Persist data through database helpers; add migrations/defaults in `initDatabase` as needed.@electron/database/json-db.ts#27-65
+9. Log important lifecycle events and errors using Winston logger instances.@electron/services/logger.ts#1-47
+10. Validate behavior in development (`npm run electron:dev`) and ensure type checks pass.
+11. **Update feature status**: Mark tasks as completed in `tasks.md` and update feature status when done.
 
 ## Packaging & Distribution
 - `electron-builder` outputs installers to `release/` with icons from `build/icons/`. Update branding before distribution.@package.json#63-95
