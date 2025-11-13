@@ -35,6 +35,7 @@ export interface CollectionGridProps {
   onToggleFavorite: (collection: Collection) => void;
   onExport?: (collection: Collection) => void;
   onImport?: (collection: Collection) => void;
+  onRun?: (collection: Collection) => void;
 }
 
 export const CollectionGrid: React.FC<CollectionGridProps> = ({
@@ -46,7 +47,8 @@ export const CollectionGrid: React.FC<CollectionGridProps> = ({
   onDuplicate,
   onToggleFavorite,
   onExport,
-  onImport
+  onImport,
+  onRun
 }) => {
   if (isLoading) {
     return (
@@ -84,6 +86,7 @@ export const CollectionGrid: React.FC<CollectionGridProps> = ({
           onToggleFavorite={() => onToggleFavorite(collection)}
           onExport={onExport ? () => onExport(collection) : undefined}
           onImport={onImport ? () => onImport(collection) : undefined}
+          onRun={onRun ? () => onRun(collection) : undefined}
         />
       ))}
     </div>

@@ -20,6 +20,7 @@ export interface FormFieldProps {
 export interface CollectionFormData {
   name: string;
   description: string;
+  documentation?: string; // Markdown documentation
   variables: Record<string, string>;
   isFavorite: boolean;
 }

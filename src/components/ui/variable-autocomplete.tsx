@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
-import { Check, Building2, Globe } from 'lucide-react';
+import { Check, Building2, Globe, Sparkles } from 'lucide-react';
 
 export interface AutocompletePosition {
   top: number;
@@ -8,11 +8,12 @@ export interface AutocompletePosition {
 }
 
 interface VariableAutocompleteProps {
-  variables: Array<{ name: string; value: string; scope: 'collection' | 'global' }>;
+  variables: Array<{ name: string; value: string; scope: 'collection' | 'global' | 'dynamic' }>;
   onSelect: (variableName: string) => void;
   onClose: () => void;
   position: AutocompletePosition;
   searchTerm?: string;
+  showOnlyDynamic?: boolean; // When true, show only dynamic variables
 }
 
 export function VariableAutocomplete({
@@ -21,16 +22,29 @@ export function VariableAutocomplete({
   onSelect,
   onClose,
   position,
+  showOnlyDynamic = false,
 }: VariableAutocompleteProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   // Filter variables based on search term
-  const filteredVariables = searchTerm 
-    ? variables.filter(v => v.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  // If showOnlyDynamic is true, show only dynamic variables
+  const filteredVariables = showOnlyDynamic
+    ? variables.filter(v => v.scope === 'dynamic')
+    : searchTerm && searchTerm.length > 0
+    ? variables.filter(v => {
+        const searchLower = searchTerm.toLowerCase();
+        const nameLower = v.name.toLowerCase();
+        // Allow searching without $ prefix for dynamic variables
+        if (v.scope === 'dynamic' && nameLower.startsWith('$')) {
+          return nameLower.includes(searchLower) || nameLower.slice(1).includes(searchLower);
+        }
+        return nameLower.includes(searchLower);
+      })
     : variables;
 
   // Group variables by scope
   const groupedVariables = {
+    dynamic: filteredVariables.filter(v => v.scope === 'dynamic'),
     collection: filteredVariables.filter(v => v.scope === 'collection'),
     global: filteredVariables.filter(v => v.scope === 'global'),
   };
@@ -38,6 +52,7 @@ export function VariableAutocomplete({
   const allVariables = [
     ...groupedVariables.collection,
     ...groupedVariables.global,
+    ...groupedVariables.dynamic,
   ];
 
   // Keyboard navigation
@@ -104,8 +119,7 @@ export function VariableAutocomplete({
           </div>
         )}
         {groupedVariables.collection.map((variable, index) => {
-          const globalIndex = index;
-          const isSelected = selectedIndex === globalIndex;
+          const isSelected = selectedIndex === index;
           return (
             <button
               key={`collection-${variable.name}`}
@@ -155,6 +169,39 @@ export function VariableAutocomplete({
                   <div className="font-medium">{variable.name}</div>
                   <div className="text-xs text-muted-foreground truncate max-w-[200px]">
                     {variable.value}
+                  </div>
+                </div>
+              </div>
+              {isSelected && <Check className="h-4 w-4 text-primary" />}
+            </button>
+          );
+        })}
+
+        {groupedVariables.dynamic.length > 0 && (
+          <div className="sticky top-0 bg-muted px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase border-t border-border mt-1">
+            <Sparkles className="inline-block h-3 w-3 mr-1" />
+            Dynamic Variables
+          </div>
+        )}
+        {groupedVariables.dynamic.map((variable, index) => {
+          const dynamicIndex = groupedVariables.collection.length + groupedVariables.global.length + index;
+          const isSelected = selectedIndex === dynamicIndex;
+          return (
+            <button
+              key={`dynamic-${variable.name}`}
+              onClick={() => handleSelect(variable.name)}
+              className={cn(
+                'flex w-full items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-accent',
+                'text-left',
+                isSelected && 'bg-accent'
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-purple-500" />
+                <div>
+                  <div className="font-medium">{variable.name}</div>
+                  <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+                    Preview: {variable.value || 'Generated at runtime'}
                   </div>
                 </div>
               </div>

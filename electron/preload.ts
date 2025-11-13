@@ -20,6 +20,7 @@ export interface Collection {
   id?: number;
   name: string;
   description?: string;
+  documentation?: string; // Markdown documentation for the collection
   variables: Record<string, string>;
   environments?: CollectionEnvironment[];
   activeEnvironmentId?: number;
@@ -74,6 +75,21 @@ export interface RequestOptions {
   queryParams?: Array<{ key: string; value: string; enabled: boolean }>;
 }
 
+export interface RequestPreset {
+  id?: string;
+  name: string;
+  description?: string;
+  requestId?: number; // The request this preset belongs to
+  requestData: {
+    method: Request['method'];
+    url: string;
+    headers: Record<string, string>;
+    body: string;
+    queryParams: Array<{ key: string; value: string; enabled: boolean }>;
+    auth: Request['auth'];
+  };
+}
+
 const api = {
   // Environment operations
   env: {
@@ -100,6 +116,7 @@ const api = {
       ipcRenderer.invoke('collection:deleteEnvironment', collectionId, environmentId),
     setActiveEnvironment: (collectionId: number, environmentId: number | null) => 
       ipcRenderer.invoke('collection:setActiveEnvironment', collectionId, environmentId),
+    run: (collectionId: number) => ipcRenderer.invoke('collection:run', collectionId),
   },
 
   // Folder operations
@@ -127,6 +144,20 @@ const api = {
     delete: (id: string) => ipcRenderer.invoke('unsaved-request:delete', id),
     clear: () => ipcRenderer.invoke('unsaved-request:clear'),
     promote: (id: string, data: any) => ipcRenderer.invoke('unsaved-request:promote', id, data),
+  },
+
+  // Preset operations
+  preset: {
+    list: (requestId?: number) => ipcRenderer.invoke('preset:list', requestId),
+    save: (preset: RequestPreset) => ipcRenderer.invoke('preset:save', preset),
+    delete: (id: string) => ipcRenderer.invoke('preset:delete', id),
+  },
+
+  // cURL operations
+  curl: {
+    parse: (command: string) => ipcRenderer.invoke('curl:parse', command),
+    generate: (request: Request) => ipcRenderer.invoke('curl:generate', request),
+    importBulk: (commands: string[]) => ipcRenderer.invoke('curl:import-bulk', commands),
   },
 
   // Settings operations

@@ -28,6 +28,7 @@ export function HighlightedVariableInput({
 }: HighlightedVariableInputProps) {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showOnlyDynamic, setShowOnlyDynamic] = useState(false);
   const [highlights, setHighlights] = useState<VariableHighlight[]>([]);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuVariable, setContextMenuVariable] = useState<string>('');
@@ -38,7 +39,7 @@ export function HighlightedVariableInput({
 
   // Detect variables in text and create highlights
   useEffect(() => {
-    const VARIABLE_REGEX = /\{\{[\w.]+\}\}/g;
+    const VARIABLE_REGEX = /\{\{(\$)?[\w.]+\}\}/g; // Allow $ for dynamic variables
     const newHighlights: VariableHighlight[] = [];
     let match: RegExpExecArray | null;
 
@@ -75,13 +76,21 @@ export function HighlightedVariableInput({
       const afterBraces = newValue.substring(lastBraces + 2);
       if (!afterBraces.includes('}}')) {
         // Still typing variable name
-        setSearchTerm(afterBraces);
+        // Check if user typed {{$ (wants dynamic variables)
+        const isDynamicSearch = afterBraces.startsWith('$') && afterBraces.length === 1;
+        setShowOnlyDynamic(isDynamicSearch);
+        
+        // Remove $ prefix from search term if present (for dynamic variables)
+        const search = afterBraces.startsWith('$') ? afterBraces.substring(1) : afterBraces;
+        setSearchTerm(search);
         setShowAutocomplete(true);
       } else {
         setShowAutocomplete(false);
+        setShowOnlyDynamic(false);
       }
     } else {
       setShowAutocomplete(false);
+      setShowOnlyDynamic(false);
     }
   };
 
@@ -91,7 +100,12 @@ export function HighlightedVariableInput({
     if (lastBraces === -1) return;
 
     const beforeBraces = value.substring(0, lastBraces);
-    const afterCurrentVar = value.substring(lastBraces + 2 + searchTerm.length);
+    // Calculate the actual length of what was typed after {{ (including $ if present)
+    const afterBraces = value.substring(lastBraces + 2);
+    const actualTypedLength = afterBraces.includes('}}') 
+      ? afterBraces.indexOf('}}') 
+      : afterBraces.length;
+    const afterCurrentVar = value.substring(lastBraces + 2 + actualTypedLength);
     const newValue = beforeBraces + `{{${variableName}}}` + afterCurrentVar;
     
     onChange(newValue);
@@ -178,6 +192,7 @@ export function HighlightedVariableInput({
           onSelect={handleAutocompleteSelect}
           onClose={handleClose}
           position={position}
+          showOnlyDynamic={showOnlyDynamic}
         />
       )}
       {showContextMenu && (

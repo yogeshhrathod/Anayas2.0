@@ -46,6 +46,7 @@ export interface Collection {
   id?: number;
   name: string;
   description?: string;
+  documentation?: string; // Markdown documentation for the collection
   variables: Record<string, string>; // DEPRECATED - use environments array
   environments?: CollectionEnvironment[]; // NEW - collection-specific environments
   activeEnvironmentId?: number; // NEW - currently selected environment for this collection
@@ -77,6 +78,7 @@ export interface RequestPreset {
   id: string;
   name: string;
   description?: string;
+  requestId?: number; // The request this preset belongs to
   requestData: {
     method: Request['method'];
     url: string;

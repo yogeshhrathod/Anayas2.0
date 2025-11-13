@@ -2,7 +2,7 @@
  * useVariableResolution - Hook for resolving environment variables in text
  * 
  * Provides real-time variable resolution with collection and global context
- * Supports {{var}}, {{collection.var}}, {{global.var}} syntax
+ * Supports {{var}}, {{collection.var}}, {{global.var}}, {{$dynamic}} syntax
  * Returns resolved text and list of unresolved variables
  */
 
@@ -12,7 +12,7 @@ import { useStore } from '../store/useStore';
 export interface VariableInfo {
   name: string;
   value: string;
-  scope: 'collection' | 'global';
+  scope: 'collection' | 'global' | 'dynamic';
   originalText: string; // The full {{variable}} string
 }
 
@@ -22,7 +22,39 @@ export interface ResolutionResult {
   variables: VariableInfo[];
 }
 
-const VARIABLE_REGEX = /\{\{(\w+\.)?(\w+)\}\}/g;
+const VARIABLE_REGEX = /\{\{(\$)?(\w+\.)?(\w+)\}\}/g;
+
+/**
+ * Resolves dynamic/system variables
+ */
+function resolveDynamicVariable(variableName: string): string {
+  switch (variableName) {
+    case 'timestamp':
+      // Unix timestamp in seconds
+      return Math.floor(Date.now() / 1000).toString();
+    
+    case 'randomInt':
+      // Random integer between 0 and 999999
+      return Math.floor(Math.random() * 1000000).toString();
+    
+    case 'guid':
+    case 'uuid':
+      // UUID v4 (simple implementation)
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    
+    case 'randomEmail':
+      // Random email address for testing
+      const randomPart = Math.random().toString(36).substring(2, 15);
+      return `${randomPart}@example.com`;
+    
+    default:
+      return '';
+  }
+}
 
 export function useVariableResolution(text: string): ResolutionResult {
   const { currentEnvironment, selectedRequest, collections } = useStore();
@@ -60,7 +92,7 @@ export function useVariableResolution(text: string): ResolutionResult {
 
     while ((match = VARIABLE_REGEX.exec(text)) !== null) {
       matchCount++;
-      const [fullMatch, prefix, variableName] = match;
+      const [fullMatch, isDynamic, prefix, variableName] = match;
       const matchIndex = match.index;
       const matchLength = fullMatch.length;
 
@@ -69,23 +101,32 @@ export function useVariableResolution(text: string): ResolutionResult {
       lastIndex = matchIndex + matchLength;
 
       let value = '';
-      let scope: 'collection' | 'global' = 'global';
+      let scope: 'collection' | 'global' | 'dynamic' = 'global';
 
-      // Resolve variable based on prefix
-      if (prefix === 'collection.') {
-        value = collectionVariables[variableName] || '';
-        scope = 'collection';
-      } else if (prefix === 'global.') {
-        value = globalVariables[variableName] || '';
-        scope = 'global';
+      // Handle dynamic variables first
+      if (isDynamic === '$') {
+        value = resolveDynamicVariable(variableName);
+        scope = 'dynamic';
+        if (value === '') {
+          unresolved.push(variableName);
+        }
       } else {
-        // No prefix - check collection first, then global
-        value = collectionVariables[variableName] || globalVariables[variableName] || '';
-        scope = collectionVariables[variableName] ? 'collection' : 'global';
-      }
+        // Resolve variable based on prefix
+        if (prefix === 'collection.') {
+          value = collectionVariables[variableName] || '';
+          scope = 'collection';
+        } else if (prefix === 'global.') {
+          value = globalVariables[variableName] || '';
+          scope = 'global';
+        } else {
+          // No prefix - check collection first, then global
+          value = collectionVariables[variableName] || globalVariables[variableName] || '';
+          scope = collectionVariables[variableName] ? 'collection' : 'global';
+        }
 
-      if (value === '') {
-        unresolved.push(variableName);
+        if (value === '') {
+          unresolved.push(variableName);
+        }
       }
 
       variables.push({
@@ -108,17 +149,39 @@ export function useVariableResolution(text: string): ResolutionResult {
 }
 
 /**
+ * Dynamic/system variables available
+ */
+const DYNAMIC_VARIABLES: Array<{ name: string; description: string; scope: 'dynamic' }> = [
+  { name: '$timestamp', description: 'Current Unix timestamp in seconds', scope: 'dynamic' },
+  { name: '$randomInt', description: 'Random integer (0-999999)', scope: 'dynamic' },
+  { name: '$guid', description: 'UUID v4', scope: 'dynamic' },
+  { name: '$uuid', description: 'UUID v4 (alias)', scope: 'dynamic' },
+  { name: '$randomEmail', description: 'Random email address', scope: 'dynamic' },
+];
+
+/**
  * Get all available variables with their values and scope
  */
 export function useAvailableVariables(): Array<{
   name: string;
   value: string;
-  scope: 'collection' | 'global';
+  scope: 'collection' | 'global' | 'dynamic';
 }> {
   const { currentEnvironment, selectedRequest, collections } = useStore();
 
   return useMemo(() => {
-    const result: Array<{ name: string; value: string; scope: 'collection' | 'global' }> = [];
+    const result: Array<{ name: string; value: string; scope: 'collection' | 'global' | 'dynamic' }> = [];
+
+    // Add dynamic variables first
+    DYNAMIC_VARIABLES.forEach(dynamicVar => {
+      // Get preview value for dynamic variables
+      const previewValue = resolveDynamicVariable(dynamicVar.name.replace('$', ''));
+      result.push({ 
+        name: dynamicVar.name, 
+        value: previewValue, 
+        scope: 'dynamic' 
+      });
+    });
 
     // Add global environment variables
     if (currentEnvironment?.variables) {

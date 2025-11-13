@@ -100,6 +100,7 @@ export function useCollectionOperations() {
       const result = await window.electronAPI.collection.save({
         name: data.name,
         description: data.description,
+        documentation: data.documentation || '',
         variables: data.variables,
         isFavorite: data.isFavorite
       });
@@ -123,6 +124,7 @@ export function useCollectionOperations() {
         id,
         name: data.name,
         description: data.description,
+        documentation: data.documentation || '',
         variables: data.variables,
         isFavorite: data.isFavorite
       });

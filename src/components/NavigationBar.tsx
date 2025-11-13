@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
-import { Home, FolderPlus, Globe, History as HistoryIcon, Settings as SettingsIcon, ScrollText, Plus, Upload } from "lucide-react";
+import { Home, FolderPlus, Globe, History as HistoryIcon, Settings as SettingsIcon, ScrollText, Plus, Upload, Terminal, ChevronDown } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useStore } from "../store/useStore";
 import { EnvironmentSelector } from "./EnvironmentSelector";
 import { Request } from "../types/entities";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { getShortcutDisplay, KEYMAP } from "../lib/keymap";
 import { useToastNotifications } from "../hooks/useToastNotifications";
+import { CurlImportDialog } from "./curl/CurlImportDialog";
 
 export function NavigationBar() {
   const { currentPage, setCurrentPage, setSelectedRequest, setActiveUnsavedRequestId } = useStore();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [showCurlImport, setShowCurlImport] = useState(false);
   const { showSuccess, showError } = useToastNotifications();
 
   useEffect(() => {
@@ -114,6 +117,52 @@ export function NavigationBar() {
     }
   };
 
+  const handleCurlImport = () => {
+    setShowCurlImport(true);
+  };
+
+  const handleCurlImportComplete = async (
+    requests: Request[],
+    collectionId: number,
+    folderId?: number
+  ) => {
+    try {
+      if (requests.length === 0) {
+        showError('No requests to import', 'Please parse a valid cURL command');
+        return;
+      }
+
+      // For home page, load the first request into the request builder
+      // Clear active unsaved request ID to create a new one
+      setActiveUnsavedRequestId(null);
+      
+      const importedRequest = requests[0];
+      const newRequest: Request = {
+        name: importedRequest.name || 'Imported Request',
+        method: importedRequest.method,
+        url: importedRequest.url || '',
+        headers: importedRequest.headers || { 'Content-Type': 'application/json' },
+        body: importedRequest.body || '',
+        queryParams: importedRequest.queryParams || [],
+        auth: importedRequest.auth || { type: 'none' },
+        collectionId: undefined,
+        folderId: undefined,
+        isFavorite: 0,
+      };
+      
+      setSelectedRequest(newRequest);
+      showSuccess('Request imported', {
+        description: requests.length > 1 
+          ? `Loaded first request (${requests.length} total parsed)`
+          : 'Request loaded into builder',
+      });
+    } catch (error: any) {
+      console.error('Failed to import cURL request:', error);
+      showError('Import failed', error.message || 'Failed to import request');
+      throw error;
+    }
+  };
+
   return (
     <div className="flex h-11 items-center border-b border-border/50 bg-card/80 backdrop-blur-md px-4 select-none">
       {/* Primary Navigation (Left) */}
@@ -149,27 +198,45 @@ export function NavigationBar() {
         {/* Action Buttons - Only visible on home page */}
         {currentPage === 'home' && (
           <>
-            {/* Import Request Button */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleImportRequest}
-                    className={cn(
-                      "h-8 px-3 flex items-center gap-2 rounded-full transition-all duration-200",
-                      "hover:bg-accent/50 hover:scale-[1.02] bg-blue-500/10 border border-blue-500/50 text-blue-600 dark:text-blue-400 shadow-sm",
-                      isCompact ? "w-8 px-0 justify-center" : ""
-                    )}
-                  >
-                    <Upload className="h-4 w-4" />
-                    {!isCompact && <span className="text-sm font-medium">Import Request</span>}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Import Request ({getShortcutDisplay(KEYMAP.IMPORT_ITEM)})</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {/* Import Request Button with Dropdown */}
+            <DropdownMenu>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className={cn(
+                          "h-8 px-3 flex items-center gap-2 rounded-full transition-all duration-200",
+                          "hover:bg-accent/50 hover:scale-[1.02] bg-blue-500/10 border border-blue-500/50 text-blue-600 dark:text-blue-400 shadow-sm",
+                          isCompact ? "w-8 px-0 justify-center" : ""
+                        )}
+                      >
+                        <Upload className="h-4 w-4" />
+                        {!isCompact && (
+                          <>
+                            <span className="text-sm font-medium">Import</span>
+                            <ChevronDown className="h-3 w-3" />
+                          </>
+                        )}
+                      </button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Import Request ({getShortcutDisplay(KEYMAP.IMPORT_ITEM)})</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleImportRequest}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCurlImport}>
+                  <Terminal className="h-4 w-4 mr-2" />
+                  Import cURL
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* New Request Button */}
             <TooltipProvider>
@@ -221,6 +288,14 @@ export function NavigationBar() {
           <EnvironmentSelector />
         </div>
       </div>
+
+      {/* cURL Import Dialog */}
+      <CurlImportDialog
+        open={showCurlImport}
+        onOpenChange={setShowCurlImport}
+        onImport={handleCurlImportComplete}
+        requireCollection={false}
+      />
     </div>
   );
 }

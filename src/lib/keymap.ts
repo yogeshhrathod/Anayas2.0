@@ -107,6 +107,86 @@ export const KEYMAP: Record<string, KeymapConfig> = {
     shiftKey: true,
     description: 'Import Item',
     action: 'import-item'
+  },
+  CREATE_PRESET: {
+    key: 'p',
+    metaKey: true, // Cmd+Shift+P on Mac
+    ctrlKey: true, // Ctrl+Shift+P on Windows/Linux
+    shiftKey: true,
+    description: 'Create Preset',
+    action: 'create-preset'
+  },
+  SELECT_PRESET_1: {
+    key: '1',
+    metaKey: true, // Cmd+Shift+1 on Mac
+    ctrlKey: true, // Ctrl+Shift+1 on Windows/Linux
+    shiftKey: true,
+    description: 'Select Preset 1',
+    action: 'select-preset-1'
+  },
+  SELECT_PRESET_2: {
+    key: '2',
+    metaKey: true, // Cmd+Shift+2 on Mac
+    ctrlKey: true, // Ctrl+Shift+2 on Windows/Linux
+    shiftKey: true,
+    description: 'Select Preset 2',
+    action: 'select-preset-2'
+  },
+  SELECT_PRESET_3: {
+    key: '3',
+    metaKey: true, // Cmd+Shift+3 on Mac
+    ctrlKey: true, // Ctrl+Shift+3 on Windows/Linux
+    shiftKey: true,
+    description: 'Select Preset 3',
+    action: 'select-preset-3'
+  },
+  SELECT_PRESET_4: {
+    key: '4',
+    metaKey: true, // Cmd+Shift+4 on Mac
+    ctrlKey: true, // Ctrl+Shift+4 on Windows/Linux
+    shiftKey: true,
+    description: 'Select Preset 4',
+    action: 'select-preset-4'
+  },
+  SELECT_PRESET_5: {
+    key: '5',
+    metaKey: true, // Cmd+Shift+5 on Mac
+    ctrlKey: true, // Ctrl+Shift+5 on Windows/Linux
+    shiftKey: true,
+    description: 'Select Preset 5',
+    action: 'select-preset-5'
+  },
+  SELECT_PRESET_6: {
+    key: '6',
+    metaKey: true, // Cmd+Shift+6 on Mac
+    ctrlKey: true, // Ctrl+Shift+6 on Windows/Linux
+    shiftKey: true,
+    description: 'Select Preset 6',
+    action: 'select-preset-6'
+  },
+  SELECT_PRESET_7: {
+    key: '7',
+    metaKey: true, // Cmd+Shift+7 on Mac
+    ctrlKey: true, // Ctrl+Shift+7 on Windows/Linux
+    shiftKey: true,
+    description: 'Select Preset 7',
+    action: 'select-preset-7'
+  },
+  SELECT_PRESET_8: {
+    key: '8',
+    metaKey: true, // Cmd+Shift+8 on Mac
+    ctrlKey: true, // Ctrl+Shift+8 on Windows/Linux
+    shiftKey: true,
+    description: 'Select Preset 8',
+    action: 'select-preset-8'
+  },
+  SELECT_PRESET_9: {
+    key: '9',
+    metaKey: true, // Cmd+Shift+9 on Mac
+    ctrlKey: true, // Ctrl+Shift+9 on Windows/Linux
+    shiftKey: true,
+    description: 'Select Preset 9',
+    action: 'select-preset-9'
   }
 };
 
