@@ -19,21 +19,25 @@ import { CollectionForm } from '../components/collection/CollectionForm';
 import { CollectionGrid } from '../components/collection/CollectionGrid';
 import { CollectionActions } from '../components/collection/CollectionActions';
 import { CollectionRunner } from '../components/collection/CollectionRunner';
+import { CurlImportDialog } from '../components/curl/CurlImportDialog';
 import { useCollectionOperations } from '../hooks/useCollectionOperations';
 import { useConfirmation } from '../hooks/useConfirmation';
 import { useStore } from '../store/useStore';
-import { Collection } from '../types/entities';
+import { Collection, Request } from '../types/entities';
 import { CollectionFormData } from '../types/forms';
 import { Button } from '../components/ui/button';
+import { useToastNotifications } from '../hooks/useToastNotifications';
 
 export function Collections() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [runningCollection, setRunningCollection] = useState<Collection | null>(null);
+  const [showCurlImport, setShowCurlImport] = useState(false);
   const formRef = useRef<React.ElementRef<typeof CollectionForm>>(null);
 
-  const { setCurrentPage, setSelectedRequest } = useStore();
+  const { setCurrentPage, setSelectedRequest, triggerSidebarRefresh } = useStore();
+  const { showSuccess, showError } = useToastNotifications();
 
   const {
     collections,
@@ -140,6 +144,37 @@ export function Collections() {
     importCollections();
   };
 
+  const handleCurlImport = () => {
+    setShowCurlImport(true);
+  };
+
+  const handleCurlImportComplete = async (
+    requests: Request[],
+    collectionId: number,
+    folderId?: number
+  ) => {
+    try {
+      // Save each request
+      for (const request of requests) {
+        await window.electronAPI.request.save({
+          ...request,
+          collectionId,
+          folderId,
+          isFavorite: request.isFavorite || 0,
+        });
+      }
+      
+      triggerSidebarRefresh();
+      showSuccess('Import successful', {
+        description: `Imported ${requests.length} request(s)`,
+      });
+    } catch (error: any) {
+      console.error('Failed to import requests:', error);
+      showError('Import failed', error.message || 'Failed to import requests');
+      throw error;
+    }
+  };
+
   if (isEditing) {
     return (
       <PageLayout
@@ -176,6 +211,7 @@ export function Collections() {
         <CollectionActions
           onImport={handleImport}
           onExport={handleExport}
+          onCurlImport={handleCurlImport}
           onSearch={setSearchTerm}
           searchValue={searchTerm}
           onNewCollection={handleNewCollection}
@@ -204,6 +240,12 @@ export function Collections() {
           open={!!runningCollection}
         />
       )}
+
+      <CurlImportDialog
+        open={showCurlImport}
+        onOpenChange={setShowCurlImport}
+        onImport={handleCurlImportComplete}
+      />
     </PageLayout>
   );
 }

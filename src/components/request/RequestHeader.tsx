@@ -31,9 +31,10 @@ import { OverlayVariableInput } from '../ui/overlay-variable-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Badge } from '../ui/badge';
-import { Send, Loader2, Check, Circle } from 'lucide-react';
+import { Send, Loader2, Check, Circle, Copy } from 'lucide-react';
 import { RequestFormData } from '../../types/forms';
 import { KEYMAP, getShortcutDisplay } from '../../lib/keymap';
+import { useToastNotifications } from '../../hooks/useToastNotifications';
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const;
 
@@ -65,11 +66,44 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
   onSend,
   isLoading
 }) => {
+  const { showSuccess, showError } = useToastNotifications();
+
   const handleNameKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       onNameEdit.save();
     } else if (e.key === 'Escape') {
       onNameEdit.cancel();
+    }
+  };
+
+  const handleCopyAsCurl = async () => {
+    try {
+      if (!requestData.url.trim()) {
+        showError('Invalid request', 'URL is required to generate cURL command');
+        return;
+      }
+
+      // Convert RequestFormData to Request format for IPC
+      const request = {
+        method: requestData.method,
+        url: requestData.url,
+        headers: requestData.headers || {},
+        body: requestData.body || '',
+        queryParams: requestData.queryParams || [],
+        auth: requestData.auth || { type: 'none' },
+      };
+
+      const result = await window.electronAPI.curl.generate(request);
+      
+      if (result.success && result.command) {
+        await navigator.clipboard.writeText(result.command);
+        showSuccess('Copied', { description: 'cURL command copied to clipboard' });
+      } else {
+        showError('Failed to generate cURL', result.error || 'Unknown error');
+      }
+    } catch (error: any) {
+      console.error('Failed to copy as cURL:', error);
+      showError('Failed to copy as cURL', error.message || 'Unknown error');
     }
   };
 
@@ -167,6 +201,26 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
               className="font-mono text-xs"
             />
           </div>
+
+          {/* Copy as cURL Button */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleCopyAsCurl}
+                  disabled={!requestData.url.trim()}
+                  title="Copy as cURL"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Copy as cURL</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           {/* Send Button */}
           <Button 
