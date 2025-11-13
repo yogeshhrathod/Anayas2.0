@@ -59,7 +59,7 @@
 
 ---
 
-## Phase 2: Essential Features 🔄 IN PROGRESS (85% Complete)
+## Phase 2: Essential Features 🔄 IN PROGRESS (92% Complete)
 
 ### 2.1 Collections Management ✅ COMPLETED
 - [x] **Create Collection** - CRUD operations
@@ -71,7 +71,7 @@
 - [x] **Delete Collection** (with confirmation)
 - [x] **Collection Runner** - Execute all requests in sequence
 - [x] **Collection Export/Import** - Export and import collections as JSON
-- [ ] **Collection Documentation** - Markdown notes
+- [x] **Collection Documentation** - Markdown notes
 - [ ] **Bulk Operations** - Select multiple requests
 
 **Timeline**: 3-4 days ✅ **COMPLETED**
@@ -83,11 +83,11 @@
 - [x] **Variable Interpolation Engine** - Parse `{{variableName}}`
 - [x] **Global Variables** - Available in all environments
 - [x] **Environment-Specific Variables**
-- [ ] **Dynamic Variables**:
-  - [ ] `{{$timestamp}}`
-  - [ ] `{{$randomInt}}`
-  - [ ] `{{$guid}}`
-  - [ ] `{{$randomEmail}}`
+- [x] **Dynamic Variables**:
+  - [x] `{{$timestamp}}`
+  - [x] `{{$randomInt}}`
+  - [x] `{{$guid}}`
+  - [x] `{{$randomEmail}}`
 - [ ] **Secrets Management** - Encrypted storage for sensitive data
 - [ ] **Environment Inheritance** - Base + overrides
 - [x] **Color Coding** - Visual distinction for environments
@@ -444,7 +444,7 @@
 
 ### **Phase 2** (Essential Features) - 🔄 IN PROGRESS
 - Duration: ~2-3 weeks
-- Status: **85% Complete**
+- Status: **92% Complete**
 - Priority: HIGH
 
 ### **Phase 3** (Import/Export) - 📋 PLANNED
@@ -471,7 +471,7 @@
 ---
 
 ## **Total Estimated Timeline**: 12-16 weeks for MVP
-## **Current Progress**: ~70% Complete
+## **Current Progress**: ~75% Complete
 
 ---
 
@@ -513,7 +513,9 @@
 - **Collections**: Full collection and folder management with drag-and-drop
 - **Collection Runner**: Execute all requests in a collection sequentially
 - **Collection Export/Import**: Export and import collections as JSON
+- **Collection Documentation**: Markdown documentation editor
 - **Environments**: Complete environment and variable system
+- **Dynamic Variables**: `{{$timestamp}}`, `{{$randomInt}}`, `{{$guid}}`, `{{$randomEmail}}`
 - **History**: Full request history with search and filtering
 - **Theming**: Advanced VS Code-style theme system
 - **Basic Settings**: Core application settings
@@ -527,7 +529,7 @@
 - **Keyboard Shortcuts**: Core shortcuts implemented (duplicate, edit, export/import), tab navigation and advanced shortcuts pending
 - **Settings Panel**: Core settings done, editor/network/privacy/advanced settings pending
 - **Performance**: Basic optimizations done, virtual scrolling and worker threads pending
-- **Collections**: Collection runner and export/import complete, documentation and bulk operations pending
+- **Collections**: Only bulk operations pending (documentation is complete)
 
 ### 📋 **NEXT PRIORITIES**
 1. **cURL Import/Export** - Critical for interoperability
@@ -545,4 +547,4 @@
 - Priorities may shift based on user feedback
 - Phase 7 (Visual Flow) is a future enhancement
 - Some features may be implemented in parallel
-- **Current MVP is 65% complete** with core functionality ready for production use
+- **Current MVP is 75% complete** with core functionality ready for production use
