@@ -64,10 +64,18 @@ Before implementation:
 ### Step 4: Implementation
 During implementation:
 1. Reference `spec.md`, `plan.md`, and `tasks.md` when coding
-2. Update task status in `tasks.md` as you progress
+2. Update task status in `tasks.md` as you progress (change `pending` → `in-progress` → `completed`)
 3. Follow the task order and dependencies
-4. Mark completed tasks
-5. Update feature status to `in-progress`
+4. Mark completed tasks with `completed` status
+5. **AUTOMATICALLY** update feature status in `spec.md` header when starting: `planned` → `in-progress`
+6. **AUTOMATICALLY** update `plan.md` status header when starting implementation: `planned` → `in-progress`
+7. **AUTOMATICALLY** update `tasks.md` status header when starting: `planned` → `in-progress`
+8. **AUTOMATICALLY** check if all tasks are completed, and if so:
+   - Update `spec.md` status: `in-progress` → `completed`
+   - Update `plan.md` status: `in-progress` → `completed`
+   - Update `tasks.md` status: `in-progress` → `completed`
+   - Update corresponding phase in `plan-timeline.md` (mark items as completed)
+   - Run `./scripts/update-feature-index.sh` to update the index
 
 ## Status Tracking
 
@@ -87,16 +95,28 @@ Bugs have the following statuses:
 - `resolved` - Bug is fixed and verified
 
 Update status in:
-- `spec.md` header
-- `plan.md` header (if exists)
-- `tasks.md` header (if exists)
-- `specs/README.md` index
+- `spec.md` header - **AUTOMATICALLY** update when status changes
+- `plan.md` header (if exists) - **AUTOMATICALLY** update when status changes
+- `tasks.md` header (if exists) - **AUTOMATICALLY** update when status changes
+- `plan-timeline.md` - **AUTOMATICALLY** update phase items when feature completes
+- `specs/README.md` index - **AUTOMATICALLY** update by running `./scripts/update-feature-index.sh`
+
+**Status Update Rules:**
+- When starting implementation: Update all status headers from `planned` → `in-progress`
+- When all tasks completed: Update all status headers from `in-progress` → `completed`
+- When feature completed: Update `plan-timeline.md` phase items and run index update script
+- When bug resolved: Update all status headers from `testing` → `resolved` and update `plan-timeline.md`
 
 ## Integration with plan-timeline.md
 
 - Link features to phases in `plan-timeline.md` using the `Phase` field in spec.md
-- When a feature is completed, update the corresponding phase in `plan-timeline.md`
+- **AUTOMATICALLY** when a feature is completed:
+  1. Find the phase in `plan-timeline.md` that matches the feature's `Phase` field
+  2. Mark all related checklist items in that phase as completed `[x]`
+  3. Update phase completion percentage if applicable
+  4. Update overall project progress percentage
 - Features should align with the phases defined in `plan-timeline.md`
+- **AUTOMATICALLY** update phase status when all features in a phase are completed
 
 ## When Creating New Features
 
@@ -122,10 +142,19 @@ Update status in:
 3. **ALWAYS** identify where to implement the feature (existing buttons, components, pages, etc.) before creating new ones
 4. **ALWAYS** reuse existing components, hooks, and utilities when possible - do NOT create duplicates
 5. **ALWAYS** follow the task order specified in `tasks.md`
-6. **ALWAYS** update task status as you work
-7. **ALWAYS** reference the spec when making implementation decisions
-8. **ALWAYS** update feature status when moving between phases
-9. **ALWAYS** create tests as specified in `plan.md` and `tasks.md`
+6. **ALWAYS** update task status in `tasks.md` as you work (`pending` → `in-progress` → `completed`)
+7. **AUTOMATICALLY** update status headers when starting implementation:
+   - Update `spec.md` header: `**Status**: planned` → `**Status**: in-progress`
+   - Update `plan.md` header: `**Status**: planned` → `**Status**: in-progress`
+   - Update `tasks.md` header: `**Status**: planned` → `**Status**: in-progress`
+8. **AUTOMATICALLY** when ALL tasks are completed:
+   - Update `spec.md` header: `**Status**: in-progress` → `**Status**: completed`
+   - Update `plan.md` header: `**Status**: in-progress` → `**Status**: completed`
+   - Update `tasks.md` header: `**Status**: in-progress` → `**Status**: completed`
+   - Update `plan-timeline.md`: Mark related phase items as `[x]` completed
+   - Run `./scripts/update-feature-index.sh` to refresh the index
+9. **ALWAYS** reference the spec when making implementation decisions
+10. **ALWAYS** create tests as specified in `plan.md` and `tasks.md`
 
 ## Code Reuse & Existing Components
 
@@ -234,6 +263,45 @@ specs/bug-001-collection-crash/
 - Use `scripts/create-bug.sh [bug-name]` to create a new bug report
 - Use `scripts/update-feature-index.sh` to update the feature and bug index
 
+## Automatic Status Updates
+
+### During Implementation
+- **When you start working on a feature**: Automatically update status headers in `spec.md`, `plan.md`, and `tasks.md` from `planned` to `in-progress`
+- **When you complete a task**: Update task status in `tasks.md` from `pending`/`in-progress` to `completed`
+- **When ALL tasks are completed**: 
+  1. Update all status headers (`spec.md`, `plan.md`, `tasks.md`) from `in-progress` to `completed`
+  2. Update `plan-timeline.md`: Find the phase mentioned in spec.md `Phase` field and mark related items as `[x]`
+  3. Update phase completion percentage in `plan-timeline.md` if applicable
+  4. Update overall project progress percentage in `plan-timeline.md`
+  5. Run `./scripts/update-feature-index.sh` to update `specs/README.md`
+
+### Status Update Pattern
+```markdown
+# In spec.md, plan.md, tasks.md headers:
+**Status**: `planned` → `in-progress` → `completed`
+
+# In tasks.md individual tasks:
+- **Status**: `pending` → `in-progress` → `completed`
+
+# In plan-timeline.md:
+- [ ] Item → [x] Item (when feature completes)
+```
+
+### plan-timeline.md Update Rules
+1. Find the phase section that matches the feature's `Phase` field in spec.md
+2. Mark all checklist items related to the feature as completed `[x]`
+3. Recalculate phase completion percentage
+4. Recalculate overall project progress percentage
+5. Update phase status if all items in phase are complete
+
+### Tracking Feature-Related Changes
+- **When modifying code related to a feature**: Check if the change affects the feature spec, plan, or tasks
+- **If implementation deviates from spec**: Update `spec.md` to reflect the actual implementation
+- **If new tasks are discovered**: Add them to `tasks.md` and update status accordingly
+- **If architecture changes**: Update `plan.md` to document the change
+- **If feature scope changes**: Update `spec.md` goals and acceptance criteria
+- **Always keep spec, plan, and tasks in sync** with actual implementation
+
 ## Best Practices
 
 1. Keep specs focused - one feature per spec
@@ -241,5 +309,6 @@ specs/bug-001-collection-crash/
 3. Keep tasks granular and actionable
 4. Mark dependencies clearly
 5. Use parallel execution markers `[P]` where appropriate
-6. Update status regularly
+6. **AUTOMATICALLY** update status - don't wait for manual updates
 7. Link related features in spec.md references
+8. Always run `./scripts/update-feature-index.sh` after status changes

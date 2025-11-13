@@ -66,7 +66,12 @@ Link features to phases in `plan-timeline.md` using the `Phase` field in spec.md
 8. Persist data through database helpers; add migrations/defaults in `initDatabase` as needed.@electron/database/json-db.ts#27-65
 9. Log important lifecycle events and errors using Winston logger instances.@electron/services/logger.ts#1-47
 10. Validate behavior in development (`npm run electron:dev`) and ensure type checks pass.
-11. **Update feature status**: Mark tasks as completed in `tasks.md` and update feature status when done.
+11. **AUTOMATICALLY update feature status**:
+    - When starting: Update `spec.md`, `plan.md`, `tasks.md` headers: `planned` → `in-progress`
+    - When all tasks completed: Update all headers: `in-progress` → `completed`
+    - Update `plan-timeline.md`: Mark phase items as `[x]` completed, update percentages
+    - Run `./scripts/update-feature-index.sh` to refresh the index
+12. **Track task completion**: Update task status in `tasks.md` as you work (`pending` → `in-progress` → `completed`)
 
 ## Packaging & Distribution
 - `electron-builder` outputs installers to `release/` with icons from `build/icons/`. Update branding before distribution.@package.json#63-95
