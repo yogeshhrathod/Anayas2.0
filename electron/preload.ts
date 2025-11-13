@@ -153,6 +153,13 @@ const api = {
     delete: (id: string) => ipcRenderer.invoke('preset:delete', id),
   },
 
+  // cURL operations
+  curl: {
+    parse: (command: string) => ipcRenderer.invoke('curl:parse', command),
+    generate: (request: Request) => ipcRenderer.invoke('curl:generate', request),
+    importBulk: (commands: string[]) => ipcRenderer.invoke('curl:import-bulk', commands),
+  },
+
   // Settings operations
   settings: {
     get: (key: string) => ipcRenderer.invoke('settings:get', key),

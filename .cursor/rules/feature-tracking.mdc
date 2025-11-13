@@ -1,0 +1,245 @@
+---
+alwaysApply: true
+---
+
+# Feature Tracking & Spec-Driven Development
+
+## Overview
+
+This project uses a **spec-driven development** workflow inspired by GitHub's spec-kit. All features and bugs must follow the spec → plan → tasks → implement workflow.
+
+## Directory Structure
+
+### Features
+All features MUST be created in the `specs/` directory with the following naming convention:
+- Format: `specs/XXX-feature-name/` where XXX is a zero-padded 3-digit number (001, 002, 003, etc.)
+- Example: `specs/001-curl-import-export/`
+
+### Bugs
+All bugs MUST be created in the `specs/` directory with the following naming convention:
+- Format: `specs/bug-XXX-bug-name/` where XXX is a zero-padded 3-digit number (001, 002, 003, etc.)
+- Example: `specs/bug-001-collection-crash/`
+
+## Required Files for Each Feature
+
+Every feature directory MUST contain:
+
+1. **spec.md** - Feature specification (use `templates/spec-template.md`)
+2. **plan.md** - Implementation plan (use `templates/plan-template.md`)
+3. **tasks.md** - Task breakdown (use `templates/tasks-template.md`)
+4. **contracts/** - Directory for API contracts and data models
+   - `api-spec.json` or `contracts.md` - API/IPC contracts
+   - `data-model.md` - Data model specifications
+
+Optional files:
+- `research.md` - Research notes and findings
+- `quickstart.md` - Quick start guide for the feature
+
+## Workflow: Spec → Plan → Tasks → Implement
+
+### Step 1: Create Feature Specification
+When starting a new feature:
+1. Use `scripts/create-feature.sh` to create the feature structure
+2. Fill out `spec.md` using `templates/spec-template.md`
+3. Define user stories, acceptance criteria, and technical requirements
+4. Set status to `draft` initially
+
+### Step 2: Create Implementation Plan
+After spec is approved:
+1. Create `plan.md` using `templates/plan-template.md`
+2. Document architecture decisions
+3. Break down into implementation phases
+4. Define file structure changes
+5. Set status to `planned`
+
+### Step 3: Generate Task Breakdown
+Before implementation:
+1. Create `tasks.md` using `templates/tasks-template.md`
+2. Break down plan into specific, actionable tasks
+3. Organize by user story and phase
+4. Mark parallel tasks with `[P]`
+5. Specify file paths for each task
+6. Set status to `planned`
+
+### Step 4: Implementation
+During implementation:
+1. Reference `spec.md`, `plan.md`, and `tasks.md` when coding
+2. Update task status in `tasks.md` as you progress
+3. Follow the task order and dependencies
+4. Mark completed tasks
+5. Update feature status to `in-progress`
+
+## Status Tracking
+
+### Feature Status
+Features have the following statuses:
+- `draft` - Specification is being written
+- `planned` - Spec approved, plan and tasks ready
+- `in-progress` - Implementation has started
+- `completed` - Feature is fully implemented and tested
+
+### Bug Status
+Bugs have the following statuses:
+- `reported` - Bug has been reported
+- `investigating` - Root cause analysis in progress
+- `fixing` - Fix implementation in progress
+- `testing` - Fix is being tested
+- `resolved` - Bug is fixed and verified
+
+Update status in:
+- `spec.md` header
+- `plan.md` header (if exists)
+- `tasks.md` header (if exists)
+- `specs/README.md` index
+
+## Integration with plan-timeline.md
+
+- Link features to phases in `plan-timeline.md` using the `Phase` field in spec.md
+- When a feature is completed, update the corresponding phase in `plan-timeline.md`
+- Features should align with the phases defined in `plan-timeline.md`
+
+## When Creating New Features
+
+1. **ALWAYS** use `scripts/create-feature.sh` to create the feature structure
+2. **ALWAYS** start with `spec.md` - never skip the specification phase
+3. **ALWAYS** use the templates from `templates/` directory
+4. **ALWAYS** number features sequentially (001, 002, 003, etc.)
+5. **ALWAYS** update `specs/README.md` when creating a new feature
+
+## When Creating New Bugs
+
+1. **ALWAYS** use `scripts/create-bug.sh` to create the bug structure
+2. **ALWAYS** start with `spec.md` - fill in reproduction steps, expected/actual behavior
+3. **ALWAYS** use `templates/bug-template.md` for bug reports
+4. **ALWAYS** number bugs sequentially (bug-001, bug-002, etc.)
+5. **ALWAYS** link to related feature if applicable using `**Related Feature**` field
+6. **ALWAYS** update `specs/README.md` when creating a new bug
+
+## When Implementing Features
+
+1. **ALWAYS** read the feature's `spec.md`, `plan.md`, and `tasks.md` before starting
+2. **ALWAYS** check existing codebase first - search for existing components, hooks, utilities, or patterns that can be reused
+3. **ALWAYS** identify where to implement the feature (existing buttons, components, pages, etc.) before creating new ones
+4. **ALWAYS** reuse existing components, hooks, and utilities when possible - do NOT create duplicates
+5. **ALWAYS** follow the task order specified in `tasks.md`
+6. **ALWAYS** update task status as you work
+7. **ALWAYS** reference the spec when making implementation decisions
+8. **ALWAYS** update feature status when moving between phases
+9. **ALWAYS** create tests as specified in `plan.md` and `tasks.md`
+
+## Code Reuse & Existing Components
+
+### Before Creating New Components
+1. **Search the codebase** for existing components that serve similar purposes
+2. **Check existing feature specs** in `specs/` directory for similar implementations
+3. **Check component library** in `src/components/` for reusable UI components
+4. **Review hooks** in `src/hooks/` for existing logic that can be extended
+5. **Check utilities** in `src/lib/` for reusable helper functions and utilities
+6. **Review types** in `src/types/` for existing interfaces/types that can be extended
+7. **Examine pages** in `src/pages/` to see where the feature should be integrated
+8. **Look for patterns** - if similar functionality exists, follow the same pattern
+
+### Integration Points
+- **Existing Feature Specs**: Check `specs/` directory for similar features that can inform implementation
+- **Existing Buttons**: Check if buttons/actions already exist that can be extended
+- **Existing Pages**: Identify which page should host the new feature
+- **Existing Components**: Find components that can be reused or extended
+- **Existing Hooks**: Look for hooks that handle similar logic
+- **Existing Utilities**: Check `src/lib/` for helper functions (parsers, generators, formatters, etc.)
+- **Existing Types**: Review `src/types/` for interfaces/types that can be extended
+- **Existing Services**: Check `electron/services/` for reusable services
+- **Existing IPC Handlers**: Review `electron/ipc/handlers.ts` for similar handlers
+
+### When to Create New vs Reuse
+- **Reuse** when: Component/pattern exists and can be extended with minimal changes
+- **Create** when: No suitable existing component exists, or extending would make it too complex
+- **Extend** when: Existing component is close but needs additional functionality
+
+### Example Workflow
+1. Search: "Where is [similar feature] implemented?"
+2. Analyze: "Can I extend this component or should I create new?"
+3. Identify: "Where should this feature be added? (existing page/component)"
+4. Plan: "What existing code can I leverage?"
+5. Implement: "Extend existing or create new based on analysis"
+
+## File Path Conventions
+
+- Feature specs: `specs/XXX-feature-name/spec.md`
+- Implementation plans: `specs/XXX-feature-name/plan.md`
+- Task breakdowns: `specs/XXX-feature-name/tasks.md`
+- Contracts: `specs/XXX-feature-name/contracts/api-spec.json`
+- Data models: `specs/XXX-feature-name/contracts/data-model.md`
+
+## Template Usage
+
+- **NEVER** create feature files from scratch
+- **ALWAYS** copy from `templates/` directory
+- **ALWAYS** fill in all required sections
+- **ALWAYS** maintain the template structure
+
+## Reference Requirements
+
+When implementing a feature:
+- Reference the feature's spec.md in commit messages
+- Reference the feature's plan.md when making architectural decisions
+- Reference the feature's tasks.md to track progress
+- Link PRs to the feature directory
+
+## Example Structures
+
+### Feature Structure
+```
+specs/001-curl-import-export/
+├── spec.md
+├── plan.md
+├── tasks.md
+├── contracts/
+│   ├── api-spec.json
+│   └── data-model.md
+├── research.md
+└── quickstart.md
+```
+
+### Bug Structure
+```
+specs/bug-001-collection-crash/
+├── spec.md          # Bug report with reproduction steps
+├── plan.md          # Fix plan and root cause analysis
+├── tasks.md         # Fix tasks and verification steps
+└── contracts/       # If needed for fix
+```
+
+## Bug Tracking Guidelines
+
+### When to Create a Bug vs Feature
+- **Bug**: Something that used to work but is now broken, or something that doesn't work as specified
+- **Feature**: New functionality that doesn't exist yet
+
+### Bug Workflow
+1. **Report**: Create bug with `scripts/create-bug.sh`, fill in reproduction steps
+2. **Investigate**: Update status to `investigating`, document root cause in `plan.md`
+3. **Fix**: Update status to `fixing`, implement fix following `tasks.md`
+4. **Test**: Update status to `testing`, verify fix works
+5. **Resolve**: Update status to `resolved` when fix is verified and merged
+
+### Bug Severity Levels
+- `critical` - System crash, data loss, security vulnerability
+- `high` - Major functionality broken, significant user impact
+- `medium` - Moderate functionality issue, workaround available
+- `low` - Minor issue, cosmetic problem, edge case
+
+## Commands
+
+- Use `scripts/create-feature.sh [feature-name]` to create a new feature
+- Use `scripts/create-bug.sh [bug-name]` to create a new bug report
+- Use `scripts/update-feature-index.sh` to update the feature and bug index
+
+## Best Practices
+
+1. Keep specs focused - one feature per spec
+2. Update specs as requirements change
+3. Keep tasks granular and actionable
+4. Mark dependencies clearly
+5. Use parallel execution markers `[P]` where appropriate
+6. Update status regularly
+7. Link related features in spec.md references
