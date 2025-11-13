@@ -34,7 +34,9 @@ This directory contains feature specifications and bug reports following the spe
 
 ## Feature List
 
-*No features yet. Use `./scripts/create-feature.sh <feature-name>` to create your first feature.*
+| ID | Feature Name | Status | Phase | Owner |
+|----|--------------|--------|-------|-------|
+| `001-curl-import-export` | [curl-import-export](specs/001-curl-import-export/spec.md) | `completed` | Phase 3: Import/Export & Interoperability (plan-timeline.md) | Development Team |
 
 ## Bug List
 

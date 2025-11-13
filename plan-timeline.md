@@ -111,22 +111,22 @@
 
 ---
 
-## Phase 3: Import/Export & Interoperability 📋 PLANNED (0% Complete)
+## Phase 3: Import/Export & Interoperability 🔄 IN PROGRESS (25% Complete)
 
-### 3.1 cURL Support 📋 PLANNED
-- [ ] **cURL Parser** - Parse cURL commands
-  - [ ] Parse method
-  - [ ] Parse URL
-  - [ ] Parse headers (-H)
-  - [ ] Parse data (-d, --data)
-  - [ ] Parse auth credentials
+### 3.1 cURL Support ✅ COMPLETED
+- [x] **cURL Parser** - Parse cURL commands
+  - [x] Parse method
+  - [x] Parse URL
+  - [x] Parse headers (-H)
+  - [x] Parse data (-d, --data)
+  - [x] Parse auth credentials
   - [ ] Parse proxy settings
   - [ ] Parse SSL options
-- [ ] **cURL Generator** - Export request as cURL
-- [ ] **Import from Clipboard** - Detect and parse cURL
-- [ ] **Bulk cURL Import** - Import multiple commands
+- [x] **cURL Generator** - Export request as cURL
+- [x] **Import from Clipboard** - Paste and parse cURL
+- [x] **Bulk cURL Import** - Import multiple commands
 
-**Timeline**: 2 days
+**Timeline**: 2 days ✅ **COMPLETED**
 
 ### 3.2 Postman Collection Import/Export 📦 PLANNED
 - [ ] **Postman v2.0 Importer**
@@ -447,8 +447,9 @@
 - Status: **92% Complete**
 - Priority: HIGH
 
-### **Phase 3** (Import/Export) - 📋 PLANNED
+### **Phase 3** (Import/Export) - 🔄 IN PROGRESS
 - Duration: ~1-2 weeks
+- Status: **25% Complete** (cURL Support completed)
 - Priority: HIGH
 
 ### **Phase 4** (Advanced Features) - 🔄 IN PROGRESS
@@ -481,7 +482,7 @@
 - ✅ Collections Management
 - ✅ Environment & Variables
 - ✅ Request History
-- 📋 cURL Import/Export
+- ✅ cURL Import/Export
 - 🔄 Keyboard Shortcuts (Partial)
 - 🔄 Settings Panel (Partial)
 
@@ -520,10 +521,11 @@
 - **Theming**: Advanced VS Code-style theme system
 - **Basic Settings**: Core application settings
 - **Keyboard Shortcuts**: Comprehensive shortcut system including:
-  - Global shortcuts (Cmd+K, Cmd+N, Cmd+B, etc.)
-  - Item operations (Cmd+E edit, Cmd+D duplicate, Cmd+Backspace delete)
-  - Export/Import (Cmd+Shift+E, Cmd+Shift+I)
-  - Collection operations (Cmd+R add request, Cmd+Shift+N new folder/collection)
+    - Global shortcuts (Cmd+K, Cmd+N, Cmd+B, etc.)
+    - Item operations (Cmd+E edit, Cmd+D duplicate, Cmd+Backspace delete)
+    - Export/Import (Cmd+Shift+E, Cmd+Shift+I)
+    - Collection operations (Cmd+R add request, Cmd+Shift+N new folder/collection)
+- **cURL Import/Export**: Full cURL command parsing and generation with bulk import support
 
 ### 🔄 **IN PROGRESS**
 - **Keyboard Shortcuts**: Core shortcuts implemented (duplicate, edit, export/import), tab navigation and advanced shortcuts pending
@@ -532,11 +534,11 @@
 - **Collections**: Only bulk operations pending (documentation is complete)
 
 ### 📋 **NEXT PRIORITIES**
-1. **cURL Import/Export** - Critical for interoperability
-2. **Postman Collection Import** - Essential for user migration
-3. **Code Generation** - High user value
-4. **Sandbox Mode** - Important for experimentation
-5. **Request Chaining & Scripting** - Advanced testing capabilities
+1. **Postman Collection Import** - Essential for user migration
+2. **Code Generation** - High user value
+3. **Sandbox Mode** - Important for experimentation
+4. **Request Chaining & Scripting** - Advanced testing capabilities
+5. **Additional Import Formats** - OpenAPI/Swagger, Insomnia, HAR
 
 ---
 

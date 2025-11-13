@@ -1,9 +1,9 @@
 # Feature Specification: cURL Import/Export
 
-**Status**: `planned`  
+**Status**: `completed`  
 **Feature ID**: `001-curl-import-export`  
 **Created**: 2025-11-13  
-**Last Updated**: 2025-11-13  
+**Last Updated**: 2025-01-27  
 **Owner**: Development Team  
 **Phase**: Phase 3: Import/Export & Interoperability (plan-timeline.md)
 

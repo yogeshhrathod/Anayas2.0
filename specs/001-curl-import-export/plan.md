@@ -1,7 +1,7 @@
 # Implementation Plan: cURL Import/Export
 
 **Feature ID**: `001-curl-import-export`  
-**Status**: `planned`  
+**Status**: `completed`  
 **Related Spec**: [spec.md](./spec.md)
 
 ## Overview

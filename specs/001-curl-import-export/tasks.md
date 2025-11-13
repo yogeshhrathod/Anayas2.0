@@ -1,7 +1,7 @@
 # Task Breakdown: cURL Import/Export
 
 **Feature ID**: `001-curl-import-export`  
-**Status**: `in-progress`  
+**Status**: `completed`  
 **Related Spec**: [spec.md](./spec.md)  
 **Related Plan**: [plan.md](./plan.md)
 
@@ -25,14 +25,14 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **Description**: Implement parser to convert cURL commands to Request objects. Support method, URL, headers, data, auth, query params
 - **Dependencies**: Task 1.1
 - **Acceptance**: Can parse standard cURL commands with all supported features
-- **Status**: `in-progress`
+- **Status**: `completed`
 
 #### Task 1.3: Create cURL Generator Utility `[P]`
 - **File**: `src/lib/curl-generator.ts`
 - **Description**: Implement generator to convert Request objects to cURL commands. Support all request types, proper escaping
 - **Dependencies**: None
 - **Acceptance**: Can generate valid cURL commands from any request
-- **Status**: `pending`
+- **Status**: `completed`
 
 **Checkpoint**: Parser and generator utilities complete and tested
 
@@ -43,14 +43,14 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **Description**: Add curl:parse, curl:generate, and curl:import-bulk IPC handlers
 - **Dependencies**: Task 1.2, Task 1.3
 - **Acceptance**: IPC handlers work correctly with parser and generator
-- **Status**: `pending`
+- **Status**: `completed`
 
 #### Task 2.2: Expose Preload APIs
 - **File**: `electron/preload.ts`
 - **Description**: Add electronAPI.curl namespace with parse, generate, importBulk methods
 - **Dependencies**: Task 2.1
 - **Acceptance**: APIs accessible from renderer process
-- **Status**: `pending`
+- **Status**: `completed`
 
 **Checkpoint**: IPC communication working
 
@@ -61,14 +61,14 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **Description**: Create dialog with textarea, file upload, preview, and save options. Support bulk import
 - **Dependencies**: Task 2.2
 - **Acceptance**: Dialog can import and preview cURL commands
-- **Status**: `pending`
+- **Status**: `completed`
 
 #### Task 3.2: Add Import Options to UI
 - **File**: `src/pages/Collections.tsx`, `src/components/collection/RequestItem.tsx`
 - **Description**: Add Import cURL button/menu items to Collections page and context menus
 - **Dependencies**: Task 3.1
 - **Acceptance**: Users can access import dialog from multiple places
-- **Status**: `pending`
+- **Status**: `completed`
 
 **Checkpoint**: Import functionality complete
 
@@ -81,7 +81,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **Description**: Add Copy as cURL button next to Send button. Call generator and copy to clipboard
 - **Dependencies**: Task 2.2
 - **Acceptance**: Button generates and copies cURL command successfully
-- **Status**: `pending`
+- **Status**: `completed`
 
 **Checkpoint**: Export functionality complete
 
@@ -94,7 +94,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **Description**: Add support for importing multiple cURL commands separated by newlines
 - **Dependencies**: Task 3.1
 - **Acceptance**: Can import multiple commands, errors don't block others
-- **Status**: `pending`
+- **Status**: `completed`
 
 **Checkpoint**: Bulk import working
 
@@ -106,13 +106,13 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **File**: `src/lib/__tests__/curl-parser.test.ts` (if test setup exists)
 - **Description**: Test parser with various cURL formats, edge cases, error handling
 - **Dependencies**: Task 1.2
-- **Status**: `pending`
+- **Status**: `completed`
 
 #### Test Task 2: Generator Tests
 - **File**: `src/lib/__tests__/curl-generator.test.ts` (if test setup exists)
 - **Description**: Test generator with all request types, auth types, special characters
 - **Dependencies**: Task 1.3
-- **Status**: `pending`
+- **Status**: `completed`
 
 ### Integration Tests
 
@@ -120,7 +120,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **File**: Integration test file (if exists)
 - **Description**: Test IPC handlers with various inputs
 - **Dependencies**: Task 2.1
-- **Status**: `pending`
+- **Status**: `completed`
 
 ### Manual Testing
 
@@ -128,7 +128,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **File**: N/A
 - **Description**: Test all scenarios manually: import/export, various formats, edge cases
 - **Dependencies**: All implementation tasks
-- **Status**: `pending`
+- **Status**: `completed`
 
 ---
 
@@ -154,12 +154,12 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ## Progress Tracking
 
 **Total Tasks**: 13  
-**Completed**: 1  
-**In Progress**: 1  
-**Pending**: 11  
+**Completed**: 13  
+**In Progress**: 0  
+**Pending**: 0  
 **Blocked**: 0
 
-**Completion**: 8%
+**Completion**: 100%
 
 ---
 
