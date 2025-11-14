@@ -1,11 +1,11 @@
 # Bug Report: z-index-fixes
 
-**Status**: `reported`  
+**Status**: `testing`  
 **Bug ID**: `bug-001-z-index-fixes`  
 **Severity**: `high`  
 **Priority**: `P1`  
 **Created**: 2025-11-14  
-**Last Updated**: 2025-11-14  
+**Last Updated**: 2025-01-27  
 **Reporter**: Development Team  
 **Assignee**: Development Team  
 **Related Feature**: N/A (Infrastructure/UI Fix)
@@ -37,6 +37,7 @@ The application has multiple z-index issues:
    - Resize handles: `z-50` (may conflict)
 
 3. **Specific issues in home page and request builder**:
+   - **CRITICAL**: Environment dropdown on home page goes behind content (root cause: `overflow-hidden` on Homepage wrapper creates conflicting stacking context)
    - Dialogs (SaveRequestDialog, PromoteRequestDialog) may be hidden behind other overlays
    - Select dropdowns in dialogs may appear behind dialog overlays
    - GlobalSearch results may appear behind dialogs
@@ -45,7 +46,12 @@ The application has multiple z-index issues:
 
 ## Reproduction Steps
 
-1. Open the application and navigate to the home page
+1. **CRITICAL - Home Page Environment Dropdown Issue**:
+   - Open the application and navigate to the home page
+   - Click on the environment selector dropdown in the navigation bar
+   - Observe that the dropdown goes behind the page content (should appear above)
+   - Note: This issue does NOT occur on Collections or Environments pages
+
 2. Open the request builder
 3. Try opening a dialog (e.g., Save Request dialog)
 4. While the dialog is open, try opening a dropdown menu or select component
@@ -71,6 +77,7 @@ The application has multiple z-index issues:
 
 ## Actual Behavior
 
+- **CRITICAL**: Environment dropdown on home page goes behind content (root cause: `overflow-hidden` on Homepage wrapper creates conflicting stacking context with NavigationBar's `backdrop-blur-md`)
 - Z-index values are hardcoded inconsistently
 - Some components (ContextMenu, Toast) have too low z-index values
 - Some components (GlobalSearch, CurlImportDialog) have extremely high z-index values
@@ -103,6 +110,7 @@ N/A - Visual layering issues that need to be observed in the UI
 - The `common-utils.md` file references a `z-index.ts` utility that should exist but doesn't
 - This is a foundational fix that will improve maintainability
 - All future components should use the centralized z-index utility
+- **Home Page Fix**: The root cause of the environment dropdown issue was identified as a stacking context conflict. The `overflow-hidden` on Homepage.tsx line 8 was unnecessary (ApiRequestBuilder already handles overflow internally) and created a conflicting stacking context with NavigationBar's `backdrop-blur-md`. The fix removes `overflow-hidden` and adds `z-sticky` to NavigationBar.
 
 ## Root Cause Analysis
 

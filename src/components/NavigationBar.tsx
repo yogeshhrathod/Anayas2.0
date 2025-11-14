@@ -164,7 +164,7 @@ export function NavigationBar() {
   };
 
   return (
-    <div className="flex h-11 items-center border-b border-border/50 bg-card/80 backdrop-blur-md px-4 select-none">
+    <div className="flex h-11 items-center border-b border-border/50 bg-card/80 backdrop-blur-md px-4 select-none z-sticky">
       {/* Primary Navigation (Left) */}
       <div className="flex items-center gap-2" style={{ WebkitAppRegion: "no-drag" } as any}>
         {primaryNavItems.map((item) => {

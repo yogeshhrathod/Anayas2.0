@@ -40,7 +40,7 @@ export function VariableContextMenu({
 
   return (
     <div
-      className="fixed z-[10001] w-56 rounded-md border bg-popover p-1 shadow-lg"
+      className="fixed z-context-menu w-56 rounded-md border bg-popover p-1 shadow-lg"
       style={{ left: position.x, top: position.y }}
       onClick={(e) => e.stopPropagation()}
     >

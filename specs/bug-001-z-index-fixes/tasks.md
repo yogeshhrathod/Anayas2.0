@@ -1,7 +1,7 @@
 # Task Breakdown: z-index-fixes
 
 **Bug ID**: `bug-001-z-index-fixes`  
-**Status**: `planned`  
+**Status**: `completed`  
 **Related Spec**: [spec.md](spec.md)  
 **Related Plan**: [plan.md](plan.md)
 
@@ -20,25 +20,36 @@ Tasks are organized by implementation phase. Tasks marked with `[P]` can be exec
   - All semantic classes defined: base, content, sticky, dropdown, popover, context-menu, modal-backdrop, modal, dialog, tooltip, global-search, toast
   - Special case `dialog-dropdown` added (value: 3501) for dropdowns in dialogs
   - Tailwind IntelliSense recognizes new classes
-- **Status**: `pending`
+- **Status**: `completed`
 
 **Checkpoint**: Tailwind config updated with z-index values. Semantic classes like `z-dialog` are available in all components.
 
 ---
 
-## Phase 2: Fix Home Page & Request Builder (Primary Focus)
+## Phase 2: Fix Home Page Structure & Request Builder (Primary Focus)
 
-### Task 2.1: Fix Homepage status bar
+### Task 2.1: Fix Homepage structure (CRITICAL - Root Cause Fix)
 - **File**: `src/pages/Homepage.tsx`
-- **Description**: Replace `z-0` with appropriate Tailwind class (likely `z-sticky` or `z-base`)
+- **Description**: Remove `overflow-hidden` from line 8 to eliminate conflicting stacking context. ApiRequestBuilder already handles overflow internally.
 - **Dependencies**: Task 1.1
 - **Acceptance**: 
-  - Status bar uses semantic Tailwind class (`z-sticky` or `z-base`)
-  - No visual regression
-  - Status bar appears correctly
-- **Status**: `pending`
+  - `overflow-hidden` removed from Homepage wrapper
+  - No visual regression (ApiRequestBuilder still handles overflow)
+  - Home page structure matches Collections/Environments pages
+  - Environment dropdown no longer goes behind content
+- **Status**: `completed`
 
-### Task 2.2: Fix SaveRequestDialog
+### Task 2.2: Fix NavigationBar z-index
+- **File**: `src/components/NavigationBar.tsx`
+- **Description**: Add `z-sticky` or `z-navigation` class to NavigationBar container to ensure it stays above page content
+- **Dependencies**: Task 1.1
+- **Acceptance**: 
+  - NavigationBar uses `z-sticky` or `z-navigation` class
+  - NavigationBar appears above page content
+  - No visual regression
+- **Status**: `completed`
+
+### Task 2.3: Fix SaveRequestDialog
 - **File**: `src/components/ui/save-request-dialog.tsx`
 - **Description**: Replace `z-[9999]` with `z-dialog`
 - **Dependencies**: Task 1.1
@@ -48,7 +59,7 @@ Tasks are organized by implementation phase. Tasks marked with `[P]` can be exec
   - No visual regression
 - **Status**: `pending`
 
-### Task 2.3: Fix PromoteRequestDialog
+### Task 2.4: Fix PromoteRequestDialog
 - **File**: `src/components/ui/promote-request-dialog.tsx`
 - **Description**: Replace `z-[9999]` with `z-dialog`
 - **Dependencies**: Task 1.1
@@ -58,7 +69,7 @@ Tasks are organized by implementation phase. Tasks marked with `[P]` can be exec
   - No visual regression
 - **Status**: `pending`
 
-### Task 2.4: Fix GlobalSearch
+### Task 2.5: Fix GlobalSearch
 - **File**: `src/components/GlobalSearch.tsx`
 - **Description**: Replace `z-[99999]` with `z-global-search`
 - **Dependencies**: Task 1.1
@@ -68,7 +79,7 @@ Tasks are organized by implementation phase. Tasks marked with `[P]` can be exec
   - No visual regression
 - **Status**: `pending`
 
-### Task 2.5: Fix SelectContent (used in dialogs)
+### Task 2.6: Fix SelectContent (used in dialogs)
 - **File**: `src/components/ui/select.tsx`
 - **Description**: Replace `z-[10000]` with `z-dropdown` (or `z-dialog-dropdown` when explicitly in dialog context)
 - **Dependencies**: Task 1.1
@@ -79,7 +90,7 @@ Tasks are organized by implementation phase. Tasks marked with `[P]` can be exec
   - No visual regression
 - **Status**: `pending`
 
-### Task 2.6: Fix DropdownMenu (used in request builder)
+### Task 2.7: Fix DropdownMenu (used in request builder)
 - **File**: `src/components/ui/dropdown-menu.tsx`
 - **Description**: Replace `z-[9999]` with `z-dropdown` in both `DropdownMenuContent` and `DropdownMenuSubContent`
 - **Dependencies**: Task 1.1
@@ -89,7 +100,10 @@ Tasks are organized by implementation phase. Tasks marked with `[P]` can be exec
   - No visual regression
 - **Status**: `pending`
 
-**Checkpoint**: Home page and request builder z-index issues are fixed. Test by opening dialogs, dropdowns, and GlobalSearch to verify correct layering.
+**Checkpoint**: Home page structure fixed (no stacking context conflict) and request builder z-index issues are fixed. Test by:
+- Opening environment dropdown on home page - verify it appears above content (not behind)
+- Opening dialogs, dropdowns, and GlobalSearch to verify correct layering
+- Comparing behavior with Collections/Environments pages - should be consistent
 
 ---
 
@@ -271,15 +285,19 @@ Tasks are organized by implementation phase. Tasks marked with `[P]` can be exec
 
 ## Phase 4: Verification & Testing
 
-### Task 4.1: Test home page z-index
+### Task 4.1: Test home page z-index (CRITICAL)
 - **File**: Manual testing
 - **Description**: Test z-index on home page:
+  - **CRITICAL**: Environment dropdown appears above content (not behind)
   - Status bar appears correctly
   - No conflicts with other elements
-- **Dependencies**: Tasks 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
+  - Structure matches Collections/Environments pages
+- **Dependencies**: Tasks 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7
 - **Acceptance**: 
+  - Environment dropdown works correctly on home page
   - All home page elements appear correctly
   - No z-index conflicts observed
+  - Behavior consistent with other pages
 - **Status**: `pending`
 
 ### Task 4.2: Test request builder z-index
@@ -408,13 +426,14 @@ Tasks are organized by implementation phase. Tasks marked with `[P]` can be exec
 ## Task Execution Order
 
 ### Sequential Tasks
-1. Task 1.1 (Create z-index utility) - Must complete first
-2. All Phase 2 tasks (can be done in parallel after Task 1.1)
-3. All Phase 3 tasks (can be done in parallel after Task 1.1)
-4. All Phase 4 tasks (verification, must complete after all fixes)
+1. Task 1.1 (Configure Tailwind z-index) - Must complete first
+2. Task 2.1 (Fix Homepage structure) - CRITICAL root cause fix, should be done first in Phase 2
+3. Tasks 2.2-2.7 (can be done in parallel after Task 1.1)
+4. All Phase 3 tasks (can be done in parallel after Task 1.1)
+5. All Phase 4 tasks (verification, must complete after all fixes)
 
 ### Parallel Tasks
-- Tasks 2.1-2.6 can run in parallel after Task 1.1
+- Tasks 2.2-2.7 can run in parallel after Task 1.1 (Task 2.1 should be done first as it's the root cause fix)
 - Tasks 3.1-3.17 can run in parallel after Task 1.1
 - Tasks 4.1-4.10 can run in parallel after all fixes are complete
 
@@ -422,15 +441,18 @@ Tasks are organized by implementation phase. Tasks marked with `[P]` can be exec
 
 ## Progress Tracking
 
-**Total Tasks**: 27  
-**Completed**: 0  
+**Total Tasks**: 28  
+**Completed**: 3  
 **In Progress**: 0  
-**Pending**: 27  
+**Pending**: 25  
 **Blocked**: 0
 
 ### Phase Breakdown
 - **Phase 1**: 1 task
-- **Phase 2**: 6 tasks (home page & request builder focus)
+- **Phase 2**: 7 tasks (home page structure fix + request builder focus)
+  - Task 2.1: Fix Homepage structure (CRITICAL - removes stacking context conflict)
+  - Task 2.2: Fix NavigationBar z-index
+  - Tasks 2.3-2.7: Fix request builder components
 - **Phase 3**: 17 tasks (all other components)
 - **Phase 4**: 10 tasks (verification & testing)
 
@@ -438,9 +460,11 @@ Tasks are organized by implementation phase. Tasks marked with `[P]` can be exec
 
 ## Notes
 
+- **CRITICAL**: Task 2.1 (Fix Homepage structure) is the root cause fix - this must be done first
 - All tasks should use semantic Tailwind classes: `z-dialog`, `z-dropdown`, `z-tooltip`, etc.
 - No imports needed - classes are available globally via Tailwind config
 - Use `z-dialog-dropdown` for dropdowns that appear inside dialogs
 - Test each component after fixing to catch issues early
-- Focus on Phase 2 (home page & request builder) first as these are the primary areas mentioned in the bug report
+- Focus on Phase 2 (home page structure fix + request builder) first as these are the primary areas mentioned in the bug report
 - Tailwind IntelliSense should autocomplete the new z-index classes
+- **Key Fix**: Removing `overflow-hidden` from Homepage.tsx eliminates the stacking context conflict that causes environment dropdown to go behind content

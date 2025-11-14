@@ -248,7 +248,7 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
       {/* Create Preset Dialog */}
       {showCreateDialog && (
         <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog"
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
               e.preventDefault();

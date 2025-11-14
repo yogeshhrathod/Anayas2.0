@@ -75,10 +75,10 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
       {isOpen && (
         <>
           <div
-            className="fixed inset-0 z-[9998]"
+            className="fixed inset-0 z-modal-backdrop"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full z-[9999] mt-2 w-80 rounded-md border bg-popover p-2 shadow-lg">
+          <div className="absolute right-0 top-full z-popover mt-2 w-80 rounded-md border bg-popover p-2 shadow-lg">
             {currentCollection && collectionEnvironments.length > 0 && (
               <div className="mb-3">
                 <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">

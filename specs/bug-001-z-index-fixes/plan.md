@@ -1,7 +1,7 @@
 # Fix Plan: z-index-fixes
 
 **Bug ID**: `bug-001-z-index-fixes`  
-**Status**: `planned`  
+**Status**: `completed`  
 **Related Spec**: [spec.md](spec.md)
 
 ## Overview
@@ -19,12 +19,21 @@ Create a centralized z-index utility and refactor all hardcoded z-index values t
    - No understanding of which components should appear above others
    - Conflicts when multiple overlays are open simultaneously
 
-3. **Specific Conflicts**:
+3. **Home Page Stacking Context Issue** (CRITICAL):
+   - **Homepage.tsx line 8**: `overflow-hidden` creates a stacking context that conflicts with NavigationBar
+   - **NavigationBar line 167**: `backdrop-blur-md` creates another stacking context
+   - **EnvironmentSelector dropdown**: Uses `absolute` positioning, trapped in NavigationBar's stacking context
+   - **Result**: Home page content (in separate stacking context) can appear above the dropdown
+   - **Why it works on Collections/Environments**: Those pages don't have `overflow-hidden`, so no conflicting stacking context
+   - **Root Cause**: Unnecessary `overflow-hidden` on Homepage wrapper (ApiRequestBuilder already handles overflow internally)
+
+4. **Specific Conflicts**:
    - **ContextMenu** (`z-50`) is too low and gets hidden behind other components
    - **Toast** (`z-[100]`) is too low and may be hidden behind dialogs
    - **SelectContent** (`z-[10000]`) is higher than dialogs (`z-[9999]`), causing dropdowns to appear above dialog overlays
    - **GlobalSearch** (`z-[99999]`) is unnecessarily high
    - **VariableAutocomplete** and **VariableContextMenu** use very high values that conflict with dialogs
+   - **EnvironmentSelector dropdown** goes behind home page content due to stacking context conflict
 
 ### Affected Components
 
@@ -161,7 +170,12 @@ Use semantic Tailwind classes instead of hardcoded values:
 - `tailwind.config.js` (modify) - **WHY**: Add z-index values to `theme.extend.zIndex` for centralized, semantic z-index classes
 
 ### Modified Files
-- `src/pages/Homepage.tsx` - **WHY**: Fix status bar z-index (currently `z-0`, should use `z-sticky` or `z-base`)
+- `src/pages/Homepage.tsx` - **WHY**: 
+  - Remove `overflow-hidden` from line 8 (creates conflicting stacking context)
+  - ApiRequestBuilder already handles overflow internally (line 294)
+  - This aligns home page structure with Collections/Environments pages
+  - Fix status bar z-index (currently `z-sticky`, already fixed)
+- `src/components/NavigationBar.tsx` - **WHY**: Add explicit z-index (`z-sticky` or `z-navigation`) to ensure NavigationBar stays above page content
 - `src/components/ApiRequestBuilder.tsx` - **WHY**: No direct z-index, but contains components that need fixes
 - `src/components/ui/save-request-dialog.tsx` - **WHY**: Replace `z-[9999]` with `z-dialog`
 - `src/components/ui/promote-request-dialog.tsx` - **WHY**: Replace `z-[9999]` with `z-dialog`
@@ -290,11 +304,16 @@ Use semantic Tailwind classes instead of hardcoded values:
 ```
 tailwind.config.js
   - Add zIndex to theme.extend
+  - Optionally add 'navigation': '200' for NavigationBar
 ```
 
 ### Modified Files
 ```
 src/pages/Homepage.tsx
+  - Remove overflow-hidden from line 8 (fixes stacking context conflict)
+  - Status bar already uses z-sticky
+src/components/NavigationBar.tsx
+  - Add z-sticky or z-navigation to ensure it stays above content
 src/components/ApiRequestBuilder.tsx (indirect - contains fixed components)
 src/components/ui/save-request-dialog.tsx
 src/components/ui/promote-request-dialog.tsx
@@ -348,6 +367,48 @@ src/pages/History.tsx
 </div>
 ```
 
+### Home Page Structure Fix: `src/pages/Homepage.tsx`
+**Purpose**: Remove conflicting stacking context  
+**Key Changes**:
+- Remove `overflow-hidden` from wrapper div (line 8)
+- ApiRequestBuilder already handles overflow internally (line 294)
+- Aligns structure with Collections/Environments pages
+
+**Before**:
+```tsx
+<div className="flex-1 overflow-hidden">  {/* Creates stacking context */}
+  <ApiRequestBuilder />
+</div>
+```
+
+**After**:
+```tsx
+<div className="flex-1">  {/* No stacking context conflict */}
+  <ApiRequestBuilder />
+</div>
+```
+
+**Why This Works**:
+- ApiRequestBuilder has `overflow-hidden` internally (line 294), so wrapper is redundant
+- Removes conflicting stacking context that was causing dropdown to go behind content
+- Matches pattern used in Collections/Environments pages (no overflow at page level)
+
+### NavigationBar Fix: `src/components/NavigationBar.tsx`
+**Purpose**: Ensure NavigationBar stays above page content  
+**Key Changes**:
+- Add `z-sticky` or `z-navigation` class to NavigationBar container
+- Ensures NavigationBar and its dropdowns stay above page content
+
+**Before**:
+```tsx
+<div className="flex h-11 items-center border-b border-border/50 bg-card/80 backdrop-blur-md px-4 select-none">
+```
+
+**After**:
+```tsx
+<div className="flex h-11 items-center border-b border-border/50 bg-card/80 backdrop-blur-md px-4 select-none z-sticky">
+```
+
 ### Component Updates
 All components will:
 1. Replace hardcoded z-index values with semantic Tailwind classes
@@ -358,6 +419,7 @@ All components will:
 ## Testing Strategy
 
 ### Manual Testing Checklist
+- [ ] **CRITICAL**: Open home page - verify environment dropdown appears above content (not behind)
 - [ ] Open home page - verify status bar appears correctly
 - [ ] Open request builder - verify no z-index conflicts
 - [ ] Open Save Request dialog - verify it appears above content
@@ -369,6 +431,7 @@ All components will:
 - [ ] Open CurlImportDialog - verify it appears correctly
 - [ ] Open fullscreen editor - verify it appears correctly
 - [ ] Test multiple overlays simultaneously - verify correct layering
+- [ ] **CRITICAL**: Compare home page vs Collections/Environments - verify environment dropdown works consistently
 
 ### Visual Regression Testing
 - [ ] Compare screenshots before/after fix

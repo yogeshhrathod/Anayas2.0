@@ -288,7 +288,7 @@ export function GlobalSearch() {
       {/* Search Results - Portal */}
       {isOpen && createPortal(
         <div 
-          className="fixed bg-card/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-xl z-[99999] max-h-96 overflow-y-auto transition-all duration-300"
+          className="fixed bg-card/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-xl z-global-search max-h-96 overflow-y-auto transition-all duration-300"
           style={{
             top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 8,
             left: (inputRef.current?.getBoundingClientRect().left ?? 0),

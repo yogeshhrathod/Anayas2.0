@@ -287,7 +287,7 @@ export function History() {
       
       {/* Request Details Modal */}
       {showDetails && selectedRequest && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog">
           <Card className="w-4/5 max-w-4xl max-h-[80vh] overflow-hidden">
             <CardHeader>
               <div className="flex items-center justify-between">
