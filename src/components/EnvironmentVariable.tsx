@@ -60,6 +60,7 @@ export function EnvironmentVariable({
             <Button
               variant="outline"
               size="sm"
+              type="button"
               onClick={() => {
                 const newVariables = { ...variables, '': '' };
                 onVariablesChange(newVariables);

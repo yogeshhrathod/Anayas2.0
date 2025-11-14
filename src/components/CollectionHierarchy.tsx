@@ -253,7 +253,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       const duplicateCollection = {
         name: `${collection.name} (Copy)`,
         description: collection.description || '',
-        variables: collection.variables || {},
+        environments: collection.environments ? collection.environments.map(env => ({ ...env, id: undefined })) : [],
         isFavorite: false
       };
 

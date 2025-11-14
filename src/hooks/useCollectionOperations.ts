@@ -101,7 +101,7 @@ export function useCollectionOperations() {
         name: data.name,
         description: data.description,
         documentation: data.documentation || '',
-        variables: data.variables,
+        environments: data.environments || [],
         isFavorite: data.isFavorite
       });
 
@@ -125,7 +125,7 @@ export function useCollectionOperations() {
         name: data.name,
         description: data.description,
         documentation: data.documentation || '',
-        variables: data.variables,
+        environments: data.environments || [],
         isFavorite: data.isFavorite
       });
 
@@ -161,7 +161,7 @@ export function useCollectionOperations() {
       const result = await createCollection({
         name: `${collection.name} (Copy)`,
         description: collection.description || '',
-        variables: collection.variables,
+        environments: collection.environments ? collection.environments.map(env => ({ ...env, id: undefined })) : [],
         isFavorite: false
       });
 
@@ -208,7 +208,7 @@ export function useCollectionOperations() {
       await updateCollection(collection.id!, {
         name: collection.name,
         description: collection.description || '',
-        variables: collection.variables,
+        environments: collection.environments || [],
         isFavorite: !collection.isFavorite
       });
     } catch (error: any) {
@@ -256,7 +256,7 @@ export function useCollectionOperations() {
             await createCollection({
               name: collection.name,
               description: collection.description,
-              variables: collection.variables,
+              environments: collection.environments || [],
               isFavorite: false
             });
           }

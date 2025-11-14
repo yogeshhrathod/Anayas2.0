@@ -16,8 +16,10 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
     currentEnvironment, 
     setCurrentEnvironment,
     collections,
+    setCollections,
     selectedRequest,
-    setCollectionEnvironmentSelection
+    setCollectionEnvironmentSelection,
+    triggerSidebarRefresh
   } = useStore();
 
   // Determine which environments to show based on current request
@@ -43,11 +45,19 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
     if (!currentCollection?.id) return;
     
     try {
-      await window.electronAPI.collection.setActiveEnvironment(currentCollection.id, envId);
-      setCollectionEnvironmentSelection(currentCollection.id, envId);
-      setIsOpen(false);
+      const result = await window.electronAPI.collection.setActiveEnvironment(currentCollection.id, envId);
+      if (result?.success && result.collection) {
+        // Update the collection in the store with the updated activeEnvironmentId
+        const updatedCollections = collections.map(c => 
+          c.id === currentCollection.id ? result.collection : c
+        );
+        setCollections(updatedCollections);
+        setCollectionEnvironmentSelection(currentCollection.id, envId);
+        triggerSidebarRefresh(); // Refresh sidebar to show updated state
+        setIsOpen(false);
+      }
     } catch (error) {
-      console.error('Failed to set collection environment:', error);
+      // Error handling is done by the IPC handler
     }
   };
 

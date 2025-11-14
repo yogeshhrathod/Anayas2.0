@@ -9,7 +9,7 @@ import { Trash2, Search, Filter, Clock, CheckCircle2, XCircle, Play, Eye } from 
 import { useToast } from '../components/ui/use-toast';
 
 export function History() {
-  const { requestHistory, setRequestHistory } = useStore();
+  const { requestHistory, setRequestHistory, currentEnvironment } = useStore();
   const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -76,7 +76,8 @@ export function History() {
           : (request.headers || {}),
         body: typeof request.response_body === 'string' 
           ? JSON.parse(request.response_body) 
-          : request.response_body
+          : request.response_body,
+        environmentId: currentEnvironment?.id
       });
 
       if (result.success) {

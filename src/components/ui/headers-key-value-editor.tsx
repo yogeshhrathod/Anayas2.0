@@ -55,6 +55,7 @@ export const HeadersKeyValueEditor: React.FC<HeadersKeyValueEditorProps> = ({
           <Button
             variant="outline"
             size="sm"
+            type="button"
             onClick={addHeader}
             className="mt-2"
           >
@@ -81,6 +82,7 @@ export const HeadersKeyValueEditor: React.FC<HeadersKeyValueEditorProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
+                type="button"
                 onClick={() => removeHeader(key)}
                 className="h-8 w-8 p-0 text-destructive hover:text-destructive"
               >
@@ -91,6 +93,7 @@ export const HeadersKeyValueEditor: React.FC<HeadersKeyValueEditorProps> = ({
           <Button
             variant="outline"
             size="sm"
+            type="button"
             onClick={addHeader}
             className="w-full"
           >

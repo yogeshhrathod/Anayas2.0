@@ -47,9 +47,8 @@ export interface Collection {
   name: string;
   description?: string;
   documentation?: string; // Markdown documentation for the collection
-  variables: Record<string, string>; // DEPRECATED - use environments array
-  environments?: CollectionEnvironment[]; // NEW - collection-specific environments
-  activeEnvironmentId?: number; // NEW - currently selected environment for this collection
+  environments?: CollectionEnvironment[]; // Collection-specific environments
+  activeEnvironmentId?: number; // Currently selected environment for this collection
   isFavorite: number;
   createdAt?: string;
   lastUsed?: string;

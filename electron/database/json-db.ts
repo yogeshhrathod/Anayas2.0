@@ -87,8 +87,10 @@ export async function initDatabase(): Promise<void> {
       }
       
       // Migration: Convert collection.variables to collection.environments
+      // Also ensure all collections have environments[] array (even if empty)
       let needsMigration = false;
       for (const collection of db.collections) {
+        // Migrate old variables to environments if they exist
         if (!collection.environments && collection.variables && Object.keys(collection.variables).length > 0) {
           collection.environments = [{
             id: generateUniqueId(),
@@ -98,6 +100,11 @@ export async function initDatabase(): Promise<void> {
           collection.activeEnvironmentId = collection.environments[0].id;
           needsMigration = true;
           console.log(`Migrated collection ${collection.id}: Converted variables to environments`);
+        }
+        // Ensure all collections have environments[] array (initialize if missing)
+        if (!collection.environments) {
+          collection.environments = [];
+          needsMigration = true;
         }
       }
       
