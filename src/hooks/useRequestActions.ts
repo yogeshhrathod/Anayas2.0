@@ -55,7 +55,7 @@ export interface RequestActionsActions {
 }
 
 export function useRequestActions(requestData: RequestFormData) {
-  const { triggerSidebarRefresh, setSelectedRequest, selectedRequest } = useStore();
+  const { triggerSidebarRefresh, setSelectedRequest, selectedRequest, currentEnvironment } = useStore();
   const { showSuccess, showError } = useToastNotifications();
 
   const { presetsExpanded, setPresetsExpanded } = useStore();
@@ -111,7 +111,8 @@ export function useRequestActions(requestData: RequestFormData) {
         headers: requestData.headers,
         body: requestData.body,
         auth: requestData.auth,
-        collectionId: selectedRequest?.collectionId
+        collectionId: selectedRequest?.collectionId,
+        environmentId: currentEnvironment?.id
       });
 
       setState(prev => ({ ...prev, response }));

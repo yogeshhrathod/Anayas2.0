@@ -22,15 +22,17 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { MonacoEditor } from '../ui/monaco-editor';
-import { EnvironmentVariable } from '../EnvironmentVariable';
+import { CollectionEnvironmentManager } from './CollectionEnvironmentManager';
 import { Collection } from '../../types/entities';
 import { CollectionFormData } from '../../types/forms';
 import { useFormValidation } from '../../hooks/useFormValidation';
+import { useStore } from '../../store/useStore';
 
 export interface CollectionFormProps {
   collection?: Collection | null;
   onSave: (data: CollectionFormData) => Promise<void>;
   onCancel: () => void;
+  onCollectionUpdate?: (collection: Collection) => void;
   isLoading?: boolean;
 }
 
@@ -54,16 +56,18 @@ const validationSchema = {
 export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>(({
   collection,
   onSave,
+  onCollectionUpdate,
   isLoading: _isLoading = false
 }, ref) => {
   const [formData, setFormData] = useState<CollectionFormData>({
     name: '',
     description: '',
     documentation: '',
-    variables: {},
+    environments: [],
     isFavorite: false
   });
-  const [activeTab, setActiveTab] = useState<'variables' | 'documentation'>('variables');
+  const [activeTab, setActiveTab] = useState<'environments' | 'documentation'>('environments');
+  const { setCollections } = useStore();
 
   const { errors, validateField, validateForm, clearFieldError } = useFormValidation(validationSchema);
 
@@ -73,7 +77,7 @@ export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>
         name: collection.name,
         description: collection.description || '',
         documentation: collection.documentation || '',
-        variables: collection.variables || {},
+        environments: collection.environments || [],
         isFavorite: !!collection.isFavorite
       });
     }
@@ -92,8 +96,24 @@ export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>
     clearFieldError(field);
   };
 
-  const handleVariableChange = (variables: Record<string, string>) => {
-    setFormData(prev => ({ ...prev, variables }));
+  const handleEnvironmentsChange = async () => {
+    // Reload collections to get updated environments
+    if (collection?.id) {
+      const updatedCollections = await window.electronAPI.collection.list();
+      setCollections(updatedCollections);
+      // Update form data with latest collection data
+      const updatedCollection = updatedCollections.find((c: Collection) => c.id === collection.id);
+      if (updatedCollection) {
+        setFormData(prev => ({
+          ...prev,
+          environments: updatedCollection.environments || []
+        }));
+        // Notify parent component to update collection prop
+        if (onCollectionUpdate) {
+          onCollectionUpdate(updatedCollection);
+        }
+      }
+    }
   };
 
   // Expose submit handler for parent component
@@ -146,14 +166,14 @@ export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>
             <div className="flex border-b border-border/50 mb-4">
               <button
                 type="button"
-                onClick={() => setActiveTab('variables')}
+                onClick={() => setActiveTab('environments')}
                 className={`flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'variables'
+                  activeTab === 'environments'
                     ? 'border-primary text-primary bg-primary/5'
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 }`}
               >
-                Variables
+                Environments
               </button>
               <button
                 type="button"
@@ -167,14 +187,22 @@ export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>
                 Documentation
               </button>
             </div>
-            {activeTab === 'variables' && (
+            {activeTab === 'environments' && (
               <div className="mt-4">
-                <EnvironmentVariable
-                  variables={formData.variables}
-                  onVariablesChange={handleVariableChange}
-                  title=""
-                  description=""
-                />
+                {collection?.id ? (
+                  <CollectionEnvironmentManager
+                    collectionId={collection.id}
+                    environments={formData.environments || []}
+                    activeEnvironmentId={collection.activeEnvironmentId}
+                    onEnvironmentsChange={handleEnvironmentsChange}
+                  />
+                ) : (
+                  <div className="text-center py-8 border border-dashed rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      Please save the collection first before adding environments.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             {activeTab === 'documentation' && (

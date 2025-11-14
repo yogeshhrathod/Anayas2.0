@@ -196,6 +196,9 @@ export function Collections() {
           collection={editingCollection}
           onSave={handleSaveCollection}
           onCancel={handleCancelEdit}
+          onCollectionUpdate={(updatedCollection) => {
+            setEditingCollection(updatedCollection);
+          }}
           isLoading={isSaving}
         />
       </PageLayout>

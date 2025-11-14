@@ -113,20 +113,20 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
             </div>
           </div>
 
-          {Object.keys(collection.variables || {}).length > 0 && (
+          {collection.environments && collection.environments.length > 0 && (
             <div className="space-y-2">
               <div className="text-sm font-medium text-muted-foreground">
-                Environment Variables
+                Collection Environments
               </div>
               <div className="flex flex-wrap gap-1">
-                {Object.keys(collection.variables || {}).slice(0, 3).map((key) => (
-                  <Badge key={key} variant="secondary" className="text-xs">
-                    {key}
+                {collection.environments.slice(0, 3).map((env) => (
+                  <Badge key={env.id} variant="secondary" className="text-xs">
+                    {env.name}
                   </Badge>
                 ))}
-                {Object.keys(collection.variables || {}).length > 3 && (
+                {collection.environments.length > 3 && (
                   <Badge variant="outline" className="text-xs">
-                    +{Object.keys(collection.variables || {}).length - 3} more
+                    +{collection.environments.length - 3} more
                   </Badge>
                 )}
               </div>

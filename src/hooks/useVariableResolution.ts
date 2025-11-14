@@ -68,13 +68,25 @@ export function useVariableResolution(text: string): ResolutionResult {
     const globalVariables = currentEnvironment?.variables || {};
 
     // Get collection variables if request belongs to a collection
+    // CRITICAL: Match backend fallback logic exactly - use first env if no activeEnvironmentId or if it points to deleted env
     let collectionVariables: Record<string, string> = {};
     if (selectedRequest?.collectionId) {
       const collection = collections.find(c => c.id === selectedRequest.collectionId);
-      if (collection?.environments && collection.activeEnvironmentId) {
-        const activeEnv = collection.environments.find(
-          e => e.id === collection.activeEnvironmentId
-        );
+      if (collection?.environments && collection.environments.length > 0) {
+        let activeEnv;
+        
+        // If activeEnvironmentId is set, try to find that environment
+        if (collection.activeEnvironmentId) {
+          activeEnv = collection.environments.find(
+            e => e.id === collection.activeEnvironmentId
+          );
+        }
+        
+        // If activeEnvironmentId not set or points to deleted environment, use first as fallback
+        if (!activeEnv) {
+          activeEnv = collection.environments[0];
+        }
+        
         if (activeEnv) {
           collectionVariables = activeEnv.variables || {};
         }
@@ -191,13 +203,28 @@ export function useAvailableVariables(): Array<{
     }
 
     // Add collection environment variables if applicable
+    // CRITICAL: Match backend fallback logic exactly - use first env if no activeEnvironmentId or if it points to deleted env
     if (selectedRequest?.collectionId) {
       const collection = collections.find(c => c.id === selectedRequest.collectionId);
-      if (collection?.environments && collection.activeEnvironmentId) {
-        const activeEnv = collection.environments.find(e => e.id === collection.activeEnvironmentId);
+      if (collection?.environments && collection.environments.length > 0) {
+        let activeEnv;
+        
+        // If activeEnvironmentId is set, try to find that environment
+        if (collection.activeEnvironmentId) {
+          activeEnv = collection.environments.find(e => e.id === collection.activeEnvironmentId);
+        }
+        
+        // If activeEnvironmentId not set or points to deleted environment, use first as fallback
+        if (!activeEnv) {
+          activeEnv = collection.environments[0];
+        }
+        
         if (activeEnv?.variables) {
           Object.entries(activeEnv.variables).forEach(([name, value]) => {
-            result.push({ name, value, scope: 'collection' });
+            // Only add non-empty values to avoid empty rows
+            if (value !== undefined && value !== null) {
+              result.push({ name, value: String(value), scope: 'collection' });
+            }
           });
         }
       }

@@ -153,7 +153,8 @@ export function registerIpcHandlers() {
         name: collection.name,
         description: collection.description,
         documentation: collection.documentation || '',
-        variables: collection.variables || {},
+        environments: collection.environments || [],
+        activeEnvironmentId: collection.activeEnvironmentId,
         isFavorite: collection.isFavorite ? 1 : 0,
       });
       return { success: true, id: collection.id };
@@ -162,7 +163,8 @@ export function registerIpcHandlers() {
         name: collection.name,
         description: collection.description,
         documentation: collection.documentation || '',
-        variables: collection.variables || {},
+        environments: collection.environments || [],
+        activeEnvironmentId: collection.activeEnvironmentId,
         isFavorite: collection.isFavorite ? 1 : 0,
       });
       return { success: true, id };
@@ -209,7 +211,9 @@ export function registerIpcHandlers() {
     }
     
     saveDatabase();
-    return { success: true, id: envId };
+    // Return updated collection
+    const updatedCollection = db.collections.find(c => c.id === collectionId);
+    return { success: true, id: envId, collection: updatedCollection };
   });
 
   ipcMain.handle('collection:updateEnvironment', async (_, collectionId, environmentId, updates) => {
@@ -226,7 +230,9 @@ export function registerIpcHandlers() {
     
     Object.assign(env, updates);
     saveDatabase();
-    return { success: true };
+    // Return updated collection
+    const updatedCollection = db.collections.find(c => c.id === collectionId);
+    return { success: true, collection: updatedCollection };
   });
 
   ipcMain.handle('collection:deleteEnvironment', async (_, collectionId, environmentId) => {
@@ -246,7 +252,9 @@ export function registerIpcHandlers() {
     }
     
     saveDatabase();
-    return { success: true };
+    // Return updated collection
+    const updatedCollection = db.collections.find(c => c.id === collectionId);
+    return { success: true, collection: updatedCollection };
   });
 
   ipcMain.handle('collection:setActiveEnvironment', async (_, collectionId, environmentId) => {
@@ -264,7 +272,9 @@ export function registerIpcHandlers() {
     
     collection.activeEnvironmentId = environmentId;
     saveDatabase();
-    return { success: true };
+    // Return updated collection
+    const updatedCollection = db.collections.find(c => c.id === collectionId);
+    return { success: true, collection: updatedCollection };
   });
 
   // Folder operations
@@ -379,18 +389,37 @@ export function registerIpcHandlers() {
     try {
       const db = getDatabase();
       
-      // Get global environment
-      const globalEnv = db.environments.find((e) => e.isDefault === 1) || db.environments[0];
+      // Get global environment - use provided environmentId if available, otherwise use default
+      let globalEnv;
+      if (options.environmentId) {
+        globalEnv = db.environments.find((e) => e.id === options.environmentId);
+      }
+      // Fallback to default or first environment
+      if (!globalEnv) {
+        globalEnv = db.environments.find((e) => e.isDefault === 1) || db.environments[0];
+      }
       if (!globalEnv) {
         throw new Error('No environment selected');
       }
 
       // Get collection variables if request has a collection
+      // CRITICAL: Match frontend fallback logic - use first env if no activeEnvironmentId
       let collectionVariables: Record<string, string> = {};
       if (options.collectionId) {
         const collection = db.collections.find(c => c.id === options.collectionId);
-        if (collection && collection.environments && collection.activeEnvironmentId) {
-          const activeEnv = collection.environments.find(e => e.id === collection.activeEnvironmentId);
+        if (collection && collection.environments && collection.environments.length > 0) {
+          let activeEnv;
+          
+          // If activeEnvironmentId is set, try to find that environment
+          if (collection.activeEnvironmentId) {
+            activeEnv = collection.environments.find(e => e.id === collection.activeEnvironmentId);
+          }
+          
+          // If activeEnvironmentId not set or points to deleted environment, use first as fallback
+          if (!activeEnv) {
+            activeEnv = collection.environments[0];
+          }
+          
           if (activeEnv) {
             collectionVariables = activeEnv.variables || {};
           }
