@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Search, Clock, Globe, FolderPlus, Zap, ArrowRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { cn } from '../lib/utils';
+import { useClickOutside } from '../hooks/useClickOutside';
 
 interface SearchResult {
   id: string;
@@ -212,20 +213,13 @@ export function GlobalSearch() {
     return () => document.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
 
-  // Click outside to close
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (resultsRef.current && !resultsRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-        setQuery('');
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isOpen]);
+  // Click outside to close (escape handled in keyboard navigation above)
+  const handleClose = () => {
+    setIsOpen(false);
+    setQuery('');
+  };
+  
+  useClickOutside(resultsRef, handleClose, isOpen, { handleEscape: false });
 
   const getTypeColor = (type: string) => {
     switch (type) {

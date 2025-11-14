@@ -305,6 +305,42 @@ useSessionRecovery();
 
 **Performance**: Runs once on startup, efficient
 
+### `useClickOutside.ts`
+**Purpose**: Close dropdowns/modals on click outside or Escape key
+
+```typescript
+import { useClickOutside } from '@/hooks/useClickOutside';
+
+const [isOpen, setIsOpen] = useState(false);
+const dropdownRef = useRef<HTMLDivElement>(null);
+
+// Basic usage
+useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
+
+// With options (disable escape, custom close condition)
+useClickOutside(dropdownRef, handleClose, isOpen, {
+  handleEscape: false, // Only handle click outside
+  shouldClose: (e) => !e.defaultPrevented // Custom condition
+});
+```
+
+**When to use**: 
+- Dropdown menus that should close on outside click
+- Modals that should close on Escape key
+- Any component that needs click-outside or escape handling
+
+**Performance**: 
+- Minimal memory footprint (<1MB)
+- Event listeners are properly cleaned up
+- No performance impact
+
+**Features**:
+- Click outside detection
+- Escape key support (configurable)
+- Conditional activation
+- Custom close conditions
+- Automatic cleanup
+
 ## Performance Utilities
 
 ### Performance Tracking (to be created)
