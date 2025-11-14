@@ -104,18 +104,60 @@ const name = generateDraftName(); // "New Request", "New Request 2", etc.
 
 **Performance**: Fast, no performance concerns
 
-### `z-index.ts`
-**Purpose**: Centralized z-index values
+### Z-Index Management (Tailwind Config)
+**Purpose**: Centralized z-index values using Tailwind config extension
 
-```typescript
-import { Z_INDEX } from '@/lib/z-index';
+**Approach**: Define z-index values in `tailwind.config.js` under `theme.extend.zIndex` for semantic class names.
 
-<div style={{ zIndex: Z_INDEX.MODAL }} />
+```javascript
+// tailwind.config.js
+theme: {
+  extend: {
+    zIndex: {
+      'base': '0',
+      'content': '10',
+      'sticky': '100',
+      'dropdown': '1000',
+      'popover': '1500',
+      'context-menu': '2000',
+      'modal-backdrop': '3000',
+      'modal': '3500',
+      'dialog': '3500',
+      'dialog-dropdown': '3501',
+      'tooltip': '5000',
+      'global-search': '7000',
+      'toast': '9000',
+    }
+  }
+}
 ```
 
-**When to use**: Always use this for z-index values, never hardcode
+**Usage in components**:
+```tsx
+// Use semantic Tailwind classes - no imports needed
+<div className="fixed inset-0 z-dialog">
+  {/* Dialog content */}
+</div>
 
-**Performance**: Constants, no performance impact
+<div className="z-dropdown">
+  {/* Dropdown */}
+</div>
+```
+
+**When to use**: 
+- Always use semantic Tailwind z-index classes (`z-dialog`, `z-dropdown`, etc.)
+- Never hardcode z-index values like `z-[9999]` or `z-[10000]`
+- Add new z-index values to `tailwind.config.js` if needed
+- Use `z-dialog-dropdown` for dropdowns that appear inside dialogs
+
+**Benefits**:
+- Type-safe via Tailwind IntelliSense autocomplete
+- No runtime overhead (no string interpolation or imports)
+- Better purging (Tailwind optimizes unused classes)
+- Cleaner, more readable code
+- Consistent with Tailwind patterns
+
+**Performance**: No performance impact - classes are compiled at build time
 
 ## Main Process Utilities (`electron/services/`)
 
@@ -262,6 +304,42 @@ useSessionRecovery();
 **When to use**: In main App component
 
 **Performance**: Runs once on startup, efficient
+
+### `useClickOutside.ts`
+**Purpose**: Close dropdowns/modals on click outside or Escape key
+
+```typescript
+import { useClickOutside } from '@/hooks/useClickOutside';
+
+const [isOpen, setIsOpen] = useState(false);
+const dropdownRef = useRef<HTMLDivElement>(null);
+
+// Basic usage
+useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
+
+// With options (disable escape, custom close condition)
+useClickOutside(dropdownRef, handleClose, isOpen, {
+  handleEscape: false, // Only handle click outside
+  shouldClose: (e) => !e.defaultPrevented // Custom condition
+});
+```
+
+**When to use**: 
+- Dropdown menus that should close on outside click
+- Modals that should close on Escape key
+- Any component that needs click-outside or escape handling
+
+**Performance**: 
+- Minimal memory footprint (<1MB)
+- Event listeners are properly cleaned up
+- No performance impact
+
+**Features**:
+- Click outside detection
+- Escape key support (configurable)
+- Conditional activation
+- Custom close conditions
+- Automatic cleanup
 
 ## Performance Utilities
 

@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Input } from './input';
 import { VariableAutocomplete } from './variable-autocomplete';
 import { useAvailableVariables } from '../../hooks/useVariableResolution';
+import { useClickOutside } from '../../hooks/useClickOutside';
 
 export interface VariableInputProps {
   value: string;
@@ -84,28 +85,7 @@ export function VariableInput({
   };
 
   // Close autocomplete on escape or click outside
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setShowAutocomplete(false);
-      }
-    };
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setShowAutocomplete(false);
-      }
-    };
-
-    if (showAutocomplete) {
-      window.addEventListener('keydown', handleEscape);
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        window.removeEventListener('keydown', handleEscape);
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [showAutocomplete]);
+  useClickOutside(wrapperRef, handleClose, showAutocomplete);
 
   return (
     <div ref={wrapperRef} className="relative">

@@ -4,6 +4,7 @@ import { VariableAutocomplete } from './variable-autocomplete';
 import { VariableContextMenu } from './variable-context-menu';
 import { useAvailableVariables } from '../../hooks/useVariableResolution';
 import { cn } from '../../lib/utils';
+import { useClickOutside } from '../../hooks/useClickOutside';
 
 interface VariableHighlight {
   start: number;
@@ -146,31 +147,13 @@ export function HighlightedVariableInput({
     }
   };
 
-  // Close autocomplete on escape or click outside
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setShowAutocomplete(false);
-        setShowContextMenu(false);
-      }
-    };
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setShowAutocomplete(false);
-        setShowContextMenu(false);
-      }
-    };
-
-    if (showAutocomplete || showContextMenu) {
-      window.addEventListener('keydown', handleEscape);
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        window.removeEventListener('keydown', handleEscape);
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [showAutocomplete, showContextMenu]);
+  // Close autocomplete and context menu on escape or click outside
+  const handleCloseAll = () => {
+    setShowAutocomplete(false);
+    setShowContextMenu(false);
+  };
+  
+  useClickOutside(wrapperRef, handleCloseAll, showAutocomplete || showContextMenu);
 
   const position = updateDropdownPosition();
 

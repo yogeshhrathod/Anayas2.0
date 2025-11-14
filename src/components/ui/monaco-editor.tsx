@@ -712,7 +712,7 @@ export function MonacoEditor({
   const editorHeight = isFullscreen ? 'calc(100vh - 120px)' : height;
 
   return (
-    <Card className={`${className} ${isFullscreen ? 'fixed inset-4 z-[9999]' : ''}`}>
+    <Card className={`${className} ${isFullscreen ? 'fixed inset-4 z-modal' : ''}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

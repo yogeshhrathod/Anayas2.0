@@ -60,7 +60,7 @@ export function ShortcutHelp() {
       </Button>
       
       {open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog">
           <div className="bg-background border rounded-lg p-6 max-w-2xl max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Keyboard Shortcuts</h2>

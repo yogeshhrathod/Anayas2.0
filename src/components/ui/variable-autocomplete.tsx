@@ -96,7 +96,7 @@ export function VariableAutocomplete({
   if (allVariables.length === 0) {
     return (
       <div
-        className="fixed z-[10000] w-80 rounded-md border bg-popover p-2 shadow-lg"
+        className="fixed z-popover w-80 rounded-md border bg-popover p-2 shadow-lg"
         style={{ top: `${position.top}px`, left: `${position.left}px` }}
       >
         <div className="px-3 py-2 text-sm text-muted-foreground">
@@ -108,7 +108,7 @@ export function VariableAutocomplete({
 
   return (
     <div
-      className="fixed z-[10000] w-80 rounded-md border bg-popover shadow-lg overflow-hidden"
+      className="fixed z-popover w-80 rounded-md border bg-popover shadow-lg overflow-hidden"
       style={{ top: `${position.top}px`, left: `${position.left}px` }}
     >
       <div className="max-h-96 overflow-auto">

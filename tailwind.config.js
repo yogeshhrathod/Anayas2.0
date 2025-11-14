@@ -83,6 +83,32 @@ module.exports = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      zIndex: {
+        // Base content layers (0-100)
+        'base': '0',
+        'content': '10',
+        'sticky': '100',
+
+        // Interactive elements (1000-2000)
+        'dropdown': '1000',
+        'popover': '1500',
+        'context-menu': '2000',
+
+        // Overlays (3000-4000)
+        'modal-backdrop': '3000',
+        'modal': '3500',
+        'dialog': '3500',
+        'dialog-dropdown': '3501', // For dropdowns in dialogs
+
+        // Floating UI (5000-6000)
+        'tooltip': '5000',
+
+        // Global features (7000-8000)
+        'global-search': '7000',
+
+        // Notifications (9000-10000)
+        'toast': '9000',
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

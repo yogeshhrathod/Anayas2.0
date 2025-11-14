@@ -165,7 +165,7 @@ export function SaveRequestDialog({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog"
       onKeyDown={handleKeyDown}
     >
       <Card className="w-96 max-h-[80vh] overflow-y-auto">

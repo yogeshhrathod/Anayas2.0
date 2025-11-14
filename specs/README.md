@@ -41,7 +41,9 @@ This directory contains feature specifications and bug reports following the spe
 
 ## Bug List
 
-*No bugs yet. Use `./scripts/create-bug.sh <bug-name>` to create your first bug report.*
+| ID | Bug Name | Status | Severity | Priority | Related Feature | Assignee |
+|----|----------|--------|----------|----------|-----------------|----------|
+| `bug-001-z-index-fixes` | [z-index-fixes](specs/bug-001-z-index-fixes/spec.md) | `reported` | `high` | `P1` | N/A (Infrastructure/UI Fix) | Development Team |
 
 ## Creating Items
 
