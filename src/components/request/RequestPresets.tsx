@@ -31,6 +31,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { Dialog } from '../ui/dialog';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -246,29 +247,20 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
       </div>
 
       {/* Create Preset Dialog */}
-      {showCreateDialog && (
-        <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog"
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.preventDefault();
-              onShowCreateDialog(false);
-            }
+      <Dialog
+        open={showCreateDialog}
+        onOpenChange={onShowCreateDialog}
+        title="Create Request Preset"
+        description="Save the current request configuration as a reusable preset"
+        maxWidth="sm"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onCreatePreset();
           }}
         >
-          <Card className="w-96">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                onCreatePreset();
-              }}
-              className="p-6"
-            >
-              <h3 className="text-lg font-semibold mb-2">Create Request Preset</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Save the current request configuration as a reusable preset
-              </p>
-              <div className="space-y-4">
+          <div className="space-y-4">
                 <div>
                   <Label htmlFor="preset-name">Preset Name (Optional)</Label>
                   <Input
@@ -303,9 +295,7 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                 </div>
               </div>
             </form>
-          </Card>
-        </div>
-      )}
+      </Dialog>
     </>
   );
 };

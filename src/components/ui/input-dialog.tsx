@@ -2,7 +2,7 @@ import * as React from "react"
 import { Button } from "./button"
 import { Input } from "./input"
 import { Label } from "./label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card"
+import { Dialog } from "./dialog"
 
 interface InputDialogProps {
   open: boolean
@@ -49,45 +49,39 @@ export function InputDialog({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleConfirm()
-    } else if (e.key === 'Escape') {
-      handleCancel()
     }
   }
 
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          {description && (
-            <CardDescription>{description}</CardDescription>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="input-dialog">Name</Label>
-            <Input
-              id="input-dialog"
-              placeholder={placeholder}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              autoFocus
-            />
-          </div>
-          
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleCancel}>
-              {cancelText}
-            </Button>
-            <Button onClick={handleConfirm} disabled={!value.trim()}>
-              {confirmText}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description={description}
+      maxWidth="md"
+    >
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="input-dialog">Name</Label>
+          <Input
+            id="input-dialog"
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            autoFocus
+          />
+        </div>
+        
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={handleCancel}>
+            {cancelText}
+          </Button>
+          <Button onClick={handleConfirm} disabled={!value.trim()}>
+            {confirmText}
+          </Button>
+        </div>
+      </div>
+    </Dialog>
   )
 }

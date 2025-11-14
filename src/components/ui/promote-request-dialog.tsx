@@ -3,7 +3,7 @@ import { Button } from './button';
 import { Input } from './input';
 import { Label } from './label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
+import { Dialog } from './dialog';
 import { AlertCircle, Save } from 'lucide-react';
 import { useToast } from './use-toast';
 import { useStore, UnsavedRequest } from '../../store/useStore';
@@ -189,21 +189,20 @@ export function PromoteRequestDialog({
   if (!open || !unsavedRequest) return null;
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog"
-      onKeyDown={handleKeyDown}
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        <span className="flex items-center gap-2">
+          <Save className="h-5 w-5" />
+          Save Request
+        </span>
+      }
+      description="Convert this unsaved request to a saved request in a collection"
+      maxWidth="sm"
+      className="max-h-[80vh]"
     >
-      <Card className="w-96 max-h-[80vh] overflow-y-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Save className="h-5 w-5" />
-            Save Request
-          </CardTitle>
-          <CardDescription>
-            Convert this unsaved request to a saved request in a collection
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div className="space-y-4" onKeyDown={handleKeyDown}>
           <div className="space-y-2">
             <Label htmlFor="request-name">Request Name</Label>
             <Input
@@ -304,9 +303,8 @@ export function PromoteRequestDialog({
               Cancel
             </Button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+      </div>
+    </Dialog>
   );
 }
 

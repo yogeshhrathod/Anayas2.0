@@ -10,13 +10,12 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Dialog } from '../ui/dialog';
 import { AlertCircle, FileUp, Loader2, Check, X } from 'lucide-react';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
 import { Request } from '../../types/entities';
@@ -231,24 +230,16 @@ export function CurlImportDialog({
   const successfulCount = parsedRequests.filter(r => r.success).length;
   const failedCount = parsedRequests.filter(r => !r.success).length;
 
-  const dialogContent = (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog"
-      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onOpenChange(false);
-        }
-      }}
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Import cURL Commands"
+      description="Paste cURL commands or upload a file to import requests"
+      maxWidth="4xl"
+      className="w-[90vw] max-h-[90vh]"
     >
-      <Card className="w-[90vw] max-w-4xl max-h-[90vh] overflow-y-auto z-dialog">
-        <CardHeader>
-          <CardTitle>Import cURL Commands</CardTitle>
-          <CardDescription>
-            Paste cURL commands or upload a file to import requests
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div className="space-y-4">
           {/* File Upload */}
           <div className="space-y-2">
             <Label>Upload File</Label>
@@ -473,12 +464,8 @@ export function CurlImportDialog({
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+      </div>
+    </Dialog>
   );
-
-  // Render dialog in a portal to ensure it's at the document root level for proper centering
-  return createPortal(dialogContent, document.body);
 }
 

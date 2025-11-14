@@ -1,5 +1,6 @@
 import { Copy, Eye, Edit } from 'lucide-react';
 import { useVariableResolution } from '../../hooks/useVariableResolution';
+import { forwardRef } from 'react';
 
 interface VariableContextMenuProps {
   variableName: string;
@@ -7,14 +8,15 @@ interface VariableContextMenuProps {
   onClose: () => void;
 }
 
-export function VariableContextMenu({
+export const VariableContextMenu = forwardRef<HTMLDivElement, VariableContextMenuProps>(({
   variableName,
   position,
   onClose,
-}: VariableContextMenuProps) {
+}, ref) => {
   const { variables } = useVariableResolution(`{{${variableName}}}`);
   const variable = variables.find(v => v.name === variableName);
   const isResolved = variable?.value !== '';
+  const isDynamic = variableName.startsWith('$');
 
   const handleCopyName = () => {
     navigator.clipboard.writeText(`{{${variableName}}}`);
@@ -40,6 +42,7 @@ export function VariableContextMenu({
 
   return (
     <div
+      ref={ref}
       className="fixed z-context-menu w-56 rounded-md border bg-popover p-1 shadow-lg"
       style={{ left: position.x, top: position.y }}
       onClick={(e) => e.stopPropagation()}
@@ -51,7 +54,7 @@ export function VariableContextMenu({
         <Copy className="h-4 w-4" />
         Copy Variable Name
       </button>
-      {isResolved && (
+      {isResolved && !isDynamic && (
         <button
           onClick={handleCopyValue}
           className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
@@ -77,5 +80,7 @@ export function VariableContextMenu({
       </button>
     </div>
   );
-}
+});
+
+VariableContextMenu.displayName = 'VariableContextMenu';
 

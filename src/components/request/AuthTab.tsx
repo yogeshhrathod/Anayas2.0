@@ -18,7 +18,7 @@
 
 import React from 'react';
 import { Card } from '../ui/card';
-import { OverlayVariableInput } from '../ui/overlay-variable-input';
+import { VariableInputUnified } from '../ui/variable-input-unified';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Shield } from 'lucide-react';
@@ -70,7 +70,8 @@ export const AuthTab: React.FC<AuthTabProps> = ({
           <Card className="p-4">
             <div className="space-y-3">
               <Label htmlFor="bearer-token" className="text-sm font-medium">Bearer Token</Label>
-              <OverlayVariableInput
+              <VariableInputUnified
+                variant="overlay"
                 value={requestData.auth.token || ''}
                 onChange={(token) => setRequestData({ 
                   ...requestData, 
@@ -90,7 +91,8 @@ export const AuthTab: React.FC<AuthTabProps> = ({
             <div className="space-y-3">
               <div>
                 <Label htmlFor="basic-username" className="text-sm font-medium">Username</Label>
-                <OverlayVariableInput
+                <VariableInputUnified
+                  variant="overlay"
                   value={requestData.auth.username || ''}
                   onChange={(username) => setRequestData({ 
                     ...requestData, 
@@ -101,7 +103,8 @@ export const AuthTab: React.FC<AuthTabProps> = ({
               </div>
               <div>
                 <Label htmlFor="basic-password" className="text-sm font-medium">Password</Label>
-                <OverlayVariableInput
+                <VariableInputUnified
+                  variant="overlay"
                   value={requestData.auth.password || ''}
                   onChange={(password) => setRequestData({ 
                     ...requestData, 
@@ -122,7 +125,8 @@ export const AuthTab: React.FC<AuthTabProps> = ({
             <div className="space-y-3">
               <div>
                 <Label htmlFor="apikey-key" className="text-sm font-medium">API Key</Label>
-                <OverlayVariableInput
+                <VariableInputUnified
+                  variant="overlay"
                   value={requestData.auth.apiKey || ''}
                   onChange={(apiKey) => setRequestData({ 
                     ...requestData, 
@@ -133,7 +137,8 @@ export const AuthTab: React.FC<AuthTabProps> = ({
               </div>
               <div>
                 <Label htmlFor="apikey-header" className="text-sm font-medium">Header Name</Label>
-                <OverlayVariableInput
+                <VariableInputUnified
+                  variant="overlay"
                   value={requestData.auth.apiKeyHeader || 'X-API-Key'}
                   onChange={(apiKeyHeader) => setRequestData({ 
                     ...requestData, 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Dialog } from '../components/ui/dialog';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
@@ -287,31 +288,25 @@ export function History() {
       </Card>
       
       {/* Request Details Modal */}
-      {showDetails && selectedRequest && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog">
-          <Card className="w-4/5 max-w-4xl max-h-[80vh] overflow-hidden">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-sm font-mono">
-                      {selectedRequest.method}
-                    </Badge>
-                    {getStatusBadge(selectedRequest.status)}
-                    <span className="text-sm text-muted-foreground">
-                      {selectedRequest.responseTime}ms
-                    </span>
-                  </CardTitle>
-                  <CardDescription className="mt-2 break-all">
-                    {selectedRequest.url}
-                  </CardDescription>
-                </div>
-                <Button variant="outline" onClick={() => setShowDetails(false)}>
-                  Close
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="overflow-auto">
+      {selectedRequest && (
+        <Dialog
+          open={showDetails}
+          onOpenChange={setShowDetails}
+          title={
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-sm font-mono">
+                {selectedRequest.method}
+              </Badge>
+              {getStatusBadge(selectedRequest.status)}
+              <span className="text-sm text-muted-foreground">
+                {selectedRequest.responseTime}ms
+              </span>
+            </div>
+          }
+          description={selectedRequest.url}
+          maxWidth="4xl"
+          className="w-4/5 max-h-[80vh]"
+        >
               <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold mb-2">Request Headers</h4>
@@ -353,9 +348,7 @@ export function History() {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+        </Dialog>
       )}
     </div>
   );

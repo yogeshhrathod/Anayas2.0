@@ -16,6 +16,7 @@
 
 import { useState, useRef } from 'react';
 import { PageLayout } from '../components/shared/PageLayout';
+import { Dialog } from '../components/ui/dialog';
 import { EnvironmentForm } from '../components/environment/EnvironmentForm';
 import { EnvironmentGrid } from '../components/environment/EnvironmentGrid';
 import { CollectionActions } from '../components/collection/CollectionActions';
@@ -25,6 +26,7 @@ import { useStore } from '../store/useStore';
 import { Environment } from '../types/entities';
 import { EnvironmentFormData } from '../types/forms';
 import { Button } from '../components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 export function Environments() {
   const [isEditing, setIsEditing] = useState(false);
@@ -127,33 +129,6 @@ export function Environments() {
     importEnvironments();
   };
 
-  if (isEditing) {
-    return (
-      <PageLayout
-        title={editingEnvironment ? 'Edit Environment' : 'New Environment'}
-        description={editingEnvironment ? 'Update environment details and variables' : 'Create a new environment with variables'}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
-              Cancel
-            </Button>
-            <Button onClick={() => formRef.current?.submit()} disabled={isSaving}>
-              {isSaving ? 'Saving...' : 'Save'}
-            </Button>
-          </div>
-        }
-      >
-        <EnvironmentForm
-          ref={formRef}
-          environment={editingEnvironment}
-          onSave={handleSaveEnvironment}
-          onCancel={handleCancelEdit}
-          isLoading={isSaving}
-        />
-      </PageLayout>
-    );
-  }
-
   return (
     <PageLayout
       title="Environments"
@@ -180,6 +155,44 @@ export function Environments() {
           onTest={handleTestEnvironment}
         />
       </div>
+
+      {/* Environment Form Dialog */}
+      <Dialog
+        open={isEditing}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCancelEdit();
+          } else {
+            setIsEditing(true);
+          }
+        }}
+        title={editingEnvironment ? 'Edit Environment' : 'New Environment'}
+        description={editingEnvironment ? 'Update environment details and variables' : 'Create a new environment with variables'}
+        maxWidth="4xl"
+      >
+        <EnvironmentForm
+          ref={formRef}
+          environment={editingEnvironment}
+          onSave={handleSaveEnvironment}
+          onCancel={handleCancelEdit}
+          isLoading={isSaving}
+        />
+        <div className="flex justify-end gap-2 pt-4 border-t mt-4">
+          <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button onClick={() => formRef.current?.submit()} disabled={isSaving}>
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save'
+            )}
+          </Button>
+        </div>
+      </Dialog>
     </PageLayout>
   );
 }

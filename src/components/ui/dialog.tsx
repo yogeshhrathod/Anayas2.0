@@ -7,8 +7,8 @@ import { X } from 'lucide-react';
 export interface DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
-  description?: string;
+  title: string | React.ReactNode; // Support both string and ReactNode for custom headers
+  description?: string | React.ReactNode; // Support both string and ReactNode
   children: React.ReactNode;
   className?: string;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl';
@@ -57,9 +57,13 @@ export function Dialog({
       <Card className={`w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-hidden flex flex-col ${className}`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex-1">
-            <CardTitle className="text-xl">{title}</CardTitle>
+            <CardTitle className="text-xl">
+              {title}
+            </CardTitle>
             {description && (
-              <CardDescription className="mt-1">{description}</CardDescription>
+              <CardDescription className="mt-1">
+                {description}
+              </CardDescription>
             )}
           </div>
           {showCloseButton && (

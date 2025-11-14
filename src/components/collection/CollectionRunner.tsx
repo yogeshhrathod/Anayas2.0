@@ -18,9 +18,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Dialog } from '../ui/dialog';
 import { Progress } from '../ui/progress';
-import { CheckCircle2, XCircle, Loader2, Play, X } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, Play } from 'lucide-react';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
 
 export interface CollectionRunnerProps {
@@ -96,24 +96,15 @@ export function CollectionRunner({ collectionId, collectionName, onClose, open }
 
   const progress = summary ? (results.length / summary.total) * 100 : 0;
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <div>
-            <CardTitle className="text-xl">Run Collection: {collectionName}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              Execute all requests in this collection sequentially
-            </p>
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleClose} disabled={isRunning}>
-            <X className="h-4 w-4" />
-          </Button>
-        </CardHeader>
-
-        <CardContent className="flex-1 overflow-y-auto space-y-4 max-h-[calc(90vh-120px)]">
+    <Dialog
+      open={open}
+      onOpenChange={(open) => !open && handleClose()}
+      title={`Run Collection: ${collectionName}`}
+      description="Execute all requests in this collection sequentially"
+      maxWidth="2xl"
+    >
+      <div className="space-y-4">
           {/* Control Buttons */}
           <div className="flex gap-2">
             {!isRunning && results.length === 0 && (
@@ -218,9 +209,8 @@ export function CollectionRunner({ collectionId, collectionName, onClose, open }
               <p>Click "Start Run" to execute all requests in this collection</p>
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+      </div>
+    </Dialog>
   );
 }
 

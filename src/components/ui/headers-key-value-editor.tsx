@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from './button';
 import { Input } from './input';
-import { OverlayVariableInput } from './overlay-variable-input';
+import { VariableInputUnified } from './variable-input-unified';
 import { Trash2, Plus } from 'lucide-react';
 
 interface HeadersKeyValueEditorProps {
@@ -73,7 +73,8 @@ export const HeadersKeyValueEditor: React.FC<HeadersKeyValueEditorProps> = ({
                 onChange={(e) => updateHeader(key, e.target.value, value)}
                 className="flex-1"
               />
-              <OverlayVariableInput
+              <VariableInputUnified
+                variant="overlay"
                 placeholder={placeholder.value}
                 value={value}
                 onChange={(newValue) => updateHeader(key, key, newValue)}
