@@ -1,15 +1,18 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { useStore } from "./store/useStore";
 import { TitleBar } from "./components/TitleBar";
 import { NavigationBar } from "./components/NavigationBar";
 import { ThemeManager } from "./components/ThemeManager";
 import Toaster from "./components/Toaster";
-import { Homepage } from "./pages/Homepage";
-import { Environments } from "./pages/Environments";
-import { Collections } from "./pages/Collections";
-import { History } from "./pages/History";
-import { Settings } from "./pages/Settings";
-import { Logs } from "./pages/Logs";
+import { PageLoadingSpinner } from "./components/ui/PageLoadingSpinner";
+// Lazy load pages for better performance
+// Pages use named exports, so we need to map them to default exports for lazy()
+const Homepage = lazy(() => import("./pages/Homepage").then(module => ({ default: module.Homepage })));
+const Environments = lazy(() => import("./pages/Environments").then(module => ({ default: module.Environments })));
+const Collections = lazy(() => import("./pages/Collections").then(module => ({ default: module.Collections })));
+const History = lazy(() => import("./pages/History").then(module => ({ default: module.History })));
+const Settings = lazy(() => import("./pages/Settings").then(module => ({ default: module.Settings })));
+const Logs = lazy(() => import("./pages/Logs").then(module => ({ default: module.Logs })));
 import { CollectionHierarchy } from "./components/CollectionHierarchy";
 import { UnsavedRequestsSection } from "./components/collection/UnsavedRequestsSection";
 import { ResizeHandle } from "./components/ui/resize-handle";
@@ -23,6 +26,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "./lib/utils";
+import { trackFeatureLoad } from "./lib/performance";
 
 function App() {
   // Session recovery - load unsaved requests on startup
@@ -374,23 +378,55 @@ function App() {
     }
   };
 
+  // Track performance when page changes
+  useEffect(() => {
+    const pageName = currentPage || "home";
+    const tracker = trackFeatureLoad(`Page-${pageName}`);
+    
+    // Use requestAnimationFrame to wait for browser paint
+    // This gives us a better measure of actual render completion
+    // Double RAF ensures we capture after layout and paint
+    let rafId1: number;
+    let rafId2: number;
+    
+    rafId1 = requestAnimationFrame(() => {
+      rafId2 = requestAnimationFrame(() => {
+        tracker.end();
+      });
+    });
+    
+    return () => {
+      if (rafId1) cancelAnimationFrame(rafId1);
+      if (rafId2) cancelAnimationFrame(rafId2);
+      tracker.cancel();
+    };
+  }, [currentPage]);
+
   const renderPage = () => {
-    switch (currentPage) {
-      case "home":
-        return <Homepage />;
-      case "collections":
-        return <Collections />;
-      case "environments":
-        return <Environments />;
-      case "history":
-        return <History />;
-      case "logs":
-        return <Logs />;
-      case "settings":
-        return <Settings />;
-      default:
-        return <Homepage />;
-    }
+    const pageComponent = (() => {
+      switch (currentPage) {
+        case "home":
+          return <Homepage />;
+        case "collections":
+          return <Collections />;
+        case "environments":
+          return <Environments />;
+        case "history":
+          return <History />;
+        case "logs":
+          return <Logs />;
+        case "settings":
+          return <Settings />;
+        default:
+          return <Homepage />;
+      }
+    })();
+
+    return (
+      <Suspense fallback={<PageLoadingSpinner />}>
+        {pageComponent}
+      </Suspense>
+    );
   };
 
 
