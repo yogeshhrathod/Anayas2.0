@@ -1,7 +1,7 @@
 # Cursor Rules
 
 ## Project Summary
-- Desktop application built with Electron 28, Vite 5, React 18, and TypeScript for Qualys report automation.@package.json#1-61 @vite.config.ts#1-47 @README.md#1-128
+- Desktop application built with Electron 28, Vite 5, React 18, and TypeScript for professional REST API testing and development.@package.json#1-61 @vite.config.ts#1-47 @README.md#1-128
 - Electron main process initializes a JSON-backed datastore, registers IPC handlers, and loads the renderer. Node integration is disabled; preload exposes a typed bridge via `contextBridge`.@electron/main.ts#1-79 @electron/database/json-db.ts#27-65 @electron/ipc/index.ts#1-1 @electron/preload.ts#1-150
 - Renderer is a React/Tailwind UI living under `src/` with Zustand for state management and Monaco-based editors for JSON templates.@src/main.tsx#1-10 @README.md#92-128
 
@@ -45,6 +45,100 @@ This project uses a **spec-driven development** workflow. All new features and b
 **ALWAYS** reference the feature/bug's spec.md, plan.md, and tasks.md when implementing. See `.cursor/rules/feature-tracking.mdc` for detailed workflow rules.
 
 Link features to phases in `plan-timeline.md` using the `Phase` field in spec.md. Bug fixes can be linked to maintenance phases.
+
+## Goal-Aware Development Workflow
+
+**CRITICAL**: Before implementing any feature, ALWAYS follow this workflow. This ensures performance-first development and goal alignment.
+
+### Step 1: SPEC (Do NOT write any code yet)
+
+1. **Read context files FIRST**:
+   - `/ai-context/project-goal.md` - Understand project goals and performance targets
+   - `/ai-context/architecture.md` - Understand architecture patterns and performance strategies
+   
+2. **Create/update `spec.md`** in `specs/XXX-feature-name/`:
+   - Include **Goal Alignment Summary** (how feature supports performance-first mission)
+   - Include **Performance Impact Analysis** (memory, bundle size, load time estimates)
+   - Include **Success Criteria** with performance metrics
+   - Include **Constraints** (performance budgets, lazy loading requirements)
+   - List any **unclear points** to confirm
+
+3. **Wait for approval** before proceeding to Step 2.
+
+### Step 2: PLAN (No code yet)
+
+1. **Read context files**:
+   - `/ai-context/example-quality.md` - Understand code quality standards and performance patterns
+   - `/ai-context/common-utils.md` - Identify reusable utilities to avoid duplication
+
+2. **Create/update `plan.md`** with:
+   - **Exact files to modify/create** (with WHY for each file)
+   - **Architecture alignment check** (follows architecture.md patterns)
+   - **Reusable utilities identification** (uses common-utils.md)
+   - **Lazy loading strategy** (how feature loads on-demand)
+   - **Code splitting plan** (separate bundle if needed)
+   - **Memory management plan** (cleanup strategy)
+   - **Performance budget verification** (memory, bundle size, load time)
+   - **Goal alignment check** (supports performance-first mission)
+
+3. **Run goal alignment check**:
+   - Does the plan support the long-term project goal? (Performance-first, low memory)
+   - Are there more reusable or cleaner ways to achieve the same?
+   - If something conflicts with the goal, warn the user.
+
+4. **Wait for approval** before proceeding to Step 3.
+
+### Step 3: IMPLEMENT (Write code)
+
+1. **Follow plan exactly** - Do NOT modify files not listed in the plan.
+
+2. **Reference context files**:
+   - Use patterns from `example-quality.md`
+   - Use utilities from `common-utils.md`
+   - Follow architecture from `architecture.md`
+
+3. **Implement performance tracking**:
+   - Track memory usage before/after feature load
+   - Track load time
+   - Track bundle size impact
+   - Log performance metrics
+
+4. **After implementation, run self-review**:
+   - Architecture violations?
+   - Duplication?
+   - Missing reusability?
+   - Performance issues? (memory leaks, slow operations)
+   - Missing lazy loading?
+   - Missing cleanup?
+   - Performance budget violations?
+
+5. **Present improvements** but DO NOT apply them until user says "apply fixes".
+
+### Permanent Rules
+
+- **Never skip steps** - Always follow SPEC → PLAN → IMPLEMENT
+- **Never guess file structure** - Ask when unsure
+- **Follow project-goal.md above all** - Performance-first is the priority
+- **Prioritize reusability, clarity, and maintainability**
+- **Never sacrifice long-term architecture for a quick shortcut**
+- **If a user request conflicts with the main goal, warn the user**
+- **Always track performance** - Memory and load time (PRIMARY), bundle size (informational)
+
+### Performance-First Checklist (MANDATORY for every feature)
+
+**PRIMARY GOALS (Memory & Speed):**
+- [ ] Feature can be lazy-loaded (not loaded upfront) - REQUIRED
+- [ ] Estimated memory footprint: _____ MB (target: <50MB per feature) - PRIMARY
+- [ ] Estimated load time: _____ ms (target: <200ms) - PRIMARY
+- [ ] Memory cleanup plan defined - REQUIRED (prevents memory leaks)
+- [ ] Performance tracking implemented (memory and load time) - REQUIRED
+- [ ] No performance regression in existing features (memory/speed) - REQUIRED
+
+**SUPPORTING (for lazy loading):**
+- [ ] Code splitting plan defined (enables lazy loading, reduces initial memory)
+
+**INFORMATIONAL (tracked but not blockers):**
+- [ ] Estimated bundle size: _____ KB (tracked for awareness, not a blocker)
 
 ## Feature Implementation Checklist
 1. **Check for existing feature/bug spec**: Look in `specs/` directory for related features or bugs. If none exists, create one using the workflow above.

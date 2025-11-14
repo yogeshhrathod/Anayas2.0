@@ -40,6 +40,86 @@
 ### New Components Needed
 - [ ] New Component 1: `src/components/path/to/new-component.tsx` - [Why existing ones can't be used]
 
+## Goal Alignment Check
+
+**Does this plan support the long-term project goal? (Performance-first, low memory)**
+- [ ] Yes - [Explanation: How this plan supports performance-first mission]
+- [ ] No - [Warning: What conflicts with goal and alternative approach]
+
+**Are there more reusable or cleaner ways to achieve the same?**
+- [Consideration 1: Alternative approach and why current is better]
+- [Consideration 2: Reusable patterns that can be leveraged]
+
+**Architecture Compliance:**
+- [ ] Follows architecture.md patterns (lazy loading, code splitting, memory management)
+- [ ] Uses common-utils.md utilities (avoids duplication)
+- [ ] Matches example-quality.md standards (performance patterns)
+- [ ] No architecture violations (no upfront loading, proper cleanup)
+
+## Performance Implementation Plan
+
+### Lazy Loading Strategy (REQUIRED)
+- **How feature loads on-demand**: [Description of lazy loading approach]
+- **Trigger**: [What triggers the feature to load? User action, route, etc.]
+- **Loading State**: [What shows while loading? Spinner, skeleton, etc.]
+- **Code**: [Example: `const Feature = lazy(() => import('./Feature'))`]
+
+### Code Splitting Plan (Supports Lazy Loading)
+- **Separate Bundle**: [Yes/No - Should this be a separate bundle?] (enables lazy loading)
+- **Bundle Type**: [Route-based / Feature-based / Component-based]
+- **Vite Configuration**: [Any special vite config needed?]
+
+### Bundle Size (INFORMATIONAL - Not Primary)
+- **Estimated Bundle Size**: _____ KB (Tracked for awareness, not a blocker)
+
+### Memory Management Plan
+- **Memory Budget**: [<50MB per feature]
+- **Cleanup Strategy**: [What gets cleaned up on unmount?]
+  - [ ] Event listeners removed
+  - [ ] Subscriptions cancelled
+  - [ ] Requests aborted
+  - [ ] Caches cleared
+  - [ ] Workers terminated
+  - [ ] Timers cleared
+- **Cleanup Code Location**: [Where cleanup code will be placed]
+
+### Performance Tracking Implementation (MANDATORY)
+- **Memory Tracking** (PRIMARY): [How memory will be tracked before/after feature load]
+  ```typescript
+  // Example:
+  const memoryBefore = performance.memory?.usedJSHeapSize || 0;
+  await loadFeature();
+  const memoryAfter = performance.memory?.usedJSHeapSize || 0;
+  logger.info('Feature memory', { delta: memoryAfter - memoryBefore });
+  ```
+- **Load Time Tracking** (PRIMARY): [How load time will be measured]
+  ```typescript
+  // Example:
+  const startTime = performance.now();
+  await loadFeature();
+  const loadTime = performance.now() - startTime;
+  logger.info('Feature load time', { loadTime });
+  ```
+- **Performance Metrics Logging**: [Where metrics will be logged]
+
+**Optional/Informational:**
+- **Bundle Size Tracking**: [How bundle size will be tracked in build] (for awareness)
+
+### Performance Budget Verification (PRIMARY GOALS)
+- **Memory** (PRIMARY): [Estimated: ___ MB] [Target: <50MB] [Status: ✅/❌] - MANDATORY
+- **Load Time** (PRIMARY): [Estimated: ___ ms] [Target: <200ms] [Status: ✅/❌] - MANDATORY
+
+**Informational:**
+- **Bundle Size**: [Estimated: ___ KB] [Tracked for awareness, not a blocker]
+
+## Files to Modify/Create (with WHY)
+
+### New Files
+- `path/to/file.ts` - **WHY**: [Reason this file is needed, why existing ones can't be used, performance considerations]
+
+### Modified Files
+- `path/to/file.ts` - **WHY**: [Reason for modification, what existing code is being extended, performance impact]
+
 ## Architecture Decisions
 
 ### Decision 1: [Title]
@@ -152,9 +232,29 @@ User Action → Component A → Service B → Database
 
 ## Performance Considerations
 
-- [ ] Performance target 1: [Metric]
-- [ ] Performance target 2: [Metric]
-- [ ] Optimization strategy: [Description]
+### Performance Targets (PRIMARY GOALS)
+- [ ] **Memory** (PRIMARY): <50MB when active (measured before/after feature load) - MANDATORY
+- [ ] **Load Time** (PRIMARY): <200ms (measured from trigger to ready) - MANDATORY
+- [ ] **Lazy Loading** (REQUIRED): Feature loads on-demand (not upfront) - MANDATORY
+- [ ] **Cleanup** (REQUIRED): Full cleanup on unmount (no memory leaks) - MANDATORY
+
+**Informational:**
+- [ ] **Bundle Size**: Tracked in build (for awareness, not a blocker)
+
+### Optimization Strategy (Focus: Memory & Speed)
+- [Strategy 1: How feature will be optimized for memory usage]
+- [Strategy 2: How feature will be optimized for load time]
+- [Strategy 3: Memory management approach (cleanup, lazy loading)]
+- [Strategy 4: Code splitting approach (enables lazy loading, reduces initial memory)]
+
+### Performance Monitoring (MANDATORY)
+- [ ] Memory usage tracked and logged - MANDATORY
+- [ ] Load time tracked and logged - MANDATORY
+- [ ] Performance metrics logged to monitoring system - MANDATORY
+- [ ] Alerts on memory/load time budget violations - MANDATORY
+
+**Optional/Informational:**
+- [ ] Bundle size tracked in build (for awareness)
 
 ## Security Considerations
 
