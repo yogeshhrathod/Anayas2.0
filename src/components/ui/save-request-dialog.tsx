@@ -3,7 +3,7 @@ import { Button } from './button';
 import { Input } from './input';
 import { Label } from './label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
+import { Dialog } from './dialog';
 import { AlertCircle, FolderPlus, Plus } from 'lucide-react';
 import { useToast } from './use-toast';
 
@@ -161,24 +161,21 @@ export function SaveRequestDialog({
     }
   };
 
-  if (!open) return null;
-
   return (
-    <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog"
-      onKeyDown={handleKeyDown}
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        <span className="flex items-center gap-2">
+          <FolderPlus className="h-5 w-5" />
+          Save Request
+        </span>
+      }
+      description="Choose a name and collection for your request"
+      maxWidth="sm"
+      className="max-h-[80vh]"
     >
-      <Card className="w-96 max-h-[80vh] overflow-y-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FolderPlus className="h-5 w-5" />
-            Save Request
-          </CardTitle>
-          <CardDescription>
-            Choose a name and collection for your request
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div className="space-y-4" onKeyDown={handleKeyDown}>
           {/* Request Name */}
           <div className="space-y-2">
             <Label htmlFor="request-name">Request Name</Label>
@@ -296,8 +293,7 @@ export function SaveRequestDialog({
               Cancel
             </Button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+      </div>
+    </Dialog>
   );
 }

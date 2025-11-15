@@ -1,9 +1,9 @@
 # Task Breakdown: reusable-click-outside-hook
 
 **Feature ID**: `004-reusable-click-outside-hook`  
-**Status**: `draft` | `planned` | `in-progress` | `completed`  
-**Related Spec**: [Link to spec.md]  
-**Related Plan**: [Link to plan.md]
+**Status**: `completed`  
+**Related Spec**: [spec.md](./spec.md)  
+**Related Plan**: [plan.md](./plan.md)
 
 ## Task Organization
 

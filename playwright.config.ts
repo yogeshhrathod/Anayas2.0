@@ -25,6 +25,12 @@ export default defineConfig({
 
     /* Take screenshot on failure */
     screenshot: 'only-on-failure',
+    
+    /* Record video for UI interaction tests */
+    video: 'retain-on-failure',
+    
+    /* Viewport size */
+    viewport: { width: 1400, height: 900 },
   },
 
   /* Global setup for test artifacts */
@@ -35,6 +41,15 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testMatch: /.*\.spec\.ts$/,
+      testIgnore: /.*integration.*\.spec\.ts$/,
+    },
+    {
+      name: 'electron',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /.*integration.*\.spec\.ts$/,
+      // Electron tests need the dev server running
+      dependencies: [],
     },
   ],
 
@@ -43,5 +58,6 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
   },
 });

@@ -55,12 +55,18 @@ export function getDatabase(): Database {
   return db;
 }
 
-export async function initDatabase(): Promise<void> {
-  const userDataPath = app.getPath('userData');
-  dbPath = path.join(userDataPath, 'database.json');
+export async function initDatabase(customDbPath?: string): Promise<void> {
+  // Support test mode: use custom database path if provided
+  if (customDbPath) {
+    dbPath = customDbPath;
+  } else {
+    const userDataPath = app.getPath('userData');
+    dbPath = path.join(userDataPath, 'database.json');
+  }
 
   // Ensure directory exists
-  fs.mkdirSync(userDataPath, { recursive: true });
+  const dbDir = path.dirname(dbPath);
+  fs.mkdirSync(dbDir, { recursive: true });
 
   // Load existing database or create new one
   if (fs.existsSync(dbPath)) {
@@ -141,8 +147,8 @@ export async function initDatabase(): Promise<void> {
     saveDatabase();
   }
 
-  // Seed sample data if database is empty
-  if (db.environments.length === 0) {
+  // Seed sample data if database is empty (skip in test mode)
+  if (db.environments.length === 0 && !process.env.TEST_MODE) {
     // Add sample environment
     addEnvironment({
       name: 'development',

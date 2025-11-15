@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from './button';
-import { Card, CardContent, CardHeader, CardTitle } from './card';
+import { Dialog } from './dialog';
 import { JsonEditor } from './json-editor';
 import { Alert, AlertDescription } from './alert';
-import { X, AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 import { useToast } from './use-toast';
 
 interface BulkEditModalProps {
@@ -108,21 +108,15 @@ export function BulkEditModal({
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <div>
-            <CardTitle className="text-xl">{title}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">{description}</p>
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleCancel}>
-            <X className="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-4 overflow-auto max-h-[calc(90vh-120px)]">
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => !open && handleCancel()}
+      title={title}
+      description={description}
+      maxWidth="4xl"
+    >
+      <div className="space-y-4">
           <JsonEditor
             value={jsonValue}
             onChange={setJsonValue}
@@ -157,8 +151,7 @@ export function BulkEditModal({
               Save Changes
             </Button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+      </div>
+    </Dialog>
   );
 }

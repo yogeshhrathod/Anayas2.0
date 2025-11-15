@@ -387,3 +387,127 @@ await loadFeature();
 tracker.end();
 ```
 
+## Testing Patterns
+
+### Test-Driven Development (TDD)
+
+**ALWAYS** write tests first using the Red-Green-Refactor cycle:
+
+```typescript
+// ✅ GOOD: Write test first (RED)
+test('should create new feature', async ({ electronPage, testDbPath }) => {
+  const result = await electronPage.evaluate(async () => {
+    return await window.electronAPI.newFeature.create({ name: 'Test' });
+  });
+  expect(result.success).toBe(true);
+});
+
+// Then implement feature (GREEN)
+// Then refactor (REFACTOR)
+```
+
+### BDD (Behavior-Driven Development)
+
+**ALWAYS** use Given-When-Then structure:
+
+```typescript
+// ✅ GOOD: BDD structure
+test('should create collection when form is submitted', async ({ electronPage, testDbPath }) => {
+  // GIVEN: User is on Collections page
+  await electronPage.goto('/');
+  await electronPage.click('text=Collections');
+  
+  // WHEN: User fills form and clicks Save
+  await electronPage.click('button:has-text("New Collection")');
+  await electronPage.fill('input#name', 'My Collection');
+  await electronPage.click('button:has-text("Save")');
+  
+  // THEN: Collection should be created and visible
+  const visible = await electronPage.locator('text=My Collection').isVisible();
+  expect(visible).toBe(true);
+});
+```
+
+### IPC Handler Tests
+
+**ALWAYS** test all handlers with success, error, and edge cases:
+
+```typescript
+// ✅ GOOD: Complete handler test
+test.describe('NewCategory IPC Handlers', () => {
+  test('new-category:save - should create new category', async ({ electronPage, testDbPath }) => {
+    const result = await electronPage.evaluate(async () => {
+      return await window.electronAPI.newCategory.save({ name: 'Test' });
+    });
+    expect(result.success).toBe(true);
+    assertDataPersisted(result, testDbPath, 'categories');
+  });
+  
+  test('new-category:save - should handle invalid input', async ({ electronPage, testDbPath }) => {
+    const result = await electronPage.evaluate(async () => {
+      return await window.electronAPI.newCategory.save({ name: '' });
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+});
+```
+
+### Component Integration Tests
+
+**ALWAYS** test components with IPC integration:
+
+```typescript
+// ✅ GOOD: Component integration test
+test.describe('NewComponent Component Integration', () => {
+  test('should render with data from IPC', async ({ electronPage, testDbPath }) => {
+    // GIVEN: Data exists
+    await electronPage.evaluate(async () => {
+      await window.electronAPI.data.create({ /* ... */ });
+    });
+    
+    // WHEN: Component renders
+    await electronPage.goto('/');
+    await electronPage.waitForLoadState('networkidle');
+    
+    // THEN: Component should display data
+    const component = electronPage.locator('[data-testid="new-component"]');
+    await component.waitFor({ state: 'visible' });
+    expect(await component.isVisible()).toBe(true);
+  });
+});
+```
+
+### Performance Tests
+
+**ALWAYS** test performance for large datasets:
+
+```typescript
+// ✅ GOOD: Performance test
+test('should handle 1000+ items efficiently', async ({ electronPage, testDbPath }) => {
+  const startTime = Date.now();
+  const startMemory = process.memoryUsage().heapUsed;
+  
+  await electronPage.evaluate(async () => {
+    const promises = [];
+    for (let i = 0; i < 1000; i++) {
+      promises.push(window.electronAPI.item.create({ /* ... */ }));
+    }
+    await Promise.all(promises);
+  });
+  
+  const duration = Date.now() - startTime;
+  const memoryDelta = (process.memoryUsage().heapUsed - startMemory) / 1024 / 1024;
+  
+  expect(duration).toBeLessThan(30000); // <30s
+  expect(memoryDelta).toBeLessThan(500); // <500MB
+});
+```
+
+### Test Patterns Reference
+
+- **IPC Handler Tests**: See `tests/integration/ipc-handlers/env-handlers.spec.ts`
+- **Component Tests**: See `tests/integration/components/collection-hierarchy.spec.ts`
+- **Data Flow Tests**: See `tests/integration/data-flow/full-cycle.spec.ts`
+- **Performance Tests**: See `tests/integration/performance/large-datasets.spec.ts`
+

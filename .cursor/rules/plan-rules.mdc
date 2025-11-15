@@ -2,6 +2,31 @@
 alwaysApply: true
 ---
 
+# Plan Rules
+
+## Test-Driven Development Integration
+
+When creating implementation plans, **ALWAYS** include test planning:
+
+1. **List test files to create** - Based on feature scope
+2. **Reference existing test patterns** - Similar features/components
+3. **Plan test data setup** - What data needs to be created
+4. **Identify test categories** - IPC handlers, components, data flow, performance
+
+## BDD in Planning
+
+- **Write acceptance criteria as BDD scenarios** in spec.md
+- **Convert BDD scenarios to test cases** in plan.md
+- **Use Given-When-Then structure** for test planning
+
+## Test Coverage Planning
+
+For each feature, plan:
+- IPC handler tests (if adding new handlers)
+- Component integration tests (if adding new components)
+- Data flow tests (if adding new data flows)
+- Performance tests (if performance-critical)
+
 # Cursor Rules
 
 ## Project Summary
@@ -183,3 +208,20 @@ Link features to phases in `plan-timeline.md` using the `Phase` field in spec.md
 - Ensure new functionality includes IPC-to-renderer wiring, data persistence, and UI updates where applicable.
 - Provide reproducible steps, reference relevant scripts, and attach log excerpts if bug fixes are involved.
 - Run `npm run type-check` and applicable tests (add tests if introducing logic-heavy modules).
+- **MANDATORY**: All new features MUST include tests following TDD/BDD principles
+- **MANDATORY**: Run full test suite before PR: `npm run test:electron -- tests/integration/`
+- **MANDATORY**: Verify no test regressions - all existing tests should pass
+- **MANDATORY**: New IPC handlers require 100% test coverage
+- **MANDATORY**: New components require integration tests
+
+## CRITICAL: No Completion Without Tests
+
+**NO EXCEPTIONS - NO EXCUSES**
+
+- **DO NOT** mark a task as `completed` without running tests
+- **DO NOT** mark a feature as `completed` without running tests
+- **DO NOT** update status to `completed` if tests fail
+- **MUST** run `npm run test:electron -- tests/integration/` before completion
+- **MUST** verify ALL tests pass before marking complete
+- **MUST** fix failing tests before completion - no excuses
+- **ONLY** mark as `completed` after ALL tests pass

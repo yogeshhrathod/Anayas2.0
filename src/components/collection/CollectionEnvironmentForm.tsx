@@ -18,6 +18,7 @@
  */
 
 import { useState, useEffect, useImperativeHandle, forwardRef, useCallback } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { EnvironmentVariable } from '../EnvironmentVariable';
@@ -149,9 +150,18 @@ export const CollectionEnvironmentForm = forwardRef<CollectionEnvironmentFormRef
               type="button"
               onClick={handleSubmit}
               disabled={isLoading}
-              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isLoading ? 'Saving...' : environment ? 'Update Environment' : 'Create Environment'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : environment ? (
+                'Update Environment'
+              ) : (
+                'Create Environment'
+              )}
             </button>
           </div>
         )}

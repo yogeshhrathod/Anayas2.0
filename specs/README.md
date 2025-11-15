@@ -37,13 +37,19 @@ This directory contains feature specifications and bug reports following the spe
 | ID | Feature Name | Status | Phase | Owner |
 |----|--------------|--------|-------|-------|
 | `001-curl-import-export` | [curl-import-export](specs/001-curl-import-export/spec.md) | `completed` | Phase 3: Import/Export & Interoperability (plan-timeline.md) | Development Team |
+| `002-environment-inheritance-and-overrides` | [environment-inheritance-and-overrides](specs/002-environment-inheritance-and-overrides/spec.md) | `completed` | Phase 2: Essential Features (plan-timeline.md) | Development Team |
 | `003-performance-optimization-lazy-loading` | [performance-optimization-lazy-loading](specs/003-performance-optimization-lazy-loading/spec.md) | `completed` | Phase 4: Advanced Features - Performance Optimizations (plan-timeline.md) | Development Team |
+| `004-reusable-click-outside-hook` | [reusable-click-outside-hook](specs/004-reusable-click-outside-hook/spec.md) | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact) | Development Team |
+| `006-dialog-backdrop-consolidation` | [dialog-backdrop-consolidation](specs/006-dialog-backdrop-consolidation/spec.md) | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact) | Development Team |
+| `007-form-validation-consolidation` | [form-validation-consolidation](specs/007-form-validation-consolidation/spec.md) | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact) | Development Team |
+| `008-comprehensive-test-suite` | [comprehensive-test-suite](specs/008-comprehensive-test-suite/spec.md) | `completed` | Infrastructure & Quality Assurance | Development Team |
 
 ## Bug List
 
 | ID | Bug Name | Status | Severity | Priority | Related Feature | Assignee |
 |----|----------|--------|----------|----------|-----------------|----------|
-| `bug-001-z-index-fixes` | [z-index-fixes](specs/bug-001-z-index-fixes/spec.md) | `reported` | `high` | `P1` | N/A (Infrastructure/UI Fix) | Development Team |
+| `bug-001-z-index-fixes` | [z-index-fixes](specs/bug-001-z-index-fixes/spec.md) | `resolved` | `high` | `P1` | N/A (Infrastructure/UI Fix) | Development Team |
+| `bug-002-variable-context-menu-fixes` | [variable-context-menu-fixes](specs/bug-002-variable-context-menu-fixes/spec.md) | `resolved` | `medium` | `P1` | `specs/005-variable-input-consolidation/` (Variable Input Components Consolidation) | Development Team |
 
 ## Creating Items
 

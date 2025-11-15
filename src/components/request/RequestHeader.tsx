@@ -27,7 +27,7 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { OverlayVariableInput } from '../ui/overlay-variable-input';
+import { VariableInputUnified } from '../ui/variable-input-unified';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Badge } from '../ui/badge';
@@ -194,7 +194,8 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
 
           {/* URL Input with Variable Support */}
           <div className="flex-1">
-            <OverlayVariableInput
+            <VariableInputUnified
+              variant="overlay"
               value={requestData.url}
               onChange={(url) => setRequestData({ ...requestData, url })}
               placeholder="Enter request URL or use {{variable}}"

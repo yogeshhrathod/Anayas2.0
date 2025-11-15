@@ -1,6 +1,6 @@
 # Bug Report: z-index-fixes
 
-**Status**: `testing`  
+**Status**: `resolved`  
 **Bug ID**: `bug-001-z-index-fixes`  
 **Severity**: `high`  
 **Priority**: `P1`  

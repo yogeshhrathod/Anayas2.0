@@ -51,8 +51,38 @@ function createWindow() {
 
 app.whenReady().then(async () => {
   try {
-    await initDatabase();
+    // Support test mode: use custom database path if provided
+    const testDbPath = process.env.TEST_DB_PATH;
+    await initDatabase(testDbPath);
     registerIpcHandlers();
+    
+    // Register test handlers if in test mode
+    if (process.env.TEST_MODE === 'true') {
+      // Test utilities IPC handlers
+      ipcMain.handle('test:getDbPath', () => {
+        return process.env.TEST_DB_PATH || '';
+      });
+
+      ipcMain.handle('test:resetDatabase', async () => {
+        const { getDatabase, saveDatabase } = await import('./database');
+        const db = getDatabase();
+        db.environments = [];
+        db.collections = [];
+        db.folders = [];
+        db.requests = [];
+        db.request_history = [];
+        db.unsaved_requests = [];
+        db.presets = [];
+        db.settings = {};
+        saveDatabase();
+        return { success: true };
+      });
+
+      ipcMain.handle('test:isReady', () => {
+        return { ready: app.isReady() && mainWindow !== null };
+      });
+    }
+    
     createWindow();
 
     app.on('activate', () => {

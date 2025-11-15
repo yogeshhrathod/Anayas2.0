@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { Button } from './ui/button';
+import { Dialog } from './ui/dialog';
 import { Keyboard } from 'lucide-react';
 import { useShortcutContext } from '../hooks/useShortcutContext';
 import { detectContext, SHORTCUTS } from '../lib/shortcuts';
@@ -59,17 +60,14 @@ export function ShortcutHelp() {
         <span className="ml-2">Keyboard Shortcuts</span>
       </Button>
       
-      {open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog">
-          <div className="bg-background border rounded-lg p-6 max-w-2xl max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Keyboard Shortcuts</h2>
-              <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-                ×
-              </Button>
-            </div>
-            
-            <div className="space-y-6">
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Keyboard Shortcuts"
+        maxWidth="2xl"
+        className="max-h-[80vh]"
+      >
+        <div className="space-y-6">
               {Object.entries(groupedShortcuts).map(([context, shortcuts]) => (
                 <div key={context}>
                   <h3 className="text-lg font-semibold mb-3">
@@ -89,10 +87,8 @@ export function ShortcutHelp() {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
         </div>
-      )}
+      </Dialog>
     </>
   );
 }

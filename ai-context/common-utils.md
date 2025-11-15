@@ -341,6 +341,45 @@ useClickOutside(dropdownRef, handleClose, isOpen, {
 - Custom close conditions
 - Automatic cleanup
 
+### `useVariableInput.ts`
+**Purpose**: Shared hook for variable input components with autocomplete
+
+```typescript
+import { useVariableInput } from '@/hooks/useVariableInput';
+
+const {
+  showAutocomplete,
+  searchTerm,
+  dropdownPosition,
+  inputRef,
+  wrapperRef,
+  handleChange,
+  handleAutocompleteSelect,
+  handleClose,
+  variables
+} = useVariableInput({
+  value,
+  onChange
+});
+```
+
+**When to use**: 
+- Building variable input components
+- Components that need variable autocomplete
+- Inputs that support `{{variable}}` syntax
+
+**Performance**: 
+- Minimal memory footprint (<1MB)
+- Efficient state management
+- No performance impact
+
+**Features**:
+- Variable detection (`{{variable}}` syntax)
+- Autocomplete trigger on `{{` typing
+- Dynamic variable support (`{{$variable}}`)
+- Dropdown positioning
+- Cursor positioning after selection
+
 ## Performance Utilities
 
 ### Performance Tracking (to be created)
@@ -389,6 +428,105 @@ export function utilityFunction(input: InputType): OutputType {
   // Implementation
 }
 ```
+
+## React Components (`src/components/ui/`)
+
+### `dialog.tsx`
+**Purpose**: Unified dialog component with backdrop, portal, and escape key handling
+
+```typescript
+import { Dialog } from '@/components/ui/dialog';
+
+// Simple dialog with string title
+<Dialog
+  open={open}
+  onOpenChange={setOpen}
+  title="Dialog Title"
+  description="Dialog description"
+  maxWidth="md"
+>
+  {/* Dialog content */}
+</Dialog>
+
+// Dialog with custom header (ReactNode)
+<Dialog
+  open={open}
+  onOpenChange={setOpen}
+  title={
+    <span className="flex items-center gap-2">
+      <Icon className="h-5 w-5" />
+      Custom Title
+    </span>
+  }
+  description="Description can also be ReactNode"
+  maxWidth="lg"
+>
+  {/* Dialog content */}
+</Dialog>
+```
+
+**When to use**: 
+- All dialogs in the application
+- Replaces all custom backdrop implementations
+- Supports both string and ReactNode for title/description
+
+**Performance**: 
+- Minimal memory footprint (<1MB)
+- Portal rendering for proper z-index stacking
+- No performance impact
+
+**Features**:
+- Backdrop click to close
+- Escape key to close (built-in)
+- Portal rendering (outside form elements)
+- Configurable max width
+- Optional close button
+- Custom header support (ReactNode)
+
+### `variable-input-unified.tsx`
+**Purpose**: Unified variable input component with multiple variants
+
+```typescript
+import { VariableInputUnified } from '@/components/ui/variable-input-unified';
+
+// Basic variant (simple input with autocomplete)
+<VariableInputUnified 
+  value={value} 
+  onChange={setValue} 
+  variant="basic" 
+/>
+
+// Highlighted variant (shows variable highlights)
+<VariableInputUnified 
+  value={value} 
+  onChange={setValue} 
+  variant="highlighted" 
+/>
+
+// Overlay variant (shows resolved values overlay)
+<VariableInputUnified 
+  value={value} 
+  onChange={setValue} 
+  variant="overlay" 
+/>
+```
+
+**When to use**: 
+- Any input that needs variable support
+- Replaces old `VariableInput`, `HighlightedVariableInput`, `OverlayVariableInput` components
+- Use `variant="overlay"` for most cases (shows resolved values)
+
+**Performance**: 
+- Minimal memory footprint (<1MB)
+- Efficient rendering with variants
+- No performance impact
+
+**Features**:
+- Variable autocomplete
+- Dynamic variable support (`{{$variable}}`)
+- Context menu for variables (highlighted/overlay variants)
+- Resolved value display (overlay variant)
+- Double-click selection (overlay variant)
 
 ## Common Patterns
 
