@@ -4,3 +4,27 @@ alwaysApply: true
 
 ## DO NO RUN electron app unless I tell you to
 ## USE STABLE NPM LIBRARY IF POSSIBLE INSTEAD OF WRITING WHOLE CODE OURSELF
+
+## Test-Driven Development Requirements
+
+- **ALWAYS** write tests first (TDD) - Red-Green-Refactor cycle
+- **ALWAYS** use BDD format (Given-When-Then) for test scenarios
+- **ALWAYS** reference `/ai-context/test-suite-guide.md` before writing tests
+- **ALWAYS** check existing test files for patterns before creating new tests
+- **MANDATORY**: All new IPC handlers require 100% test coverage
+- **MANDATORY**: All new components require integration tests
+- **MANDATORY**: Run full test suite before PR: `npm run test:electron -- tests/integration/`
+
+## CRITICAL: No Completion Without Tests
+
+**NO EXCEPTIONS - NO EXCUSES - THIS IS NON-NEGOTIABLE**
+
+- **A task is NOT `completed`** until ALL tests pass
+- **A feature is NOT `completed`** until ALL tests pass
+- **DO NOT** mark anything as `completed` if tests fail
+- **DO NOT** mark anything as `completed` if tests are not written
+- **DO NOT** mark anything as `completed` without running tests first
+- **MUST** run `npm run test:electron -- tests/integration/` before marking complete
+- **MUST** verify ALL tests pass before updating status
+- **MUST** fix failing tests before completion - no excuses
+- **ONLY** mark as `completed` after ALL tests pass

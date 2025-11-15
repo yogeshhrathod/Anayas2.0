@@ -76,13 +76,40 @@ This directory contains centralized context files that guide AI-assisted develop
 - When debugging performance issues
 - When reviewing performance metrics
 
+### `/ai-context/test-suite-guide.md`
+**Purpose**: Comprehensive guide for using the test suite with TDD/BDD approach.
+
+**Key Content:**
+- Test suite structure and statistics
+- BDD (Behavior-Driven Development) patterns
+- TDD (Test-Driven Development) workflow
+- Test helpers and utilities reference
+- Common test patterns
+- How to write tests for new features
+
+**When to Read:**
+- Before implementing new features (to write tests first)
+- When writing new IPC handlers (to follow patterns)
+- When creating new components (to add integration tests)
+- When debugging test failures
+- When learning test patterns
+
 ## Workflow Integration
 
 These files are integrated into the development workflow:
 
 1. **SPEC Phase**: Read `project-goal.md` and `architecture.md`
-2. **PLAN Phase**: Read `example-quality.md` and `common-utils.md`
+   - Write acceptance criteria as BDD scenarios
+   - Plan test coverage requirements
+2. **PLAN Phase**: Read `example-quality.md`, `common-utils.md`, and `test-suite-guide.md`
+   - Identify test files to create
+   - Reference existing test patterns
+   - Plan test data setup
 3. **IMPLEMENT Phase**: Reference all files as needed
+   - **Write tests first** (TDD) using `test-suite-guide.md`
+   - Follow patterns from `example-quality.md`
+   - Use utilities from `common-utils.md`
+   - Run tests frequently to verify implementation
 
 See `.cursorrules` for the complete goal-aware workflow.
 
@@ -97,7 +124,10 @@ When updating these files:
 ## References
 
 - `.cursorrules` - Goal-aware workflow
+- `.cursor/rules/test-driven-development.mdc` - TDD/BDD guidelines
 - `templates/spec-template.md` - Feature spec template
 - `templates/plan-template.md` - Implementation plan template
 - `src/lib/performance.ts` - Performance tracking utility
+- `specs/008-comprehensive-test-suite/` - Test suite specification
+- `tests/integration/` - Test files and patterns
 

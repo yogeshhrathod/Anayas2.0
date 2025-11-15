@@ -42,7 +42,7 @@ This directory contains feature specifications and bug reports following the spe
 | `004-reusable-click-outside-hook` | [reusable-click-outside-hook](specs/004-reusable-click-outside-hook/spec.md) | `completed` | [Link to plan-timeline.md phase] | [Name/Team] |
 | `006-dialog-backdrop-consolidation` | [dialog-backdrop-consolidation](specs/006-dialog-backdrop-consolidation/spec.md) | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact) | Development Team |
 | `007-form-validation-consolidation` | [form-validation-consolidation](specs/007-form-validation-consolidation/spec.md) | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact) | Development Team |
-| `008-comprehensive-test-suite` | [comprehensive-test-suite](specs/008-comprehensive-test-suite/spec.md) | `draft` | Infrastructure & Quality Assurance | Development Team |
+| `008-comprehensive-test-suite` | [comprehensive-test-suite](specs/008-comprehensive-test-suite/spec.md) | `completed` | Infrastructure & Quality Assurance | Development Team |
 
 ## Bug List
 

@@ -1,0 +1,431 @@
+---
+alwaysApply: true
+---
+
+# Test-Driven Development & BDD Guidelines
+
+## Overview
+
+This project uses **Test-Driven Development (TDD)** and **Behavior-Driven Development (BDD)** principles. All features MUST be developed with comprehensive test coverage from the start.
+
+## CRITICAL: Testing is MANDATORY Before Completion
+
+**NO EXCEPTIONS - NO EXCUSES**
+
+- **A task is NOT completed** until all tests pass
+- **A feature is NOT completed** until all tests pass
+- **Tests MUST be written** before marking anything as complete
+- **All tests MUST pass** before updating status to `completed`
+- **No feature can be marked `completed`** without passing tests
+- **No task can be marked `completed`** without passing tests
+
+**Completion Checklist (MANDATORY):**
+1. ✅ All tests written for the feature/task
+2. ✅ All tests passing: `npm run test:electron -- tests/integration/`
+3. ✅ No test regressions (existing tests still pass)
+4. ✅ Test coverage verified (100% for IPC handlers, integration tests for components)
+5. ✅ Only then mark task/feature as `completed`
+
+## Test Suite Structure
+
+### Test Categories
+
+1. **IPC Handler Tests** (`tests/integration/ipc-handlers/`)
+   - One test file per handler category
+   - Test all handlers: success, error, edge cases
+   - 100% coverage required
+
+2. **Component Integration Tests** (`tests/integration/components/`)
+   - Test React components with IPC integration
+   - Verify rendering, state updates, user interactions
+   - Test major components: CollectionHierarchy, RequestBuilder, EnvironmentSwitcher, Sidebar
+
+3. **Data Flow Tests** (`tests/integration/data-flow/`)
+   - Test complete UI → IPC → DB → UI flow
+   - Verify state synchronization
+   - Test full cycles
+
+4. **Rendering Tests** (`tests/integration/rendering/`)
+   - Component rendering verification
+   - Loading/error/empty states
+   - State updates
+
+5. **Performance Tests** (`tests/integration/performance/`)
+   - Large datasets (1000+ items)
+   - Concurrent operations
+   - Memory leak detection
+
+## BDD Workflow: Given-When-Then
+
+### Writing Tests in BDD Style
+
+All tests should follow the **Given-When-Then** structure:
+
+```typescript
+test('should [expected behavior] when [condition]', async ({ electronPage, testDbPath }) => {
+  // GIVEN: Setup initial state
+  const collection = await electronPage.evaluate(async () => {
+    return await window.electronAPI.collection.save({
+      name: 'Test Collection',
+      // ... setup data
+    });
+  });
+
+  // WHEN: Perform action
+  const result = await electronPage.evaluate(async (id) => {
+    return await window.electronAPI.collection.delete(id);
+  }, collection.id);
+
+  // THEN: Verify outcome
+  expect(result.success).toBe(true);
+  const collections = await electronPage.evaluate(async () => {
+    return await window.electronAPI.collection.list();
+  });
+  expect(collections.length).toBe(0);
+});
+```
+
+### BDD Test Structure
+
+1. **Given** (Setup): Create necessary data, set up initial state
+2. **When** (Action): Perform the operation being tested
+3. **Then** (Assertion): Verify the expected outcome
+
+## Test-Driven Feature Development
+
+### Step 1: Write Tests First (TDD)
+
+When implementing a new feature:
+
+1. **Write failing tests** for the feature in `spec.md` acceptance criteria
+2. **Create test files** before implementation:
+   - IPC handler tests if adding new handlers
+   - Component tests if adding new components
+   - Integration tests for data flow
+3. **Run tests** - they should fail (Red)
+4. **Implement feature** to make tests pass (Green)
+5. **Refactor** while keeping tests green (Refactor)
+
+### Step 2: Use Existing Test Patterns
+
+**ALWAYS** reference existing test files for patterns:
+
+- **IPC Handler Tests**: See `tests/integration/ipc-handlers/env-handlers.spec.ts`
+- **Component Tests**: See `tests/integration/components/collection-hierarchy.spec.ts`
+- **Data Flow Tests**: See `tests/integration/data-flow/full-cycle.spec.ts`
+- **Performance Tests**: See `tests/integration/performance/large-datasets.spec.ts`
+
+### Step 3: Test Coverage Requirements
+
+**MANDATORY Coverage:**
+- [ ] All new IPC handlers have tests (100% coverage)
+- [ ] All new components have integration tests
+- [ ] All data flows are tested (UI → IPC → DB → UI)
+- [ ] Error cases are tested
+- [ ] Edge cases are tested
+
+## Test Execution
+
+### Running Tests
+
+```bash
+# Run all tests
+npm run test:electron -- tests/integration/
+
+# Run specific category
+npm run test:electron -- tests/integration/ipc-handlers/
+
+# Run specific test file
+npm run test:electron -- tests/integration/ipc-handlers/env-handlers.spec.ts
+
+# Run single test
+npm run test:electron -- tests/integration/ipc-handlers/env-handlers.spec.ts --grep "env:save"
+
+# Run with debugging
+npm run test:electron -- tests/integration/ipc-handlers/env-handlers.spec.ts --headed --slow-mo=1000
+```
+
+### Test Independence
+
+- **ALWAYS** write independent tests (no shared state)
+- Each test uses isolated test database
+- Tests can run in any order
+- Tests clean up after themselves
+
+## Test Helpers & Utilities
+
+### Available Test Helpers
+
+Located in `tests/helpers/`:
+
+- **`electron-fixtures.ts`**: Main test fixtures with `electronPage` and `testDbPath`
+- **`assertions.ts`**: Custom assertions (`assertRendered`, `assertDataPersisted`, etc.)
+- **`debug-helpers.ts`**: Debugging utilities (`captureConsoleLogs`, `generateErrorReport`, etc.)
+- **`test-db.ts`**: Test database utilities (`createTestDatabase`, `getDatabaseContents`)
+- **`logger.ts`**: Test logging with performance tracking
+
+### Available Test Utilities
+
+Located in `tests/utils/`:
+
+- **`wait-for.ts`**: Wait for conditions
+- **`screenshot.ts`**: Screenshot utilities
+- **`trace.ts`**: Execution tracing
+
+## Writing New Tests
+
+### For New IPC Handlers
+
+1. **Check existing handler tests** for patterns
+2. **Create test file**: `tests/integration/ipc-handlers/[category]-handlers.spec.ts`
+3. **Test structure**:
+   ```typescript
+   test.describe('[Category] IPC Handlers', () => {
+     test('[handler]:[action] - should [expected behavior]', async ({ electronPage, testDbPath }) => {
+       // Given-When-Then structure
+     });
+   });
+   ```
+4. **Test cases needed**:
+   - Success case
+   - Error case
+   - Edge cases (empty data, invalid input, etc.)
+   - Data persistence verification
+
+### For New Components
+
+1. **Check existing component tests** for patterns
+2. **Create test file**: `tests/integration/components/[component-name].spec.ts`
+3. **Test structure**:
+   ```typescript
+   test.describe('[Component] Component Integration', () => {
+     test('should render [component] with [data]', async ({ electronPage, testDbPath }) => {
+       // Given: Setup data
+       // When: Render component
+       // Then: Verify rendering
+     });
+   });
+   ```
+4. **Test cases needed**:
+   - Component renders
+   - IPC integration works
+   - User interactions work
+   - State updates correctly
+   - Error handling
+
+### For New Features
+
+1. **Write acceptance criteria** in `spec.md` as BDD scenarios
+2. **Create test files** before implementation
+3. **Write tests** following Given-When-Then
+4. **Run tests** - should fail initially
+5. **Implement feature** to make tests pass
+6. **Refactor** while keeping tests green
+
+## BDD Scenarios in Specs
+
+### Writing BDD Scenarios in spec.md
+
+Format acceptance criteria as BDD scenarios:
+
+```markdown
+### Scenario: Create new collection
+**Given** I am on the Collections page
+**When** I click "New Collection" and fill in the form
+**Then** the collection should be created
+**And** it should appear in the collection list
+**And** it should be persisted to the database
+```
+
+### Converting BDD to Tests
+
+Each BDD scenario becomes one or more test cases:
+
+```typescript
+test('should create new collection when form is submitted', async ({ electronPage, testDbPath }) => {
+  // Given: I am on the Collections page
+  await electronPage.goto('/');
+  await electronPage.click('text=Collections');
+  
+  // When: I click "New Collection" and fill in the form
+  await electronPage.click('button:has-text("New Collection")');
+  await electronPage.fill('input#name', 'My Collection');
+  await electronPage.click('button:has-text("Save")');
+  
+  // Then: the collection should be created
+  const collectionVisible = await electronPage.locator('text=My Collection').isVisible();
+  expect(collectionVisible).toBe(true);
+  
+  // And: it should be persisted to the database
+  const dbContents = getDatabaseContents(testDbPath);
+  const collection = dbContents.collections.find((c: any) => c.name === 'My Collection');
+  expect(collection).toBeDefined();
+});
+```
+
+## Test Quality Standards
+
+### Test Naming
+
+Use descriptive test names that explain the scenario:
+
+```typescript
+// ✅ GOOD: Clear what is being tested
+test('collection:save - should create new collection with all fields', ...)
+test('should handle error when collection name is empty', ...)
+
+// ❌ BAD: Vague
+test('test collection', ...)
+test('collection test 1', ...)
+```
+
+### Test Organization
+
+- Group related tests in `test.describe()` blocks
+- One test per scenario
+- Tests should be independent
+- Use setup/teardown when needed
+
+### Assertions
+
+- Use specific assertions (`toBe`, `toEqual`, `toContain`)
+- Verify both success and failure cases
+- Check data persistence
+- Verify UI updates
+
+## Debugging Failed Tests
+
+### When Tests Fail
+
+1. **Check error message** - Read the failure details
+2. **Review test artifacts**:
+   - Screenshots in `test-artifacts/`
+   - Error reports in `test-artifacts/[test-name]/error-report.md`
+   - Console logs in `test-artifacts/[test-name]/console-logs.txt`
+3. **Run test in headed mode**: `--headed --slow-mo=1000`
+4. **Check debug helpers**: Use `captureDebugInfo()` for comprehensive debugging
+
+### Debug Helpers Usage
+
+```typescript
+import { captureDebugInfo, generateErrorReport } from '../../helpers/debug-helpers';
+
+test('should handle error case', async ({ electronPage, testDbPath }) => {
+  try {
+    // Test code
+  } catch (error) {
+    const debugInfo = await captureDebugInfo(
+      electronPage,
+      testDbPath,
+      'test-step',
+      'test-artifacts/debug'
+    );
+    generateErrorReport(error, debugInfo, 'test-name', 'test-artifacts/debug');
+    throw error;
+  }
+});
+```
+
+## Performance Testing
+
+### When to Add Performance Tests
+
+- Features that handle large datasets
+- Features with concurrent operations
+- Features that might cause memory leaks
+- Critical user paths
+
+### Performance Test Patterns
+
+```typescript
+test('should handle 1000+ items efficiently', async ({ electronPage, testDbPath }) => {
+  const startTime = Date.now();
+  const startMemory = process.memoryUsage().heapUsed;
+  
+  // Create 1000 items
+  await electronPage.evaluate(async () => {
+    // ... create items
+  });
+  
+  const duration = Date.now() - startTime;
+  const memoryDelta = (process.memoryUsage().heapUsed - startMemory) / 1024 / 1024;
+  
+  expect(duration).toBeLessThan(30000); // <30s
+  expect(memoryDelta).toBeLessThan(500); // <500MB
+});
+```
+
+## Integration with Feature Development
+
+### During SPEC Phase
+
+- Write acceptance criteria as BDD scenarios
+- Identify test categories needed
+- Plan test coverage
+
+### During PLAN Phase
+
+- List test files to create
+- Identify test patterns to follow
+- Plan test data setup
+
+### During IMPLEMENT Phase
+
+1. **Write tests first** (TDD)
+2. **Run tests** - should fail
+3. **Implement feature** - make tests pass
+4. **Refactor** - keep tests green
+5. **Verify coverage** - all scenarios tested
+
+### After Implementation
+
+**MANDATORY BEFORE COMPLETION:**
+
+1. **Run all tests**: `npm run test:electron -- tests/integration/`
+   - **ALL tests MUST pass** - no exceptions
+   - **No test regressions** - existing tests must still pass
+   - **If tests fail, fix them** - do not mark as complete until fixed
+
+2. **Verify coverage**: All acceptance criteria have tests
+   - Every acceptance criteria in `spec.md` must have a corresponding test
+   - IPC handlers: 100% coverage required
+   - Components: Integration tests required
+
+3. **Check performance**: Run performance tests if applicable
+   - Performance tests must pass
+   - No performance regressions
+
+4. **Update test documentation**: Add to test suite guide if needed
+
+**ONLY AFTER ALL TESTS PASS:**
+- Mark task as `completed` in `tasks.md`
+- Mark feature as `completed` in `spec.md`, `plan.md`, `tasks.md`
+- Update `plan-timeline.md`
+- Run `./scripts/update-feature-index.sh`
+
+**IF TESTS FAIL:**
+- **DO NOT** mark as complete
+- **DO NOT** update status to `completed`
+- **FIX THE TESTS** or fix the implementation
+- **RE-RUN TESTS** until all pass
+- **THEN** mark as complete
+
+## Best Practices
+
+1. **Write tests first** (TDD) - Red-Green-Refactor cycle
+2. **Use BDD format** - Given-When-Then structure
+3. **Test independently** - No shared state between tests
+4. **Test edge cases** - Empty data, invalid input, errors
+5. **Verify persistence** - Check database after operations
+6. **Test UI updates** - Verify components update correctly
+7. **Use existing patterns** - Follow established test patterns
+8. **Keep tests fast** - Individual tests should complete in <30s
+9. **Document test scenarios** - Clear test names and comments
+10. **Run tests frequently** - Before and after changes
+
+## References
+
+- Test Suite Spec: `specs/008-comprehensive-test-suite/spec.md`
+- Test Helpers: `tests/helpers/`
+- Test Utilities: `tests/utils/`
+- Existing Tests: `tests/integration/`

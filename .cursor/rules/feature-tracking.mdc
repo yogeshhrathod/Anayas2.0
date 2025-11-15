@@ -103,9 +103,10 @@ Update status in:
 
 **Status Update Rules:**
 - When starting implementation: Update all status headers from `planned` → `in-progress`
-- When all tasks completed: Update all status headers from `in-progress` → `completed`
-- When feature completed: Update `plan-timeline.md` phase items and run index update script
-- When bug resolved: Update all status headers from `testing` → `resolved` and update `plan-timeline.md`
+- When all tasks completed: **FIRST run all tests**, verify ALL pass, **THEN** update all status headers from `in-progress` → `completed`
+- When feature completed: **FIRST run all tests**, verify ALL pass, **THEN** update `plan-timeline.md` phase items and run index update script
+- When bug resolved: **FIRST run all tests**, verify ALL pass, **THEN** update all status headers from `testing` → `resolved` and update `plan-timeline.md`
+- **CRITICAL**: Never update status to `completed` or `resolved` without running and passing tests first
 
 ## Integration with plan-timeline.md
 
@@ -138,23 +139,36 @@ Update status in:
 ## When Implementing Features
 
 1. **ALWAYS** read the feature's `spec.md`, `plan.md`, and `tasks.md` before starting
-2. **ALWAYS** check existing codebase first - search for existing components, hooks, utilities, or patterns that can be reused
-3. **ALWAYS** identify where to implement the feature (existing buttons, components, pages, etc.) before creating new ones
-4. **ALWAYS** reuse existing components, hooks, and utilities when possible - do NOT create duplicates
-5. **ALWAYS** follow the task order specified in `tasks.md`
-6. **ALWAYS** update task status in `tasks.md` as you work (`pending` → `in-progress` → `completed`)
-7. **AUTOMATICALLY** update status headers when starting implementation:
+2. **ALWAYS** read `/ai-context/test-suite-guide.md` to understand test patterns
+3. **ALWAYS** check existing codebase first - search for existing components, hooks, utilities, or patterns that can be reused
+4. **ALWAYS** check existing test files for similar patterns before writing new tests
+5. **ALWAYS** identify where to implement the feature (existing buttons, components, pages, etc.) before creating new ones
+6. **ALWAYS** reuse existing components, hooks, and utilities when possible - do NOT create duplicates
+7. **ALWAYS** follow the task order specified in `tasks.md`
+8. **ALWAYS** write tests FIRST (TDD) - Red-Green-Refactor cycle
+9. **ALWAYS** use BDD format (Given-When-Then) for test scenarios
+10. **ALWAYS** update task status in `tasks.md` as you work (`pending` → `in-progress` → `completed`)
+11. **ALWAYS** run tests before and after implementation changes
+12. **AUTOMATICALLY** update status headers when starting implementation:
    - Update `spec.md` header: `**Status**: planned` → `**Status**: in-progress`
    - Update `plan.md` header: `**Status**: planned` → `**Status**: in-progress`
    - Update `tasks.md` header: `**Status**: planned` → `**Status**: in-progress`
-8. **AUTOMATICALLY** when ALL tasks are completed:
-   - Update `spec.md` header: `**Status**: in-progress` → `**Status**: completed`
-   - Update `plan.md` header: `**Status**: in-progress` → `**Status**: completed`
-   - Update `tasks.md` header: `**Status**: in-progress` → `**Status**: completed`
-   - Update `plan-timeline.md`: Mark related phase items as `[x]` completed
-   - Run `./scripts/update-feature-index.sh` to refresh the index
-9. **ALWAYS** reference the spec when making implementation decisions
-10. **ALWAYS** create tests as specified in `plan.md` and `tasks.md`
+13. **AUTOMATICALLY** when ALL tasks are completed:
+   - **MANDATORY FIRST**: Run all tests: `npm run test:electron -- tests/integration/`
+   - **MANDATORY**: Verify ALL tests pass - NO EXCEPTIONS
+   - **MANDATORY**: Verify no test regressions - existing tests must still pass
+   - **ONLY IF ALL TESTS PASS**: Update `spec.md` header: `**Status**: in-progress` → `**Status**: completed`
+   - **ONLY IF ALL TESTS PASS**: Update `plan.md` header: `**Status**: in-progress` → `**Status**: completed`
+   - **ONLY IF ALL TESTS PASS**: Update `tasks.md` header: `**Status**: in-progress` → `**Status**: completed`
+   - **ONLY IF ALL TESTS PASS**: Update `plan-timeline.md`: Mark related phase items as `[x]` completed
+   - **ONLY IF ALL TESTS PASS**: Run `./scripts/update-feature-index.sh` to refresh the index
+   - **IF TESTS FAIL**: Fix tests or implementation, re-run tests, DO NOT mark as complete until all pass
+14. **ALWAYS** reference the spec when making implementation decisions
+15. **ALWAYS** create tests as specified in `plan.md` and `tasks.md`
+16. **ALWAYS** verify test coverage matches acceptance criteria in `spec.md`
+17. **NEVER** mark a task as `completed` without running and passing tests
+18. **NEVER** mark a feature as `completed` without running and passing tests
+19. **NEVER** update status to `completed` if tests fail - fix them first
 
 ## Code Reuse & Existing Components
 
@@ -267,13 +281,17 @@ specs/bug-001-collection-crash/
 
 ### During Implementation
 - **When you start working on a feature**: Automatically update status headers in `spec.md`, `plan.md`, and `tasks.md` from `planned` to `in-progress`
-- **When you complete a task**: Update task status in `tasks.md` from `pending`/`in-progress` to `completed`
+- **When you complete a task**: **FIRST run tests**, verify they pass, **THEN** update task status in `tasks.md` from `pending`/`in-progress` to `completed`
 - **When ALL tasks are completed**: 
-  1. Update all status headers (`spec.md`, `plan.md`, `tasks.md`) from `in-progress` to `completed`
-  2. Update `plan-timeline.md`: Find the phase mentioned in spec.md `Phase` field and mark related items as `[x]`
-  3. Update phase completion percentage in `plan-timeline.md` if applicable
-  4. Update overall project progress percentage in `plan-timeline.md`
-  5. Run `./scripts/update-feature-index.sh` to update `specs/README.md`
+  1. **MANDATORY FIRST**: Run all tests: `npm run test:electron -- tests/integration/`
+  2. **MANDATORY**: Verify ALL tests pass - NO EXCEPTIONS
+  3. **MANDATORY**: Verify no test regressions - existing tests must still pass
+  4. **ONLY IF ALL TESTS PASS**: Update all status headers (`spec.md`, `plan.md`, `tasks.md`) from `in-progress` to `completed`
+  5. **ONLY IF ALL TESTS PASS**: Update `plan-timeline.md`: Find the phase mentioned in spec.md `Phase` field and mark related items as `[x]`
+  6. **ONLY IF ALL TESTS PASS**: Update phase completion percentage in `plan-timeline.md` if applicable
+  7. **ONLY IF ALL TESTS PASS**: Update overall project progress percentage in `plan-timeline.md`
+  8. **ONLY IF ALL TESTS PASS**: Run `./scripts/update-feature-index.sh` to update `specs/README.md`
+  9. **IF TESTS FAIL**: Fix tests or implementation, re-run tests, DO NOT mark as complete until all pass
 
 ### Status Update Pattern
 ```markdown
