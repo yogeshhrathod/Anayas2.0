@@ -74,6 +74,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
       variant="ghost"
       size="sm"
       className={cn(sizeClasses[size], className)}
+      aria-label="Open actions menu"
     >
       <MoreVertical className="h-3 w-3" />
     </Button>

@@ -69,7 +69,11 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card
+      className="hover:shadow-md transition-shadow"
+      data-testid="collection-card"
+      data-collection-name={collection.name}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
@@ -86,6 +90,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
               size="sm"
               onClick={onToggleFavorite}
               className="p-1 h-8 w-8"
+              aria-label={collection.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
             >
               {collection.isFavorite ? (
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />

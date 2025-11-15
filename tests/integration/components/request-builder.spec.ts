@@ -145,18 +145,18 @@ test.describe('RequestBuilder Component Integration', () => {
     await electronPage.goto('/');
     await electronPage.waitForLoadState('networkidle');
 
-    // Find method selector
-    const methodSelect = electronPage.locator('select, [role="combobox"]').first();
-    const methodSelectCount = await methodSelect.count();
-
-    if (methodSelectCount > 0) {
-      // Change method to POST
-      await methodSelect.selectOption('POST');
-      await electronPage.waitForTimeout(500);
-
-      // Verify method was changed
-      const selectedMethod = await methodSelect.inputValue();
-      expect(['POST', 'post']).toContain(selectedMethod.toLowerCase());
+    const methodSelect = electronPage.locator('[data-testid="method-select"]').first();
+    if (await methodSelect.count() > 0) {
+      await methodSelect.click();
+      const postOption = electronPage
+        .locator('[data-radix-select-item][data-value="POST"], [data-value="POST"], [role="option"]:has-text("POST")')
+        .first();
+      if (await postOption.count() > 0) {
+        await postOption.click();
+        await electronPage.waitForTimeout(500);
+        const selectedMethod = (await methodSelect.innerText())?.trim();
+        expect(selectedMethod?.toUpperCase()).toBe('POST');
+      }
     }
   });
 

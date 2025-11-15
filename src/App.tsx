@@ -446,9 +446,10 @@ function App() {
         {/* Sidebar */}
         <div
           className={cn(
-            "flex flex-col border-r bg-card",
+            "app-sidebar flex flex-col border-r bg-card",
             !isResizing && "transition-all duration-300"
           )}
+          data-testid="app-sidebar"
           style={{ width: sidebarOpen ? `${sidebarWidth}px` : '64px' }}
         >
           {/* Header */}
@@ -475,16 +476,21 @@ function App() {
                 }
               }}
               className="rounded-md p-2 hover:bg-accent transition-colors"
+              aria-label="Toggle sidebar"
+              aria-expanded={sidebarOpen}
             >
               <Menu className="h-5 w-5" />
             </button>
           </div>
 
           {/* Navigation */}
-          <nav className={cn(
+          <nav
+            className={cn(
             "flex-1 flex flex-col",
             sidebarOpen ? "p-1.5" : "p-1"
-          )}>
+            )}
+            aria-label="Sidebar navigation"
+          >
             {/* Collections Section - Contains Unsaved + Collections */}
             {sidebarOpen && (
               <div className="flex-1 flex flex-col overflow-hidden">

@@ -38,6 +38,12 @@ import { parseCurlCommand, parseCurlCommands } from '../lib/curl-parser';
 import { generateCurlCommand } from '../lib/curl-generator';
 import fs from 'fs';
 
+const broadcast = (channel: string, payload?: any) => {
+  BrowserWindow.getAllWindows().forEach((window) => {
+    window.webContents.send(channel, payload);
+  });
+};
+
 export function registerIpcHandlers() {
 
   // Environment operations
@@ -157,6 +163,7 @@ export function registerIpcHandlers() {
         activeEnvironmentId: collection.activeEnvironmentId,
         isFavorite: collection.isFavorite ? 1 : 0,
       });
+      broadcast('collections:updated');
       return { success: true, id: collection.id };
     } else {
       const id = addCollection({
@@ -167,12 +174,15 @@ export function registerIpcHandlers() {
         activeEnvironmentId: collection.activeEnvironmentId,
         isFavorite: collection.isFavorite ? 1 : 0,
       });
+      broadcast('collections:updated');
       return { success: true, id };
     }
   });
 
   ipcMain.handle('collection:delete', async (_, id) => {
     deleteCollection(id);
+    broadcast('collections:updated');
+    broadcast('requests:updated');
     return { success: true };
   });
 
@@ -183,6 +193,7 @@ export function registerIpcHandlers() {
       collection.isFavorite = collection.isFavorite ? 0 : 1;
       saveDatabase();
     }
+    broadcast('collections:updated');
     return { success: true };
   });
 
@@ -211,8 +222,8 @@ export function registerIpcHandlers() {
     }
     
     saveDatabase();
-    // Return updated collection
     const updatedCollection = db.collections.find(c => c.id === collectionId);
+    broadcast('collections:updated');
     return { success: true, id: envId, collection: updatedCollection };
   });
 
@@ -230,8 +241,8 @@ export function registerIpcHandlers() {
     
     Object.assign(env, updates);
     saveDatabase();
-    // Return updated collection
     const updatedCollection = db.collections.find(c => c.id === collectionId);
+    broadcast('collections:updated');
     return { success: true, collection: updatedCollection };
   });
 
@@ -252,8 +263,8 @@ export function registerIpcHandlers() {
     }
     
     saveDatabase();
-    // Return updated collection
     const updatedCollection = db.collections.find(c => c.id === collectionId);
+    broadcast('collections:updated');
     return { success: true, collection: updatedCollection };
   });
 
@@ -272,8 +283,8 @@ export function registerIpcHandlers() {
     
     collection.activeEnvironmentId = environmentId;
     saveDatabase();
-    // Return updated collection
     const updatedCollection = db.collections.find(c => c.id === collectionId);
+    broadcast('collections:updated');
     return { success: true, collection: updatedCollection };
   });
 
@@ -290,6 +301,7 @@ export function registerIpcHandlers() {
         description: folder.description,
         collectionId: folder.collectionId,
       });
+      broadcast('folders:updated');
       return { success: true, id: folder.id };
     } else {
       const id = addFolder({
@@ -297,12 +309,14 @@ export function registerIpcHandlers() {
         description: folder.description,
         collectionId: folder.collectionId,
       });
+      broadcast('folders:updated');
       return { success: true, id };
     }
   });
 
   ipcMain.handle('folder:delete', async (_, id) => {
     deleteFolder(id);
+    broadcast('folders:updated');
     return { success: true };
   });
 
@@ -345,6 +359,7 @@ export function registerIpcHandlers() {
         isFavorite: request.isFavorite ? 1 : 0,
         order: request.order,
       });
+      broadcast('requests:updated');
       return { success: true, id: request.id };
     } else {
       const id = addRequest({
@@ -360,6 +375,7 @@ export function registerIpcHandlers() {
         isFavorite: request.isFavorite ? 1 : 0,
         order: request.order,
       });
+      broadcast('requests:updated');
       return { success: true, id };
     }
   });
@@ -377,11 +393,13 @@ export function registerIpcHandlers() {
       folderId: request.folderId || null,
       isFavorite: request.isFavorite ? 1 : 0,
     }, afterRequestId);
+    broadcast('requests:updated');
     return { success: true, id };
   });
 
   ipcMain.handle('request:delete', async (_, id) => {
     deleteRequest(id);
+    broadcast('requests:updated');
     return { success: true };
   });
 

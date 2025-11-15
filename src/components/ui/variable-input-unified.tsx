@@ -385,7 +385,9 @@ export function VariableInputUnified({
             }
           }
         }}
-        placeholder={!value && placeholder ? placeholder : ''}
+        // Keep placeholder attribute for accessibility and testing, but rely on
+        // overlay + CSS to control visual appearance.
+        placeholder={placeholder}
         disabled={disabled}
         style={{
           ...SHARED_STYLES,
@@ -411,6 +413,7 @@ export function VariableInputUnified({
           MozOsxFontSmoothing: 'grayscale',
         }}
         className="placeholder:text-transparent"
+        data-testid="variable-input"
       />
 
       {/* Autocomplete */}

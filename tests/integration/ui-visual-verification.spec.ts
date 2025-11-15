@@ -82,7 +82,7 @@ test.describe('UI Visual Verification', () => {
     console.log('Collection visible in UI:', collectionInUI);
     
     // Step 7: Verify collection card is actually rendered in DOM
-    const collectionCard = electronPage.locator('text=Visual Test Collection');
+    const collectionCard = electronPage.locator('h3:has-text("Visual Test Collection")').first();
     await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
     const cardBoundingBox = await collectionCard.boundingBox();
     expect(cardBoundingBox).toBeTruthy();

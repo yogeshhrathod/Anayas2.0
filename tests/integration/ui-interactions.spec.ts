@@ -372,13 +372,10 @@ test.describe('UI Interaction Tests', () => {
       await electronPage.waitForTimeout(1000);
 
       // Find the collection card
-      const collectionCard = electronPage.locator(`text=Collection To Edit`).first();
+      const collectionCard = electronPage.locator('[data-testid="collection-card"][data-collection-name="Collection To Edit"]').first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
-      // Find action menu button near the collection card (MoreVertical icon button)
-      // The ActionMenu is typically in the same card/container as the collection name
-      const cardContainer = collectionCard.locator('..').first(); // Get parent container
-      const actionMenuButton = cardContainer.locator('button:has(svg)').last(); // Last button with SVG (usually the menu)
+      const actionMenuButton = collectionCard.locator('button[aria-label="Open actions menu"]').first();
       
       // Alternative: find all buttons with SVG and click the one that opens a menu
       let menuOpened = false;
@@ -390,7 +387,8 @@ test.describe('UI Interaction Tests', () => {
           const dropdownVisible = await electronPage.locator('[role="menu"]').count() > 0;
           if (dropdownVisible) {
             menuOpened = true;
-            await electronPage.click('text=Edit');
+            const dropdown = electronPage.locator('[role="menu"]').last();
+            await dropdown.locator('text=Edit').click();
             await electronPage.waitForTimeout(1000);
           }
         } catch {
@@ -461,19 +459,20 @@ test.describe('UI Interaction Tests', () => {
       await electronPage.waitForTimeout(1000);
 
       // Find collection card
-      const collectionCard = electronPage.locator('text=Collection To Duplicate').first();
+      const collectionCard = electronPage
+        .locator('[data-testid="collection-card"][data-collection-name="Collection To Duplicate"]')
+        .first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
-      // Find action menu button near the collection card
-      const cardContainer = collectionCard.locator('..').first();
-      const actionMenuButton = cardContainer.locator('button:has(svg)').last();
+      const actionMenuButton = collectionCard.locator('button[aria-label="Open actions menu"]').first();
       
       if (await actionMenuButton.count() > 0) {
         await actionMenuButton.click();
         await electronPage.waitForTimeout(800);
         // Wait for dropdown menu to appear
-        await electronPage.waitForSelector('[role="menu"]', { timeout: 2000 }).catch(() => {});
-        await electronPage.click('text=Duplicate');
+        const dropdown = electronPage.locator('[role="menu"]').last();
+        await dropdown.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+        await dropdown.locator('text=Duplicate').first().click();
         await electronPage.waitForTimeout(1000);
       }
 
@@ -506,7 +505,7 @@ test.describe('UI Interaction Tests', () => {
       await electronPage.waitForTimeout(1000);
 
       // Find collection and click favorite button (star icon)
-      const collectionCard = electronPage.locator('text=Favorite Test Collection').first();
+      const collectionCard = electronPage.locator('[data-testid="collection-card"][data-collection-name="Favorite Test Collection"]').first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
       // Look for star/favorite button
@@ -550,19 +549,25 @@ test.describe('UI Interaction Tests', () => {
       await electronPage.waitForTimeout(1000);
 
       // Find collection card
-      const collectionCard = electronPage.locator('text=Collection To Delete').first();
+      const collectionCard = electronPage
+        .locator('[data-testid="collection-card"][data-collection-name="Collection To Delete"]')
+        .first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
-      // Find action menu button near the collection card
-      const cardContainer = collectionCard.locator('..').first();
-      const actionMenuButton = cardContainer.locator('button:has(svg)').last();
+      const actionMenuButton = collectionCard.locator('button[aria-label="Open actions menu"]').first();
       
       if (await actionMenuButton.count() > 0) {
+        // Auto-accept native confirm dialog triggered by useConfirmation
+        electronPage.once('dialog', async (dialog) => {
+          await dialog.accept();
+        });
+
         await actionMenuButton.click();
         await electronPage.waitForTimeout(800);
         // Wait for dropdown menu to appear
-        await electronPage.waitForSelector('[role="menu"]', { timeout: 2000 }).catch(() => {});
-        await electronPage.click('text=Delete');
+        const dropdown = electronPage.locator('[role="menu"]').last();
+        await dropdown.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+        await dropdown.locator('text=Delete').first().click();
         await electronPage.waitForTimeout(1000);
       }
 
@@ -598,19 +603,25 @@ test.describe('UI Interaction Tests', () => {
       await electronPage.waitForTimeout(1000);
 
       // Find collection card
-      const collectionCard = electronPage.locator('text=Collection To Keep').first();
+      const collectionCard = electronPage
+        .locator('[data-testid="collection-card"][data-collection-name="Collection To Keep"]')
+        .first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
-      // Find action menu button near the collection card
-      const cardContainer = collectionCard.locator('..').first();
-      const actionMenuButton = cardContainer.locator('button:has(svg)').last();
+      const actionMenuButton = collectionCard.locator('button[aria-label="Open actions menu"]').first();
       
       if (await actionMenuButton.count() > 0) {
+        // Auto-dismiss native confirm dialog triggered by useConfirmation
+        electronPage.once('dialog', async (dialog) => {
+          await dialog.dismiss();
+        });
+
         await actionMenuButton.click();
         await electronPage.waitForTimeout(800);
         // Wait for dropdown menu to appear
-        await electronPage.waitForSelector('[role="menu"]', { timeout: 2000 }).catch(() => {});
-        await electronPage.click('text=Delete');
+        const dropdown = electronPage.locator('[role="menu"]').last();
+        await dropdown.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+        await dropdown.locator('text=Delete').first().click();
         await electronPage.waitForTimeout(1000);
       }
 
@@ -667,20 +678,18 @@ test.describe('UI Interaction Tests', () => {
       await electronPage.waitForTimeout(1000);
 
       // Find collection and click Run button
-      const collectionCard = electronPage.locator('text=Collection To Run').first();
+      const collectionCard = electronPage
+        .locator('[data-testid="collection-card"][data-collection-name="Collection To Run"]')
+        .first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
-      // Look for Run button or action menu
-      const runButton = electronPage.locator('button:has-text("Run"), button[aria-label*="Run"], button[title*="Run"]').first();
-      const actionMenu = electronPage.locator('button[aria-label*="menu"], button[aria-label*="actions"]').first();
-
-      if (await runButton.count() > 0) {
-        await runButton.click();
-        await electronPage.waitForTimeout(2000);
-      } else if (await actionMenu.count() > 0) {
+      // Open the action menu on the collection card
+      const actionMenu = collectionCard.locator('button[aria-label="Open actions menu"]').first();
+      if (await actionMenu.count() > 0) {
         await actionMenu.click();
         await electronPage.waitForTimeout(500);
-        await electronPage.click('text=Run');
+        const dropdown = electronPage.locator('[role="menu"]').last();
+        await dropdown.locator('text=Run Collection').first().click();
         await electronPage.waitForTimeout(2000);
       }
 

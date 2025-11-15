@@ -27,13 +27,8 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     await electronPage.waitForLoadState('networkidle');
     await electronPage.waitForTimeout(1000);
 
-    // Verify environment switcher is visible
-    // EnvironmentSwitcher typically shows current environment
-    const envSwitcher = electronPage.locator('text=Environment, [class*="environment"], button:has-text("Environment")');
-    const envSwitcherCount = await envSwitcher.count();
-    
-    // Environment switcher should be visible on non-home pages
-    expect(envSwitcherCount).toBeGreaterThan(0);
+    const envSwitcher = electronPage.locator('[data-testid="environment-switcher"]');
+    await expect(envSwitcher).toBeVisible();
   });
 
   test('should switch global environment', async ({ electronPage, testDbPath }) => {
@@ -65,10 +60,8 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     await electronPage.waitForTimeout(1000);
 
     // Find and click environment switcher
-    const envSwitcher = electronPage.locator('button:has-text("Environment"), [class*="environment-selector"]').first();
-    const envSwitcherCount = await envSwitcher.count();
-
-    if (envSwitcherCount > 0) {
+    const envSwitcher = electronPage.locator('[data-testid="environment-switcher-trigger"]').first();
+    if (await envSwitcher.count() > 0) {
       await envSwitcher.click();
       await electronPage.waitForTimeout(500);
 
@@ -110,11 +103,10 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     await electronPage.waitForTimeout(1000);
 
     // Verify current environment is displayed
-    const currentEnvText = electronPage.locator('text=Current Environment, text=current-env');
-    const currentEnvVisible = await currentEnvText.isVisible({ timeout: 5000 });
-    
-    // Environment switcher should show current environment
-    expect(currentEnvVisible).toBe(true);
+    const currentEnvText = electronPage.locator('[data-testid="environment-switcher"] span', {
+      hasText: 'Current Environment'
+    });
+    await expect(currentEnvText).toBeVisible({ timeout: 5000 });
   });
 
   test('should handle collection environments', async ({ electronPage, testDbPath }) => {

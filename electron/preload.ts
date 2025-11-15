@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
 export interface Environment {
   id?: number;
@@ -90,6 +90,20 @@ export interface RequestPreset {
   };
 }
 
+const createIpcSubscription = (channel: string) => {
+  return (callback: (data?: any) => void) => {
+    const subscription = (_event: IpcRendererEvent, data: any) => callback(data);
+    ipcRenderer.on(channel, subscription);
+    return () => {
+      ipcRenderer.removeListener(channel, subscription);
+    };
+  };
+};
+
+const onCollectionsUpdated = createIpcSubscription('collections:updated');
+const onRequestsUpdated = createIpcSubscription('requests:updated');
+const onFoldersUpdated = createIpcSubscription('folders:updated');
+
 const api = {
   // Environment operations
   env: {
@@ -117,6 +131,7 @@ const api = {
     setActiveEnvironment: (collectionId: number, environmentId: number | null) => 
       ipcRenderer.invoke('collection:setActiveEnvironment', collectionId, environmentId),
     run: (collectionId: number) => ipcRenderer.invoke('collection:run', collectionId),
+    onUpdated: onCollectionsUpdated,
   },
 
   // Folder operations
@@ -124,6 +139,7 @@ const api = {
     list: (collectionId?: number) => ipcRenderer.invoke('folder:list', collectionId),
     save: (folder: Folder) => ipcRenderer.invoke('folder:save', folder),
     delete: (id: number) => ipcRenderer.invoke('folder:delete', id),
+    onUpdated: onFoldersUpdated,
   },
 
   // Request operations
@@ -135,6 +151,7 @@ const api = {
     send: (options: RequestOptions) => ipcRenderer.invoke('request:send', options),
     history: (limit?: number) => ipcRenderer.invoke('request:history', limit),
     deleteHistory: (id: number) => ipcRenderer.invoke('request:deleteHistory', id),
+    onUpdated: onRequestsUpdated,
   },
 
   // Unsaved Request operations

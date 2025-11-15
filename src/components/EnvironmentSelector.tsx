@@ -76,11 +76,15 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
   useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
 
   return (
-    <div ref={dropdownRef} className={cn("relative", className)}>
+    <div ref={dropdownRef} className={cn("relative", className)} data-testid="environment-switcher">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent/50 hover:scale-[1.02] transition-all duration-200"
         title="Switch environment"
+        aria-label="Environment switcher"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        data-testid="environment-switcher-trigger"
       >
         <Globe className="h-4 w-4" />
         <span>{getDisplayText()}</span>
@@ -88,7 +92,10 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-popover mt-2 w-80 rounded-md border bg-popover p-2 shadow-lg">
+        <div
+          className="absolute right-0 top-full z-popover mt-2 w-80 rounded-md border bg-popover p-2 shadow-lg"
+          role="listbox"
+        >
             {currentCollection && collectionEnvironments.length > 0 && (
               <div className="mb-3">
                 <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">

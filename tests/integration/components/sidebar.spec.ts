@@ -7,11 +7,8 @@ test.describe('Sidebar Component Integration', () => {
 
     // Verify sidebar is visible
     // Sidebar typically contains navigation items
-    const sidebar = electronPage.locator('[class*="sidebar"], [class*="nav"], aside');
-    const sidebarCount = await sidebar.count();
-    
-    // Sidebar should be present
-    expect(sidebarCount).toBeGreaterThan(0);
+    const sidebar = electronPage.locator('[data-testid="app-sidebar"]');
+    await expect(sidebar).toBeVisible();
 
     // Verify navigation items are visible
     const homeNav = electronPage.locator('button:has-text("Home"), a:has-text("Home")');
@@ -71,11 +68,7 @@ test.describe('Sidebar Component Integration', () => {
     await electronPage.waitForTimeout(1000);
 
     // Verify active state (button might have active class or aria-current)
-    const activeNav = collectionsNav.locator('[aria-current="page"], [class*="active"]');
-    const activeCount = await activeNav.count();
-    
-    // Navigation should reflect active state
-    expect(activeCount).toBeGreaterThan(0);
+    await expect(collectionsNav).toHaveAttribute('aria-current', 'page');
   });
 
   test('should display collection hierarchy in sidebar', async ({ electronPage, testDbPath }) => {
@@ -133,7 +126,7 @@ test.describe('Sidebar Component Integration', () => {
 
     if (toggleCount > 0) {
       // Get initial sidebar state
-      const sidebar = electronPage.locator('[class*="sidebar"], aside').first();
+      const sidebar = electronPage.locator('[data-testid="app-sidebar"]').first();
       const initialWidth = await sidebar.evaluate((el) => (el as HTMLElement).offsetWidth);
 
       // Click toggle

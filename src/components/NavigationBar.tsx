@@ -164,7 +164,12 @@ export function NavigationBar() {
   };
 
   return (
-    <div className="flex h-11 items-center border-b border-border/50 bg-card/80 backdrop-blur-md px-4 select-none z-sticky">
+    <div
+      className="flex h-11 items-center border-b border-border/50 bg-card/80 backdrop-blur-md px-4 select-none z-sticky"
+      role="navigation"
+      aria-label="Application navigation"
+      data-testid="primary-navigation"
+    >
       {/* Primary Navigation (Left) */}
       <div className="flex items-center gap-2" style={{ WebkitAppRegion: "no-drag" } as any}>
         {primaryNavItems.map((item) => {
@@ -182,6 +187,8 @@ export function NavigationBar() {
                   : "hover:text-accent-foreground",
                 isCompact ? "w-8 px-0 flex items-center justify-center" : "px-3 flex items-center gap-2"
               )}
+              aria-current={isActive ? 'page' : undefined}
+              data-testid={`nav-${item.id}`}
             >
               <Icon className="h-4 w-4" />
               {!isCompact && <span>{item.label}</span>}
@@ -277,6 +284,8 @@ export function NavigationBar() {
                   : "text-muted-foreground hover:text-foreground"
               )}
               title={item.label}
+              aria-label={item.label}
+              data-testid={`nav-${item.id}`}
             >
               <Icon className="h-4 w-4" />
             </button>

@@ -894,6 +894,11 @@ async function setupMockElectronAPI(page: Page, testDbPath: string) {
   
   // Create the electronAPI object in the page context
   await page.addInitScript(() => {
+    // Simple in-page event subscriptions to simulate IPC push updates
+    const collectionUpdatedListeners: Array<() => void> = [];
+    const requestUpdatedListeners: Array<() => void> = [];
+    const folderUpdatedListeners: Array<() => void> = [];
+
     (window as any).electronAPI = {
       env: {
         list: () => (window as any).electronAPI_env_list(),
@@ -906,34 +911,107 @@ async function setupMockElectronAPI(page: Page, testDbPath: string) {
       },
       collection: {
         list: () => (window as any).electronAPI_collection_list(),
-        save: (collection: any) => (window as any).electronAPI_collection_save(collection),
-        delete: (id: number) => (window as any).electronAPI_collection_delete(id),
-        toggleFavorite: (id: number) => (window as any).electronAPI_collection_toggleFavorite(id),
+        save: async (collection: any) => {
+          const result = await (window as any).electronAPI_collection_save(collection);
+          collectionUpdatedListeners.forEach((cb) => cb());
+          return result;
+        },
+        delete: async (id: number) => {
+          const result = await (window as any).electronAPI_collection_delete(id);
+          collectionUpdatedListeners.forEach((cb) => cb());
+          folderUpdatedListeners.forEach((cb) => cb());
+          requestUpdatedListeners.forEach((cb) => cb());
+          return result;
+        },
+        toggleFavorite: async (id: number) => {
+          const result = await (window as any).electronAPI_collection_toggleFavorite(id);
+          collectionUpdatedListeners.forEach((cb) => cb());
+          return result;
+        },
         setActiveEnvironment: (collectionId: number, environmentId: number | null) => 
           (window as any).electronAPI_collection_setActiveEnvironment(collectionId, environmentId),
-        addEnvironment: (collectionId: number, environment: any) => 
-          (window as any).electronAPI_collection_addEnvironment(collectionId, environment),
-        updateEnvironment: (collectionId: number, environmentId: number, updates: any) => 
-          (window as any).electronAPI_collection_updateEnvironment(collectionId, environmentId, updates),
-        deleteEnvironment: (collectionId: number, environmentId: number) => 
-          (window as any).electronAPI_collection_deleteEnvironment(collectionId, environmentId),
+        addEnvironment: async (collectionId: number, environment: any) => {
+          const result = await (window as any).electronAPI_collection_addEnvironment(collectionId, environment);
+          collectionUpdatedListeners.forEach((cb) => cb());
+          return result;
+        },
+        updateEnvironment: async (collectionId: number, environmentId: number, updates: any) => {
+          const result = await (window as any).electronAPI_collection_updateEnvironment(
+            collectionId,
+            environmentId,
+            updates
+          );
+          collectionUpdatedListeners.forEach((cb) => cb());
+          return result;
+        },
+        deleteEnvironment: async (collectionId: number, environmentId: number) => {
+          const result = await (window as any).electronAPI_collection_deleteEnvironment(collectionId, environmentId);
+          collectionUpdatedListeners.forEach((cb) => cb());
+          return result;
+        },
         run: (collectionId: number) => (window as any).electronAPI_collection_run(collectionId),
+        onUpdated: (callback: () => void) => {
+          collectionUpdatedListeners.push(callback);
+          return () => {
+            const index = collectionUpdatedListeners.indexOf(callback);
+            if (index >= 0) {
+              collectionUpdatedListeners.splice(index, 1);
+            }
+          };
+        },
       },
       request: {
         list: (collectionId?: number, folderId?: number) => 
           (window as any).electronAPI_request_list(collectionId, folderId),
-        save: (request: any) => (window as any).electronAPI_request_save(request),
-        saveAfter: (request: any, afterRequestId: number) => 
-          (window as any).electronAPI_request_saveAfter(request, afterRequestId),
-        delete: (id: number) => (window as any).electronAPI_request_delete(id),
+        save: async (request: any) => {
+          const result = await (window as any).electronAPI_request_save(request);
+          requestUpdatedListeners.forEach((cb) => cb());
+          return result;
+        },
+        saveAfter: async (request: any, afterRequestId: number) => {
+          const result = await (window as any).electronAPI_request_saveAfter(request, afterRequestId);
+          requestUpdatedListeners.forEach((cb) => cb());
+          return result;
+        },
+        delete: async (id: number) => {
+          const result = await (window as any).electronAPI_request_delete(id);
+          requestUpdatedListeners.forEach((cb) => cb());
+          return result;
+        },
         send: (options: any) => (window as any).electronAPI_request_send(options),
         history: (limit?: number) => (window as any).electronAPI_request_history(limit),
         deleteHistory: (id: number) => (window as any).electronAPI_request_deleteHistory(id),
+        onUpdated: (callback: () => void) => {
+          requestUpdatedListeners.push(callback);
+          return () => {
+            const index = requestUpdatedListeners.indexOf(callback);
+            if (index >= 0) {
+              requestUpdatedListeners.splice(index, 1);
+            }
+          };
+        },
       },
       folder: {
         list: (collectionId?: number) => (window as any).electronAPI_folder_list(collectionId),
-        save: (folder: any) => (window as any).electronAPI_folder_save(folder),
-        delete: (id: number) => (window as any).electronAPI_folder_delete(id),
+        save: async (folder: any) => {
+          const result = await (window as any).electronAPI_folder_save(folder);
+          folderUpdatedListeners.forEach((cb) => cb());
+          return result;
+        },
+        delete: async (id: number) => {
+          const result = await (window as any).electronAPI_folder_delete(id);
+          folderUpdatedListeners.forEach((cb) => cb());
+          return result;
+        },
+        onUpdated: (callback: () => void) => {
+          folderUpdatedListeners.push(callback);
+          return () => {
+            const index = folderUpdatedListeners.indexOf(callback);
+            if (index >= 0) {
+              folderUpdatedListeners.splice(index, 1);
+            }
+          };
+        },
       },
       settings: {
         get: (key: string) => (window as any).electronAPI_settings_get(key),

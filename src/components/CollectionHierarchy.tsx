@@ -42,7 +42,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
   const [requests, setRequests] = useState<Request[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
 
-  // Load requests and folders when collections change
+  // Load requests and folders when collections change or refresh is triggered
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -58,6 +58,85 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     };
     loadData();
   }, [collections, sidebarRefreshTrigger]);
+
+  // Auto-expand collections when new ones appear
+  useEffect(() => {
+    if (!collections.length) {
+      return;
+    }
+    const newExpanded = new Set(expandedCollections);
+    let changed = false;
+    collections.forEach((collection) => {
+      if (collection.id && !newExpanded.has(collection.id)) {
+        newExpanded.add(collection.id);
+        changed = true;
+      }
+    });
+    if (changed) {
+      setExpandedCollections(newExpanded);
+    }
+  }, [collections, expandedCollections, setExpandedCollections]);
+
+  // Subscribe to collection/request/folder updates from the main process (if supported).
+  // In test environments, the mocked electronAPI does not provide these events, so we
+  // guard access to keep the UI rendering instead of crashing.
+  useEffect(() => {
+    const api: any = (window as any).electronAPI;
+    if (!api || !api.collection || !api.request || !api.folder) {
+      return;
+    }
+
+    const hasCollectionEvents = typeof api.collection.onUpdated === 'function';
+    const hasRequestEvents = typeof api.request.onUpdated === 'function';
+    const hasFolderEvents = typeof api.folder.onUpdated === 'function';
+
+    if (!hasCollectionEvents && !hasRequestEvents && !hasFolderEvents) {
+      return;
+    }
+
+    const handleCollectionsUpdated = async () => {
+      try {
+        const latestCollections = await api.collection.list();
+        setCollections(latestCollections);
+      } catch (error) {
+        console.error('Failed to refresh collections:', error);
+      }
+    };
+
+    const handleRequestsUpdated = async () => {
+      try {
+        const latestRequests = await api.request.list();
+        setRequests(latestRequests);
+      } catch (error) {
+        console.error('Failed to refresh requests:', error);
+      }
+    };
+
+    const handleFoldersUpdated = async () => {
+      try {
+        const latestFolders = await api.folder.list();
+        setFolders(latestFolders);
+      } catch (error) {
+        console.error('Failed to refresh folders:', error);
+      }
+    };
+
+    const unsubscribeCollections = hasCollectionEvents
+      ? api.collection.onUpdated(handleCollectionsUpdated)
+      : undefined;
+    const unsubscribeRequests = hasRequestEvents
+      ? api.request.onUpdated(handleRequestsUpdated)
+      : undefined;
+    const unsubscribeFolders = hasFolderEvents
+      ? api.folder.onUpdated(handleFoldersUpdated)
+      : undefined;
+
+    return () => {
+      unsubscribeCollections?.();
+      unsubscribeRequests?.();
+      unsubscribeFolders?.();
+    };
+  }, [setCollections]);
 
   // Handle drop on collection (including unsaved requests)
   const handleCollectionDrop = async (e: React.DragEvent, collectionId: number) => {
@@ -364,6 +443,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
   return (
     <div 
       className="space-y-1"
+      data-testid="collection-hierarchy"
       onFocus={() => setFocusedContext('sidebar')}
       onBlur={() => setFocusedContext(null)}
     >

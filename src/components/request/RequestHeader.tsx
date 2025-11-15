@@ -171,7 +171,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
             value={requestData.method} 
             onValueChange={(value) => setRequestData({ ...requestData, method: value as RequestFormData['method'] })}
           >
-            <SelectTrigger className="w-24">
+            <SelectTrigger className="w-24" data-testid="method-select" aria-label="HTTP method select">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
