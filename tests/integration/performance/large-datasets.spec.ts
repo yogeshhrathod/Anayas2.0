@@ -187,5 +187,56 @@ test.describe('Performance: Large Datasets', () => {
     const collectionVisible = await electronPage.locator('text=Render Test Collection').first().isVisible({ timeout: 5000 });
     expect(collectionVisible).toBe(true);
   });
+
+  test('should allow scrolling collections in sidebar with many collections', async ({ electronPage }) => {
+    // GIVEN: Many collections created in the database
+    await electronPage.evaluate(async (count) => {
+      const promises = [];
+      for (let i = 0; i < count; i++) {
+        promises.push(
+          window.electronAPI.collection.save({
+            name: `Sidebar Scroll Collection ${i}`,
+            description: `Sidebar scroll test ${i}`,
+            documentation: '',
+            environments: [],
+            activeEnvironmentId: null,
+            isFavorite: false,
+          })
+        );
+      }
+      await Promise.all(promises);
+    }, 50);
+
+    // WHEN: Navigating to home so the sidebar is visible
+    await electronPage.goto('/');
+    await electronPage.waitForLoadState('networkidle');
+    await electronPage.waitForTimeout(1500);
+
+    // THEN: The sidebar collections container should be scrollable
+    const scrollable = await electronPage.evaluate(() => {
+      const el = document.querySelector(
+        '[data-testid="sidebar-collections-scroll-container"]'
+      ) as HTMLElement | null;
+      if (!el) return false;
+      return el.scrollHeight > el.clientHeight;
+    });
+    expect(scrollable).toBe(true);
+
+    // WHEN: Scrolling to the bottom of the sidebar collections list
+    await electronPage.evaluate(() => {
+      const el = document.querySelector(
+        '[data-testid="sidebar-collections-scroll-container"]'
+      ) as HTMLElement | null;
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+    await electronPage.waitForTimeout(1000);
+
+    // THEN: A collection near the end of the list should be visible
+    const lastCollection = electronPage.locator('text=Sidebar Scroll Collection 49').first();
+    const lastVisible = await lastCollection.isVisible({ timeout: 5000 });
+    expect(lastVisible).toBe(true);
+  });
 });
 

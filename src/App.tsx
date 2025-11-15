@@ -446,7 +446,7 @@ function App() {
         {/* Sidebar */}
         <div
           className={cn(
-            "app-sidebar flex flex-col border-r bg-card",
+            "app-sidebar flex flex-col border-r bg-card min-h-0",
             !isResizing && "transition-all duration-300"
           )}
           data-testid="app-sidebar"
@@ -486,14 +486,14 @@ function App() {
           {/* Navigation */}
           <nav
             className={cn(
-            "flex-1 flex flex-col",
-            sidebarOpen ? "p-1.5" : "p-1"
+              "flex-1 flex flex-col min-h-0",
+              sidebarOpen ? "p-1.5" : "p-1"
             )}
             aria-label="Sidebar navigation"
           >
             {/* Collections Section - Contains Unsaved + Collections */}
             {sidebarOpen && (
-              <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 flex flex-col overflow-hidden min-h-0">
                 {/* Unsaved Requests Section - Only render if there are unsaved requests */}
                 {unsavedRequests.length > 0 && (
                   <>
@@ -519,7 +519,10 @@ function App() {
                 )}
 
                 {/* Collections Section - Takes Remaining Space */}
-                <div className="flex-1 overflow-y-auto min-h-0">
+                <div
+                  className="flex-1 overflow-y-auto min-h-0"
+                  data-testid="sidebar-collections-scroll-container"
+                >
                   <CollectionHierarchy 
                     onRequestSelect={async (request: Request) => {
                       setCurrentPage('home');

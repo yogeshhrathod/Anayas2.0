@@ -18,6 +18,7 @@ test.describe('CollectionHierarchy Component Integration', () => {
     // Navigate to home page where CollectionHierarchy is displayed
     await electronPage.goto('/');
     await electronPage.waitForLoadState('networkidle');
+    await electronPage.waitForTimeout(2000); // Wait for collections and requests to load
 
     // Verify collection hierarchy component is rendered
     // CollectionHierarchy typically renders collections in the sidebar
@@ -26,7 +27,7 @@ test.describe('CollectionHierarchy Component Integration', () => {
   });
 
   test('should expand and collapse collection', async ({ electronPage, testDbPath }) => {
-    // Create collection with requests
+    // GIVEN: A collection with at least one request
     const setup = await electronPage.evaluate(async () => {
       const collection = await window.electronAPI.collection.save({
         name: 'Expandable Collection',
@@ -54,26 +55,44 @@ test.describe('CollectionHierarchy Component Integration', () => {
       return { collectionId: collection.id };
     });
 
+    // WHEN: Navigating to the home page where the sidebar is visible
     await electronPage.goto('/');
     await electronPage.waitForLoadState('networkidle');
+    await electronPage.waitForTimeout(2000); // Wait for collections and requests to load
 
-    // Find and click collection to expand
-    const collectionElement = electronPage.locator('text=Expandable Collection');
-    await collectionElement.waitFor({ state: 'visible', timeout: 5000 });
-    
-    // Click to expand (if there's a chevron or expand button)
-    const expandButton = collectionElement.locator('..').locator('button, [role="button"]').first();
-    const expandButtonCount = await expandButton.count();
-    
-    if (expandButtonCount > 0) {
-      await expandButton.click();
-      await electronPage.waitForTimeout(500);
-    }
+    // WHEN: Locating the collection group in the sidebar
+    const collectionGroup = electronPage
+      .locator('[data-testid=\"collection-group\"][data-collection-name=\"Expandable Collection\"]')
+      .first();
+    await collectionGroup.waitFor({ state: 'visible', timeout: 5000 });
 
-    // Verify request is visible when expanded
-    const requestVisible = await electronPage.locator('text=Test Request').isVisible({ timeout: 2000 });
-    // Note: This may not always be true depending on UI implementation
-    // The test verifies the component responds to expand/collapse
+    // Capture initial expanded/collapsed state via presence of children container
+    const initialChildrenCount = await collectionGroup
+      .locator('[data-testid=\"collection-children\"]')
+      .count();
+
+    // WHEN: Clicking the collection to toggle its state
+    const collectionElement = electronPage.locator('text=Expandable Collection').first();
+    await collectionElement.click();
+    await electronPage.waitForTimeout(1000);
+
+    const afterFirstClickChildrenCount = await collectionGroup
+      .locator('[data-testid=\"collection-children\"]')
+      .count();
+
+    // THEN: Children visibility should change after first click (expanded → collapsed or vice versa)
+    expect(afterFirstClickChildrenCount).not.toBe(initialChildrenCount);
+
+    // WHEN: Clicking again to toggle back
+    await collectionElement.click();
+    await electronPage.waitForTimeout(1000);
+
+    const afterSecondClickChildrenCount = await collectionGroup
+      .locator('[data-testid=\"collection-children\"]')
+      .count();
+
+    // THEN: Children visibility should return to the initial state
+    expect(afterSecondClickChildrenCount).toBe(initialChildrenCount);
   });
 
   test('should select request when clicked', async ({ electronPage, testDbPath }) => {

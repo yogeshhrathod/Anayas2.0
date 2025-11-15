@@ -11,7 +11,7 @@
  * This refactored version is much smaller and more maintainable than the original.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { useCollectionDragDrop } from '../hooks/useCollectionDragDrop';
 import { useToastNotifications } from '../hooks/useToastNotifications';
@@ -41,6 +41,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
   const { showSuccess, showError } = useToastNotifications();
   const [requests, setRequests] = useState<Request[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
+  const prevCollectionIdsRef = useRef<Set<number>>(new Set());
 
   // Load requests and folders when collections change or refresh is triggered
   useEffect(() => {
@@ -59,22 +60,44 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     loadData();
   }, [collections, sidebarRefreshTrigger]);
 
-  // Auto-expand collections when new ones appear
+  // Auto-expand collections when new ones appear, but preserve manual collapse.
   useEffect(() => {
     if (!collections.length) {
+      // If there are no collections, reset the previously seen IDs.
+      prevCollectionIdsRef.current = new Set();
       return;
     }
+
+    const prevIds = prevCollectionIdsRef.current;
+    const currentIds = new Set<number>();
+
+    collections.forEach((collection) => {
+      if (typeof collection.id === 'number') {
+        currentIds.add(collection.id);
+      }
+    });
+
+    // Only auto-expand collections that are newly added (not present in prevIds).
     const newExpanded = new Set(expandedCollections);
     let changed = false;
+
     collections.forEach((collection) => {
-      if (collection.id && !newExpanded.has(collection.id)) {
+      if (
+        typeof collection.id === 'number' &&
+        !prevIds.has(collection.id) &&
+        !newExpanded.has(collection.id)
+      ) {
         newExpanded.add(collection.id);
         changed = true;
       }
     });
+
     if (changed) {
       setExpandedCollections(newExpanded);
     }
+
+    // Update previously seen IDs for the next run.
+    prevCollectionIdsRef.current = currentIds;
   }, [collections, expandedCollections, setExpandedCollections]);
 
   // Subscribe to collection/request/folder updates from the main process (if supported).
@@ -455,7 +478,12 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
           collectionFolders.reduce((sum, folder) => sum + getRequestsForFolder(folder.id!).length, 0);
 
         return (
-          <div key={collection.id}>
+          <div
+            key={collection.id}
+            data-testid="collection-group"
+            data-collection-id={collection.id}
+            data-collection-name={collection.name}
+          >
             <CollectionItem
               collection={collection}
               isExpanded={isExpanded}
@@ -495,7 +523,10 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
 
             {/* Expanded Content */}
             {isExpanded && (
-              <div className="ml-4 space-y-1">
+              <div
+                className="ml-4 space-y-1"
+                data-testid="collection-children"
+              >
                 {/* Folders */}
                 {collectionFolders.map((folder) => {
                   const folderRequests = getRequestsForFolder(folder.id!);

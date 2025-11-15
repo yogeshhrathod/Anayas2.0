@@ -790,7 +790,7 @@ test.describe('UI Interaction Tests', () => {
     });
 
     test('should expand and collapse collection in sidebar', async ({ electronPage }) => {
-      // Create a collection with requests
+      // GIVEN: A collection with a request rendered in the sidebar
       await electronPage.evaluate(async () => {
         const collection = await (window as any).electronAPI.collection.save({
           name: 'Expandable Collection',
@@ -810,47 +810,62 @@ test.describe('UI Interaction Tests', () => {
         });
       });
 
-      // Navigate to home page to see sidebar
+      // WHEN: Navigating to the home page to see the sidebar
       await electronPage.click('text=Home');
       await electronPage.waitForLoadState('networkidle');
       await electronPage.waitForTimeout(2000); // Wait longer for sidebar to load
 
-      // Trigger sidebar refresh to ensure collections are visible
-      await electronPage.evaluate(() => {
-        // Try to trigger sidebar refresh if available
-        if ((window as any).electronAPI) {
-          // Sidebar should auto-refresh, but wait a bit
-        }
-      });
-      await electronPage.waitForTimeout(1000);
-
-      // Find collection in sidebar - might be in a collapsible section
-      const collectionItem = electronPage.locator('text=Expandable Collection').first();
-      // Increase timeout and try to find it
+      // WHEN: Finding the collection group in the sidebar
+      const collectionGroup = electronPage
+        .locator('[data-testid="collection-group"][data-collection-name="Expandable Collection"]')
+        .first();
       try {
-        await collectionItem.waitFor({ state: 'visible', timeout: 10000 });
+        await collectionGroup.waitFor({ state: 'visible', timeout: 10000 });
       } catch {
-        // If not found, the sidebar might need to be refreshed or collection might not be visible
-        // This is acceptable - the test verifies the expand/collapse functionality exists
+        // If not found, the sidebar might not have rendered collections yet.
         return;
       }
 
-      // Click to expand (might be a chevron or the collection name itself)
-      const expandButton = electronPage.locator('button[aria-label*="expand"], svg[class*="chevron"]').first();
-      if (await expandButton.count() > 0) {
-        await expandButton.click();
-        await electronPage.waitForTimeout(500);
-      } else {
-        // Try clicking the collection name
-        await collectionItem.click();
-        await electronPage.waitForTimeout(500);
-      }
+      // Capture initial expanded/collapsed state via presence of children container
+      const initialChildrenCount = await collectionGroup
+        .locator('[data-testid="collection-children"]')
+        .count();
 
-      // Verify request is visible (expanded)
-      const requestVisible = await electronPage.evaluate(() => {
-        return document.body.textContent?.includes('Request in Collection') || false;
+      // WHEN: Clicking the collection row to toggle its state (use DOM click to avoid overlays)
+      await electronPage.evaluate(() => {
+        const group = document.querySelector(
+          '[data-testid="collection-group"][data-collection-name="Expandable Collection"]'
+        ) as HTMLElement | null;
+        if (!group) return;
+        const clickable = (group.querySelector('.group') as HTMLElement | null) ?? group;
+        clickable.click();
       });
-      expect(requestVisible).toBe(true);
+      await electronPage.waitForTimeout(1000);
+
+      const afterFirstClickChildrenCount = await collectionGroup
+        .locator('[data-testid="collection-children"]')
+        .count();
+
+      // THEN: Children visibility should change after first click
+      expect(afterFirstClickChildrenCount).not.toBe(initialChildrenCount);
+
+      // WHEN: Clicking again to toggle back
+      await electronPage.evaluate(() => {
+        const group = document.querySelector(
+          '[data-testid="collection-group"][data-collection-name="Expandable Collection"]'
+        ) as HTMLElement | null;
+        if (!group) return;
+        const clickable = (group.querySelector('.group') as HTMLElement | null) ?? group;
+        clickable.click();
+      });
+      await electronPage.waitForTimeout(1000);
+
+      const afterSecondClickChildrenCount = await collectionGroup
+        .locator('[data-testid="collection-children"]')
+        .count();
+
+      // THEN: Children visibility should return to the initial state
+      expect(afterSecondClickChildrenCount).toBe(initialChildrenCount);
     });
   });
 });
