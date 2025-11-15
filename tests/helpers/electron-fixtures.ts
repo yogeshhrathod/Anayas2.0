@@ -79,6 +79,43 @@ async function createIPCHandlers(testDbPath: string) {
         db.saveDatabase();
         return { success: true };
       },
+      test: async (env: any) => {
+        try {
+          const baseUrl = env.variables?.base_url || env.baseUrl;
+          if (baseUrl) {
+            const isReachable = await apiService.apiService.testConnection(baseUrl);
+            return { success: isReachable, message: isReachable ? 'Connection successful' : 'Connection failed' };
+          }
+          return { success: true, message: 'No base URL to test' };
+        } catch (error: any) {
+          return { success: false, message: error.message };
+        }
+      },
+      import: async (filePath: string) => {
+        try {
+          const fs = require('fs');
+          const content = fs.readFileSync(filePath, 'utf-8');
+          const lines = content.split('\n');
+          const envData: any = {};
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed && !trimmed.startsWith('#')) {
+              const [key, ...valueParts] = trimmed.split('=');
+              envData[key.trim()] = valueParts.join('=').trim();
+            }
+          }
+          return {
+            success: true,
+            data: {
+              name: envData.ENV || 'imported',
+              displayName: envData.ENV || 'Imported Environment',
+              variables: envData,
+            },
+          };
+        } catch (error: any) {
+          return { success: false, message: error.message };
+        }
+      },
     },
     collection: {
       list: async () => {
@@ -137,6 +174,59 @@ async function createIPCHandlers(testDbPath: string) {
           }
         }
         collection.activeEnvironmentId = environmentId;
+        db.saveDatabase();
+        const updatedCollection = database.collections.find((c: any) => c.id === collectionId);
+        return { success: true, collection: updatedCollection };
+      },
+      addEnvironment: async (collectionId: number, environment: any) => {
+        const database = db.getDatabase();
+        const collection = database.collections.find((c: any) => c.id === collectionId);
+        if (!collection) {
+          throw new Error('Collection not found');
+        }
+        if (!collection.environments) {
+          collection.environments = [];
+        }
+        const envId = db.generateUniqueId();
+        collection.environments.push({
+          id: envId,
+          name: environment.name,
+          variables: environment.variables || {},
+        });
+        if (collection.environments.length === 1) {
+          collection.activeEnvironmentId = envId;
+        }
+        db.saveDatabase();
+        const updatedCollection = database.collections.find((c: any) => c.id === collectionId);
+        return { success: true, id: envId, collection: updatedCollection };
+      },
+      updateEnvironment: async (collectionId: number, environmentId: number, updates: any) => {
+        const database = db.getDatabase();
+        const collection = database.collections.find((c: any) => c.id === collectionId);
+        if (!collection || !collection.environments) {
+          throw new Error('Collection or environment not found');
+        }
+        const env = collection.environments.find((e: any) => e.id === environmentId);
+        if (!env) {
+          throw new Error('Environment not found');
+        }
+        Object.assign(env, updates);
+        db.saveDatabase();
+        const updatedCollection = database.collections.find((c: any) => c.id === collectionId);
+        return { success: true, collection: updatedCollection };
+      },
+      deleteEnvironment: async (collectionId: number, environmentId: number) => {
+        const database = db.getDatabase();
+        const collection = database.collections.find((c: any) => c.id === collectionId);
+        if (!collection || !collection.environments) {
+          throw new Error('Collection or environment not found');
+        }
+        collection.environments = collection.environments.filter((e: any) => e.id !== environmentId);
+        if (collection.activeEnvironmentId === environmentId) {
+          collection.activeEnvironmentId = collection.environments.length > 0 
+            ? collection.environments[0].id 
+            : undefined;
+        }
         db.saveDatabase();
         const updatedCollection = database.collections.find((c: any) => c.id === collectionId);
         return { success: true, collection: updatedCollection };
@@ -352,6 +442,21 @@ async function createIPCHandlers(testDbPath: string) {
           return { success: true, id };
         }
       },
+      saveAfter: async (request: any, afterRequestId: number) => {
+        const id = db.addRequestAfter({
+          name: request.name,
+          method: request.method,
+          url: request.url,
+          headers: request.headers || {},
+          body: request.body || null,
+          queryParams: request.queryParams || [],
+          auth: request.auth || null,
+          collectionId: request.collectionId,
+          folderId: request.folderId || null,
+          isFavorite: request.isFavorite ? 1 : 0,
+        }, afterRequestId);
+        return { success: true, id };
+      },
       delete: async (id: number) => {
         db.deleteRequest(id);
         return { success: true };
@@ -528,6 +633,187 @@ async function createIPCHandlers(testDbPath: string) {
       getAll: async () => {
         return db.getAllSettings();
       },
+      reset: async () => {
+        db.resetSettings();
+        return { success: true };
+      },
+    },
+    unsavedRequest: {
+      save: async (request: any) => {
+        try {
+          if (request.id) {
+            db.updateUnsavedRequest(request.id, {
+              name: request.name,
+              method: request.method,
+              url: request.url,
+              headers: request.headers || {},
+              body: request.body || '',
+              queryParams: request.queryParams || [],
+              auth: request.auth || null,
+            });
+            return { success: true, id: request.id };
+          } else {
+            const id = db.addUnsavedRequest({
+              name: request.name,
+              method: request.method,
+              url: request.url,
+              headers: request.headers || {},
+              body: request.body || '',
+              queryParams: request.queryParams || [],
+              auth: request.auth || null,
+              lastModified: new Date().toISOString(),
+            });
+            return { success: true, id };
+          }
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      },
+      getAll: async () => {
+        try {
+          return db.getAllUnsavedRequests();
+        } catch (error: any) {
+          return [];
+        }
+      },
+      delete: async (id: number) => {
+        try {
+          db.deleteUnsavedRequest(id);
+          return { success: true };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      },
+      clear: async () => {
+        try {
+          db.clearUnsavedRequests();
+          return { success: true };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      },
+      promote: async (id: number, data: any) => {
+        try {
+          const savedId = db.promoteUnsavedRequest(id, data);
+          return { success: true, id: savedId };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      },
+    },
+    preset: {
+      list: async (requestId?: number) => {
+        try {
+          return db.getAllPresets(requestId);
+        } catch (error: any) {
+          return [];
+        }
+      },
+      save: async (preset: any) => {
+        try {
+          const id = db.addPreset(preset);
+          return { success: true, id };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      },
+      delete: async (id: number) => {
+        try {
+          db.deletePreset(id);
+          return { success: true };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      },
+    },
+    curl: {
+      parse: async (command: string) => {
+        try {
+          const parseCurlCommand = require('../../electron/lib/curl-parser').parseCurlCommand;
+          const request = parseCurlCommand(command);
+          return { success: true, request };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      },
+      generate: async (request: any) => {
+        try {
+          const generateCurlCommand = require('../../electron/lib/curl-generator').generateCurlCommand;
+          const curlCommand = generateCurlCommand(request);
+          return { success: true, command: curlCommand };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      },
+      importBulk: async (commands: string[]) => {
+        try {
+          const parseCurlCommands = require('../../electron/lib/curl-parser').parseCurlCommands;
+          const results = parseCurlCommands(commands);
+          return { success: true, results };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      },
+    },
+    file: {
+      select: async (filters?: any) => {
+        // Mock file dialog - return null (cancelled) for tests
+        return null;
+      },
+      selectDirectory: async () => {
+        // Mock directory dialog - return null (cancelled) for tests
+        return null;
+      },
+      save: async (defaultPath: string, content: string) => {
+        // Mock save dialog - return success: false for tests
+        return { success: false };
+      },
+      read: async (filePath: string) => {
+        try {
+          const fs = require('fs');
+          const content = fs.readFileSync(filePath, 'utf-8');
+          return { success: true, content };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      },
+      write: async (filePath: string, content: string) => {
+        try {
+          const fs = require('fs');
+          fs.writeFileSync(filePath, content, 'utf-8');
+          return { success: true };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      },
+    },
+    app: {
+      getVersion: async () => {
+        return '1.0.0';
+      },
+      getPath: async (name: string) => {
+        return '/mock/path';
+      },
+    },
+    window: {
+      minimize: async () => {
+        // Mock - no-op for tests
+      },
+      maximize: async () => {
+        // Mock - no-op for tests
+      },
+      close: async () => {
+        // Mock - no-op for tests
+      },
+      isMaximized: async () => {
+        return false;
+      },
+    },
+    notification: {
+      show: async (options: any) => {
+        // Mock notification - return success for tests
+        return { success: true };
+      },
     },
   };
 }
@@ -546,16 +832,22 @@ async function setupMockElectronAPI(page: Page, testDbPath: string) {
   await page.exposeFunction('electronAPI_env_delete', handlers.env.delete);
   await page.exposeFunction('electronAPI_env_getCurrent', handlers.env.getCurrent);
   await page.exposeFunction('electronAPI_env_setCurrent', handlers.env.setCurrent);
+  await page.exposeFunction('electronAPI_env_test', handlers.env.test);
+  await page.exposeFunction('electronAPI_env_import', handlers.env.import);
   
   await page.exposeFunction('electronAPI_collection_list', handlers.collection.list);
   await page.exposeFunction('electronAPI_collection_save', handlers.collection.save);
   await page.exposeFunction('electronAPI_collection_delete', handlers.collection.delete);
   await page.exposeFunction('electronAPI_collection_toggleFavorite', handlers.collection.toggleFavorite);
   await page.exposeFunction('electronAPI_collection_setActiveEnvironment', handlers.collection.setActiveEnvironment);
+  await page.exposeFunction('electronAPI_collection_addEnvironment', handlers.collection.addEnvironment);
+  await page.exposeFunction('electronAPI_collection_updateEnvironment', handlers.collection.updateEnvironment);
+  await page.exposeFunction('electronAPI_collection_deleteEnvironment', handlers.collection.deleteEnvironment);
   await page.exposeFunction('electronAPI_collection_run', handlers.collection.run);
   
   await page.exposeFunction('electronAPI_request_list', handlers.request.list);
   await page.exposeFunction('electronAPI_request_save', handlers.request.save);
+  await page.exposeFunction('electronAPI_request_saveAfter', handlers.request.saveAfter);
   await page.exposeFunction('electronAPI_request_delete', handlers.request.delete);
   await page.exposeFunction('electronAPI_request_send', handlers.request.send);
   await page.exposeFunction('electronAPI_request_history', handlers.request.history);
@@ -568,6 +860,37 @@ async function setupMockElectronAPI(page: Page, testDbPath: string) {
   await page.exposeFunction('electronAPI_settings_get', handlers.settings.get);
   await page.exposeFunction('electronAPI_settings_set', handlers.settings.set);
   await page.exposeFunction('electronAPI_settings_getAll', handlers.settings.getAll);
+  await page.exposeFunction('electronAPI_settings_reset', handlers.settings.reset);
+  
+  await page.exposeFunction('electronAPI_unsavedRequest_save', handlers.unsavedRequest.save);
+  await page.exposeFunction('electronAPI_unsavedRequest_getAll', handlers.unsavedRequest.getAll);
+  await page.exposeFunction('electronAPI_unsavedRequest_delete', handlers.unsavedRequest.delete);
+  await page.exposeFunction('electronAPI_unsavedRequest_clear', handlers.unsavedRequest.clear);
+  await page.exposeFunction('electronAPI_unsavedRequest_promote', handlers.unsavedRequest.promote);
+  
+  await page.exposeFunction('electronAPI_preset_list', handlers.preset.list);
+  await page.exposeFunction('electronAPI_preset_save', handlers.preset.save);
+  await page.exposeFunction('electronAPI_preset_delete', handlers.preset.delete);
+  
+  await page.exposeFunction('electronAPI_curl_parse', handlers.curl.parse);
+  await page.exposeFunction('electronAPI_curl_generate', handlers.curl.generate);
+  await page.exposeFunction('electronAPI_curl_importBulk', handlers.curl.importBulk);
+  
+  await page.exposeFunction('electronAPI_file_select', handlers.file.select);
+  await page.exposeFunction('electronAPI_file_selectDirectory', handlers.file.selectDirectory);
+  await page.exposeFunction('electronAPI_file_save', handlers.file.save);
+  await page.exposeFunction('electronAPI_file_read', handlers.file.read);
+  await page.exposeFunction('electronAPI_file_write', handlers.file.write);
+  
+  await page.exposeFunction('electronAPI_app_getVersion', handlers.app.getVersion);
+  await page.exposeFunction('electronAPI_app_getPath', handlers.app.getPath);
+  
+  await page.exposeFunction('electronAPI_window_minimize', handlers.window.minimize);
+  await page.exposeFunction('electronAPI_window_maximize', handlers.window.maximize);
+  await page.exposeFunction('electronAPI_window_close', handlers.window.close);
+  await page.exposeFunction('electronAPI_window_isMaximized', handlers.window.isMaximized);
+  
+  await page.exposeFunction('electronAPI_notification_show', handlers.notification.show);
   
   // Create the electronAPI object in the page context
   await page.addInitScript(() => {
@@ -578,6 +901,8 @@ async function setupMockElectronAPI(page: Page, testDbPath: string) {
         delete: (id: number) => (window as any).electronAPI_env_delete(id),
         getCurrent: () => (window as any).electronAPI_env_getCurrent(),
         setCurrent: (id: number) => (window as any).electronAPI_env_setCurrent(id),
+        test: (env: any) => (window as any).electronAPI_env_test(env),
+        import: (filePath: string) => (window as any).electronAPI_env_import(filePath),
       },
       collection: {
         list: () => (window as any).electronAPI_collection_list(),
@@ -586,12 +911,20 @@ async function setupMockElectronAPI(page: Page, testDbPath: string) {
         toggleFavorite: (id: number) => (window as any).electronAPI_collection_toggleFavorite(id),
         setActiveEnvironment: (collectionId: number, environmentId: number | null) => 
           (window as any).electronAPI_collection_setActiveEnvironment(collectionId, environmentId),
+        addEnvironment: (collectionId: number, environment: any) => 
+          (window as any).electronAPI_collection_addEnvironment(collectionId, environment),
+        updateEnvironment: (collectionId: number, environmentId: number, updates: any) => 
+          (window as any).electronAPI_collection_updateEnvironment(collectionId, environmentId, updates),
+        deleteEnvironment: (collectionId: number, environmentId: number) => 
+          (window as any).electronAPI_collection_deleteEnvironment(collectionId, environmentId),
         run: (collectionId: number) => (window as any).electronAPI_collection_run(collectionId),
       },
       request: {
         list: (collectionId?: number, folderId?: number) => 
           (window as any).electronAPI_request_list(collectionId, folderId),
         save: (request: any) => (window as any).electronAPI_request_save(request),
+        saveAfter: (request: any, afterRequestId: number) => 
+          (window as any).electronAPI_request_saveAfter(request, afterRequestId),
         delete: (id: number) => (window as any).electronAPI_request_delete(id),
         send: (options: any) => (window as any).electronAPI_request_send(options),
         history: (limit?: number) => (window as any).electronAPI_request_history(limit),
@@ -606,6 +939,44 @@ async function setupMockElectronAPI(page: Page, testDbPath: string) {
         get: (key: string) => (window as any).electronAPI_settings_get(key),
         set: (key: string, value: any) => (window as any).electronAPI_settings_set(key, value),
         getAll: () => (window as any).electronAPI_settings_getAll(),
+        reset: () => (window as any).electronAPI_settings_reset(),
+      },
+      unsavedRequest: {
+        save: (request: any) => (window as any).electronAPI_unsavedRequest_save(request),
+        getAll: () => (window as any).electronAPI_unsavedRequest_getAll(),
+        delete: (id: number) => (window as any).electronAPI_unsavedRequest_delete(id),
+        clear: () => (window as any).electronAPI_unsavedRequest_clear(),
+        promote: (id: number, data: any) => (window as any).electronAPI_unsavedRequest_promote(id, data),
+      },
+      preset: {
+        list: (requestId?: number) => (window as any).electronAPI_preset_list(requestId),
+        save: (preset: any) => (window as any).electronAPI_preset_save(preset),
+        delete: (id: number) => (window as any).electronAPI_preset_delete(id),
+      },
+      curl: {
+        parse: (command: string) => (window as any).electronAPI_curl_parse(command),
+        generate: (request: any) => (window as any).electronAPI_curl_generate(request),
+        importBulk: (commands: string[]) => (window as any).electronAPI_curl_importBulk(commands),
+      },
+      file: {
+        select: (filters?: any) => (window as any).electronAPI_file_select(filters),
+        selectDirectory: () => (window as any).electronAPI_file_selectDirectory(),
+        save: (defaultPath: string, content: string) => (window as any).electronAPI_file_save(defaultPath, content),
+        read: (filePath: string) => (window as any).electronAPI_file_read(filePath),
+        write: (filePath: string, content: string) => (window as any).electronAPI_file_write(filePath, content),
+      },
+      app: {
+        getVersion: () => (window as any).electronAPI_app_getVersion(),
+        getPath: (name: string) => (window as any).electronAPI_app_getPath(name),
+      },
+      window: {
+        minimize: () => (window as any).electronAPI_window_minimize(),
+        maximize: () => (window as any).electronAPI_window_maximize(),
+        close: () => (window as any).electronAPI_window_close(),
+        isMaximized: () => (window as any).electronAPI_window_isMaximized(),
+      },
+      notification: {
+        show: (options: any) => (window as any).electronAPI_notification_show(options),
       },
     };
   });
