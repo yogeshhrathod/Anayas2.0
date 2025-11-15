@@ -10,16 +10,16 @@ test.describe('Performance: Memory Leak Detection', () => {
     for (let i = 0; i < 10; i++) {
       const createStart = Date.now();
       
-      const collection = await electronPage.evaluate(async () => {
+      const collection = await electronPage.evaluate(async (index) => {
         return await window.electronAPI.collection.save({
-          name: `Memory Test Collection ${i}`,
+          name: `Memory Test Collection ${index}`,
           description: '',
           documentation: '',
           environments: [],
           activeEnvironmentId: null,
           isFavorite: false,
         });
-      });
+      }, i);
 
       await electronPage.evaluate(async (id) => {
         return await window.electronAPI.collection.delete(id);
