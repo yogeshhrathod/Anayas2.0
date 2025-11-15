@@ -2,8 +2,20 @@ import winston from 'winston';
 import path from 'path';
 import { app } from 'electron';
 import fs from 'fs';
+import os from 'os';
 
-const logsDir = path.join(app.getPath('userData'), 'logs');
+// Support test mode: use temp directory if app is not available
+let logsDir: string;
+try {
+  if (process.env.TEST_MODE === 'true') {
+    logsDir = path.join(os.tmpdir(), 'anayas-test-logs');
+  } else {
+    logsDir = path.join(app.getPath('userData'), 'logs');
+  }
+} catch {
+  // Fallback if app is not available
+  logsDir = path.join(os.tmpdir(), 'anayas-logs');
+}
 fs.mkdirSync(logsDir, { recursive: true });
 
 export function createLogger(module: string) {

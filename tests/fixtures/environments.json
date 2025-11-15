@@ -1,0 +1,39 @@
+[
+  {
+    "id": 1,
+    "name": "development",
+    "displayName": "Development",
+    "variables": {
+      "base_url": "https://jsonplaceholder.typicode.com",
+      "api_key": "dev-key-123",
+      "user_id": "1"
+    },
+    "isDefault": 1,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "name": "staging",
+    "displayName": "Staging",
+    "variables": {
+      "base_url": "https://staging.example.com",
+      "api_key": "staging-key-456",
+      "user_id": "2"
+    },
+    "isDefault": 0,
+    "createdAt": "2024-01-02T00:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "name": "production",
+    "displayName": "Production",
+    "variables": {
+      "base_url": "https://api.example.com",
+      "api_key": "prod-key-789",
+      "user_id": "3"
+    },
+    "isDefault": 0,
+    "createdAt": "2024-01-03T00:00:00.000Z"
+  }
+]
+

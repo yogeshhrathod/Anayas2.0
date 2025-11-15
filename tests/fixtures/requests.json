@@ -1,0 +1,73 @@
+[
+  {
+    "id": 1,
+    "name": "Get Users",
+    "method": "GET",
+    "url": "{{base_url}}/users",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{api_key}}"
+    },
+    "body": null,
+    "queryParams": [
+      {
+        "key": "page",
+        "value": "1",
+        "enabled": true
+      },
+      {
+        "key": "limit",
+        "value": "10",
+        "enabled": true
+      }
+    ],
+    "auth": {
+      "type": "bearer",
+      "token": "{{api_key}}"
+    },
+    "collectionId": 1,
+    "folderId": null,
+    "isFavorite": 0,
+    "order": 1000,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "name": "Get User by ID",
+    "method": "GET",
+    "url": "{{base_url}}/users/{{user_id}}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": null,
+    "queryParams": [],
+    "auth": {
+      "type": "none"
+    },
+    "collectionId": 1,
+    "folderId": null,
+    "isFavorite": 0,
+    "order": 2000,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "name": "Create Post",
+    "method": "POST",
+    "url": "{{base_url}}/posts",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": "{\n  \"title\": \"Test Post\",\n  \"body\": \"This is a test post\",\n  \"userId\": {{user_id}}\n}",
+    "queryParams": [],
+    "auth": {
+      "type": "none"
+    },
+    "collectionId": 1,
+    "folderId": null,
+    "isFavorite": 0,
+    "order": 3000,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+]
+

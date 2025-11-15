@@ -45,6 +45,18 @@ test-results/
 playwright-report/
 playwright/.cache/
 test-artifacts/
+.playwright/                    # Browser cache directory
+
+# Test databases (if created in project directory)
+**/test-db/
+**/anayas-test-db/
+*.test.db
+*.test.json
+
+# Coverage reports (if you add test coverage later)
+coverage/
+.nyc_output/
+*.lcov
 
 # Misc
 *.pem

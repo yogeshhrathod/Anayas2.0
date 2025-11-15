@@ -1,0 +1,33 @@
+[
+  {
+    "id": 1,
+    "name": "Test Collection",
+    "description": "A test collection for integration tests",
+    "documentation": "# Test Collection\n\nThis is a test collection.",
+    "variables": {},
+    "environments": [
+      {
+        "id": 101,
+        "name": "Test Environment",
+        "variables": {
+          "collection_var": "test-value"
+        }
+      }
+    ],
+    "activeEnvironmentId": 101,
+    "isFavorite": 1,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "name": "API Testing",
+    "description": "Collection for API testing",
+    "documentation": "",
+    "variables": {},
+    "environments": [],
+    "activeEnvironmentId": null,
+    "isFavorite": 0,
+    "createdAt": "2024-01-02T00:00:00.000Z"
+  }
+]
+

@@ -1,0 +1,10 @@
+curl -X GET "https://jsonplaceholder.typicode.com/users" -H "Content-Type: application/json"
+
+curl -X POST "https://jsonplaceholder.typicode.com/posts" -H "Content-Type: application/json" -d '{"title":"Test Post","body":"Test body","userId":1}'
+
+curl -X GET "https://jsonplaceholder.typicode.com/users/1" -H "Authorization: Bearer token123"
+
+curl -X PUT "https://jsonplaceholder.typicode.com/posts/1" -H "Content-Type: application/json" -d '{"title":"Updated Post","body":"Updated body","userId":1}'
+
+curl -X DELETE "https://jsonplaceholder.typicode.com/posts/1" -H "Authorization: Bearer token123"
+
