@@ -163,10 +163,85 @@ test.describe('Environment IPC Handlers', () => {
   });
 
   test('env:import - should import environment from file', async ({ electronPage, testDbPath }) => {
-    // This test would require file system access
-    // For now, we'll skip the actual file import and test the handler structure
-    // In a real scenario, you'd create a test .env file and import it
-    test.skip(); // Skip until file handling is properly mocked
+    // Create a temporary .env file
+    const fs = require('fs');
+    const path = require('path');
+    const os = require('os');
+    
+    const envContent = `# Test Environment File
+ENV=test
+base_url=https://api.example.com
+api_key=test-api-key-123
+database_url=postgres://localhost:5432/testdb
+`;
+    
+    const testFilePath = path.join(os.tmpdir(), `test-env-${Date.now()}.env`);
+    fs.writeFileSync(testFilePath, envContent, 'utf-8');
+    
+    try {
+      const result = await electronPage.evaluate(async (filePath) => {
+        return await window.electronAPI.env.import(filePath);
+      }, testFilePath);
+      
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data.name).toBe('test');
+      // When ENV is set, displayName uses ENV value, otherwise 'Imported Environment'
+      expect(result.data.displayName).toBe('test');
+      expect(result.data.variables).toBeDefined();
+      expect(result.data.variables.base_url).toBe('https://api.example.com');
+      expect(result.data.variables.api_key).toBe('test-api-key-123');
+      expect(result.data.variables.database_url).toBe('postgres://localhost:5432/testdb');
+    } finally {
+      // Cleanup
+      if (fs.existsSync(testFilePath)) {
+        fs.unlinkSync(testFilePath);
+      }
+    }
+  });
+
+  test('env:import - should use fallback when ENV is not set', async ({ electronPage, testDbPath }) => {
+    // Create a temporary .env file without ENV variable
+    const fs = require('fs');
+    const path = require('path');
+    const os = require('os');
+    
+    const envContent = `# Test Environment File without ENV
+base_url=https://api.example.com
+api_key=test-api-key-123
+`;
+    
+    const testFilePath = path.join(os.tmpdir(), `test-env-fallback-${Date.now()}.env`);
+    fs.writeFileSync(testFilePath, envContent, 'utf-8');
+    
+    try {
+      const result = await electronPage.evaluate(async (filePath) => {
+        return await window.electronAPI.env.import(filePath);
+      }, testFilePath);
+      
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data.name).toBe('imported');
+      expect(result.data.displayName).toBe('Imported Environment');
+      expect(result.data.variables).toBeDefined();
+      expect(result.data.variables.base_url).toBe('https://api.example.com');
+    } finally {
+      // Cleanup
+      if (fs.existsSync(testFilePath)) {
+        fs.unlinkSync(testFilePath);
+      }
+    }
+  });
+
+  test('env:import - should handle non-existent file', async ({ electronPage, testDbPath }) => {
+    const nonExistentPath = '/path/that/does/not/exist.env';
+    
+    const result = await electronPage.evaluate(async (filePath) => {
+      return await window.electronAPI.env.import(filePath);
+    }, nonExistentPath);
+    
+    expect(result.success).toBe(false);
+    expect(result.message).toBeDefined();
   });
 });
 

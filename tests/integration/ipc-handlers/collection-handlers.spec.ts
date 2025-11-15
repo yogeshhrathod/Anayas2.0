@@ -184,6 +184,121 @@ test.describe('Collection IPC Handlers', () => {
     expect(result.collection.activeEnvironmentId).toBe(collection.envId);
   });
 
+  test('collection:updateEnvironment - should update collection environment', async ({ electronPage, testDbPath }) => {
+    // Create collection with environment
+    const setup = await electronPage.evaluate(async () => {
+      const coll = await window.electronAPI.collection.save({
+        name: 'Test Collection',
+        description: '',
+        documentation: '',
+        environments: [],
+        activeEnvironmentId: null,
+        isFavorite: false,
+      });
+      
+      const envResult = await window.electronAPI.collection.addEnvironment(coll.id, {
+        name: 'Original Env',
+        variables: { api_key: 'original-key' },
+      });
+      
+      return { collectionId: coll.id, envId: envResult.id };
+    });
+    
+    // Update environment
+    const result = await electronPage.evaluate(async ({ collectionId, envId }) => {
+      return await window.electronAPI.collection.updateEnvironment(collectionId, envId, {
+        name: 'Updated Env',
+        variables: { api_key: 'updated-key', new_var: 'new-value' },
+      });
+    }, setup);
+    
+    expect(result.success).toBe(true);
+    expect(result.collection).toBeDefined();
+    
+    // Verify update
+    const dbContents = getDatabaseContents(testDbPath);
+    const collection = dbContents.collections.find((c: any) => c.id === setup.collectionId);
+    const env = collection.environments.find((e: any) => e.id === setup.envId);
+    expect(env.name).toBe('Updated Env');
+    expect(env.variables.api_key).toBe('updated-key');
+    expect(env.variables.new_var).toBe('new-value');
+  });
+
+  test('collection:deleteEnvironment - should delete collection environment', async ({ electronPage, testDbPath }) => {
+    // Create collection with multiple environments
+    const setup = await electronPage.evaluate(async () => {
+      const coll = await window.electronAPI.collection.save({
+        name: 'Test Collection',
+        description: '',
+        documentation: '',
+        environments: [],
+        activeEnvironmentId: null,
+        isFavorite: false,
+      });
+      
+      const env1 = await window.electronAPI.collection.addEnvironment(coll.id, {
+        name: 'Env 1',
+        variables: {},
+      });
+      
+      const env2 = await window.electronAPI.collection.addEnvironment(coll.id, {
+        name: 'Env 2',
+        variables: {},
+      });
+      
+      // Set env1 as active
+      await window.electronAPI.collection.setActiveEnvironment(coll.id, env1.id);
+      
+      return { collectionId: coll.id, env1Id: env1.id, env2Id: env2.id };
+    });
+    
+    // Delete env1 (active environment)
+    const result = await electronPage.evaluate(async ({ collectionId, envId }) => {
+      return await window.electronAPI.collection.deleteEnvironment(collectionId, envId);
+    }, { collectionId: setup.collectionId, envId: setup.env1Id });
+    
+    expect(result.success).toBe(true);
+    expect(result.collection).toBeDefined();
+    expect(result.collection.environments.length).toBe(1);
+    
+    // Verify env1 is deleted and env2 is now active (fallback)
+    const dbContents = getDatabaseContents(testDbPath);
+    const collection = dbContents.collections.find((c: any) => c.id === setup.collectionId);
+    expect(collection.environments.length).toBe(1);
+    expect(collection.environments[0].id).toBe(setup.env2Id);
+    expect(collection.activeEnvironmentId).toBe(setup.env2Id);
+  });
+
+  test('collection:deleteEnvironment - should handle deleting last environment', async ({ electronPage, testDbPath }) => {
+    // Create collection with single environment
+    const setup = await electronPage.evaluate(async () => {
+      const coll = await window.electronAPI.collection.save({
+        name: 'Test Collection',
+        description: '',
+        documentation: '',
+        environments: [],
+        activeEnvironmentId: null,
+        isFavorite: false,
+      });
+      
+      const env = await window.electronAPI.collection.addEnvironment(coll.id, {
+        name: 'Only Env',
+        variables: {},
+      });
+      
+      return { collectionId: coll.id, envId: env.id };
+    });
+    
+    // Delete the only environment
+    const result = await electronPage.evaluate(async ({ collectionId, envId }) => {
+      return await window.electronAPI.collection.deleteEnvironment(collectionId, envId);
+    }, setup);
+    
+    expect(result.success).toBe(true);
+    expect(result.collection.environments.length).toBe(0);
+    expect(result.collection.activeEnvironmentId).toBeUndefined();
+  });
+
   test('collection:run - should run all requests in collection', async ({ electronPage, testDbPath }) => {
     // Create environment
     const env = await electronPage.evaluate(async () => {
