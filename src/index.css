@@ -66,8 +66,18 @@
     @apply border-border;
   }
 
+  html {
+    @apply h-full overflow-hidden;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground h-full overflow-hidden;
+    margin: 0;
+  }
+
+  #root {
+    @apply h-full;
+    min-height: 0;
   }
 }
 
