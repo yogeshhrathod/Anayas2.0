@@ -59,7 +59,7 @@
 
 ---
 
-## Phase 2: Essential Features 🔄 IN PROGRESS (92% Complete)
+## Phase 2: Essential Features 🔄 IN PROGRESS (91% Complete)
 
 ### 2.1 Collections Management ✅ COMPLETED
 - [x] **Create Collection** - CRUD operations
@@ -72,7 +72,7 @@
 - [x] **Collection Runner** - Execute all requests in sequence
 - [x] **Collection Export/Import** - Export and import collections as JSON
 - [x] **Collection Documentation** - Markdown notes
-- [ ] **Bulk Operations** - Select multiple requests
+- [x] **Bulk Operations** - Deferred to Phase 4 (low priority)
 
 **Timeline**: 3-4 days ✅ **COMPLETED**
 
@@ -177,6 +177,18 @@
 - [ ] **Compare Changes** - Show diff from saved version
 
 **Timeline**: 1-2 days
+
+### 4.6 Bulk Operations (Deferred from Phase 2) 📋 PLANNED
+- [ ] **Multi-Select UI** - Checkboxes for selecting multiple requests
+- [ ] **Select All/Deselect All** - Quick selection controls
+- [ ] **Bulk Delete** - Delete multiple requests at once
+- [ ] **Bulk Move** - Move multiple requests to another collection/folder
+- [ ] **Bulk Duplicate** - Duplicate multiple requests
+- [ ] **Bulk Export** - Export multiple requests as collection
+- [ ] **Bulk Property Edit** - Change properties (method, tags) for multiple requests
+
+**Timeline**: 1-2 days  
+**Priority**: Low (deferred from Phase 2 - not critical for MVP)
 
 ### 4.2 Keyboard Shortcuts 🔄 PARTIALLY COMPLETED
 - [x] **Command Palette** (Cmd+K) - Quick actions
@@ -447,7 +459,7 @@
 
 ### **Phase 2** (Essential Features) - 🔄 IN PROGRESS
 - Duration: ~2-3 weeks
-- Status: **92% Complete**
+- Status: **91% Complete**
 - Priority: HIGH
 
 ### **Phase 3** (Import/Export) - 🔄 IN PROGRESS
@@ -534,7 +546,7 @@
 - **Keyboard Shortcuts**: Core shortcuts implemented (duplicate, edit, export/import), tab navigation and advanced shortcuts pending
 - **Settings Panel**: Core settings done, editor/network/privacy/advanced settings pending
 - **Performance**: Basic optimizations done, virtual scrolling and worker threads pending
-- **Collections**: Only bulk operations pending (documentation is complete)
+- **Collections**: Complete (bulk operations deferred to Phase 4 as low priority)
 
 ### 📋 **NEXT PRIORITIES**
 1. **Postman Collection Import** - Essential for user migration

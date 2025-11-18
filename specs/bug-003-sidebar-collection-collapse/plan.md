@@ -1,8 +1,8 @@
 # Implementation Plan: sidebar-collection-collapse (Bug Fix)
 
 **Feature ID**: `bug-003-sidebar-collection-collapse`  
-**Status**: `draft` | `planned` | `in-progress` | `completed`  
-**Related Spec**: [Link to spec.md]
+**Status**: `completed`  
+**Related Spec**: [spec.md](spec.md)
 
 ## Overview
 

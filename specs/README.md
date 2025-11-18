@@ -50,6 +50,7 @@ This directory contains feature specifications and bug reports following the spe
 |----|----------|--------|----------|----------|-----------------|----------|
 | `bug-001-z-index-fixes` | [z-index-fixes](specs/bug-001-z-index-fixes/spec.md) | `resolved` | `high` | `P1` | N/A (Infrastructure/UI Fix) | Development Team |
 | `bug-002-variable-context-menu-fixes` | [variable-context-menu-fixes](specs/bug-002-variable-context-menu-fixes/spec.md) | `resolved` | `medium` | `P1` | `specs/005-variable-input-consolidation/` (Variable Input Components Consolidation) | Development Team |
+| `bug-003-sidebar-collection-collapse` | [sidebar-collection-collapse](specs/bug-003-sidebar-collection-collapse/spec.md) | `resolved` | `medium` | `P2` | Collections Management (Phase 2) | Development Team |
 
 ## Creating Items
 
