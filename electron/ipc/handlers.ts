@@ -454,15 +454,47 @@ export function registerIpcHandlers() {
 
       // Resolve variables in all request parts
       const resolvedUrl = variableResolver.resolve(options.url, variableContext);
-      const resolvedHeaders = variableResolver.resolveObject(options.headers || {}, variableContext);
+      const resolvedHeadersRaw = variableResolver.resolveObject(options.headers || {}, variableContext);
       const resolvedBody = typeof options.body === 'string' 
         ? variableResolver.resolve(options.body, variableContext)
         : options.body;
       
-      const resolvedQueryParams = (options.queryParams || []).map(param => ({
-        ...param,
-        value: variableResolver.resolve(param.value, variableContext)
+      // Type-safe query params interface
+      interface QueryParam {
+        key: string;
+        value: string;
+        enabled: boolean;
+      }
+      
+      const resolvedQueryParams: QueryParam[] = (options.queryParams || []).map(param => ({
+        key: param.key,
+        value: variableResolver.resolve(param.value, variableContext),
+        enabled: param.enabled !== false // Default to enabled if not explicitly false
       }));
+
+      // Validate URL early for better error messages
+      let baseUrl: URL;
+      try {
+        baseUrl = new URL(resolvedUrl);
+      } catch (urlError: any) {
+        throw new Error(`Invalid URL: ${resolvedUrl}. ${urlError.message || 'URL must be a valid absolute URL'}`);
+      }
+
+      // Sanitize headers: drop empty/whitespace keys
+      const resolvedHeaders = Object.fromEntries(
+        Object.entries(resolvedHeadersRaw || {}).filter(([key]) => typeof key === 'string' && key.trim().length > 0)
+      );
+
+      // Append query params (enabled) to URL
+      let finalUrl = resolvedUrl;
+      if (resolvedQueryParams && resolvedQueryParams.length > 0) {
+        for (const qp of resolvedQueryParams) {
+          if (qp.enabled && qp.key && qp.key.trim().length > 0) {
+            baseUrl.searchParams.set(qp.key.trim(), qp.value ?? '');
+          }
+        }
+        finalUrl = baseUrl.toString();
+      }
 
       // Execute HTTP request using apiService with resolved values
       let result: any;
@@ -470,25 +502,25 @@ export function registerIpcHandlers() {
       
       switch (method) {
         case 'GET':
-          result = await apiService.getJson(resolvedUrl, resolvedHeaders);
+          result = await apiService.getJson(finalUrl, resolvedHeaders);
           break;
         case 'POST':
-          result = await apiService.postJson(resolvedUrl, resolvedBody, resolvedHeaders);
+          result = await apiService.postJson(finalUrl, resolvedBody, resolvedHeaders);
           break;
         case 'PUT':
-          result = await apiService.putJson(resolvedUrl, resolvedBody, resolvedHeaders);
+          result = await apiService.putJson(finalUrl, resolvedBody, resolvedHeaders);
           break;
         case 'PATCH':
-          result = await apiService.patchJson(resolvedUrl, resolvedBody, resolvedHeaders);
+          result = await apiService.patchJson(finalUrl, resolvedBody, resolvedHeaders);
           break;
         case 'DELETE':
-          result = await apiService.deleteJson(resolvedUrl, resolvedHeaders);
+          result = await apiService.deleteJson(finalUrl, resolvedHeaders);
           break;
         case 'HEAD':
-          result = await apiService.headJson(resolvedUrl, resolvedHeaders);
+          result = await apiService.headJson(finalUrl, resolvedHeaders);
           break;
         case 'OPTIONS':
-          result = await apiService.optionsJson(resolvedUrl, resolvedHeaders);
+          result = await apiService.optionsJson(finalUrl, resolvedHeaders);
           break;
         default:
           throw new Error(`Unsupported HTTP method: ${method}`);
@@ -497,7 +529,7 @@ export function registerIpcHandlers() {
       // Save to history with original URL for reference
       addRequestHistory({
         method: method,
-        url: resolvedUrl,
+        url: finalUrl,
         status: result.status,
         response_time: result.responseTime,
         response_body: typeof result.body === 'string' ? result.body : JSON.stringify(result.body),

@@ -295,5 +295,94 @@ test.describe('Request IPC Handlers', () => {
     
     expect(historyAfter.length).toBe(history.length - 1);
   });
+
+  test('request:send - should ignore empty header keys and not crash', async ({ electronPage }) => {
+    // GIVEN: default environment exists
+    await electronPage.evaluate(async () => {
+      await window.electronAPI.env.save({
+        name: 'empty-header-env',
+        displayName: 'Empty Header Env',
+        variables: {},
+        isDefault: true,
+      });
+    });
+    // WHEN: sending with an empty header key present
+    const result = await electronPage.evaluate(async () => {
+      return await window.electronAPI.request.send({
+        method: 'GET',
+        url: 'https://jsonplaceholder.typicode.com/posts/1',
+        headers: {
+          '': '',
+          'Accept': 'application/json',
+        },
+        body: null,
+        queryParams: [],
+      });
+    });
+    // THEN: handler should sanitize and succeed (no crash)
+    expect(result).toBeDefined();
+    expect(result.success).toBe(true);
+    expect([200, 304]).toContain(result.status);
+  });
+
+  test('request:send - should handle invalid URL gracefully', async ({ electronPage }) => {
+    // GIVEN: default environment exists
+    await electronPage.evaluate(async () => {
+      await window.electronAPI.env.save({
+        name: 'invalid-url-env',
+        displayName: 'Invalid URL Env',
+        variables: {},
+        isDefault: true,
+      });
+    });
+    
+    // WHEN: sending request with invalid URL (no scheme)
+    const result = await electronPage.evaluate(async () => {
+      return await window.electronAPI.request.send({
+        method: 'GET',
+        url: 'not-a-valid-url',
+        headers: {},
+        body: null,
+        queryParams: [],
+      });
+    });
+    
+    // THEN: should return error gracefully (no crash)
+    expect(result).toBeDefined();
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+    expect(typeof result.error).toBe('string');
+    expect(result.error).toContain('Invalid URL');
+  });
+
+  test('request:send - should handle relative URL gracefully', async ({ electronPage }) => {
+    // GIVEN: default environment exists
+    await electronPage.evaluate(async () => {
+      await window.electronAPI.env.save({
+        name: 'relative-url-env',
+        displayName: 'Relative URL Env',
+        variables: {},
+        isDefault: true,
+      });
+    });
+    
+    // WHEN: sending request with relative URL
+    const result = await electronPage.evaluate(async () => {
+      return await window.electronAPI.request.send({
+        method: 'GET',
+        url: '/api/posts',
+        headers: {},
+        body: null,
+        queryParams: [],
+      });
+    });
+    
+    // THEN: should return error gracefully (no crash)
+    expect(result).toBeDefined();
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+    expect(typeof result.error).toBe('string');
+    expect(result.error).toContain('Invalid URL');
+  });
 });
 

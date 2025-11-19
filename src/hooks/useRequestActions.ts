@@ -111,25 +111,48 @@ export function useRequestActions(requestData: RequestFormData) {
     setState(prev => ({ ...prev, isLoading: true, response: null }));
 
     try {
-      const response = await window.electronAPI.request.send({
+      // Sanitize headers: drop empty/whitespace keys
+      const sanitizedHeaders = Object.fromEntries(
+        Object.entries(requestData.headers || {}).filter(([key]) => key && key.trim().length > 0)
+      );
+
+      const result = await window.electronAPI.request.send({
         method: requestData.method,
         url: requestData.url,
-        headers: requestData.headers,
+        headers: sanitizedHeaders,
         body: requestData.body,
+        queryParams: requestData.queryParams || [],
         auth: requestData.auth,
         collectionId: selectedRequest?.collectionId,
         environmentId: currentEnvironment?.id
       });
 
-      setState(prev => ({ ...prev, response }));
-      showSuccess('Request completed', { description: `Status: ${response.status}` });
+      // Handle error shape from IPC
+      if (!result || result.success === false) {
+        const errorMessage = (result && result.error) ? result.error : 'An error occurred while sending the request';
+        setState(prev => ({ ...prev, response: null })); // Clear response on error
+        showError('Request Failed', errorMessage);
+        return;
+      }
+
+      // Map IPC success payload to ResponseData for UI
+      const mappedResponse: ResponseData = {
+        status: result.status,
+        statusText: result.statusText,
+        headers: result.headers || {},
+        data: result.data,
+        time: result.responseTime,
+      };
+
+      setState(prev => ({ ...prev, response: mappedResponse }));
+      showSuccess('Request completed', { description: `Status: ${mappedResponse.status}` });
       
       // Save response with the request if it's a saved request
       if (requestData.id && requestData.collectionId) {
         try {
           await window.electronAPI.request.save({
             ...requestData,
-            lastResponse: response,
+            lastResponse: mappedResponse,
           });
         } catch (error) {
           console.error('Failed to save response with request:', error);

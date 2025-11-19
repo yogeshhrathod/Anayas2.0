@@ -73,6 +73,7 @@ export interface RequestOptions {
   auth?: any;
   collectionId?: number;
   queryParams?: Array<{ key: string; value: string; enabled: boolean }>;
+  environmentId?: number;
 }
 
 export interface SidebarState {

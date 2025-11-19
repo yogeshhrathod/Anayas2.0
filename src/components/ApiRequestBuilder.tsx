@@ -11,7 +11,7 @@
  * This refactored version is much smaller and more maintainable than the original.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { SaveRequestDialog } from './ui/save-request-dialog';
 import { KEYMAP, createKeymapHandler } from '../lib/keymap';
@@ -33,17 +33,38 @@ export function ApiRequestBuilder() {
   const requestState = useRequestState(selectedRequest);
   const requestActions = useRequestActions(requestState.requestData);
 
+  // Track previous response to detect when a NEW response arrives
+  const previousResponseRef = useRef<typeof requestActions.response>(null);
+
   // Reload presets when request ID changes (when switching between requests)
   useEffect(() => {
+    // Reset response tracking when switching to a different request
+    // This allows auto-switch to work again for the new request
+    previousResponseRef.current = null;
     // This is handled inside useRequestActions, but we trigger a refresh here if needed
     // The effect in useRequestActions will handle loading presets for the new request
   }, [requestState.requestData.id]);
 
-  // Auto-switch to Response tab when response is received
+  // Auto-switch to Response tab ONLY when a NEW response arrives (not continuously)
   useEffect(() => {
-    if (requestActions.response && requestState.activeTab !== 'response') {
+    const currentResponse = requestActions.response;
+    const previousResponse = previousResponseRef.current;
+    
+    // Reset ref when response is cleared (new request being sent)
+    if (!currentResponse) {
+      previousResponseRef.current = null;
+      return;
+    }
+    
+    // Only auto-switch if:
+    // 1. We have a new response (current exists, previous was null)
+    // 2. We're not already on the response tab
+    if (currentResponse && !previousResponse && requestState.activeTab !== 'response') {
       requestState.setActiveTab('response');
     }
+    
+    // Update the ref to track the current response for next comparison
+    previousResponseRef.current = currentResponse;
   }, [requestActions.response, requestState.activeTab, requestState.setActiveTab]);
 
   // Keyboard shortcuts
