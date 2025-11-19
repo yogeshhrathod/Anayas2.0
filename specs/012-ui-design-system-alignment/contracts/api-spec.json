@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "API Contract: ui-design-system-alignment",
+  "description": "API contract specification for ui-design-system-alignment",
+  "version": "1.0.0",
+  "featureId": "012-ui-design-system-alignment",
+  "lastUpdated": "2025-11-19",
+  "endpoints": [
+    {
+      "name": "[Endpoint Name]",
+      "method": "GET|POST|PUT|PATCH|DELETE",
+      "path": "/api/v1/endpoint",
+      "description": "[Endpoint description]",
+      "request": {
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "queryParams": {
+          "param1": {
+            "type": "string",
+            "required": true,
+            "description": "[Parameter description]"
+          }
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "field1": {
+              "type": "string",
+              "description": "[Field description]"
+            }
+          },
+          "required": [
+            "field1"
+          ]
+        }
+      },
+      "response": {
+        "200": {
+          "description": "Success response",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Bad request",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "ipcHandlers": [
+    {
+      "name": "handler:name",
+      "channel": "channel:name",
+      "description": "[Handler description]",
+      "request": {
+        "type": "object",
+        "properties": {}
+      },
+      "response": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ],
+  "dataModels": [
+    {
+      "name": "[Model Name]",
+      "type": "interface|type|class",
+      "description": "[Model description]",
+      "schema": {
+        "properties": {
+          "field1": {
+            "type": "string",
+            "description": "[Field description]"
+          }
+        }
+      }
+    }
+  ]
+}

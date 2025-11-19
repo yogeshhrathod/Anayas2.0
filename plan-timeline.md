@@ -178,7 +178,7 @@
 
 **Timeline**: 1-2 days
 
-### 4.6 Bulk Operations (Deferred from Phase 2) 📋 PLANNED
+### 4.7 Bulk Operations (Deferred from Phase 2) 📋 PLANNED
 - [ ] **Multi-Select UI** - Checkboxes for selecting multiple requests
 - [ ] **Select All/Deselect All** - Quick selection controls
 - [ ] **Bulk Delete** - Delete multiple requests at once
@@ -298,6 +298,21 @@
 - [ ] **Response Streaming** - For large responses
 
 **Timeline**: 2-3 days
+
+### 4.6 UI Design System Alignment 🎨 📋 PLANNED
+- [ ] **Shell Layout Alignment** - Align app shell with editor-style three/four-pane model (activity/navigation, sidebar, main stage, response stage)
+- [ ] **Layout Modes** - Implement normal/write/debug modes with smooth transitions
+- [ ] **Request Builder Alignment** - Match design system patterns (URL strip, compact tabs, table-like sections)
+- [ ] **Response Visualization** - Align with design system (tabs, status/metrics bar, large JSON handling)
+- [ ] **Virtualized JSON Viewer** - Implement virtualized viewer for large responses with in-pane search
+- [ ] **Command Palette** - First-class command palette (Cmd/Ctrl+K) with fuzzy search and context awareness
+- [ ] **Navigation & Sidebar** - Align NavigationBar and CollectionHierarchy with activity bar and tree patterns
+- [ ] **Accessibility Improvements** - ARIA roles, focus management, keyboard navigation, semantic colors
+- [ ] **Visual Polish** - Semantic color usage, density guidelines, micro-interactions
+
+**Timeline**: 3-4 days  
+**Spec**: `specs/012-ui-design-system-alignment/`  
+**Status**: `draft` - Aligns UI with `ai-context/ui-design-system.md`
 
 ---
 
@@ -420,7 +435,7 @@
 ### UI/UX Improvements 🎨 🔄 PARTIALLY COMPLETED
 - [x] **Resizable Panels** - Implement proper panel resizing
 - [x] **Keyboard Navigation** - Full keyboard support
-- [ ] **Accessibility** - ARIA labels, screen reader support
+- [ ] **Accessibility** - ARIA labels, screen reader support (see Phase 4.6 UI Design System Alignment)
 - [x] **Tooltips** - Helpful hints throughout UI
 - [x] **Empty States** - Better empty state designs
 - [x] **Loading States** - Skeleton loaders
@@ -428,6 +443,7 @@
 - [x] **Success Animations** - Subtle feedback
 - [ ] **Onboarding** - First-time user guide
 - [ ] **Shortcuts Overlay** - Show available shortcuts
+- [ ] **UI Design System Alignment** - Comprehensive alignment with design system (see Phase 4.6)
 
 ### Developer Experience 🛠️ 📋 PLANNED
 - [ ] **Plugin System** - Allow community extensions
@@ -469,7 +485,7 @@
 
 ### **Phase 4** (Advanced Features) - 🔄 IN PROGRESS
 - Duration: ~2-3 weeks
-- Status: **50% Complete**
+- Status: **45% Complete** (UI Design System Alignment added)
 - Priority: MEDIUM
 
 ### **Phase 5** (Premium Features) - 📋 PLANNED
