@@ -1,7 +1,7 @@
 # Task Breakdown: ui-design-system-alignment
 
 **Feature ID**: `012-ui-design-system-alignment`  
-**Status**: `draft`  
+**Status**: `planned`  
 **Related Spec**: `specs/012-ui-design-system-alignment/spec.md`  
 **Related Plan**: `specs/012-ui-design-system-alignment/plan.md`
 

@@ -312,7 +312,7 @@
 
 **Timeline**: 3-4 days  
 **Spec**: `specs/012-ui-design-system-alignment/`  
-**Status**: `draft` - Aligns UI with `ai-context/ui-design-system.md`
+**Status**: `planned` - Aligns UI with `ai-context/ui-design-system.md`
 
 ---
 

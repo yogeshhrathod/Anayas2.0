@@ -1,9 +1,9 @@
 # Feature Specification: ui-design-system-alignment
 
-**Status**: `draft`  
+**Status**: `planned`  
 **Feature ID**: `012-ui-design-system-alignment`  
 **Created**: 2025-11-19  
-**Last Updated**: 2025-11-19  
+**Last Updated**: 2025-01-27  
 **Owner**: [TBD]  
 **Phase**: [UI & DX polish phase in `plan-timeline.md` – to be finalized]
 
