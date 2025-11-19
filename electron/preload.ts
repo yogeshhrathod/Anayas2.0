@@ -75,6 +75,11 @@ export interface RequestOptions {
   queryParams?: Array<{ key: string; value: string; enabled: boolean }>;
 }
 
+export interface SidebarState {
+  expandedSections: string[];
+  sectionOrder?: string[];
+}
+
 export interface RequestPreset {
   id?: string;
   name: string;
@@ -183,6 +188,12 @@ const api = {
     set: (key: string, value: any) => ipcRenderer.invoke('settings:set', key, value),
     getAll: () => ipcRenderer.invoke('settings:getAll'),
     reset: () => ipcRenderer.invoke('settings:reset'),
+  },
+
+  // Sidebar state operations
+  sidebar: {
+    getState: () => ipcRenderer.invoke('settings:getSidebarState'),
+    setState: (state: SidebarState) => ipcRenderer.invoke('settings:setSidebarState', state),
   },
 
   // File operations

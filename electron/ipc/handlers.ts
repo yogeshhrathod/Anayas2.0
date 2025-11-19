@@ -720,6 +720,24 @@ export function registerIpcHandlers() {
     return { success: true };
   });
 
+  // Sidebar state operations
+  ipcMain.handle('settings:getSidebarState', async () => {
+    const state = getSetting('sidebar');
+    // Return default state if not set
+    if (!state) {
+      return {
+        expandedSections: ['collections'],
+        sectionOrder: ['unsaved', 'collections'],
+      };
+    }
+    return state;
+  });
+
+  ipcMain.handle('settings:setSidebarState', async (_, state) => {
+    setSetting('sidebar', state);
+    return { success: true };
+  });
+
   // File operations
   ipcMain.handle('file:select', async (_, filters) => {
     const result = await dialog.showOpenDialog({
