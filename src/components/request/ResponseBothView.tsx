@@ -58,14 +58,14 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
 
   // Left Panel: Headers
   const headersPanel = (
-    <div className="p-4 h-full overflow-auto">
-      <h4 className="text-sm font-semibold mb-3">Headers</h4>
-      <div className="bg-muted/50 rounded-md p-3 font-mono text-xs overflow-x-auto">
+    <div className="p-3 h-full overflow-auto">
+      <h4 className="text-sm font-semibold mb-2">Headers</h4>
+      <div className="bg-muted/50 rounded-md p-2 font-mono text-xs overflow-x-auto">
         {Object.entries(response.headers).length > 0 ? (
           Object.entries(response.headers).map(([key, value]) => (
             <div key={key} className="flex py-1 border-b border-border/50 last:border-0">
               <span className="text-muted-foreground w-40 flex-shrink-0 font-semibold">{key}:</span>
-              <span className="ml-2 break-all text-xs">{value}</span>
+              <span className="ml-1.5 break-all text-xs">{value}</span>
             </div>
           ))
         ) : (
@@ -78,10 +78,10 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
   // Right Panel: Body
   const bodyPanel = (
     <div className="flex flex-col h-full overflow-auto">
-      <div className="px-4 pt-4 pb-2">
+      <div className="px-3 pt-3 pb-1.5">
         <h4 className="text-sm font-semibold">Body</h4>
       </div>
-      <div className="px-4 pb-4">
+      <div className="px-3 pb-3">
         <MonacoEditor
           value={formattedBody}
           onChange={() => {}} // Read-only
@@ -104,8 +104,8 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Header with Status and Actions */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-border">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between px-3 pt-3 pb-1.5 border-b border-border">
+        <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold">Response</h3>
           <div className="flex items-center gap-2">
             <Badge 
@@ -124,13 +124,13 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
           <div className="flex gap-2">
             {onCopy && (
               <Button variant="outline" size="sm" onClick={onCopy}>
-                <Copy className="h-4 w-4 mr-2" />
+                <Copy className="h-4 w-4 mr-1.5" />
                 Copy
               </Button>
             )}
             {onDownload && (
               <Button variant="outline" size="sm" onClick={onDownload}>
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4 mr-1.5" />
                 Download
               </Button>
             )}

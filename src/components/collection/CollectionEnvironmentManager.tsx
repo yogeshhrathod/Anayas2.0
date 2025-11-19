@@ -122,7 +122,7 @@ export function CollectionEnvironmentManager({
             size="sm"
             type="button"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-1.5" />
             Add Environment
           </Button>
         </div>
@@ -137,7 +137,7 @@ export function CollectionEnvironmentManager({
               size="sm"
               type="button"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-1.5" />
               Create First Environment
             </Button>
           </div>
@@ -243,7 +243,7 @@ export function CollectionEnvironmentManager({
           >
             {isLoading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
                 Saving...
               </>
             ) : editingEnvironment ? (

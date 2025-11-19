@@ -202,7 +202,7 @@ export function PromoteRequestDialog({
       maxWidth="sm"
       className="max-h-[80vh]"
     >
-      <div className="space-y-4" onKeyDown={handleKeyDown}>
+      <div className="space-y-2" onKeyDown={handleKeyDown}>
           <div className="space-y-2">
             <Label htmlFor="request-name">Request Name</Label>
             <Input
@@ -285,12 +285,12 @@ export function PromoteRequestDialog({
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1.5"></div>
                   Saving...
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="h-4 w-4 mr-1.5" />
                   Save Request
                 </>
               )}

@@ -105,14 +105,14 @@ export function UnsavedRequestsSection() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Unsaved Requests List */}
-      <div className="flex-1 overflow-y-auto space-y-0.5 px-2 py-2 min-h-0">
+      <div className="flex-1 overflow-y-auto space-y-0.5 px-2 py-1.5 min-h-0">
         {unsavedRequests.map((unsaved) => {
             const isActive = unsaved.id === activeUnsavedRequestId;
             
             return (
               <div
                 key={unsaved.id}
-                className={`group flex items-center gap-2 p-2 hover:bg-muted/50 rounded-md cursor-pointer transition-colors ${
+                className={`group flex items-center gap-1.5 h-7 px-2 py-1 hover:bg-muted/50 rounded-md cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
                   isActive ? 'bg-primary/10 border border-primary/20' : ''
                 }`}
                 onClick={() => handleSelectUnsaved(unsaved)}
@@ -151,7 +151,7 @@ export function UnsavedRequestsSection() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0"
+                        className="h-5 w-5 p-0"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <MoreVertical className="h-3 w-3" />
@@ -165,7 +165,7 @@ export function UnsavedRequestsSection() {
                           handleSaveToCollection(unsaved);
                         }}
                       >
-                        <Save className="h-4 w-4 mr-2" />
+                        <Save className="h-4 w-4 mr-1.5" />
                         Save to Collection
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -175,7 +175,7 @@ export function UnsavedRequestsSection() {
                         }}
                         className="text-destructive"
                       >
-                        <Trash2 className="h-4 w-4 mr-2" />
+                        <Trash2 className="h-4 w-4 mr-1.5" />
                         Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>

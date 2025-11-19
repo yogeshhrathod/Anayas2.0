@@ -122,11 +122,11 @@ export function ResponseTab({
   return (
     <div className="flex flex-col h-full">
       {/* Sub-tab Navigation */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
+      <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border">
         <button
           onClick={() => setResponseSubTab('headers')}
           className={cn(
-            'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+            'h-7 px-2.5 py-1 text-sm font-medium rounded-md transition-all duration-200',
             responseSubTab === 'headers'
               ? 'bg-primary text-primary-foreground'
               : 'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -137,7 +137,7 @@ export function ResponseTab({
         <button
           onClick={() => setResponseSubTab('body')}
           className={cn(
-            'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+            'h-7 px-2.5 py-1 text-sm font-medium rounded-md transition-all duration-200',
             responseSubTab === 'body'
               ? 'bg-primary text-primary-foreground'
               : 'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -148,7 +148,7 @@ export function ResponseTab({
         <button
           onClick={() => setResponseSubTab('both')}
           className={cn(
-            'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+            'h-7 px-2.5 py-1 text-sm font-medium rounded-md transition-all duration-200',
             responseSubTab === 'both'
               ? 'bg-primary text-primary-foreground'
               : 'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'

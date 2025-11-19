@@ -113,7 +113,7 @@ export const RequestItem: React.FC<RequestItemProps> = ({
 
   return (
     <div
-      className={`group flex items-center gap-2 p-2 pl-8 hover:bg-muted/50 rounded-md transition-colors cursor-pointer ${
+      className={`group flex items-center gap-1.5 h-7 px-2 py-1 pl-8 hover:bg-muted/50 rounded-md transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
         isSelected ? 'bg-primary/10 border border-primary/20' : ''
       }`}
       onClick={() => {

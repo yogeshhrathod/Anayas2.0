@@ -40,18 +40,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   variant = 'card'
 }) => {
   const content = (
-    <div className="flex flex-col items-center justify-center py-12">
-      <div className="text-muted-foreground mb-4">
+    <div className="flex flex-col items-center justify-center py-8">
+      <div className="text-muted-foreground mb-3 flex items-center justify-center">
         {icon}
       </div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+      <h3 className="text-base font-semibold mb-1.5">{title}</h3>
       {description && (
-        <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
+        <p className="text-sm text-muted-foreground mb-2 text-center max-w-md">
           {description}
         </p>
       )}
       {action && (
-        <div className="mt-4">
+        <div className="mt-2">
           {action}
         </div>
       )}

@@ -152,10 +152,10 @@ export const EntityList = <T extends Record<string, any>>({
 
   if (loading) {
     return (
-      <div className={cn('space-y-4', className)}>
-        <div className="animate-pulse space-y-3">
+      <div className={cn('space-y-1', className)}>
+        <div className="animate-pulse space-y-0.5">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-16 bg-muted rounded-md" />
+            <div key={i} className="h-7 bg-muted rounded-md" />
           ))}
         </div>
       </div>
@@ -164,12 +164,12 @@ export const EntityList = <T extends Record<string, any>>({
 
   if (sortedItems.length === 0 && emptyState) {
     return (
-      <div className={cn('flex flex-col items-center justify-center py-12', className)}>
-        <div className="text-muted-foreground mb-4">
+      <div className={cn('flex flex-col items-center justify-center py-8', className)}>
+        <div className="text-muted-foreground mb-2">
           {emptyState.icon}
         </div>
-        <h3 className="text-lg font-semibold mb-2">{emptyState.title}</h3>
-        <p className="text-sm text-muted-foreground mb-4 text-center">
+        <h3 className="text-base font-semibold mb-1.5">{emptyState.title}</h3>
+        <p className="text-sm text-muted-foreground mb-2 text-center">
           {emptyState.description}
         </p>
         {emptyState.action}
@@ -178,9 +178,9 @@ export const EntityList = <T extends Record<string, any>>({
   }
 
   return (
-    <div className={cn('space-y-4', className)}>
-      {/* Search and Filters */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center">
+      <div className={cn('space-y-2', className)}>
+        {/* Search and Filters */}
+        <div className="flex flex-col gap-2 md:flex-row md:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -227,7 +227,7 @@ export const EntityList = <T extends Record<string, any>>({
           <div
             key={index}
             className={cn(
-              'p-4 rounded-lg border bg-card hover:shadow-md transition-shadow',
+              'p-3 rounded-md border bg-card hover:bg-muted/50 transition-all duration-200',
               onItemClick && 'cursor-pointer hover:bg-accent/5',
               itemClassName
             )}
@@ -252,7 +252,7 @@ export const EntityList = <T extends Record<string, any>>({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0"
+                          className="h-5 w-5 p-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSort(String(column.key));

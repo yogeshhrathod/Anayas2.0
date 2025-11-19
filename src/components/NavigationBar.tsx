@@ -180,8 +180,8 @@ export function NavigationBar() {
               key={item.id}
               onClick={() => setCurrentPage(item.id)}
               className={cn(
-                "h-8 rounded-full transition-all duration-200 text-sm font-medium",
-                "hover:bg-accent/50 hover:scale-[1.02]",
+                "h-7 rounded-full transition-all duration-200 text-sm font-medium",
+                "hover:bg-muted/50",
                 isActive
                   ? "bg-primary/10 border border-primary/50 text-primary shadow-sm"
                   : "hover:text-accent-foreground",
@@ -214,7 +214,7 @@ export function NavigationBar() {
                       <button
                         className={cn(
                           "h-8 px-3 flex items-center gap-2 rounded-full transition-all duration-200",
-                          "hover:bg-accent/50 hover:scale-[1.02] bg-blue-500/10 border border-blue-500/50 text-blue-600 dark:text-blue-400 shadow-sm",
+                          "hover:bg-muted/50 bg-blue-500/10 border border-blue-500/50 text-blue-600 dark:text-blue-400 shadow-sm",
                           isCompact ? "w-8 px-0 justify-center" : ""
                         )}
                       >
@@ -253,7 +253,7 @@ export function NavigationBar() {
                     onClick={handleNewRequest}
                     className={cn(
                       "h-8 px-3 flex items-center gap-2 rounded-full transition-all duration-200",
-                      "hover:bg-accent/50 hover:scale-[1.02] bg-primary/10 border border-primary/50 text-primary shadow-sm",
+                      "hover:bg-muted/50 bg-primary/10 border border-primary/50 text-primary shadow-sm",
                       isCompact ? "w-8 px-0 justify-center" : ""
                     )}
                   >
@@ -278,7 +278,7 @@ export function NavigationBar() {
               onClick={() => setCurrentPage(item.id)}
               className={cn(
                 "h-8 w-8 flex items-center justify-center rounded-full transition-all duration-200",
-                "hover:bg-accent/50 hover:scale-[1.02]",
+                "hover:bg-muted/50",
                 isActive
                   ? "bg-primary/10 border border-primary/50 text-primary shadow-sm"
                   : "text-muted-foreground hover:text-foreground"

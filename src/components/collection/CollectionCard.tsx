@@ -104,7 +104,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
       </CardHeader>
       
       <CardContent className="pt-0">
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-1">
@@ -119,7 +119,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
           </div>
 
           {collection.environments && collection.environments.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="text-sm font-medium text-muted-foreground">
                 Collection Environments
               </div>

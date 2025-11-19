@@ -54,9 +54,9 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Header with Status and Actions */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <div className="flex items-center gap-4">
-          <h3 className="text-lg font-semibold">Response Body</h3>
+      <div className="flex items-center justify-between px-3 pt-3 pb-1.5">
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-semibold">Response Body</h3>
           <div className="flex items-center gap-2">
             <Badge 
               variant={response.status >= 200 && response.status < 300 ? 'default' : 'destructive'}
@@ -74,13 +74,13 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
           <div className="flex gap-2">
             {onCopy && (
               <Button variant="outline" size="sm" onClick={onCopy}>
-                <Copy className="h-4 w-4 mr-2" />
+                <Copy className="h-4 w-4 mr-1.5" />
                 Copy
               </Button>
             )}
             {onDownload && (
               <Button variant="outline" size="sm" onClick={onDownload}>
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4 mr-1.5" />
                 Download
               </Button>
             )}
@@ -89,7 +89,7 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
       </div>
       
       {/* Monaco Editor - Full Width */}
-      <div className="flex-1 px-4 pb-4">
+      <div className="flex-1 px-3 pb-3">
         <MonacoEditor
           value={formattedBody}
           onChange={() => {}} // Read-only, no changes

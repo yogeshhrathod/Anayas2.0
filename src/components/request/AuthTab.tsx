@@ -34,7 +34,7 @@ export const AuthTab: React.FC<AuthTabProps> = ({
   setRequestData
 }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div>
         <h3 className="text-base font-semibold flex items-center gap-2">
           <Shield className="h-4 w-4 text-primary" />
@@ -45,8 +45,8 @@ export const AuthTab: React.FC<AuthTabProps> = ({
         </p>
       </div>
       
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
           <Label htmlFor="auth-type" className="text-sm font-medium">Authentication Type</Label>
           <Select 
             value={requestData.auth.type} 
@@ -67,8 +67,8 @@ export const AuthTab: React.FC<AuthTabProps> = ({
         </div>
         
         {requestData.auth.type === 'bearer' && (
-          <Card className="p-4">
-            <div className="space-y-3">
+          <Card className="p-3">
+            <div className="space-y-2">
               <Label htmlFor="bearer-token" className="text-sm font-medium">Bearer Token</Label>
               <VariableInputUnified
                 variant="overlay"
@@ -87,8 +87,8 @@ export const AuthTab: React.FC<AuthTabProps> = ({
         )}
         
         {requestData.auth.type === 'basic' && (
-          <Card className="p-4">
-            <div className="space-y-3">
+          <Card className="p-3">
+            <div className="space-y-2">
               <div>
                 <Label htmlFor="basic-username" className="text-sm font-medium">Username</Label>
                 <VariableInputUnified
@@ -121,8 +121,8 @@ export const AuthTab: React.FC<AuthTabProps> = ({
         )}
         
         {requestData.auth.type === 'apikey' && (
-          <Card className="p-4">
-            <div className="space-y-3">
+          <Card className="p-3">
+            <div className="space-y-2">
               <div>
                 <Label htmlFor="apikey-key" className="text-sm font-medium">API Key</Label>
                 <VariableInputUnified

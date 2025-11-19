@@ -60,8 +60,8 @@ export function InputDialog({
       description={description}
       maxWidth="md"
     >
-      <div className="space-y-4">
-        <div className="space-y-2">
+      <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="input-dialog">Name</Label>
           <Input
             id="input-dialog"

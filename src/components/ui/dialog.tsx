@@ -55,9 +55,9 @@ export function Dialog({
       onKeyDown={handleKeyDown}
     >
       <Card className={`w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-hidden flex flex-col ${className}`}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <div className="flex-1">
-            <CardTitle className="text-xl">
+            <CardTitle className="text-lg">
               {title}
             </CardTitle>
             {description && (
@@ -78,7 +78,7 @@ export function Dialog({
             </Button>
           )}
         </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto space-y-4 max-h-[calc(90vh-120px)]">
+        <CardContent className="flex-1 overflow-y-auto space-y-2 max-h-[calc(90vh-120px)]">
           {children}
         </CardContent>
       </Card>

@@ -194,8 +194,8 @@ export function Settings() {
           <CardTitle>Font Settings</CardTitle>
           <CardDescription>Customize application fonts</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <CardContent className="space-y-2">
+          <div className="grid gap-2 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="uiFontFamily">UI Font Family</Label>
               <Input
@@ -226,8 +226,8 @@ export function Settings() {
           <CardTitle>API Testing Settings</CardTitle>
           <CardDescription>Configure default options for API requests</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <CardContent className="space-y-2">
+          <div className="grid gap-2 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="requestTimeout">Request Timeout (ms)</Label>
               <Input

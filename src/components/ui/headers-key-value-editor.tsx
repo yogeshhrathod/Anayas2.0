@@ -48,9 +48,9 @@ export const HeadersKeyValueEditor: React.FC<HeadersKeyValueEditorProps> = ({
   const headerEntries = Object.entries(headers);
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`space-y-0.5 ${className}`}>
       {headerEntries.length === 0 ? (
-        <div className="text-center py-6 text-muted-foreground">
+        <div className="text-center py-4 text-muted-foreground">
           <p className="text-sm">{emptyStateText}</p>
           <Button
             variant="outline"
@@ -59,12 +59,12 @@ export const HeadersKeyValueEditor: React.FC<HeadersKeyValueEditorProps> = ({
             onClick={addHeader}
             className="mt-2"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-1.5" />
             {addButtonText}
           </Button>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-0.5">
           {headerEntries.map(([key, value], index) => (
             <div key={index} className="flex items-center gap-2">
               <Input
@@ -98,7 +98,7 @@ export const HeadersKeyValueEditor: React.FC<HeadersKeyValueEditorProps> = ({
             onClick={addHeader}
             className="w-full"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-1.5" />
             {addButtonText}
           </Button>
         </div>

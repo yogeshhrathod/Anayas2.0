@@ -74,7 +74,7 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
 
   return (
     <div className="border-b border-border/50 bg-card/30">
-      <div className="px-4 py-2">
+      <div className="px-3 py-1.5">
         <div className="flex items-center gap-1 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -82,7 +82,7 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-1.5 h-7 px-2.5 py-1 text-sm font-medium border-b-2 whitespace-nowrap transition-all duration-200 ${
                   activeTab === tab.id 
                     ? 'border-primary text-primary bg-primary/5' 
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'

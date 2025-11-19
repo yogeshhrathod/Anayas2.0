@@ -109,9 +109,9 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
 
   return (
     <div className="border-b border-border/50 bg-card/50">
-      <div className="p-4">
+      <div className="p-3">
         {/* Request Name Row */}
-        <div className="flex items-center gap-4 mb-2">
+        <div className="flex items-center gap-2 mb-1.5">
           <div className="flex-1">
             {isEditingName ? (
               <Input
@@ -165,7 +165,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
         </div>
         
         {/* Method and URL Row */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           {/* Method Selector */}
           <Select 
             value={requestData.method} 
@@ -231,12 +231,12 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
           >
             {isLoading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
                 Sending...
               </>
             ) : (
               <>
-                <Send className="h-4 w-4 mr-2" />
+                <Send className="h-4 w-4 mr-1.5" />
                 Send
               </>
             )}

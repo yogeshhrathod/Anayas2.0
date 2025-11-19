@@ -43,9 +43,9 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
   };
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`space-y-0.5 ${className}`}>
       {items.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
+        <div className="text-center py-6 text-muted-foreground">
           <p>No items added yet</p>
           <Button
             variant="outline"
@@ -53,12 +53,12 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
             onClick={addItem}
             className="mt-2"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-1.5" />
             Add Item
           </Button>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-0.5">
           {items.map((item, index) => (
             <div key={index} className="flex items-center gap-2">
               {showEnabled && (
@@ -98,7 +98,7 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
             onClick={addItem}
             className="w-full"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-1.5" />
             Add Item
           </Button>
         </div>

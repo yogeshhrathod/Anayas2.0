@@ -278,7 +278,7 @@ export function MonacoKeyValueEditor({
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-2">
         {showJsonEditor ? (
           // JSON Editor View
           <div className="space-y-2">

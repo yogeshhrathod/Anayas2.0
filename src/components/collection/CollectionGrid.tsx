@@ -52,10 +52,10 @@ export const CollectionGrid: React.FC<CollectionGridProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 6 }).map((_, index) => (
           <div key={index} className="animate-pulse">
-            <div className="bg-gray-200 rounded-lg h-48"></div>
+            <div className="bg-muted rounded-md h-32"></div>
           </div>
         ))}
       </div>
@@ -65,7 +65,7 @@ export const CollectionGrid: React.FC<CollectionGridProps> = ({
   if (collections.length === 0) {
     return (
       <EmptyState
-        icon={<span className="text-6xl">📁</span>}
+        icon={<div className="h-12 w-12 flex items-center justify-center text-4xl">📁</div>}
         title="No Collections"
         description="Create your first collection to organize your API requests"
         action={<Button onClick={() => onEdit({} as Collection)}>Create Collection</Button>}
@@ -74,7 +74,7 @@ export const CollectionGrid: React.FC<CollectionGridProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {collections.map((collection) => (
         <CollectionCard
           key={collection.id}

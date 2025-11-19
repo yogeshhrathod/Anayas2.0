@@ -65,7 +65,7 @@ export const HeadersTab: React.FC<HeadersTabProps> = ({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-base font-semibold flex items-center gap-2">
@@ -98,7 +98,7 @@ export const HeadersTab: React.FC<HeadersTabProps> = ({
       
       <div className="border rounded-md bg-card">
         {headersViewMode === 'table' ? (
-          <div className="p-3">
+          <div className="p-2">
             <HeadersKeyValueEditor
               headers={requestData.headers}
               onChange={(headers) => setRequestData({ ...requestData, headers })}

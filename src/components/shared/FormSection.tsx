@@ -65,7 +65,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
           <CardDescription>{description}</CardDescription>
         )}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-2">
         {children}
         
         {/* Display validation errors */}

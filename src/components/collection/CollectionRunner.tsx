@@ -104,7 +104,7 @@ export function CollectionRunner({ collectionId, collectionName, onClose, open }
       description="Execute all requests in this collection sequentially"
       maxWidth="2xl"
     >
-      <div className="space-y-4">
+      <div className="space-y-2">
           {/* Control Buttons */}
           <div className="flex gap-2">
             {!isRunning && results.length === 0 && (
@@ -143,9 +143,9 @@ export function CollectionRunner({ collectionId, collectionName, onClose, open }
 
           {/* Summary */}
           {summary && !isRunning && (
-            <div className="border rounded-lg p-4 bg-card">
-              <h3 className="font-semibold mb-3">Summary</h3>
-              <div className="grid grid-cols-3 gap-4">
+            <div className="border rounded-lg p-3 bg-card">
+              <h3 className="font-semibold mb-2">Summary</h3>
+              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <div className="text-2xl font-bold">{summary.total}</div>
                   <div className="text-sm text-muted-foreground">Total</div>
@@ -170,7 +170,7 @@ export function CollectionRunner({ collectionId, collectionName, onClose, open }
                 {results.map((result) => (
                   <div
                     key={result.requestId}
-                    className={`border rounded-lg p-3 ${
+                    className={`border rounded-lg p-2 ${
                       result.success && result.status && result.status < 400
                         ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
                         : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800'

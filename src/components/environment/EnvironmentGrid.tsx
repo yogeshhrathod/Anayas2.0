@@ -56,7 +56,7 @@ export const EnvironmentGrid: React.FC<EnvironmentGridProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {Array.from({ length: 8 }).map((_, index) => (
           <div key={index} className="animate-pulse">
-            <div className="bg-gray-200 rounded-lg h-32"></div>
+            <div className="bg-muted rounded-md h-32"></div>
           </div>
         ))}
       </div>
@@ -66,7 +66,7 @@ export const EnvironmentGrid: React.FC<EnvironmentGridProps> = ({
   if (environments.length === 0) {
     return (
       <EmptyState
-        icon={<span className="text-6xl">🌍</span>}
+        icon={<div className="h-12 w-12 flex items-center justify-center text-4xl">🌍</div>}
         title="No Environments"
         description="Create your first environment to manage API configurations"
         action={<Button onClick={() => onEdit({} as Environment)}>Create Environment</Button>}

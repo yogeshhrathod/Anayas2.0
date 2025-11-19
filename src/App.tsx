@@ -619,13 +619,13 @@ function App() {
         <div className="flex flex-1 flex-col">
           {/* Top Bar - Only show for non-home pages */}
           {currentPage !== 'home' && (
-            <div className="flex h-10 items-center border-b bg-card px-4">
+            <div className="flex h-10 items-center border-b bg-card px-3">
               <h2 className="text-base font-semibold capitalize">{currentPage}</h2>
             </div>
           )}
 
           {/* Page Content */}
-          <div className={`flex-1 overflow-auto ${currentPage === 'home' ? 'p-0' : 'p-4'}`}>
+          <div className={`flex-1 overflow-auto ${currentPage === 'home' ? 'p-0' : 'p-3'}`}>
             {renderPage()}
           </div>
         </div>

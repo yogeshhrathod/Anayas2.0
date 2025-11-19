@@ -83,7 +83,7 @@ export const CollectionItem: React.FC<CollectionItemProps> = ({
 
   return (
     <div
-      className={`group flex items-center gap-2 p-2 hover:bg-muted/50 rounded-md transition-colors cursor-pointer ${
+      className={`group flex items-center gap-1.5 h-7 px-2 py-1 hover:bg-muted/50 rounded-md transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
         isSelected ? 'bg-primary/10 border border-primary/20' : ''
       }`}
       onClick={() => {
@@ -98,7 +98,7 @@ export const CollectionItem: React.FC<CollectionItemProps> = ({
       <Button
         variant="ghost"
         size="sm"
-        className="h-6 w-6 p-0 pointer-events-none"
+        className="h-5 w-5 p-0 pointer-events-none"
       >
         {isExpanded ? (
           <ChevronDown className="h-4 w-4" />
@@ -114,7 +114,7 @@ export const CollectionItem: React.FC<CollectionItemProps> = ({
 
       {/* Collection Name */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <span className="text-sm font-medium truncate">
             {collection.name}
           </span>

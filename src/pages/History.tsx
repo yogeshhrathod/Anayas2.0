@@ -141,7 +141,7 @@ export function History() {
       <Card className="border-2">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <div className="rounded-lg bg-primary/10 p-2">
+            <div className="rounded-md bg-primary/10 p-2">
               <Filter className="h-5 w-5 text-primary" />
             </div>
             <div>
@@ -151,7 +151,7 @@ export function History() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-2 md:grid-cols-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -204,7 +204,7 @@ export function History() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-primary/10 p-2">
+              <div className="rounded-md bg-primary/10 p-2">
                 <Clock className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -229,9 +229,9 @@ export function History() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-1.5">
               {filteredHistory.map((request: any) => (
-                <div key={request.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
+                <div key={request.id} className="p-3 rounded-md border bg-card hover:bg-muted/50 transition-all duration-200">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -239,7 +239,7 @@ export function History() {
                           {request.method}
                         </Badge>
                         {getStatusBadge(request.status)}
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           {request.responseTime}ms
                         </span>
                       </div>
@@ -294,11 +294,11 @@ export function History() {
           onOpenChange={setShowDetails}
           title={
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-sm font-mono">
+              <Badge variant="outline" className="text-xs font-mono">
                 {selectedRequest.method}
               </Badge>
               {getStatusBadge(selectedRequest.status)}
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {selectedRequest.responseTime}ms
               </span>
             </div>
@@ -307,7 +307,7 @@ export function History() {
           maxWidth="4xl"
           className="w-4/5 max-h-[80vh]"
         >
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <div>
                   <h4 className="font-semibold mb-2">Request Headers</h4>
                   <pre className="bg-muted p-3 rounded text-xs overflow-auto">
@@ -332,7 +332,7 @@ export function History() {
                 
                 <div>
                   <h4 className="font-semibold mb-2">Request Details</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <span className="font-medium">Status:</span> {selectedRequest.status}
                     </div>

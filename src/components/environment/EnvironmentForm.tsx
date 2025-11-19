@@ -112,7 +112,7 @@ export const EnvironmentForm = forwardRef<EnvironmentFormRef, EnvironmentFormPro
     <form onSubmit={handleSubmit} className="w-full">
       <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
         {/* Left Column: Basic Info */}
-        <div className="space-y-4">
+        <div className="space-y-2">
           <div>
             <Label htmlFor="name">Name *</Label>
             <Input

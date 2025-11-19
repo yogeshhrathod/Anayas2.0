@@ -21,9 +21,15 @@ const badgeVariants = cva(
         error:
           "border-transparent bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
       },
+      size: {
+        default: "px-2.5 py-0.5",
+        compact: "h-4 px-1.5 py-0 text-[10px]",
+        sm: "px-2 py-0.5",
+      },
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
     },
   }
 )

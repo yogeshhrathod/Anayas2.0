@@ -344,7 +344,7 @@ export function ApiRequestBuilder() {
           />
 
           {/* Tab Content */}
-          <div className="flex-1 p-3 bg-background/50 overflow-hidden">
+          <div className="flex-1 p-2 bg-background/50 overflow-hidden">
             {renderTabContent()}
           </div>
         </div>

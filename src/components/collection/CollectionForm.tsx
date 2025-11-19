@@ -125,9 +125,9 @@ export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-4">
         {/* Left Column: Basic Info */}
-        <div className="space-y-4">
+        <div className="space-y-2">
           <div>
             <Label htmlFor="name">Name *</Label>
             <Input
@@ -163,11 +163,11 @@ export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>
         {/* Right Column: Tabs for Variables and Documentation */}
         <div className="flex-1">
           <div className="w-full">
-            <div className="flex border-b border-border/50 mb-4">
+            <div className="flex border-b border-border/50 mb-2">
               <button
                 type="button"
                 onClick={() => setActiveTab('environments')}
-                className={`flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-1 h-7 px-3 py-1 text-sm font-medium border-b-2 transition-all duration-200 ${
                   activeTab === 'environments'
                     ? 'border-primary text-primary bg-primary/5'
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -178,7 +178,7 @@ export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>
               <button
                 type="button"
                 onClick={() => setActiveTab('documentation')}
-                className={`flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-1 h-7 px-3 py-1 text-sm font-medium border-b-2 transition-all duration-200 ${
                   activeTab === 'documentation'
                     ? 'border-primary text-primary bg-primary/5'
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -188,7 +188,7 @@ export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>
               </button>
             </div>
             {activeTab === 'environments' && (
-              <div className="mt-4">
+              <div className="mt-2">
                 {collection?.id ? (
                   <CollectionEnvironmentManager
                     collectionId={collection.id}
@@ -206,7 +206,7 @@ export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>
               </div>
             )}
             {activeTab === 'documentation' && (
-              <div className="mt-4 space-y-2">
+              <div className="mt-2 space-y-2">
                 <Label htmlFor="documentation">Markdown Documentation</Label>
                 <p className="text-sm text-muted-foreground mb-2">
                   Write documentation for this collection using Markdown syntax

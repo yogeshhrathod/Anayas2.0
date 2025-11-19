@@ -76,7 +76,7 @@ export const ParamsTab: React.FC<ParamsTabProps> = ({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-base font-semibold flex items-center gap-2">
