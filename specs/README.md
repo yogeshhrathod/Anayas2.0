@@ -43,6 +43,7 @@ This directory contains feature specifications and bug reports following the spe
 | `006-dialog-backdrop-consolidation` | [dialog-backdrop-consolidation](specs/006-dialog-backdrop-consolidation/spec.md) | `unknown` | - | - |
 | `007-form-validation-consolidation` | [form-validation-consolidation](specs/007-form-validation-consolidation/spec.md) | `unknown` | - | - |
 | `008-comprehensive-test-suite` | [comprehensive-test-suite](specs/008-comprehensive-test-suite/spec.md) | `unknown` | - | - |
+| `009-response-view-redesign` | [response-view-redesign](specs/009-response-view-redesign/spec.md) | `unknown` | - | - |
 | `010-vscode-style-sidebar` | [vscode-style-sidebar](specs/010-vscode-style-sidebar/spec.md) | `unknown` | - | - |
 | `011-response-tab-redesign` | [response-tab-redesign](specs/011-response-tab-redesign/spec.md) | `unknown` | - | - |
 
