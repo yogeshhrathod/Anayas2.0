@@ -56,6 +56,90 @@ await urlInput.fill('https://example.com');
   - Enhanced `request:send` test to verify response data structure, headers, and response time
   - Enhanced `request:history` test to verify all properties, actual values, and database persistence
 
+## Missing Test Coverage
+
+### Critical: Bulk Edit with Environment Variable Support
+
+**Status**: ❌ **NO TEST COVERAGE**
+
+**Problem**: Bulk edit functionality exists for query parameters, headers, and body, with environment variable support, but has **zero test coverage**.
+
+**Affected Features**:
+1. **Query Parameters Bulk Edit** (`ParamsTab`)
+   - JSON view toggle for bulk editing
+   - Environment variable support in JSON (`{{base_url}}`, `{{api_key}}`, etc.)
+   - Variable autocomplete in Monaco editor
+   - Variable hover tooltips
+   - Variable interpolation on request send
+
+2. **Headers Bulk Edit** (`HeadersTab`)
+   - JSON view toggle for bulk editing
+   - Environment variable support in header values
+   - Variable autocomplete and hover
+   - Variable interpolation
+
+3. **Body Bulk Edit** (`BodyTab`)
+   - JSON editor for raw body content
+   - Environment variable support in JSON body
+   - Variable autocomplete and hover
+   - Variable interpolation
+
+**Required Test Cases**:
+
+#### Query Parameters Bulk Edit Tests
+- [ ] Can toggle from table view to JSON view
+- [ ] JSON view displays current parameters correctly
+- [ ] Can edit parameters in JSON format
+- [ ] Can use environment variables in JSON (`{{variable}}`)
+- [ ] Environment variable autocomplete works in JSON editor
+- [ ] Environment variable hover shows variable details
+- [ ] Can toggle back to table view from JSON
+- [ ] Variables are preserved when switching views
+- [ ] Variables are interpolated correctly when sending request
+- [ ] Invalid JSON shows error and prevents save
+- [ ] JSON validation works correctly
+
+#### Headers Bulk Edit Tests
+- [ ] Can toggle from table view to JSON view
+- [ ] JSON view displays current headers correctly
+- [ ] Can edit headers in JSON format
+- [ ] Can use environment variables in header values
+- [ ] Environment variable autocomplete works in JSON editor
+- [ ] Environment variable hover shows variable details
+- [ ] Can toggle back to table view from JSON
+- [ ] Variables are preserved when switching views
+- [ ] Variables are interpolated correctly when sending request
+- [ ] Invalid JSON shows error and prevents save
+
+#### Body Bulk Edit Tests
+- [ ] Can edit raw body in JSON editor
+- [ ] Can use environment variables in JSON body
+- [ ] Environment variable autocomplete works in body editor
+- [ ] Environment variable hover shows variable details
+- [ ] Variables are interpolated correctly when sending request
+- [ ] JSON validation works for body content
+- [ ] Invalid JSON shows error
+
+#### Environment Variable Integration Tests
+- [ ] Autocomplete appears when typing `{{` in JSON editor
+- [ ] Autocomplete lists global variables
+- [ ] Autocomplete lists collection variables
+- [ ] Autocomplete lists dynamic variables (`{{$timestamp}}`, etc.)
+- [ ] Autocomplete inserts variable correctly
+- [ ] Hover tooltip shows variable name and value
+- [ ] Hover tooltip shows variable scope (global/collection/dynamic)
+- [ ] Variables resolve correctly on request send
+- [ ] Nested variables work (`{{collection.base_url}}/{{global.api_key}}`)
+- [ ] Missing variables show appropriate error
+
+**Test File to Create**:
+- `tests/integration/components/bulk-edit.spec.ts` - Comprehensive bulk edit tests
+- `tests/integration/components/environment-variables-editor.spec.ts` - Variable autocomplete and hover tests
+
+**Priority**: 🔴 **HIGH** - This is a core feature with zero test coverage
+
+**Estimated Test Cases**: 30+ test cases needed
+
 ## Files Requiring Further Review
 
 ### High Priority
@@ -69,14 +153,19 @@ await urlInput.fill('https://example.com');
    - **Status**: Generally good, but some tests could verify more details
    - **Action Needed**: Review edge case tests to ensure they verify actual behavior
 
+3. **Bulk Edit Test Coverage** ⚠️ **NEW**
+   - **Status**: Zero test coverage for bulk edit functionality
+   - **Action Needed**: Create comprehensive test suite for bulk edit with environment variable support
+   - **Estimated Impact**: High - Core feature with no tests
+
 ### Medium Priority
 
-3. **Other component test files**:
+4. **Other component test files**:
    - `tests/integration/components/collection-hierarchy.spec.ts`
    - `tests/integration/components/sidebar.spec.ts`
    - Review for conditional checks and shallow assertions
 
-4. **Data flow tests**:
+5. **Data flow tests**:
    - `tests/integration/data-flow/*.spec.ts`
    - Verify they test complete flows, not just individual steps
 
@@ -149,6 +238,8 @@ When writing or reviewing integration tests, ensure:
 - [ ] Tests use meaningful timeouts (not just `waitForTimeout`)
 - [ ] Tests verify error cases, not just success cases
 - [ ] Tests are independent (no shared state between tests)
+- [ ] **Bulk edit features have test coverage** - Query params, headers, body
+- [ ] **Environment variable features have test coverage** - Autocomplete, hover, interpolation
 
 ## Next Steps
 
@@ -158,6 +249,15 @@ When writing or reviewing integration tests, ensure:
 4. ⏳ Fix `ui-interactions.spec.ts` - IN PROGRESS
 5. ⏳ Review `additional-test-cases.spec.ts` - PENDING
 6. ⏳ Review other component tests - PENDING
+7. ⏳ **Create bulk edit test suite** - PENDING (30+ test cases needed)
+   - Create `tests/integration/components/bulk-edit.spec.ts`
+   - Create `tests/integration/components/environment-variables-editor.spec.ts`
+   - Test query parameters bulk edit with variables
+   - Test headers bulk edit with variables
+   - Test body bulk edit with variables
+   - Test variable autocomplete in Monaco editor
+   - Test variable hover tooltips
+   - Test variable interpolation
 
 ## Running Tests
 

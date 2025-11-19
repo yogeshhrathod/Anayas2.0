@@ -293,6 +293,60 @@ test('collection test 1', ...)
 - Check data persistence
 - Verify UI updates
 
+### CRITICAL: Avoid Falsy Test Cases
+
+**NO CONDITIONAL CHECKS** - Tests must fail if elements don't exist:
+```typescript
+// ❌ BAD - Test passes even if element doesn't exist
+if (await element.count() > 0) {
+  await element.click();
+}
+
+// ✅ GOOD - Test fails if element doesn't exist
+await element.waitFor({ state: 'visible', timeout: 10000 });
+await element.click();
+```
+
+**NO WEAK ASSERTIONS** - Verify actual behavior, not just existence:
+```typescript
+// ❌ BAD - Only checks existence
+expect(result).toBeDefined();
+expect(result).toBeTruthy();
+
+// ✅ GOOD - Verifies actual behavior
+expect(result.success).toBe(true);
+expect(result.data).toHaveProperty('id');
+expect(result.data.id).toBe(1);
+```
+
+**NO SILENT FAILURES** - Don't hide errors:
+```typescript
+// ❌ BAD - Silently fails, test still passes
+const visible = await element.isVisible().catch(() => false);
+
+// ✅ GOOD - Test fails if element doesn't exist
+await element.waitFor({ state: 'visible', timeout: 10000 });
+const visible = await element.isVisible();
+expect(visible).toBe(true);
+```
+
+**VERIFY ACTUAL BEHAVIOR** - Don't just check that code ran:
+```typescript
+// ❌ BAD - Only checks code executed
+await button.click();
+// No verification that action worked
+
+// ✅ GOOD - Verifies the action actually worked
+await button.click();
+await electronPage.waitForTimeout(500);
+const result = await electronPage.evaluate(() => {
+  return window.electronAPI.getState();
+});
+expect(result.updated).toBe(true);
+```
+
+**Reference**: See `tests/INTEGRATION_TEST_REVIEW.md` for detailed examples of falsy test patterns and how to fix them.
+
 ## Debugging Failed Tests
 
 ### When Tests Fail
@@ -304,6 +358,8 @@ test('collection test 1', ...)
    - Console logs in `test-artifacts/[test-name]/console-logs.txt`
 3. **Run test in headed mode**: `--headed --slow-mo=1000`
 4. **Check debug helpers**: Use `captureDebugInfo()` for comprehensive debugging
+5. **Reference test guide**: See `/ai-context/test-suite-guide.md` for debugging tips and artifact viewing
+6. **Check test review**: See `tests/INTEGRATION_TEST_REVIEW.md` for known test quality issues and fixes
 
 ### Debug Helpers Usage
 
@@ -422,9 +478,13 @@ test('should handle 1000+ items efficiently', async ({ electronPage, testDbPath 
 8. **Keep tests fast** - Individual tests should complete in <30s
 9. **Document test scenarios** - Clear test names and comments
 10. **Run tests frequently** - Before and after changes
+11. **Avoid falsy test cases** - No conditional checks, no weak assertions, no silent failures
+12. **Verify actual behavior** - Don't just check that code ran, verify the outcome
 
 ## References
 
+- **Main Test Guide**: `/ai-context/test-suite-guide.md` - Comprehensive TDD/BDD guide with patterns, helpers, and best practices
+- **Test Quality Review**: `tests/INTEGRATION_TEST_REVIEW.md` - Known issues, fixes, and missing test coverage
 - Test Suite Spec: `specs/008-comprehensive-test-suite/spec.md`
 - Test Helpers: `tests/helpers/`
 - Test Utilities: `tests/utils/`

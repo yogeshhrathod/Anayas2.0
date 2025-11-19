@@ -11,6 +11,11 @@ alwaysApply: true
 - **ALWAYS** use BDD format (Given-When-Then) for test scenarios
 - **ALWAYS** reference `/ai-context/test-suite-guide.md` before writing tests
 - **ALWAYS** check existing test files for patterns before creating new tests
+- **ALWAYS** check `tests/INTEGRATION_TEST_REVIEW.md` when reviewing test quality or fixing test issues
+- **NEVER** use conditional checks (`if (count > 0)`) - use `waitFor()` instead
+- **NEVER** use weak assertions (`toBeDefined()`, `toBeTruthy()`) - verify actual behavior
+- **NEVER** use silent failures (`.catch(() => false)`) - let tests fail properly
+- **ALWAYS** verify actual behavior, not just that code executed
 - **MANDATORY**: All new IPC handlers require 100% test coverage
 - **MANDATORY**: All new components require integration tests
 - **MANDATORY**: Run full test suite before PR: `npm run test:electron -- tests/integration/`

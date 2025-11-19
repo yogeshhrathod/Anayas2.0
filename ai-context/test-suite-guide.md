@@ -492,7 +492,85 @@ npm run test:electron -- tests/integration/ipc-handlers/env-handlers.spec.ts --h
 
 # Slow motion (for debugging)
 npm run test:electron -- tests/integration/ipc-handlers/env-handlers.spec.ts --headed --slow-mo=1000
+
+# Playwright Inspector (step through test)
+npm run test:electron:debug -- tests/integration/ipc-handlers/env-handlers.spec.ts
 ```
+
+### Viewing Test Artifacts
+
+#### Screenshots
+Screenshots are automatically saved in `test-artifacts/` directory for failed tests:
+- `test-failed-1.png` - Screenshot at failure point
+- `diagnostics-screenshot.png` - Additional diagnostic screenshot
+- Test-specific screenshots in subdirectories
+
+View screenshots:
+```bash
+open test-artifacts/*.png
+```
+
+#### Videos
+Videos are recorded for failed tests and saved as `video.webm` files in test artifact directories. These show the full test execution leading to the failure.
+
+#### HTML Report
+After running tests, view the comprehensive HTML report:
+```bash
+npx playwright show-report
+```
+
+The report shows:
+- Test results summary
+- Pass/fail status
+- Execution time
+- Screenshots and videos
+- Error messages and stack traces
+
+#### Test Artifacts Directory Structure
+```
+test-artifacts/
+├── [test-name]-[hash]-electron/
+│   ├── test-failed-1.png
+│   ├── test-failed-2.png
+│   ├── video.webm
+│   ├── error-context.md
+│   ├── console-logs.txt
+│   └── attachments/
+│       ├── app-state.json
+│       └── console-logs-*.txt
+```
+
+### Debugging Tips
+
+1. **Check Screenshots**: View screenshots to see what the UI looked like when the test failed
+   ```bash
+   open test-artifacts/*.png
+   ```
+
+2. **Run with Slower Actions**: Add `--slow-mo=1000` to slow down actions and see each step
+   ```bash
+   npm run test:electron -- tests/integration/ui-interactions.spec.ts --headed --slow-mo=1000
+   ```
+
+3. **Use Playwright Inspector**: Step through the test execution
+   ```bash
+   npm run test:electron:debug -- tests/integration/ui-interactions.spec.ts
+   ```
+
+4. **Check Console Logs**: Test artifacts include console logs showing what happened during execution
+
+5. **View Error Context**: Each failed test creates an `error-context.md` file with detailed debugging information
+
+### Test Independence
+
+Every test is designed to be independent:
+- ✅ Has its own isolated test database
+- ✅ Sets up its own state
+- ✅ Cleans up after itself
+- ✅ Can run without other tests
+- ✅ Provides detailed debugging information
+
+This means you can run any test individually without dependencies on other tests.
 
 ## Completion Requirements
 
@@ -552,4 +630,6 @@ Before marking ANY task or feature as `completed`:
 - Test Utilities: `tests/utils/`
 - Existing Tests: `tests/integration/`
 - Cursor Rules: `.cursor/rules/test-driven-development.mdc`
+- Test Review: `tests/INTEGRATION_TEST_REVIEW.md` - Known issues, fixes, and missing coverage
+- Performance Testing: `specs/003-performance-optimization-lazy-loading/TESTING_GUIDE.md` - Performance-specific testing guide
 
