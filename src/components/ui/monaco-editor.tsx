@@ -5,9 +5,16 @@ import { getThemeById, Theme } from '../../lib/themes';
 import { useAvailableVariables } from '../../hooks/useVariableResolution';
 import { Button } from './button';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
-import { Alert, AlertDescription } from './alert';
-import { CheckCircle, AlertCircle, Copy, Maximize2, Minimize2 } from 'lucide-react';
+import { Copy, Braces, AlignLeft, Check } from 'lucide-react';
 import { useToast } from './use-toast';
+import { cn } from '../../lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./tooltip";
+import { DEFAULT_CODE_FONT_STACK } from '../../constants/fonts';
 
 // Convert HSL color string to hex
 function hslToHex(hsl: string): string {
@@ -488,8 +495,8 @@ export function MonacoEditor({
   onChange,
   language = 'json',
   placeholder = '{}',
-  title = 'Monaco Editor',
-  description = 'Edit your content',
+  title = '', // Default to empty to auto-hide
+  description = '',
   className = '',
   height = 400,
   showActions = true,
@@ -507,14 +514,20 @@ export function MonacoEditor({
 }: MonacoEditorProps) {
   const [isValid, setIsValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const editorRef = useRef<any>(null);
   const completionProviderRef = useRef<any>(null);
   const hoverProviderRef = useRef<any>(null);
   const decorationRef = useRef<any>(null);
   const { success, error: showError } = useToast();
-  const { themeMode, currentThemeId, customThemes } = useStore();
+  const { themeMode, currentThemeId, customThemes, settings } = useStore();
   const availableVariables = useAvailableVariables();
+  // Get code font from settings, fallback to default
+  const codeFontFamily = (settings.codeFontFamily && 
+    typeof settings.codeFontFamily === 'string' && 
+    settings.codeFontFamily.trim().length > 0)
+    ? settings.codeFontFamily.trim()
+    : DEFAULT_CODE_FONT_STACK;
 
   // Get current theme and create Monaco theme
   const currentTheme = getThemeById(currentThemeId, customThemes);
@@ -553,6 +566,15 @@ export function MonacoEditor({
       }
     }
   }, [currentTheme, monacoThemeName]);
+
+  // Handle font family changes
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.updateOptions({
+        fontFamily: codeFontFamily
+      });
+    }
+  }, [codeFontFamily]);
 
   // Re-register completion and hover providers when variables change
   useEffect(() => {
@@ -608,6 +630,7 @@ export function MonacoEditor({
     
     // Configure editor options
     editor.updateOptions({
+      fontFamily: codeFontFamily,
       fontSize,
       tabSize,
       insertSpaces,
@@ -616,7 +639,7 @@ export function MonacoEditor({
       folding,
       minimap: { enabled: minimap },
       readOnly,
-      automaticLayout,
+      automaticLayout: automaticLayout, // Use prop value
       scrollBeyondLastLine: false,
       renderWhitespace: 'selection',
       renderControlCharacters: true,
@@ -658,30 +681,29 @@ export function MonacoEditor({
         decorationRef.current = registerEnvironmentVariableDecoration(editor, monaco);
       }
     }
+
+    // Setup ResizeObserver
+    const container = editor.getContainerDomNode();
+    if (container) {
+      const resizeObserver = new ResizeObserver(() => {
+        // Trigger layout only if editor exists
+        if (editor) {
+          editor.layout();
+        }
+      });
+      resizeObserver.observe(container);
+      
+      // Store observer cleanup function
+      (editor as any)._resizeObserver = resizeObserver;
+    }
   };
 
-  // Fix: Add ResizeObserver to handle editor resize when container size changes
-  // This fixes the Monaco editor not resizing properly with window width changes
+  // Cleanup ResizeObserver on unmount
   useEffect(() => {
-    const editor = editorRef.current;
-    if (!editor) return;
-
-    // Get editor container DOM node
-    const container = editor.getContainerDomNode?.();
-    if (!container) return;
-
-    // Create ResizeObserver to watch container size changes
-    const resizeObserver = new ResizeObserver(() => {
-      // Trigger Monaco editor layout recalculation
-      editor.layout();
-    });
-
-    // Start observing the container
-    resizeObserver.observe(container);
-
-    // Cleanup: disconnect observer on unmount
     return () => {
-      resizeObserver.disconnect();
+      if (editorRef.current && (editorRef.current as any)._resizeObserver) {
+        (editorRef.current as any)._resizeObserver.disconnect();
+      }
     };
   }, []);
 
@@ -695,6 +717,8 @@ export function MonacoEditor({
   // Action handlers
   const handleCopy = () => {
     navigator.clipboard.writeText(value);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
     success('Copied', 'Content copied to clipboard');
   };
 
@@ -709,8 +733,10 @@ export function MonacoEditor({
         showError('Format Error', 'Invalid JSON cannot be formatted');
       }
     } else {
-      // For other languages, we could add formatting logic here
-      success('Format', 'Formatting not available for this language');
+      // For other languages, use Monaco's trigger action
+      if (editorRef.current) {
+        editorRef.current.trigger('anyString', 'editor.action.formatDocument');
+      }
     }
   };
 
@@ -724,61 +750,103 @@ export function MonacoEditor({
       } catch (e: any) {
         showError('Minify Error', 'Invalid JSON cannot be minified');
       }
-    } else {
-      success('Minify', 'Minification not available for this language');
     }
   };
 
-  const handleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
-
-  // Dynamic height calculation
-  const editorHeight = isFullscreen ? 'calc(100vh - 120px)' : height;
+  const hasTitle = title && title.length > 0;
 
   return (
-    <Card className={`${className} ${isFullscreen ? 'fixed inset-4 z-modal' : ''}`}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-lg">{title}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">{description}</p>
-          </div>
-          {showActions && (
-            <div className="flex gap-2">
-              {language === 'json' && (
-                <>
-                  <Button variant="outline" size="sm" onClick={handleFormat}>
-                    Format
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleMinify}>
-                    Minify
-                  </Button>
-                </>
+    <TooltipProvider>
+      <Card className={cn(
+        "flex flex-col overflow-hidden border shadow-sm transition-all duration-200", 
+        className
+      )}>
+        {/* Optional Header - Only shown if title exists */}
+        {hasTitle && (
+          <CardHeader className="flex-none px-4 py-3 border-b bg-muted/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base font-medium">{title}</CardTitle>
+                {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+              </div>
+              
+              {/* Actions in Header */}
+              {showActions && (
+                <div className="flex items-center gap-1">
+                  {language === 'json' && (
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleFormat}>
+                            <Braces className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Format JSON</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleMinify}>
+                            <AlignLeft className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Minify JSON</TooltipContent>
+                      </Tooltip>
+                    </>
+                  )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCopy}>
+                        {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Copy Content</TooltipContent>
+                  </Tooltip>
+                </div>
               )}
-              <Button variant="outline" size="sm" onClick={handleCopy}>
-                <Copy className="h-4 w-4 mr-1" />
-                Copy
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleFullscreen}>
-                {isFullscreen ? (
-                  <Minimize2 className="h-4 w-4" />
-                ) : (
-                  <Maximize2 className="h-4 w-4" />
-                )}
-              </Button>
             </div>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
+          </CardHeader>
+        )}
+        
+        <CardContent className="flex-1 p-0 relative min-h-0">
+          {/* Editor Container */}
           <div 
-            className={`border rounded-md overflow-hidden ${
-              !isValid ? 'border-red-500' : 'border-border'
-            }`}
-            style={{ height: editorHeight }}
+            className="relative w-full"
+            style={{ height: height }}
           >
+            {/* Floating Actions - Shown when no title */}
+            {!hasTitle && showActions && (
+              <div className="absolute top-2 right-2 z-20 flex flex-col gap-1 p-1 rounded-md bg-background/80 backdrop-blur-sm border shadow-sm transition-opacity duration-200">
+                {language === 'json' && (
+                  <>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleFormat}>
+                          <Braces className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">Format</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleMinify}>
+                          <AlignLeft className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">Minify</TooltipContent>
+                    </Tooltip>
+                  </>
+                )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleCopy}>
+                      {isCopied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">Copy</TooltipContent>
+                </Tooltip>
+              </div>
+            )}
+
             <Editor
               height="100%"
               language={language}
@@ -787,6 +855,7 @@ export function MonacoEditor({
               onChange={handleEditorChange}
               onMount={handleEditorDidMount}
               options={{
+                fontFamily: codeFontFamily,
                 fontSize,
                 tabSize,
                 insertSpaces,
@@ -795,7 +864,7 @@ export function MonacoEditor({
                 folding,
                 minimap: { enabled: minimap },
                 readOnly,
-                automaticLayout,
+                automaticLayout: automaticLayout, // We handle layout manually for better control
                 scrollBeyondLastLine: false,
                 renderWhitespace: 'selection',
                 renderControlCharacters: true,
@@ -819,23 +888,38 @@ export function MonacoEditor({
                 },
               }}
             />
+            
+            {/* Minimal futuristic validation status */}
+            {validateJson && language === 'json' && value.trim() && (
+              <div className={cn(
+                "absolute bottom-2 right-4 z-10 px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide backdrop-blur-md border flex items-center gap-1.5 transition-all duration-300",
+                isValid 
+                  ? "bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400" 
+                  : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+              )}>
+                {isValid ? (
+                  <>
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    VALID
+                  </>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1.5 cursor-help">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                        INVALID
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[300px] break-words">
+                      {error}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            )}
           </div>
-          
-          {/* Validation Messages */}
-          {validateJson && !isValid && error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          {validateJson && isValid && value.trim() && language === 'json' && (
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>Valid JSON</AlertDescription>
-            </Alert>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   );
 }

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Alert, AlertDescription } from './alert';
 import { CheckCircle, AlertCircle, Copy, Maximize2, Minimize2, Plus, Trash2, FileText } from 'lucide-react';
 import { useToast } from './use-toast';
+import { DEFAULT_CODE_FONT_STACK } from '../../constants/fonts';
 
 interface KeyValuePair {
   key: string;
@@ -52,7 +53,13 @@ export function MonacoKeyValueEditor({
   const [showJsonEditor, setShowJsonEditor] = useState(false);
   const editorRef = useRef<any>(null);
   const { success, error: showError } = useToast();
-  const { themeMode, currentThemeId, customThemes } = useStore();
+  const { themeMode, currentThemeId, customThemes, settings } = useStore();
+  // Get code font from settings, fallback to default
+  const codeFontFamily = (settings.codeFontFamily && 
+    typeof settings.codeFontFamily === 'string' && 
+    settings.codeFontFamily.trim().length > 0)
+    ? settings.codeFontFamily.trim()
+    : DEFAULT_CODE_FONT_STACK;
 
   // Get current theme and determine Monaco theme
   const currentTheme = getThemeById(currentThemeId, customThemes);
@@ -94,12 +101,22 @@ export function MonacoKeyValueEditor({
     }
   }, [jsonValue]);
 
+  // Handle font family changes
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.updateOptions({
+        fontFamily: codeFontFamily
+      });
+    }
+  }, [codeFontFamily]);
+
   // Handle editor mount
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
     
     // Configure editor options
     editor.updateOptions({
+      fontFamily: codeFontFamily,
       fontSize,
       tabSize: 2,
       insertSpaces: true,
@@ -279,6 +296,7 @@ export function MonacoKeyValueEditor({
                 onChange={handleEditorChange}
                 onMount={handleEditorDidMount}
                 options={{
+                  fontFamily: codeFontFamily,
                   fontSize,
                   tabSize: 2,
                   insertSpaces: true,

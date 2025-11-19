@@ -7,6 +7,7 @@ import { Label } from '../components/ui/label';
 import { ThemeCustomizer } from '../components/ThemeCustomizer';
 import { Save, RotateCcw, AlertCircle } from 'lucide-react';
 import { useToast } from '../components/ui/use-toast';
+import { DEFAULT_CODE_FONT_STACK, DEFAULT_UI_FONT_STACK } from '../constants/fonts';
 
 // Removed Qualys-specific module codes
 
@@ -16,6 +17,13 @@ interface ValidationErrors {
 }
 
 export function Settings() {
+  const createLocalSettings = (incoming: Record<string, any>) => ({
+    ...incoming,
+    // Preserve actual values, only default to empty string if truly undefined
+    uiFontFamily: incoming.uiFontFamily !== undefined ? incoming.uiFontFamily : '',
+    codeFontFamily: incoming.codeFontFamily !== undefined ? incoming.codeFontFamily : '',
+  });
+
   const { 
     settings, 
     setSettings, 
@@ -23,12 +31,13 @@ export function Settings() {
     currentThemeId,
     customThemes,
   } = useStore();
-  const [localSettings, setLocalSettings] = useState(settings);
+  const [localSettings, setLocalSettings] = useState<Record<string, any>>(() => createLocalSettings(settings));
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const { success, error } = useToast();
 
   useEffect(() => {
-    setLocalSettings(settings);
+    setLocalSettings(createLocalSettings(settings));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings]);
 
   // Number validation helpers
@@ -89,12 +98,27 @@ export function Settings() {
       // Save other settings
       for (const [key, value] of Object.entries(localSettings)) {
         if (!['themeMode', 'currentThemeId', 'customThemes', 'theme'].includes(key)) {
-          await window.electronAPI.settings.set(key, value);
+          // For font settings, only save if not empty string (empty means use default)
+          if ((key === 'uiFontFamily' || key === 'codeFontFamily')) {
+            const trimmedValue = typeof value === 'string' ? value.trim() : value;
+            if (trimmedValue && trimmedValue.length > 0) {
+              await window.electronAPI.settings.set(key, trimmedValue);
+            } else {
+              // Remove the setting to use default
+              await window.electronAPI.settings.set(key, undefined);
+            }
+          } else {
+            await window.electronAPI.settings.set(key, value);
+          }
         }
       }
       
       const updatedSettings = await window.electronAPI.settings.getAll();
+      // Update store with DB settings (source of truth)
       setSettings(updatedSettings);
+      // Force update local settings to reflect saved values
+      setLocalSettings(createLocalSettings(updatedSettings));
+      
       success('Settings saved', 'Your changes have been saved');
     } catch (e: any) {
       console.error('Failed to save settings:', e);
@@ -109,7 +133,7 @@ export function Settings() {
       await window.electronAPI.settings.reset();
       const updatedSettings = await window.electronAPI.settings.getAll();
       setSettings(updatedSettings);
-      setLocalSettings(updatedSettings);
+      setLocalSettings(createLocalSettings(updatedSettings));
       setValidationErrors({});
       success('Settings reset', 'All settings restored to defaults');
     } catch (e: any) {
@@ -122,6 +146,17 @@ export function Settings() {
   const updateSetting = (key: string, value: any) => {
     const newSettings = { ...localSettings, [key]: value };
     setLocalSettings(newSettings);
+
+    // For font settings, update store immediately for live preview (but don't persist to DB yet)
+    if (key === 'uiFontFamily' || key === 'codeFontFamily') {
+      const trimmedValue = typeof value === 'string' ? value.trim() : value;
+      // Update store immediately so FontProvider can apply the font
+      // Use trimmed value if not empty, otherwise undefined to use default
+      const fontValue = (trimmedValue && trimmedValue.length > 0) ? trimmedValue : undefined;
+      // Use current store state to ensure we don't overwrite other settings
+      const currentSettings = useStore.getState().settings;
+      setSettings({ ...currentSettings, [key]: fontValue });
+    }
 
     // Clear validation error for this field when user starts typing
     if (validationErrors[key as keyof ValidationErrors]) {
@@ -152,6 +187,38 @@ export function Settings() {
 
       {/* Theme Settings */}
       <ThemeCustomizer />
+
+      {/* Font Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Font Settings</CardTitle>
+          <CardDescription>Customize application fonts</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="uiFontFamily">UI Font Family</Label>
+              <Input
+                id="uiFontFamily"
+                type="text"
+                value={localSettings.uiFontFamily ?? ''}
+                onChange={(e) => updateSetting('uiFontFamily', e.target.value)}
+                placeholder={DEFAULT_UI_FONT_STACK}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="codeFontFamily">Code Font Family</Label>
+              <Input
+                id="codeFontFamily"
+                type="text"
+                value={localSettings.codeFontFamily ?? ''}
+                onChange={(e) => updateSetting('codeFontFamily', e.target.value)}
+                placeholder={DEFAULT_CODE_FONT_STACK}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* API Testing Settings */}
       <Card>
