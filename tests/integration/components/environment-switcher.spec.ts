@@ -59,28 +59,37 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     await electronPage.waitForLoadState('networkidle');
     await electronPage.waitForTimeout(1000);
 
-    // Find and click environment switcher
-    const envSwitcher = electronPage.locator('[data-testid="environment-switcher-trigger"]').first();
-    if (await envSwitcher.count() > 0) {
-      await envSwitcher.click();
-      await electronPage.waitForTimeout(500);
+    // Find and click environment switcher button
+    // The EnvironmentSwitcher uses a button with Globe icon and environment name
+    // Look for button containing the current environment name or "No Environment"
+    const envSwitcher = electronPage.locator('button:has-text("Global Env 1"), button:has-text("No Environment"), button:has([class*="Globe"])').first();
+    await envSwitcher.waitFor({ state: 'visible', timeout: 10000 });
+    await envSwitcher.click();
+    await electronPage.waitForTimeout(1500); // Wait for dropdown to open
 
-      // Select different environment from dropdown
-      const env2Option = electronPage.locator('text=Global Env 2, text=global-env-2');
-      const env2Count = await env2Option.count();
+    // Select different environment from dropdown
+    // The dropdown uses button elements with the environment displayName
+    // Each button has the structure: button > div > div > font-medium (displayName)
+    const env2Option = electronPage.locator('button:has-text("Global Env 2")').first();
+    await env2Option.waitFor({ state: 'visible', timeout: 10000 });
+    await env2Option.click();
+    await electronPage.waitForTimeout(1000);
 
-      if (env2Count > 0) {
-        await env2Option.click();
-        await electronPage.waitForTimeout(1000);
+    // Verify environment was switched via IPC
+    const currentEnv = await electronPage.evaluate(async () => {
+      return await window.electronAPI.env.getCurrent();
+    });
 
-        // Verify environment was switched via IPC
-        const currentEnv = await electronPage.evaluate(async () => {
-          return await window.electronAPI.env.getCurrent();
-        });
-
-        expect(currentEnv.id).toBe(setup.env2Id);
-      }
-    }
+    expect(currentEnv).toBeDefined();
+    expect(currentEnv.id).toBe(setup.env2Id);
+    
+    // Also verify UI shows the new environment
+    // Re-locate the switcher after the switch to get updated text
+    await electronPage.waitForTimeout(500); // Wait for UI update
+    const updatedEnvSwitcher = electronPage.locator('button:has-text("Global Env 2"), button:has([class*="Globe"])').first();
+    await updatedEnvSwitcher.waitFor({ state: 'visible', timeout: 5000 });
+    const envSwitcherText = await updatedEnvSwitcher.textContent();
+    expect(envSwitcherText).toContain('Global Env 2');
   });
 
   test('should display current environment', async ({ electronPage, testDbPath }) => {

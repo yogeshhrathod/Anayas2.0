@@ -36,6 +36,9 @@ export interface CollapsibleSectionProps {
   /** Icon to display in header (optional) */
   icon?: React.ComponentType<{ className?: string }>;
   
+  /** Actions to display on the right side of header (optional) */
+  headerActions?: React.ReactNode;
+  
   /** Test ID for testing */
   testId?: string;
 }
@@ -48,6 +51,7 @@ export function CollapsibleSection({
   children,
   className,
   icon: Icon,
+  headerActions,
   testId = `collapsible-section-${id}`,
 }: CollapsibleSectionProps) {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -107,6 +111,17 @@ export function CollapsibleSection({
         <span className="text-sm font-medium text-foreground uppercase tracking-wide flex-1">
           {title}
         </span>
+
+        {/* Header Actions */}
+        {headerActions && (
+          <div 
+            className="flex items-center gap-1 flex-shrink-0"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            {headerActions}
+          </div>
+        )}
       </div>
 
       {/* Section Content */}

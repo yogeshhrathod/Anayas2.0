@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Minus, Square, X, Maximize2, Zap } from "lucide-react";
+import { Minus, Square, X, Maximize2 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { GlobalSearch } from "./GlobalSearch";
+import { Logo } from "./Logo";
 
 export function TitleBar() {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -39,23 +40,7 @@ export function TitleBar() {
     >
       {/* Left Side - App Branding (macOS) or Window Controls (Windows/Linux) */}
       <div className="flex items-center gap-3" style={{ WebkitAppRegion: "no-drag" } as any}>
-        {isMac ? (
-          // macOS: Show app logo + name
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
-              <Zap className="h-3 w-3 text-white" />
-            </div>
-            <span className="text-sm font-semibold">Anayas</span>
-          </div>
-        ) : (
-          // Windows/Linux: Show app logo + name
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
-              <Zap className="h-3 w-3 text-white" />
-            </div>
-            <span className="text-sm font-semibold">Anayas</span>
-          </div>
-        )}
+        <Logo size={20} showText={true} className="text-sm" />
       </div>
 
       {/* Center - Empty (drag region) */}

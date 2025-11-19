@@ -126,11 +126,11 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
             ) : (
               <div className="flex items-center gap-2">
                 <div
-                  className={`text-sm font-medium py-1 px-2 rounded border border-transparent hover:border-border cursor-pointer transition-colors inline-block ${
-                    requestData.id ? 'hover:bg-muted/30' : ''
-                  } ${!requestData.name ? 'text-muted-foreground' : ''}`}
+                  className={`text-sm font-medium py-1 px-2 rounded border border-transparent hover:border-border cursor-pointer transition-colors inline-block hover:bg-muted/30 ${
+                    !requestData.name ? 'text-muted-foreground' : ''
+                  }`}
                   onDoubleClick={onNameEdit.start}
-                  title={requestData.id ? "Double-click to edit name" : "Save request first to enable name editing"}
+                  title="Double-click to edit name"
                 >
                   {requestData.name || 'Untitled Request'}
                 </div>

@@ -275,7 +275,6 @@ export function useRequestState(selectedRequest: Request | null) {
     setTempName: (name) => setState(prev => ({ ...prev, tempName: name })),
     
     startNameEdit: () => {
-      if (!state.requestData.id) return;
       setState(prev => ({
         ...prev,
         isEditingName: true,
@@ -303,19 +302,49 @@ export function useRequestState(selectedRequest: Request | null) {
       }
 
       try {
-        await window.electronAPI.request.save({
-          id: state.requestData.id,
-          name: state.tempName.trim(),
-          method: state.requestData.method,
-          url: state.requestData.url,
-          headers: state.requestData.headers,
-          body: state.requestData.body,
-          queryParams: state.requestData.queryParams,
-          auth: state.requestData.auth,
-          collectionId: state.requestData.collectionId,
-          folderId: state.requestData.folderId,
-          isFavorite: state.requestData.isFavorite,
-        });
+        // Check if this is an unsaved request (no id and no collectionId)
+        const isUnsaved = !state.requestData.id && !state.requestData.collectionId;
+        
+        if (isUnsaved) {
+          // Update unsaved request name
+          const result = await window.electronAPI.unsavedRequest.save({
+            id: activeUnsavedRequestId || undefined,
+            name: state.tempName.trim(),
+            method: state.requestData.method,
+            url: state.requestData.url,
+            headers: state.requestData.headers,
+            body: state.requestData.body || '',
+            queryParams: state.requestData.queryParams,
+            auth: state.requestData.auth,
+          });
+          
+          // Update active unsaved request ID if it was newly created
+          if (!activeUnsavedRequestId && result.id) {
+            setActiveUnsavedRequestId(result.id);
+          }
+          
+          // Reload unsaved requests to update sidebar
+          const allUnsaved = await window.electronAPI.unsavedRequest.getAll();
+          setUnsavedRequests(allUnsaved);
+        } else {
+          // Update saved request name
+          await window.electronAPI.request.save({
+            id: state.requestData.id,
+            name: state.tempName.trim(),
+            method: state.requestData.method,
+            url: state.requestData.url,
+            headers: state.requestData.headers,
+            body: state.requestData.body,
+            queryParams: state.requestData.queryParams,
+            auth: state.requestData.auth,
+            collectionId: state.requestData.collectionId,
+            folderId: state.requestData.folderId,
+            isFavorite: state.requestData.isFavorite,
+          });
+          
+          // Trigger sidebar refresh for real-time updates
+          triggerSidebarRefresh();
+        }
         
         setState(prev => ({
           ...prev,
@@ -324,9 +353,6 @@ export function useRequestState(selectedRequest: Request | null) {
           lastSavedAt: new Date(),
           isEditingName: false,
         }));
-        
-        // Trigger sidebar refresh for real-time updates
-        triggerSidebarRefresh();
       } catch (e: any) {
         console.error('Failed to update request name:', e);
         actions.cancelNameEdit();

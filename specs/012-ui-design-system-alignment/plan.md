@@ -1,7 +1,7 @@
 # Implementation Plan: ui-design-system-alignment
 
 **Feature ID**: `012-ui-design-system-alignment`  
-**Status**: `draft`  
+**Status**: `planned`  
 **Related Spec**: `specs/012-ui-design-system-alignment/spec.md`  
 **Primary Design Reference**: `ai-context/ui-design-system.md`
 
