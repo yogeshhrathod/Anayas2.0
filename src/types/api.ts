@@ -145,14 +145,18 @@ export interface ElectronAPI {
   request: {
     list: (collectionId?: number) => Promise<Request[]>;
     save: (data: RequestCreateRequest | RequestUpdateRequest) => Promise<RequestSaveResponse>;
+    saveAfter: (data: RequestCreateRequest, afterRequestId: number) => Promise<RequestSaveResponse>;
+    reorder: (requestId: number, newOrder: number) => Promise<ApiResponse<void>>;
     delete: (id: number) => Promise<ApiResponse<void>>;
     send: (data: RequestSendRequest) => Promise<RequestSendResponse>;
     history: (limit?: number) => Promise<RequestHistory[]>;
     deleteHistory: (id: number) => Promise<ApiResponse<void>>;
   };
   folder: {
-    list: () => Promise<Folder[]>;
+    list: (collectionId?: number) => Promise<Folder[]>;
     save: (data: FolderCreateRequest | FolderUpdateRequest) => Promise<FolderSaveResponse>;
+    saveAfter: (data: FolderCreateRequest, afterFolderId: number) => Promise<FolderSaveResponse>;
+    reorder: (folderId: number, newOrder: number) => Promise<ApiResponse<void>>;
     delete: (id: number) => Promise<ApiResponse<void>>;
   };
   settings: {

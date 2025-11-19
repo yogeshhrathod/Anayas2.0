@@ -4,21 +4,26 @@
  * Provides drag and drop functionality for collections, folders, and requests:
  * - Drag state management
  * - Drop zone handling
- * - Visual feedback
- * - Move operations
+ * - Visual feedback with drop position indicators
+ * - Move operations (between containers)
+ * - Reorder operations (within same container)
  * 
  * @example
  * ```tsx
  * const {
  *   draggedItem,
  *   dragOverItem,
+ *   dropPosition,
  *   handleDragStart,
  *   handleDragOver,
  *   handleDrop,
  *   handleDragEnd
  * } = useCollectionDragDrop({
  *   onMoveRequest: handleMoveRequest,
- *   onMoveFolder: handleMoveFolder
+ *   onMoveFolder: handleMoveFolder,
+ *   onReorderRequest: handleReorderRequest,
+ *   onReorderFolder: handleReorderFolder,
+ *   resolveFolderCollectionId: (folderId) => getCollectionIdForFolder(folderId)
  * });
  * ```
  */
@@ -29,22 +34,30 @@ import { useToastNotifications } from './useToastNotifications';
 export interface DragItem {
   type: 'collection' | 'request' | 'folder';
   id: number;
+  collectionId?: number; // For requests/folders, track their current collection
+  folderId?: number; // For requests, track their current folder
 }
+
+export type DropPosition = 'above' | 'below' | 'inside';
 
 export interface DragDropConfig {
   onMoveRequest?: (requestId: number, targetCollectionId: number, targetFolderId?: number) => Promise<void>;
   onMoveFolder?: (folderId: number, targetCollectionId: number) => Promise<void>;
+  onReorderRequest?: (requestId: number, targetRequestId: number, position: 'above' | 'below') => Promise<void>;
+  onReorderFolder?: (folderId: number, targetFolderId: number, position: 'above' | 'below') => Promise<void>;
+  resolveFolderCollectionId?: (folderId: number) => number | undefined; // Helper to resolve folder's collectionId
 }
 
 export interface DragDropState {
   draggedItem: DragItem | null;
   dragOverItem: DragItem | null;
+  dropPosition: DropPosition | null;
 }
 
 export interface DragDropActions {
   handleDragStart: (e: React.DragEvent, item: DragItem) => void;
-  handleDragOver: (e: React.DragEvent, item: DragItem) => void;
-  handleDrop: (e: React.DragEvent, targetItem: DragItem) => Promise<void>;
+  handleDragOver: (e: React.DragEvent, item: DragItem, position?: DropPosition) => void;
+  handleDrop: (e: React.DragEvent, targetItem: DragItem, position?: DropPosition) => Promise<void>;
   handleDragEnd: () => void;
   canDrop: (draggedItem: DragItem, targetItem: DragItem) => boolean;
 }
@@ -54,6 +67,7 @@ export function useCollectionDragDrop(config: DragDropConfig) {
   const [state, setState] = useState<DragDropState>({
     draggedItem: null,
     dragOverItem: null,
+    dropPosition: null,
   });
 
   const canDrop = useCallback((draggedItem: DragItem, targetItem: DragItem): boolean => {
@@ -62,14 +76,34 @@ export function useCollectionDragDrop(config: DragDropConfig) {
       return false;
     }
 
-    // Requests can be dropped on collections or folders
+    // Requests can be dropped on:
+    // - Collections (move to collection root)
+    // - Folders (move to folder)
+    // - Other requests (reorder within same container)
     if (draggedItem.type === 'request') {
-      return targetItem.type === 'collection' || targetItem.type === 'folder';
+      if (targetItem.type === 'collection' || targetItem.type === 'folder') {
+        return true; // Move operation
+      }
+      if (targetItem.type === 'request') {
+        // Reorder: only allow if in same container (same collectionId and folderId)
+        return draggedItem.collectionId === targetItem.collectionId &&
+               draggedItem.folderId === targetItem.folderId;
+      }
+      return false;
     }
 
-    // Folders can be dropped on collections
+    // Folders can be dropped on:
+    // - Collections (move to collection)
+    // - Other folders (reorder within same collection) - but NOT nested folders
     if (draggedItem.type === 'folder') {
-      return targetItem.type === 'collection';
+      if (targetItem.type === 'collection') {
+        return true; // Move operation
+      }
+      if (targetItem.type === 'folder') {
+        // Reorder: only allow if in same collection (nested folders not supported)
+        return draggedItem.collectionId === targetItem.collectionId;
+      }
+      return false;
     }
 
     // Collections can't be moved
@@ -77,47 +111,112 @@ export function useCollectionDragDrop(config: DragDropConfig) {
   }, []);
 
   const handleDragStart = useCallback((e: React.DragEvent, item: DragItem) => {
-    setState(prev => ({ ...prev, draggedItem: item }));
+    setState(prev => ({ ...prev, draggedItem: item, dropPosition: null }));
     e.dataTransfer.effectAllowed = 'move';
   }, []);
 
-  const handleDragOver = useCallback((e: React.DragEvent, item: DragItem) => {
+  const handleDragOver = useCallback((e: React.DragEvent, item: DragItem, position?: DropPosition) => {
     e.preventDefault();
     
     if (!state.draggedItem) return;
     
+    // Auto-detect position if not provided
+    let dropPosition: DropPosition = position || 'inside';
+    if (!position && state.draggedItem.type === item.type && e.currentTarget) {
+      // For same-type items, detect position based on mouse Y
+      try {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const mouseY = e.clientY;
+        const itemCenterY = rect.top + rect.height / 2;
+        dropPosition = mouseY < itemCenterY ? 'above' : 'below';
+      } catch (error) {
+        // Fallback to inside if getBoundingClientRect fails
+        dropPosition = 'inside';
+      }
+    }
+    
     if (canDrop(state.draggedItem, item)) {
       e.dataTransfer.dropEffect = 'move';
-      setState(prev => ({ ...prev, dragOverItem: item }));
+      setState(prev => ({ 
+        ...prev, 
+        dragOverItem: item,
+        dropPosition: dropPosition
+      }));
     } else {
       e.dataTransfer.dropEffect = 'none';
-      setState(prev => ({ ...prev, dragOverItem: null }));
+      setState(prev => ({ 
+        ...prev, 
+        dragOverItem: null,
+        dropPosition: null
+      }));
     }
   }, [state.draggedItem, canDrop]);
 
-  const handleDrop = useCallback(async (e: React.DragEvent, targetItem: DragItem) => {
+  const handleDrop = useCallback(async (e: React.DragEvent, targetItem: DragItem, position?: DropPosition) => {
     e.preventDefault();
     
     if (!state.draggedItem || !canDrop(state.draggedItem, targetItem)) {
       return;
     }
 
+    // Auto-detect position if not provided
+    let dropPosition: DropPosition = position || 'inside';
+    if (!position && state.draggedItem.type === targetItem.type && e.currentTarget) {
+      try {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const mouseY = e.clientY;
+        const itemCenterY = rect.top + rect.height / 2;
+        dropPosition = mouseY < itemCenterY ? 'above' : 'below';
+      } catch (error) {
+        // Fallback to inside if getBoundingClientRect fails
+        dropPosition = 'inside';
+      }
+    }
+
     try {
       if (state.draggedItem.type === 'request') {
-        if (config.onMoveRequest) {
-          const targetCollectionId = targetItem.type === 'collection' 
-            ? targetItem.id 
-            : targetItem.type === 'folder' 
-              ? targetItem.id // This would need to be resolved to collection ID
-              : 0;
-          
-          const targetFolderId = targetItem.type === 'folder' ? targetItem.id : undefined;
-          
-          await config.onMoveRequest(state.draggedItem.id, targetCollectionId, targetFolderId);
+        if (targetItem.type === 'collection' || targetItem.type === 'folder') {
+          // Move operation
+          if (config.onMoveRequest) {
+            let targetCollectionId: number;
+            
+            if (targetItem.type === 'collection') {
+              targetCollectionId = targetItem.id;
+            } else {
+              // Folder - need to resolve collectionId
+              if (config.resolveFolderCollectionId) {
+                targetCollectionId = config.resolveFolderCollectionId(targetItem.id) || 0;
+              } else {
+                // Fallback: use folder's collectionId if provided
+                targetCollectionId = targetItem.collectionId || 0;
+              }
+              
+              if (!targetCollectionId) {
+                throw new Error('Could not resolve collection ID for folder');
+              }
+            }
+            
+            const targetFolderId = targetItem.type === 'folder' ? targetItem.id : undefined;
+            
+            await config.onMoveRequest(state.draggedItem.id, targetCollectionId, targetFolderId);
+          }
+        } else if (targetItem.type === 'request') {
+          // Reorder operation
+          if (config.onReorderRequest && (dropPosition === 'above' || dropPosition === 'below')) {
+            await config.onReorderRequest(state.draggedItem.id, targetItem.id, dropPosition);
+          }
         }
       } else if (state.draggedItem.type === 'folder') {
-        if (config.onMoveFolder && targetItem.type === 'collection') {
-          await config.onMoveFolder(state.draggedItem.id, targetItem.id);
+        if (targetItem.type === 'collection') {
+          // Move operation
+          if (config.onMoveFolder) {
+            await config.onMoveFolder(state.draggedItem.id, targetItem.id);
+          }
+        } else if (targetItem.type === 'folder') {
+          // Reorder operation
+          if (config.onReorderFolder && (dropPosition === 'above' || dropPosition === 'below')) {
+            await config.onReorderFolder(state.draggedItem.id, targetItem.id, dropPosition);
+          }
         }
       }
     } catch (error: any) {
@@ -129,6 +228,7 @@ export function useCollectionDragDrop(config: DragDropConfig) {
     setState({
       draggedItem: null,
       dragOverItem: null,
+      dropPosition: null,
     });
   }, []);
 

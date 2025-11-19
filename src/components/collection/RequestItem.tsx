@@ -45,6 +45,9 @@ export interface RequestItemProps {
     onDrop: (e: React.DragEvent) => void;
     onDragEnd: () => void;
   };
+  isDragging?: boolean;
+  isDragOver?: boolean;
+  dropPosition?: 'above' | 'below' | 'inside' | null;
 }
 
 const methodColors = {
@@ -65,7 +68,10 @@ export const RequestItem: React.FC<RequestItemProps> = ({
   onDuplicate,
   onExport,
   onItemSelect,
-  dragProps
+  dragProps,
+  isDragging = false,
+  isDragOver = false,
+  dropPosition = null,
 }) => {
   const { selectedItem, triggerSidebarRefresh } = useStore();
   const isSelected = selectedItem.type === 'request' && selectedItem.id === request.id;
@@ -112,18 +118,28 @@ export const RequestItem: React.FC<RequestItemProps> = ({
   ];
 
   return (
-    <div
-      className={`group flex items-center gap-2 p-2 pl-8 hover:bg-muted/50 rounded-md transition-colors cursor-pointer ${
-        isSelected ? 'bg-primary/10 border border-primary/20' : ''
-      }`}
-      onClick={() => {
-        onSelect(request);
-        if (onItemSelect) {
-          onItemSelect();
-        }
-      }}
-      {...dragProps}
-    >
+    <div className="relative">
+      {/* Drop indicator line above */}
+      {isDragOver && dropPosition === 'above' && (
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10" />
+      )}
+      
+      <div
+        className={`group flex items-center gap-2 p-2 pl-8 hover:bg-muted/50 rounded-md transition-all cursor-pointer relative ${
+          isSelected ? 'bg-primary/10 border border-primary/20' : ''
+        } ${
+          isDragging ? 'opacity-50' : ''
+        } ${
+          isDragOver && dropPosition === 'inside' ? 'bg-primary/5 border border-primary/30' : ''
+        }`}
+        onClick={() => {
+          onSelect(request);
+          if (onItemSelect) {
+            onItemSelect();
+          }
+        }}
+        {...dragProps}
+      >
       {/* Method Badge */}
       <Badge 
         variant="secondary" 
@@ -169,6 +185,12 @@ export const RequestItem: React.FC<RequestItemProps> = ({
         actions={actions}
         size="sm"
       />
+      </div>
+      
+      {/* Drop indicator line below */}
+      {isDragOver && dropPosition === 'below' && (
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary z-10" />
+      )}
     </div>
   );
 };
