@@ -20,21 +20,24 @@
 
 import React from 'react';
 import { Badge } from '../ui/badge';
-import { Settings, Shield, Key, FileText } from 'lucide-react';
+import { Settings, Shield, Key, FileText, Eye } from 'lucide-react';
 import { RequestFormData } from '../../types/forms';
+import { ResponseData } from '../../types/entities';
 
 export interface RequestTabsProps {
-  activeTab: 'params' | 'auth' | 'headers' | 'body';
-  setActiveTab: (tab: 'params' | 'auth' | 'headers' | 'body') => void;
+  activeTab: 'params' | 'auth' | 'headers' | 'body' | 'response';
+  setActiveTab: (tab: 'params' | 'auth' | 'headers' | 'body' | 'response') => void;
   requestData: RequestFormData;
   bodyContentType: 'json' | 'text';
+  response?: ResponseData | null;
 }
 
 export const RequestTabs: React.FC<RequestTabsProps> = ({
   activeTab,
   setActiveTab,
   requestData,
-  bodyContentType
+  bodyContentType,
+  response
 }) => {
   const tabs = [
     {
@@ -60,6 +63,12 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
       label: 'Body',
       icon: FileText,
       badge: requestData.body.trim() ? bodyContentType : undefined,
+    },
+    {
+      id: 'response' as const,
+      label: 'Response',
+      icon: Eye,
+      badge: response ? (response.status >= 200 && response.status < 300 ? '✓' : '✗') : undefined,
     },
   ];
 

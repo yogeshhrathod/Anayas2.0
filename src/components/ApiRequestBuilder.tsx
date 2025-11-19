@@ -23,7 +23,7 @@ import { ParamsTab } from './request/ParamsTab';
 import { HeadersTab } from './request/HeadersTab';
 import { BodyTab } from './request/BodyTab';
 import { AuthTab } from './request/AuthTab';
-import { ResponsePanel } from './request/ResponsePanel';
+import { ResponseTab } from './request/ResponseTab';
 import { RequestPresets } from './request/RequestPresets';
 
 export function ApiRequestBuilder() {
@@ -38,6 +38,13 @@ export function ApiRequestBuilder() {
     // This is handled inside useRequestActions, but we trigger a refresh here if needed
     // The effect in useRequestActions will handle loading presets for the new request
   }, [requestState.requestData.id]);
+
+  // Auto-switch to Response tab when response is received
+  useEffect(() => {
+    if (requestActions.response && requestState.activeTab !== 'response') {
+      requestState.setActiveTab('response');
+    }
+  }, [requestActions.response, requestState.activeTab, requestState.setActiveTab]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -261,6 +268,18 @@ export function ApiRequestBuilder() {
             setRequestData={requestState.setRequestData}
           />
         );
+      case 'response':
+        return (
+          <ResponseTab
+            response={requestActions.response}
+            onCopy={requestActions.copyResponse}
+            onDownload={requestActions.downloadResponse}
+            responseSubTab={requestState.responseSubTab}
+            setResponseSubTab={requestState.setResponseSubTab}
+            splitRatio={requestState.splitViewRatio}
+            setSplitRatio={requestState.setSplitViewRatio}
+          />
+        );
       default:
         return null;
     }
@@ -300,10 +319,11 @@ export function ApiRequestBuilder() {
             setActiveTab={requestState.setActiveTab}
             requestData={requestState.requestData}
             bodyContentType={requestState.bodyContentType}
+            response={requestActions.response}
           />
 
           {/* Tab Content */}
-          <div className="flex-1 p-3 bg-background/50">
+          <div className="flex-1 p-3 bg-background/50 overflow-hidden">
             {renderTabContent()}
           </div>
         </div>
@@ -337,13 +357,6 @@ export function ApiRequestBuilder() {
           onSetNewPresetDescription={requestActions.setNewPresetDescription}
         />
       </div>
-
-      {/* Response Section */}
-      <ResponsePanel
-        response={requestActions.response}
-        onCopy={requestActions.copyResponse}
-        onDownload={requestActions.downloadResponse}
-      />
       
       {/* Save Request Dialog */}
       <SaveRequestDialog

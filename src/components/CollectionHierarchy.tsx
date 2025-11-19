@@ -193,6 +193,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
             collectionId: collectionId,
             folderId: undefined,
             isFavorite: 0,
+            lastResponse: undefined,
           };
           
           setSelectedRequest(savedRequest);

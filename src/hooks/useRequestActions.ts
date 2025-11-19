@@ -61,7 +61,7 @@ export function useRequestActions(requestData: RequestFormData) {
   const { presetsExpanded, setPresetsExpanded } = useStore();
 
   const [state, setState] = useState<RequestActionsState>({
-    response: null,
+    response: selectedRequest?.lastResponse || null, // Load saved response
     isLoading: false,
     presets: [],
     showCreatePresetDialog: false,
@@ -71,6 +71,12 @@ export function useRequestActions(requestData: RequestFormData) {
     isPresetsExpanded: presetsExpanded ?? false,
     activePresetId: null,
   });
+
+  // Load saved response when request changes
+  useEffect(() => {
+    // Load the response from the selected request
+    setState(prev => ({ ...prev, response: selectedRequest?.lastResponse || null }));
+  }, [selectedRequest?.id, selectedRequest?.lastResponse]);
 
   // Load presets from database when request changes
   useEffect(() => {
@@ -117,12 +123,24 @@ export function useRequestActions(requestData: RequestFormData) {
 
       setState(prev => ({ ...prev, response }));
       showSuccess('Request completed', { description: `Status: ${response.status}` });
+      
+      // Save response with the request if it's a saved request
+      if (requestData.id && requestData.collectionId) {
+        try {
+          await window.electronAPI.request.save({
+            ...requestData,
+            lastResponse: response,
+          });
+        } catch (error) {
+          console.error('Failed to save response with request:', error);
+        }
+      }
     } catch (err: any) {
       showError('Request Failed', err.message || 'An error occurred while sending the request');
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [requestData, showSuccess, showError]);
+  }, [requestData, showSuccess, showError, selectedRequest]);
 
   const saveRequest = useCallback(async () => {
     if (!requestData.name.trim()) {

@@ -23,6 +23,7 @@ export interface Request {
   folderId?: number;
   isFavorite: number;
   order?: number;
+  lastResponse?: ResponseData; // Saved response from last request execution
   createdAt?: string;
 }
 

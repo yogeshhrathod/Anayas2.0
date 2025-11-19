@@ -46,6 +46,7 @@ export function UnsavedRequestsSection() {
       collectionId: undefined,
       folderId: undefined,
       isFavorite: 0,
+      lastResponse: undefined,
     };
     
     setSelectedRequest(request);
