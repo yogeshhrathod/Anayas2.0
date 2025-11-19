@@ -33,6 +33,8 @@ import { useToastNotifications } from "./hooks/useToastNotifications";
 import { cn } from "./lib/utils";
 import { trackFeatureLoad } from "./lib/performance";
 
+import { FontProvider } from "./components/providers/FontProvider";
+
 function App() {
   // Session recovery - load unsaved requests on startup
   useSessionRecovery();
@@ -384,6 +386,7 @@ function App() {
       setCurrentEnvironment(currentEnv);
       setCollections(collections);
       setRequestHistory(history);
+      // DB settings are the source of truth - they override any cached localStorage values
       setSettings(settings);
       setRequests(requests);
 
@@ -467,7 +470,7 @@ function App() {
 
 
   return (
-    <>
+    <FontProvider>
       <ThemeManager />
       <Toaster />
       <div className="flex h-screen flex-col bg-background">
@@ -652,7 +655,7 @@ function App() {
         </div>
       </Dialog>
     </div>
-    </>
+    </FontProvider>
   );
 }
 

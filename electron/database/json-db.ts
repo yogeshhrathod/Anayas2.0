@@ -1,6 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
+import { createLogger } from '../services/logger';
+
+const logger = createLogger('database');
 
 export interface UnsavedRequest {
   id: string; // UUID for unsaved requests
@@ -26,6 +29,11 @@ interface Database {
   settings: Record<string, any>;
 }
 
+const FONT_SETTING_KEYS = {
+  uiFontFamily: '',
+  codeFontFamily: '',
+};
+
 let db: Database = {
   environments: [],
   collections: [],
@@ -49,6 +57,15 @@ export function generateUniqueId(): number {
     lastId = now;
   }
   return lastId;
+}
+
+function ensureFontSettingsDefaults(): void {
+  if (db.settings.uiFontFamily === undefined) {
+    db.settings.uiFontFamily = FONT_SETTING_KEYS.uiFontFamily;
+  }
+  if (db.settings.codeFontFamily === undefined) {
+    db.settings.codeFontFamily = FONT_SETTING_KEYS.codeFontFamily;
+  }
 }
 
 export function getDatabase(): Database {
@@ -77,19 +94,19 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
       // Migration: Add folders table if it doesn't exist
       if (!db.folders) {
         db.folders = [];
-        console.log('Migrated database: Added folders table');
+        logger.info('Migrated database: Added folders table');
       }
       
       // Migration: Add unsaved_requests table if it doesn't exist
       if (!db.unsaved_requests) {
         db.unsaved_requests = [];
-        console.log('Migrated database: Added unsaved_requests table');
+        logger.info('Migrated database: Added unsaved_requests table');
       }
       
       // Migration: Add presets table if it doesn't exist
       if (!db.presets) {
         db.presets = [];
-        console.log('Migrated database: Added presets table');
+        logger.info('Migrated database: Added presets table');
       }
       
       // Migration: Convert collection.variables to collection.environments
@@ -105,7 +122,7 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
           }];
           collection.activeEnvironmentId = collection.environments[0].id;
           needsMigration = true;
-          console.log(`Migrated collection ${collection.id}: Converted variables to environments`);
+          logger.info(`Migrated collection ${collection.id}: Converted variables to environments`);
         }
         // Ensure all collections have environments[] array (initialize if missing)
         if (!collection.environments) {
@@ -118,7 +135,7 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
         saveDatabase();
       }
     } catch (error) {
-      console.error('Failed to load database, creating new one:', error);
+      logger.error('Failed to load database, creating new one', { error });
       db = {
         environments: [],
         collections: [],
@@ -144,9 +161,11 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
       maxHistory: 1000,
       debugMode: false,
       defaultResponseSubTab: 'headers', // Default response view (headers/body/both)
+      ...FONT_SETTING_KEYS,
     };
     saveDatabase();
   }
+  ensureFontSettingsDefaults();
   
   // Add new settings if they don't exist (for existing databases)
   if (!db.settings.defaultResponseSubTab) {
@@ -221,7 +240,7 @@ export function saveDatabase(): void {
   try {
     fs.writeFileSync(dbPath, JSON.stringify(db, null, 2), 'utf-8');
   } catch (error) {
-    console.error('Failed to save database:', error);
+    logger.error('Failed to save database', { error });
   }
 }
 
@@ -392,7 +411,14 @@ export function deleteRequestHistory(id: number): void {
 }
 
 export function setSetting(key: string, value: any): void {
-  db.settings[key] = value;
+  if (value === undefined || value === null) {
+    // Delete the key if value is undefined or null
+    delete db.settings[key];
+    logger.debug(`Deleted setting: ${key}`);
+  } else {
+    db.settings[key] = value;
+    logger.debug(`Set setting: ${key}`);
+  }
   saveDatabase();
 }
 
@@ -401,7 +427,7 @@ export function getSetting(key: string): any {
 }
 
 export function getAllSettings(): Record<string, any> {
-  return db.settings;
+  return { ...db.settings };
 }
 
 export function resetSettings(): void {
@@ -414,6 +440,7 @@ export function resetSettings(): void {
     autoSaveRequests: true,
     maxHistory: 1000,
     debugMode: false,
+    ...FONT_SETTING_KEYS,
   };
   saveDatabase();
 }

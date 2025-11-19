@@ -285,6 +285,8 @@ export const useStore = create<AppState>()(
         if (state) {
           // Convert array back to Set
           state.expandedCollections = new Set(state.expandedCollections as unknown as number[]);
+          // Note: Settings will be loaded from DB in App.tsx loadData()
+          // Don't override DB settings with cached localStorage settings
         }
       },
     }
