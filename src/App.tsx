@@ -23,8 +23,13 @@ import { ContextState } from "./lib/shortcuts/types";
 import { Request } from "./types/entities";
 import {
   Menu,
-  Zap,
+  Trash2,
 } from "lucide-react";
+import { Logo } from "./components/Logo";
+import { Button } from "./components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/ui/tooltip";
+import { Dialog } from "./components/ui/dialog";
+import { useToastNotifications } from "./hooks/useToastNotifications";
 import { cn } from "./lib/utils";
 import { trackFeatureLoad } from "./lib/performance";
 
@@ -57,7 +62,42 @@ function App() {
     expandedSidebarSections,
     toggleSidebarSection,
     loadSidebarState,
+    setUnsavedRequests,
+    setActiveUnsavedRequestId,
   } = useStore();
+
+  const { showSuccess, showError } = useToastNotifications();
+  const [showClearAllDialog, setShowClearAllDialog] = useState(false);
+
+  const handleClearAllUnsaved = async () => {
+    try {
+      const result = await window.electronAPI.unsavedRequest.clear();
+      
+      if (result && !result.success) {
+        throw new Error(result.error || 'Failed to clear unsaved requests');
+      }
+      
+      // Clear active unsaved request
+      setActiveUnsavedRequestId(null);
+      setSelectedRequest(null);
+      
+      // Reload unsaved requests from the database
+      const updatedUnsaved = await window.electronAPI.unsavedRequest.getAll();
+      setUnsavedRequests(updatedUnsaved);
+      
+      // Show success message
+      showSuccess('All unsaved requests cleared');
+      
+      // Trigger sidebar refresh
+      triggerSidebarRefresh();
+      
+      // Close dialog
+      setShowClearAllDialog(false);
+    } catch (error: any) {
+      console.error('Failed to clear unsaved requests:', error);
+      showError('Failed to clear', error.message || 'Failed to clear unsaved requests');
+    }
+  };
 
   useEffect(() => {
     // Load initial data with error handling
@@ -454,12 +494,7 @@ function App() {
             sidebarOpen ? "justify-between" : "justify-center"
           )}>
             {sidebarOpen && (
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
-                  <Zap className="h-4 w-4 text-white" />
-                </div>
-                <h1 className="text-lg font-semibold">Anayas</h1>
-              </div>
+              <Logo size={24} showText={true} className="text-lg" />
             )}
             <button
               onClick={() => {
@@ -497,6 +532,29 @@ function App() {
                     title="Unsaved Requests"
                     isExpanded={expandedSidebarSections.has('unsaved')}
                     onToggle={() => toggleSidebarSection('unsaved')}
+                    headerActions={
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowClearAllDialog(true);
+                              }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              <span className="sr-only">Clear all unsaved requests</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Clear all unsaved requests</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    }
                   >
                     <UnsavedRequestsSection />
                   </CollapsibleSection>
@@ -569,6 +627,30 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Clear All Unsaved Requests Confirmation Dialog */}
+      <Dialog
+        open={showClearAllDialog}
+        onOpenChange={setShowClearAllDialog}
+        title="Clear All Unsaved Requests"
+        description={`Are you sure you want to clear all ${unsavedRequests.length} unsaved request${unsavedRequests.length !== 1 ? 's' : ''}? This action cannot be undone.`}
+        maxWidth="sm"
+      >
+        <div className="flex justify-end gap-2 pt-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowClearAllDialog(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleClearAllUnsaved}
+          >
+            Clear All
+          </Button>
+        </div>
+      </Dialog>
     </div>
     </>
   );
