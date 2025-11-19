@@ -660,6 +660,31 @@ export function MonacoEditor({
     }
   };
 
+  // Fix: Add ResizeObserver to handle editor resize when container size changes
+  // This fixes the Monaco editor not resizing properly with window width changes
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    // Get editor container DOM node
+    const container = editor.getContainerDomNode?.();
+    if (!container) return;
+
+    // Create ResizeObserver to watch container size changes
+    const resizeObserver = new ResizeObserver(() => {
+      // Trigger Monaco editor layout recalculation
+      editor.layout();
+    });
+
+    // Start observing the container
+    resizeObserver.observe(container);
+
+    // Cleanup: disconnect observer on unmount
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   // Handle value change
   const handleEditorChange = (newValue: string | undefined) => {
     if (newValue !== undefined) {
@@ -797,13 +822,13 @@ export function MonacoEditor({
           </div>
           
           {/* Validation Messages */}
-          {!isValid && error && (
+          {validateJson && !isValid && error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          {isValid && value.trim() && language === 'json' && (
+          {validateJson && isValid && value.trim() && language === 'json' && (
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>Valid JSON</AlertDescription>

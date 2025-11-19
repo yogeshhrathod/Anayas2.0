@@ -358,6 +358,7 @@ export function registerIpcHandlers() {
         folderId: request.folderId || null,
         isFavorite: request.isFavorite ? 1 : 0,
         order: request.order,
+        lastResponse: request.lastResponse || null,
       });
       broadcast('requests:updated');
       return { success: true, id: request.id };
@@ -374,6 +375,7 @@ export function registerIpcHandlers() {
         folderId: request.folderId || null,
         isFavorite: request.isFavorite ? 1 : 0,
         order: request.order,
+        lastResponse: request.lastResponse || null,
       });
       broadcast('requests:updated');
       return { success: true, id };

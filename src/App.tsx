@@ -530,7 +530,8 @@ function App() {
                               queryParams: [],
                               auth: { type: 'none' },
                               collectionId: fullRequest.collectionId,
-                              isFavorite: fullRequest.isFavorite
+                              isFavorite: fullRequest.isFavorite,
+                              lastResponse: fullRequest.lastResponse
                             });
                           }
                         } catch (e) {

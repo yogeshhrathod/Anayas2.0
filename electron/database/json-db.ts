@@ -143,7 +143,14 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
       autoSaveRequests: true,
       maxHistory: 1000,
       debugMode: false,
+      defaultResponseSubTab: 'headers', // Default response view (headers/body/both)
     };
+    saveDatabase();
+  }
+  
+  // Add new settings if they don't exist (for existing databases)
+  if (!db.settings.defaultResponseSubTab) {
+    db.settings.defaultResponseSubTab = 'headers';
     saveDatabase();
   }
 

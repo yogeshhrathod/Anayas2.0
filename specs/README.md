@@ -45,6 +45,7 @@ This directory contains feature specifications and bug reports following the spe
 | `008-comprehensive-test-suite` | [comprehensive-test-suite](specs/008-comprehensive-test-suite/spec.md) | `unknown` | - | - |
 | `009-response-view-redesign` | [response-view-redesign](specs/009-response-view-redesign/spec.md) | `unknown` | - | - |
 | `010-vscode-style-sidebar` | [vscode-style-sidebar](specs/010-vscode-style-sidebar/spec.md) | `unknown` | - | - |
+| `011-response-tab-redesign` | [response-tab-redesign](specs/011-response-tab-redesign/spec.md) | `unknown` | - | - |
 
 ## Bug List
 

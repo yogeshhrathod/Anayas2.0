@@ -85,7 +85,8 @@ export function GlobalSearch() {
               queryParams: [],
               auth: { type: 'none' },
               collectionId: request.collectionId,
-              isFavorite: request.isFavorite
+              isFavorite: request.isFavorite,
+              lastResponse: request.lastResponse
             });
             setIsOpen(false);
             setQuery('');

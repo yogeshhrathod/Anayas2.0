@@ -27,7 +27,7 @@ import { generateDraftName } from '../lib/draftNaming';
 
 export interface RequestState {
   requestData: RequestFormData;
-  activeTab: 'params' | 'auth' | 'headers' | 'body';
+  activeTab: 'params' | 'auth' | 'headers' | 'body' | 'response';
   bodyType: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded';
   bodyContentType: 'json' | 'text';
   bodyViewMode: 'table' | 'json';
@@ -35,6 +35,8 @@ export interface RequestState {
   paramsViewMode: 'table' | 'json';
   headersViewMode: 'table' | 'json';
   bulkEditJson: string;
+  responseSubTab: 'headers' | 'body' | 'both';
+  splitViewRatio: number;
   isSaved: boolean;
   lastSavedAt: Date | null;
   isEditingName: boolean;
@@ -51,6 +53,8 @@ export interface RequestStateActions {
   setParamsViewMode: (mode: RequestState['paramsViewMode']) => void;
   setHeadersViewMode: (mode: RequestState['headersViewMode']) => void;
   setBulkEditJson: (json: string) => void;
+  setResponseSubTab: (tab: RequestState['responseSubTab']) => void;
+  setSplitViewRatio: (ratio: number) => void;
   setIsSaved: (saved: boolean) => void;
   setLastSavedAt: (date: Date | null) => void;
   setIsEditingName: (editing: boolean) => void;
@@ -82,6 +86,9 @@ export function useRequestState(selectedRequest: Request | null) {
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const unsavedSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Load default responseSubTab from settings (defaults to 'headers' if not set)
+  const defaultResponseSubTab = (settings.defaultResponseSubTab as 'headers' | 'body' | 'both') || 'headers';
+
   const [state, setState] = useState<RequestState>({
     requestData: defaultRequestData,
     activeTab: 'params',
@@ -92,6 +99,8 @@ export function useRequestState(selectedRequest: Request | null) {
     paramsViewMode: 'table',
     headersViewMode: 'table',
     bulkEditJson: '',
+    responseSubTab: defaultResponseSubTab,
+    splitViewRatio: 50,
     isSaved: false,
     lastSavedAt: null,
     isEditingName: false,
@@ -252,6 +261,14 @@ export function useRequestState(selectedRequest: Request | null) {
     setParamsViewMode: (mode) => setState(prev => ({ ...prev, paramsViewMode: mode })),
     setHeadersViewMode: (mode) => setState(prev => ({ ...prev, headersViewMode: mode })),
     setBulkEditJson: (json) => setState(prev => ({ ...prev, bulkEditJson: json })),
+    setResponseSubTab: (tab) => {
+      setState(prev => ({ ...prev, responseSubTab: tab }));
+      // Save preference to settings
+      window.electronAPI.settings.set('defaultResponseSubTab', tab).catch((err: any) => {
+        console.error('Failed to save response sub-tab preference:', err);
+      });
+    },
+    setSplitViewRatio: (ratio) => setState(prev => ({ ...prev, splitViewRatio: ratio })),
     setIsSaved: (saved) => setState(prev => ({ ...prev, isSaved: saved })),
     setLastSavedAt: (date) => setState(prev => ({ ...prev, lastSavedAt: date })),
     setIsEditingName: (editing) => setState(prev => ({ ...prev, isEditingName: editing })),
