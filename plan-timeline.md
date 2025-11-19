@@ -453,7 +453,7 @@
 - [ ] **Custom Validators** - Create custom validation rules
 - [ ] **API Analytics** - Usage statistics and insights
 
-### Quality Assurance 🔍 ✅ COMPLETED
+### Quality Assurance 🔍 🔄 IN PROGRESS
 - [x] **IPC Handler Tests** - 100% coverage (68 tests, 53 handlers)
 - [x] **Component Integration Tests** - CollectionHierarchy, RequestBuilder, EnvironmentSwitcher, Sidebar (21 tests)
 - [x] **E2E Tests** - Playwright tests (223+ tests across 35 files)
@@ -461,6 +461,18 @@
 - [x] **Data Flow Tests** - Complete UI → IPC → DB → UI verification
 - [x] **Rendering Tests** - Component rendering, state updates, loading/error states
 - [x] **Debugging Infrastructure** - Error reports, console logs, network activity, state capture
+- [ ] **Comprehensive UI Test Plan** - Complete UI test coverage (200+ test cases) - See `tests/UI_TEST_PLAN_TRACKING.md`
+  - [ ] Page-Level Tests (6 pages, 50+ tests)
+  - [ ] Component-Level Tests (10+ components, 60+ tests)
+  - [ ] User Interaction Tests (30+ tests)
+  - [ ] Keyboard Shortcut Tests (20+ tests)
+  - [ ] Drag & Drop Tests (10+ tests)
+  - [ ] Dialog & Modal Tests (7 dialogs, 40+ tests)
+  - [ ] Form Validation Tests (4 forms, 20+ tests)
+  - [ ] Error Handling Tests (15+ tests)
+  - [ ] Performance Tests (10+ tests)
+  - [ ] Accessibility Tests (15+ tests)
+  - [ ] Cross-Platform Tests (10+ tests)
 - [ ] **Accessibility Tests** - a11y compliance
 - [ ] **Security Audit** - Review for vulnerabilities
 - [x] **Code Coverage** - IPC handlers: 100%, Components: 90%+, Data flow: 100%
