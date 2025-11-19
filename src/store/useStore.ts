@@ -109,6 +109,12 @@ interface AppState {
   unsavedSectionHeight: number;
   setUnsavedSectionHeight: (height: number) => void;
 
+  // Sidebar section state (VS Code-style collapsible sections)
+  expandedSidebarSections: Set<string>;
+  toggleSidebarSection: (section: string) => void;
+  loadSidebarState: () => Promise<void>;
+  saveSidebarState: () => void;
+
   // Presets sidebar state
   presetsExpanded: boolean;
   setPresetsExpanded: (expanded: boolean) => void;
@@ -214,6 +220,47 @@ export const useStore = create<AppState>()(
       // Unsaved section height state for vertical resizing
       unsavedSectionHeight: 200,
       setUnsavedSectionHeight: (unsavedSectionHeight) => set({ unsavedSectionHeight }),
+
+      // Sidebar section state (VS Code-style collapsible sections)
+      expandedSidebarSections: new Set<string>(['collections']), // Default: Collections expanded
+      toggleSidebarSection: (section: string) => set((state) => {
+        const newExpanded = new Set(state.expandedSidebarSections);
+        if (newExpanded.has(section)) {
+          newExpanded.delete(section);
+        } else {
+          newExpanded.add(section);
+        }
+        // Save to database after updating
+        const stateCopy = { ...state, expandedSidebarSections: newExpanded };
+        setTimeout(() => {
+          window.electronAPI.sidebar.setState({
+            expandedSections: Array.from(newExpanded),
+            sectionOrder: ['unsaved', 'collections'],
+          });
+        }, 0);
+        return { expandedSidebarSections: newExpanded };
+      }),
+      loadSidebarState: async () => {
+        try {
+          const sidebarState = await window.electronAPI.sidebar.getState();
+          set({ 
+            expandedSidebarSections: new Set(sidebarState.expandedSections || ['collections'])
+          });
+        } catch (error) {
+          console.error('Failed to load sidebar state:', error);
+          // Use default state on error
+          set({ expandedSidebarSections: new Set(['collections']) });
+        }
+      },
+      saveSidebarState: () => {
+        const state = useStore.getState();
+        window.electronAPI.sidebar.setState({
+          expandedSections: Array.from(state.expandedSidebarSections),
+          sectionOrder: ['unsaved', 'collections'],
+        }).catch((error) => {
+          console.error('Failed to save sidebar state:', error);
+        });
+      },
 
       // Presets sidebar state
       presetsExpanded: false,

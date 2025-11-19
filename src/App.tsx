@@ -15,8 +15,8 @@ const Settings = lazy(() => import("./pages/Settings").then(module => ({ default
 const Logs = lazy(() => import("./pages/Logs").then(module => ({ default: module.Logs })));
 import { CollectionHierarchy } from "./components/CollectionHierarchy";
 import { UnsavedRequestsSection } from "./components/collection/UnsavedRequestsSection";
+import { CollapsibleSection } from "./components/sidebar/CollapsibleSection";
 import { ResizeHandle } from "./components/ui/resize-handle";
-import { VerticalResizeHandle } from "./components/ui/vertical-resize-handle";
 import { useShortcuts } from "./hooks/useShortcuts";
 import { useSessionRecovery } from "./hooks/useSessionRecovery";
 import { ContextState } from "./lib/shortcuts/types";
@@ -49,13 +49,14 @@ function App() {
     setCustomThemes,
     sidebarWidth,
     setSidebarWidth,
-    unsavedSectionHeight,
-    setUnsavedSectionHeight,
     unsavedRequests,
     // @ts-ignore - selectedItem is used in shortcut handlers
     selectedItem,
     setSelectedItem,
     triggerSidebarRefresh,
+    expandedSidebarSections,
+    toggleSidebarSection,
+    loadSidebarState,
   } = useStore();
 
   useEffect(() => {
@@ -64,6 +65,13 @@ function App() {
       console.error('[App] Critical error during initialization:', error);
     });
   }, []);
+
+  // Load sidebar state on mount
+  useEffect(() => {
+    loadSidebarState().catch((error) => {
+      console.error('[App] Failed to load sidebar state:', error);
+    });
+  }, [loadSidebarState]);
 
   // Single centralized shortcut handler
   useShortcuts({
@@ -311,18 +319,6 @@ function App() {
     }
   }, [sidebarWidth, setSidebarWidth, sidebarOpen]);
 
-  // Handle vertical resize for unsaved section
-  const handleVerticalResize = useCallback((deltaY: number) => {
-    const MIN_HEIGHT = 80;  // Minimum height for unsaved section (small enough to show header + some content)
-    const MAX_HEIGHT = 600; // Maximum height to prevent taking all space
-    
-    const newHeight = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, unsavedSectionHeight + deltaY));
-    
-    // Only update if the height actually changed
-    if (newHeight !== unsavedSectionHeight) {
-      setUnsavedSectionHeight(newHeight);
-    }
-  }, [unsavedSectionHeight, setUnsavedSectionHeight]);
 
   const handleResizeStart = useCallback(() => {
     setIsResizing(true);
@@ -491,67 +487,59 @@ function App() {
             )}
             aria-label="Sidebar navigation"
           >
-            {/* Collections Section - Contains Unsaved + Collections */}
+            {/* Sidebar Sections - VS Code-style collapsible sections */}
             {sidebarOpen && (
               <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-                {/* Unsaved Requests Section - Only render if there are unsaved requests */}
+                {/* Unsaved Requests Section - Only show if there are unsaved requests */}
                 {unsavedRequests.length > 0 && (
-                  <>
-                    <div 
-                      style={{ 
-                        height: `${unsavedSectionHeight}px`, 
-                        minHeight: '80px', 
-                        maxHeight: '600px',
-                        flexShrink: 0 
-                      }}
-                      className="overflow-hidden"
-                    >
-                      <UnsavedRequestsSection />
-                    </div>
-
-                    {/* Vertical Resize Handle - Only show if unsaved section exists */}
-                    <VerticalResizeHandle
-                      onResize={handleVerticalResize}
-                      onResizeStart={handleResizeStart}
-                      onResizeEnd={handleResizeEnd}
-                    />
-                  </>
+                  <CollapsibleSection
+                    id="unsaved"
+                    title="Unsaved Requests"
+                    isExpanded={expandedSidebarSections.has('unsaved')}
+                    onToggle={() => toggleSidebarSection('unsaved')}
+                  >
+                    <UnsavedRequestsSection />
+                  </CollapsibleSection>
                 )}
 
-                {/* Collections Section - Takes Remaining Space */}
-                <div
-                  className="flex-1 overflow-y-auto min-h-0"
-                  data-testid="sidebar-collections-scroll-container"
+                {/* Collections Section */}
+                <CollapsibleSection
+                  id="collections"
+                  title="Collections"
+                  isExpanded={expandedSidebarSections.has('collections')}
+                  onToggle={() => toggleSidebarSection('collections')}
                 >
-                  <CollectionHierarchy 
-                    onRequestSelect={async (request: Request) => {
-                      setCurrentPage('home');
-                      // Load request data and set it as selected
-                      try {
-                        const requestData = await window.electronAPI.request.list(request.collectionId);
-                        const fullRequest = requestData.find((r: any) => r.id === request.id);
-                        if (fullRequest) {
-                          setSelectedRequest({
-                            id: fullRequest.id,
-                            name: fullRequest.name || '',
-                            method: fullRequest.method,
-                            url: fullRequest.url,
-                            headers: typeof fullRequest.headers === 'string' 
-                              ? JSON.parse(fullRequest.headers) 
-                              : (fullRequest.headers || {}),
-                            body: fullRequest.body || '',
-                            queryParams: [],
-                            auth: { type: 'none' },
-                            collectionId: fullRequest.collectionId,
-                            isFavorite: fullRequest.isFavorite
-                          });
+                  <div className="p-1" data-testid="sidebar-collections-scroll-container">
+                    <CollectionHierarchy 
+                      onRequestSelect={async (request: Request) => {
+                        setCurrentPage('home');
+                        // Load request data and set it as selected
+                        try {
+                          const requestData = await window.electronAPI.request.list(request.collectionId);
+                          const fullRequest = requestData.find((r: any) => r.id === request.id);
+                          if (fullRequest) {
+                            setSelectedRequest({
+                              id: fullRequest.id,
+                              name: fullRequest.name || '',
+                              method: fullRequest.method,
+                              url: fullRequest.url,
+                              headers: typeof fullRequest.headers === 'string' 
+                                ? JSON.parse(fullRequest.headers) 
+                                : (fullRequest.headers || {}),
+                              body: fullRequest.body || '',
+                              queryParams: [],
+                              auth: { type: 'none' },
+                              collectionId: fullRequest.collectionId,
+                              isFavorite: fullRequest.isFavorite
+                            });
+                          }
+                        } catch (e) {
+                          console.error('Failed to load request:', e);
                         }
-                      } catch (e) {
-                        console.error('Failed to load request:', e);
-                      }
-                    }}
-                  />
-                </div>
+                      }}
+                    />
+                  </div>
+                </CollapsibleSection>
               </div>
             )}
           </nav>
