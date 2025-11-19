@@ -1,6 +1,6 @@
-# Data Model: 017-font-settings
+# Data Model: 013-font-settings
 
-**Feature ID**: 013-017-font-settings
+**Feature ID**: 013-013-font-settings
 
 ## Overview
 

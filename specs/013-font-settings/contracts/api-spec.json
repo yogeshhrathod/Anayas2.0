@@ -1,9 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "API Contract: 017-font-settings",
-  "description": "API contract specification for 017-font-settings",
+  "title": "API Contract: 013-font-settings",
+  "description": "API contract specification for 013-font-settings",
   "version": "1.0.0",
-  "featureId": "013-017-font-settings",
+  "featureId": "013-013-font-settings",
   "lastUpdated": "2025-11-19",
   "endpoints": [
     {
