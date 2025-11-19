@@ -140,9 +140,7 @@ function getAuthHeaders(auth: Request['auth']): string[] {
 /**
  * Generate body/data flags
  */
-function generateBodyFlags(body: string, headers: Record<string, string>): string[] {
-  const contentType = headers['Content-Type'] || headers['content-type'] || '';
-  
+function generateBodyFlags(body: string, _headers: Record<string, string>): string[] {
   // Use --data-raw for better compatibility
   return ['--data-raw', escapeShellString(body)];
 }

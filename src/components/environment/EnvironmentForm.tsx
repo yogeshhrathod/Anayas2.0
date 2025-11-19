@@ -59,8 +59,8 @@ const validationSchema = {
 export const EnvironmentForm = forwardRef<EnvironmentFormRef, EnvironmentFormProps>(({
   environment,
   onSave,
-  onCancel,
-  isLoading = false
+  onCancel: _onCancel,
+  isLoading: _isLoading = false
 }, ref) => {
   const [formData, setFormData] = useState<EnvironmentFormData>({
     name: '',

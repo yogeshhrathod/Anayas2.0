@@ -87,7 +87,7 @@ export function useRequestActions(requestData: RequestFormData) {
         setState(prev => {
           // Reset active preset if it doesn't belong to the current request
           const activePresetStillValid = prev.activePresetId && 
-            loadedPresets.some(p => p.id === prev.activePresetId);
+            loadedPresets.some((p: RequestPreset) => p.id === prev.activePresetId);
           
           return {
             ...prev,

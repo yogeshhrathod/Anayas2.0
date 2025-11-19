@@ -10,7 +10,7 @@
  * - Children only render when expanded (memory efficient)
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { ChevronRight, ChevronDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 

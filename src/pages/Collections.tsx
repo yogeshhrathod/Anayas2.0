@@ -150,11 +150,16 @@ export function Collections() {
 
   const handleCurlImportComplete = async (
     requests: Request[],
-    collectionId: number,
+    collectionId?: number,
     folderId?: number
   ) => {
     try {
       // Save each request
+      if (!collectionId) {
+        showError('Collection required', 'Please select a collection to import requests');
+        return;
+      }
+      
       for (const request of requests) {
         await window.electronAPI.request.save({
           ...request,

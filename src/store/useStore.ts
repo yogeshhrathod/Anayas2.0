@@ -231,7 +231,6 @@ export const useStore = create<AppState>()(
           newExpanded.add(section);
         }
         // Save to database after updating
-        const stateCopy = { ...state, expandedSidebarSections: newExpanded };
         setTimeout(() => {
           window.electronAPI.sidebar.setState({
             expandedSections: Array.from(newExpanded),
@@ -257,7 +256,7 @@ export const useStore = create<AppState>()(
         window.electronAPI.sidebar.setState({
           expandedSections: Array.from(state.expandedSidebarSections),
           sectionOrder: ['unsaved', 'collections'],
-        }).catch((error) => {
+        }).catch((error: unknown) => {
           console.error('Failed to save sidebar state:', error);
         });
       },

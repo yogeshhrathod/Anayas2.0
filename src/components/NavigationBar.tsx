@@ -123,8 +123,8 @@ export function NavigationBar() {
 
   const handleCurlImportComplete = async (
     requests: Request[],
-    collectionId: number,
-    folderId?: number
+    _collectionId?: number,
+    _folderId?: number
   ) => {
     try {
       if (requests.length === 0) {

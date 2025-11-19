@@ -16,7 +16,7 @@ export class ShortcutRegistry {
     event: KeyboardEvent, 
     contexts: ShortcutContext[]
   ): ShortcutDefinition | null {
-    for (const [id, shortcut] of this.shortcuts) {
+    for (const [_id, shortcut] of this.shortcuts) {
       // Check if shortcut is active in current context
       const isActiveInContext = shortcut.contexts.some(ctx => 
         contexts.includes(ctx)
