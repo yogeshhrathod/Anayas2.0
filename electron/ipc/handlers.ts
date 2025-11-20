@@ -9,8 +9,11 @@ import {
   updateCollection,
   deleteCollection,
   addFolder,
+  addFolderAfter,
   updateFolder,
   deleteFolder,
+  reorderFolder,
+  reorderRequest,
   addRequest,
   addRequestAfter,
   updateRequest,
@@ -291,7 +294,17 @@ export function registerIpcHandlers() {
   // Folder operations
   ipcMain.handle('folder:list', async (_, collectionId) => {
     const db = getDatabase();
-    return db.folders.filter(f => !collectionId || f.collectionId === collectionId);
+    const filteredFolders = db.folders.filter(f => !collectionId || f.collectionId === collectionId);
+    
+    // Sort by order field, then by id as fallback
+    return filteredFolders.sort((a, b) => {
+      const orderA = a.order || 0;
+      const orderB = b.order || 0;
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      return (a.id || 0) - (b.id || 0);
+    });
   });
 
   ipcMain.handle('folder:save', async (_, folder) => {
@@ -300,6 +313,7 @@ export function registerIpcHandlers() {
         name: folder.name,
         description: folder.description,
         collectionId: folder.collectionId,
+        order: folder.order,
       });
       broadcast('folders:updated');
       return { success: true, id: folder.id };
@@ -308,10 +322,23 @@ export function registerIpcHandlers() {
         name: folder.name,
         description: folder.description,
         collectionId: folder.collectionId,
+        order: folder.order,
       });
       broadcast('folders:updated');
       return { success: true, id };
     }
+  });
+
+  ipcMain.handle('folder:saveAfter', async (_, folder, afterFolderId) => {
+    const id = addFolderAfter(folder, afterFolderId);
+    broadcast('folders:updated');
+    return { success: true, id };
+  });
+
+  ipcMain.handle('folder:reorder', async (_, folderId, newOrder) => {
+    reorderFolder(folderId, newOrder);
+    broadcast('folders:updated');
+    return { success: true };
   });
 
   ipcMain.handle('folder:delete', async (_, id) => {
@@ -397,6 +424,12 @@ export function registerIpcHandlers() {
     }, afterRequestId);
     broadcast('requests:updated');
     return { success: true, id };
+  });
+
+  ipcMain.handle('request:reorder', async (_, requestId, newOrder) => {
+    reorderRequest(requestId, newOrder);
+    broadcast('requests:updated');
+    return { success: true };
   });
 
   ipcMain.handle('request:delete', async (_, id) => {

@@ -295,7 +295,58 @@ export function deleteCollection(id: number): void {
 // Folder CRUD operations
 export function addFolder(folder: any): number {
   const id = generateUniqueId();
-  db.folders.push({ ...folder, id, createdAt: new Date().toISOString() });
+  
+  // Generate order value - if not provided, use a large number to append to end
+  let order = folder.order;
+  if (order === undefined) {
+    const db = getDatabase();
+    const maxOrder = Math.max(...db.folders.map(f => f.order || 0), 0);
+    order = maxOrder + 1000; // Add 1000 to ensure it goes to the end
+  }
+  
+  db.folders.push({ ...folder, id, order, createdAt: new Date().toISOString() });
+  saveDatabase();
+  return id;
+}
+
+export function addFolderAfter(folder: any, afterFolderId: number): number {
+  const id = generateUniqueId();
+  const db = getDatabase();
+  
+  // Find the folder to insert after
+  const afterFolder = db.folders.find(f => f.id === afterFolderId);
+  if (!afterFolder) {
+    // Fallback to regular addFolder if afterFolder not found
+    return addFolder(folder);
+  }
+  
+  // Calculate order value - insert between afterFolder and the next folder
+  const afterOrder = afterFolder.order || 0;
+  const nextFolder = db.folders
+    .filter(f => f.collectionId === afterFolder.collectionId)
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .find(f => (f.order || 0) > afterOrder);
+  
+  let order;
+  if (nextFolder) {
+    // Insert between afterFolder and nextFolder
+    order = afterOrder + Math.floor(((nextFolder.order || 0) - afterOrder) / 2);
+    if (order === afterOrder) {
+      order = afterOrder + 1;
+    }
+  } else {
+    // Insert after afterFolder
+    order = afterOrder + 1000;
+  }
+  
+  const newFolder = { 
+    ...folder, 
+    id, 
+    order,
+    createdAt: new Date().toISOString() 
+  };
+  
+  db.folders.push(newFolder);
   saveDatabase();
   return id;
 }
@@ -304,6 +355,22 @@ export function updateFolder(id: number, folder: any): void {
   const index = db.folders.findIndex((f) => f.id === id);
   if (index !== -1) {
     db.folders[index] = { ...db.folders[index], ...folder, id };
+    saveDatabase();
+  }
+}
+
+export function reorderFolder(id: number, newOrder: number): void {
+  const index = db.folders.findIndex((f) => f.id === id);
+  if (index !== -1) {
+    db.folders[index].order = newOrder;
+    saveDatabase();
+  }
+}
+
+export function reorderRequest(id: number, newOrder: number): void {
+  const index = db.requests.findIndex((r) => r.id === id);
+  if (index !== -1) {
+    db.requests[index].order = newOrder;
     saveDatabase();
   }
 }

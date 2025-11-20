@@ -60,6 +60,7 @@ export interface Folder {
   name: string;
   description?: string;
   collectionId: number;
+  order?: number;
   createdAt?: string;
 }
 
