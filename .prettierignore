@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+dist-electron/
+release/
+build/
+
+# Test artifacts
+test-artifacts/
+playwright-report/
+test-results/
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Config files that shouldn't be formatted
+tsconfig.json
+tsconfig.*.json
+vite.config.ts
+playwright.config.ts
+tailwind.config.js
+postcss.config.js
+

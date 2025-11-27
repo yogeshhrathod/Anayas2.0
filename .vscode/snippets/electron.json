@@ -1,0 +1,57 @@
+{
+  "Electron IPC Handler": {
+    "prefix": "ipchandler",
+    "body": [
+      "import { ipcMain } from 'electron';",
+      "import { logger } from './services/logger';",
+      "",
+      "ipcMain.handle('${1:channel}', async (event, ${2:args}) => {",
+      "  try {",
+      "    logger.info('${1:channel} called', { ${2:args} });",
+      "    $0",
+      "    return { success: true, data: ${3:result} };",
+      "  } catch (error) {",
+      "    logger.error('Error in ${1:channel}:', error);",
+      "    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };",
+      "  }",
+      "});"
+    ],
+    "description": "Electron IPC Handler with logging"
+  },
+  "Electron BrowserWindow": {
+    "prefix": "browserwindow",
+    "body": [
+      "import { BrowserWindow } from 'electron';",
+      "",
+      "function create${1:WindowName}() {",
+      "  const window = new BrowserWindow({",
+      "    width: ${2:800},",
+      "    height: ${3:600},",
+      "    webPreferences: {",
+      "      preload: path.join(__dirname, 'preload.js'),",
+      "      nodeIntegration: false,",
+      "      contextIsolation: true,",
+      "    },",
+      "  });",
+      "",
+      "  $0",
+      "",
+      "  return window;",
+      "}"
+    ],
+    "description": "Electron BrowserWindow creation"
+  },
+  "Electron Preload API": {
+    "prefix": "preloadapi",
+    "body": [
+      "import { contextBridge, ipcRenderer } from 'electron';",
+      "",
+      "contextBridge.exposeInMainWorld('${1:apiName}', {",
+      "  ${2:method}: (${3:args}) => ipcRenderer.invoke('${4:channel}', ${3:args}),",
+      "  $0",
+      "});"
+    ],
+    "description": "Electron preload API exposure"
+  }
+}
+

@@ -1,0 +1,107 @@
+{
+  "React Functional Component": {
+    "prefix": "rfc",
+    "body": [
+      "import React from 'react';",
+      "",
+      "interface ${1:ComponentName}Props {",
+      "  $2",
+      "}",
+      "",
+      "export function ${1:ComponentName}({ $3 }: ${1:ComponentName}Props) {",
+      "  return (",
+      "    <div>",
+      "      $0",
+      "    </div>",
+      "  );",
+      "}"
+    ],
+    "description": "React Functional Component with TypeScript"
+  },
+  "Electron IPC Handler": {
+    "prefix": "ipc",
+    "body": [
+      "ipcMain.handle('${1:channel}', async (event, ${2:args}) => {",
+      "  try {",
+      "    $0",
+      "    return { success: true, data: ${3:result} };",
+      "  } catch (error) {",
+      "    logger.error('Error in ${1:channel}:', error);",
+      "    return { success: false, error: error.message };",
+      "  }",
+      "});"
+    ],
+    "description": "Electron IPC Handler with error handling"
+  },
+  "Zustand Store": {
+    "prefix": "zustand",
+    "body": [
+      "import { create } from 'zustand';",
+      "",
+      "interface ${1:StoreName}State {",
+      "  $2",
+      "}",
+      "",
+      "export const use${1:StoreName}Store = create<${1:StoreName}State>((set) => ({",
+      "  $0",
+      "}));"
+    ],
+    "description": "Zustand store with TypeScript"
+  },
+  "React Hook": {
+    "prefix": "rhook",
+    "body": [
+      "import { useState, useEffect } from 'react';",
+      "",
+      "export function use${1:HookName}(${2:params}) {",
+      "  const [${3:state}, set${3/(.*)/${3:/capitalize}/}] = useState(${4:initialValue});",
+      "",
+      "  useEffect(() => {",
+      "    $0",
+      "  }, [${5:dependencies}]);",
+      "",
+      "  return { ${3:state} };",
+      "}"
+    ],
+    "description": "React Custom Hook"
+  },
+  "TypeScript Interface": {
+    "prefix": "interface",
+    "body": [
+      "interface ${1:InterfaceName} {",
+      "  $0",
+      "}"
+    ],
+    "description": "TypeScript Interface"
+  },
+  "TypeScript Type": {
+    "prefix": "type",
+    "body": [
+      "type ${1:TypeName} = {",
+      "  $0",
+      "};"
+    ],
+    "description": "TypeScript Type"
+  },
+  "Async Function": {
+    "prefix": "async",
+    "body": [
+      "async function ${1:functionName}(${2:params}): Promise<${3:ReturnType}> {",
+      "  $0",
+      "}"
+    ],
+    "description": "Async Function with TypeScript"
+  },
+  "Try Catch Block": {
+    "prefix": "try",
+    "body": [
+      "try {",
+      "  $1",
+      "} catch (error) {",
+      "  $2",
+      "}"
+    ],
+    "description": "Try Catch Block"
+  }
+}
+

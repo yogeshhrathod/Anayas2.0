@@ -1,0 +1,6 @@
+# VS Code workspace files to ignore
+*.code-workspace
+.vscode/settings.json.bak
+.vscode/launch.json.bak
+.vscode/tasks.json.bak
+
