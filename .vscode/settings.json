@@ -232,6 +232,7 @@
   "editor.gotoLocation.multipleDefinitions": "goto",
   "editor.gotoLocation.multipleReferences": "goto",
   "editor.gotoLocation.multipleImplementations": "goto",
-  "editor.gotoLocation.multipleDeclarations": "goto"
+  "editor.gotoLocation.multipleDeclarations": "goto",
+  "testing.automaticallyOpenTestResults": "neverOpen"
 }
 

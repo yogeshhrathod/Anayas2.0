@@ -43,4 +43,5 @@ vite.config.ts
 playwright.config.ts
 tailwind.config.js
 postcss.config.js
+.eslintrc.json
 

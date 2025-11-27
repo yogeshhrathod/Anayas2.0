@@ -47,12 +47,28 @@ Workspace-specific settings including:
 
 ### `tasks.json`
 Predefined tasks for common development operations:
+
+#### Build & Development
 - **Type Check** - Run TypeScript type checking
-- **Build** - Build the project
+- **Build** - Build the project (default build task)
 - **Dev Server** - Start Vite dev server
 - **Electron: Dev** - Run Electron in development mode
-- **Test: Electron** - Run Electron tests
 - **Clean Build** - Remove build artifacts
+
+#### Code Quality
+- **Format Code (Prettier)** - Format all code files
+- **Format: Check (Prettier)** - Check formatting without changing files
+- **Lint Code (ESLint)** - Run ESLint to check code quality
+- **Lint: Fix (ESLint)** - Run ESLint and auto-fix issues
+- **Validate** - Run type check + format check
+
+#### Testing
+- **Test: All** - Run all tests
+- **Test: Electron** - Run Electron tests
+- **Test: Electron (Debug)** - Run Electron tests in debug mode
+
+#### Setup
+- **Install Recommended Extensions** - Install all recommended VS Code extensions
 
 ### `launch.json`
 Debug configurations:
@@ -83,21 +99,57 @@ Code snippets for faster development:
 
 1. **Install Recommended Extensions**
    - VS Code will prompt you, or run "Extensions: Show Recommended Extensions"
+   - Or use task: "Install Recommended Extensions"
    - Essential: Prettier, ESLint, Tailwind CSS IntelliSense
 
-2. **Use Tasks**
+2. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Use Tasks**
    - Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
    - Type "Tasks: Run Task"
    - Select a task
 
-3. **Debug**
+4. **Format Code**
+   - Use task: "Format Code (Prettier)"
+   - Or run: `npm run format`
+   - Or enable format on save in settings
+
+5. **Debug**
    - Open Run and Debug panel (`Cmd+Shift+D` / `Ctrl+Shift+D`)
    - Select a debug configuration
    - Press F5 to start debugging
 
-4. **Use Snippets**
+6. **Use Snippets**
    - Type snippet prefix (e.g., `rfc` for React component)
    - Press Tab to expand
+
+## Available NPM Scripts
+
+### Development
+- `npm run dev` - Start Vite dev server
+- `npm run electron:dev` - Run Electron in dev mode
+- `npm run type-check` - Type check TypeScript
+
+### Code Quality
+- `npm run format` - Format all code with Prettier
+- `npm run format:check` - Check formatting without changes
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Run ESLint and auto-fix
+- `npm run validate` - Type check + format check
+
+### Building
+- `npm run build` - Build for production
+- `npm run build:mac` - Build for macOS
+- `npm run build:win` - Build for Windows
+- `npm run build:linux` - Build for Linux
+
+### Testing
+- `npm run test` - Run all tests
+- `npm run test:electron` - Run Electron tests
+- `npm run test:electron:debug` - Debug Electron tests
 
 ## Notes
 
@@ -105,4 +157,4 @@ Code snippets for faster development:
 - Some settings require specific extensions to be installed
 - File nesting patterns help organize related files in the explorer
 - Performance settings are optimized for large TypeScript projects
-
+- ESLint and Prettier work together - Prettier handles formatting, ESLint handles code quality

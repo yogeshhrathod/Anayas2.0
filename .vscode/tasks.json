@@ -137,6 +137,128 @@
           "endsPattern": ".*Local:.*http://localhost:5173.*"
         }
       }
+    },
+    {
+      "label": "Format Code (Prettier)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "format"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Format: Check (Prettier)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "format:check"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Lint Code (ESLint)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "lint"],
+      "problemMatcher": "$eslint-stylish",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Lint: Fix (ESLint)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "lint:fix"],
+      "problemMatcher": "$eslint-stylish",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Validate (Type Check + Format Check)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "validate"],
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Install Recommended Extensions",
+      "type": "shell",
+      "command": "code",
+      "args": [
+        "--install-extension",
+        "dbaeumer.vscode-eslint",
+        "--install-extension",
+        "esbenp.prettier-vscode",
+        "--install-extension",
+        "bradlc.vscode-tailwindcss",
+        "--install-extension",
+        "ms-vscode.vscode-typescript-next",
+        "--install-extension",
+        "dsznajder.es7-react-js-snippets",
+        "--install-extension",
+        "formulahendry.auto-rename-tag",
+        "--install-extension",
+        "eamodio.gitlens",
+        "--install-extension",
+        "mhutchie.git-graph",
+        "--install-extension",
+        "ms-playwright.playwright",
+        "--install-extension",
+        "usernamehw.errorlens",
+        "--install-extension",
+        "streetsidesoftware.code-spell-checker",
+        "--install-extension",
+        "christian-kohler.path-intellisense",
+        "--install-extension",
+        "formulahendry.auto-close-tag"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "windows": {
+        "command": "code.cmd"
+      },
+      "osx": {
+        "command": "code"
+      },
+      "linux": {
+        "command": "code"
+      }
     }
   ]
 }
