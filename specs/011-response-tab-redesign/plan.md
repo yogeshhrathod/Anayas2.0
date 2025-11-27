@@ -198,6 +198,7 @@ Convert the ResponsePanel from a bottom-fixed component to a dedicated "Response
 ### Performance Tracking Implementation (MANDATORY)
 
 - **Memory Tracking** (PRIMARY):
+
   ```typescript
   // In ResponseTab.tsx
   useEffect(() => {
@@ -222,7 +223,9 @@ Convert the ResponsePanel from a bottom-fixed component to a dedicated "Response
     };
   }, []);
   ```
+
 - **Load Time Tracking** (PRIMARY):
+
   ```typescript
   // In ResponseTab.tsx
   useEffect(() => {
@@ -247,6 +250,7 @@ Convert the ResponsePanel from a bottom-fixed component to a dedicated "Response
     });
   }, []);
   ```
+
 - **Performance Metrics Logging**: Console logs with `[Performance]` prefix for filtering
 
 **Optional/Informational:**
@@ -344,6 +348,7 @@ Convert the ResponsePanel from a bottom-fixed component to a dedicated "Response
    - **PERFORMANCE IMPACT**: Minimal (ResizeObserver is lightweight, browser-native API)
    - **FIX**: This solves the Monaco editor resize issue (primary requirement)
    - **EXAMPLE**:
+
      ```typescript
      useEffect(() => {
        if (!editorRef.current) return;
