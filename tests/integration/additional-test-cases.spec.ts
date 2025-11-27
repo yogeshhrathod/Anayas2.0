@@ -649,7 +649,7 @@ test.describe('Additional IPC Test Cases', () => {
   });
 
   test.describe('Data Persistence', () => {
-    test('should persist data across multiple operations', async ({ electronPage, testDbPath }) => {
+    test('should persist data across multiple operations', async ({ electronPage, _testDbPath }) => {
       // Create environment
       const envResult = await electronPage.evaluate(async () => {
         return await (window as any).electronAPI.env.save({

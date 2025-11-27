@@ -2,7 +2,7 @@ import { test, expect } from '../../helpers/electron-fixtures';
 import { assertRendered } from '../../helpers/assertions';
 
 test.describe('RequestBuilder Component Integration', () => {
-  test('should render request builder with request data', async ({ electronPage, testDbPath }) => {
+  test('should render request builder with request data', async ({ electronPage, _testDbPath }) => {
     // Create environment and collection
     const setup = await electronPage.evaluate(async () => {
       const env = await window.electronAPI.env.save({
@@ -57,7 +57,7 @@ test.describe('RequestBuilder Component Integration', () => {
     expect(urlValue).toContain('jsonplaceholder.typicode.com');
   });
 
-  test('should update form inputs', async ({ electronPage, testDbPath }) => {
+  test('should update form inputs', async ({ electronPage, _testDbPath }) => {
     // Create request
     const setup = await electronPage.evaluate(async () => {
       const collection = await window.electronAPI.collection.save({
@@ -105,7 +105,7 @@ test.describe('RequestBuilder Component Integration', () => {
     expect(updatedUrl).toBe('https://updated-url.com');
   });
 
-  test('should send request and display response', async ({ electronPage, testDbPath }) => {
+  test('should send request and display response', async ({ electronPage, _testDbPath }) => {
     // Create environment
     await electronPage.evaluate(async () => {
       await window.electronAPI.env.save({
@@ -163,7 +163,7 @@ test.describe('RequestBuilder Component Integration', () => {
     expect(responseText).toContain('200');
   });
 
-  test('should handle different HTTP methods', async ({ electronPage, testDbPath }) => {
+  test('should handle different HTTP methods', async ({ electronPage, _testDbPath }) => {
     await electronPage.goto('/');
     await electronPage.waitForLoadState('networkidle');
 
@@ -193,7 +193,7 @@ test.describe('RequestBuilder Component Integration', () => {
     expect(methodValue).toContain('POST');
   });
 
-  test('should display tabs for params, headers, body, auth', async ({ electronPage, testDbPath }) => {
+  test('should display tabs for params, headers, body, auth', async ({ electronPage, _testDbPath }) => {
     await electronPage.goto('/');
     await electronPage.waitForLoadState('networkidle');
 

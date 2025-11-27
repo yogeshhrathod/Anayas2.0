@@ -1,7 +1,7 @@
 import { test, expect } from '../../helpers/electron-fixtures';
 
 test.describe('Sidebar Component Integration', () => {
-  test('should render sidebar with navigation items', async ({ electronPage, testDbPath }) => {
+  test('should render sidebar with navigation items', async ({ electronPage, _testDbPath }) => {
     await electronPage.goto('/');
     await electronPage.waitForLoadState('networkidle');
 
@@ -22,7 +22,7 @@ test.describe('Sidebar Component Integration', () => {
     expect(homeCount + collectionsCount).toBeGreaterThan(0);
   });
 
-  test('should navigate between pages', async ({ electronPage, testDbPath }) => {
+  test('should navigate between pages', async ({ electronPage, _testDbPath }) => {
     await electronPage.goto('/');
     await electronPage.waitForLoadState('networkidle');
 
@@ -57,7 +57,7 @@ test.describe('Sidebar Component Integration', () => {
     expect(homePageText).toContain('Anayas');
   });
 
-  test('should update active page state', async ({ electronPage, testDbPath }) => {
+  test('should update active page state', async ({ electronPage, _testDbPath }) => {
     await electronPage.goto('/');
     await electronPage.waitForLoadState('networkidle');
 
@@ -71,7 +71,7 @@ test.describe('Sidebar Component Integration', () => {
     await expect(collectionsNav).toHaveAttribute('aria-current', 'page');
   });
 
-  test('should display collection hierarchy in sidebar', async ({ electronPage, testDbPath }) => {
+  test('should display collection hierarchy in sidebar', async ({ electronPage, _testDbPath }) => {
     // Create collection
     await electronPage.evaluate(async () => {
       await window.electronAPI.collection.save({
@@ -92,7 +92,7 @@ test.describe('Sidebar Component Integration', () => {
     expect(collectionVisible).toBe(true);
   });
 
-  test('should refresh sidebar when data changes', async ({ electronPage, testDbPath }) => {
+  test('should refresh sidebar when data changes', async ({ electronPage, _testDbPath }) => {
     await electronPage.goto('/');
     await electronPage.waitForLoadState('networkidle');
 
@@ -116,7 +116,7 @@ test.describe('Sidebar Component Integration', () => {
     expect(collectionVisible).toBe(true);
   });
 
-  test('should handle sidebar toggle/collapse', async ({ electronPage, testDbPath }) => {
+  test('should handle sidebar toggle/collapse', async ({ electronPage, _testDbPath }) => {
     await electronPage.goto('/');
     await electronPage.waitForLoadState('networkidle');
 

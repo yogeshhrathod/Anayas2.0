@@ -25,9 +25,9 @@ export interface CollectionUpdateRequest extends CollectionCreateRequest {
   id: number;
 }
 
-export interface CollectionListResponse extends ApiResponse<Collection[]> {}
+export type CollectionListResponse = ApiResponse<Collection[]>;
 
-export interface CollectionSaveResponse extends ApiResponse<{ id: number }> {}
+export type CollectionSaveResponse = ApiResponse<{ id: number }>;
 
 // Environment API types
 export interface EnvironmentCreateRequest {
@@ -41,9 +41,9 @@ export interface EnvironmentUpdateRequest extends EnvironmentCreateRequest {
   id: number;
 }
 
-export interface EnvironmentListResponse extends ApiResponse<Environment[]> {}
+export type EnvironmentListResponse = ApiResponse<Environment[]>;
 
-export interface EnvironmentSaveResponse extends ApiResponse<{ id: number }> {}
+export type EnvironmentSaveResponse = ApiResponse<{ id: number }>;
 
 export interface EnvironmentTestRequest {
   name: string;
@@ -51,7 +51,7 @@ export interface EnvironmentTestRequest {
   variables: Record<string, string>;
 }
 
-export interface EnvironmentTestResponse extends ApiResponse<{ success: boolean }> {}
+export type EnvironmentTestResponse = ApiResponse<{ success: boolean }>;
 
 // Request API types
 export interface RequestCreateRequest {
@@ -79,13 +79,13 @@ export interface RequestSendRequest {
   auth: Request['auth'];
 }
 
-export interface RequestSendResponse extends ApiResponse<ResponseData> {}
+export type RequestSendResponse = ApiResponse<ResponseData>;
 
-export interface RequestListResponse extends ApiResponse<Request[]> {}
+export type RequestListResponse = ApiResponse<Request[]>;
 
-export interface RequestHistoryResponse extends ApiResponse<RequestHistory[]> {}
+export type RequestHistoryResponse = ApiResponse<RequestHistory[]>;
 
-export interface RequestSaveResponse extends ApiResponse<{ id: number }> {}
+export type RequestSaveResponse = ApiResponse<{ id: number }>;
 
 // Folder API types
 export interface FolderCreateRequest {
@@ -98,26 +98,26 @@ export interface FolderUpdateRequest extends FolderCreateRequest {
   id: number;
 }
 
-export interface FolderListResponse extends ApiResponse<Folder[]> {}
+export type FolderListResponse = ApiResponse<Folder[]>;
 
-export interface FolderSaveResponse extends ApiResponse<{ id: number }> {}
+export type FolderSaveResponse = ApiResponse<{ id: number }>;
 
 // Settings API types
-export interface SettingsGetAllResponse extends ApiResponse<Record<string, any>> {}
+export type SettingsGetAllResponse = ApiResponse<Record<string, any>>;
 
 export interface SettingsSetRequest {
   key: string;
   value: any;
 }
 
-export interface SettingsSetResponse extends ApiResponse<void> {}
+export type SettingsSetResponse = ApiResponse<void>;
 
 // File API types
 export interface FileSelectRequest {
   filters: Array<{ name: string; extensions: string[] }>;
 }
 
-export interface FileSelectResponse extends ApiResponse<string> {}
+export type FileSelectResponse = ApiResponse<string>;
 
 // Error types
 export interface ApiError {

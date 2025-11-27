@@ -1,7 +1,7 @@
 import { test, expect } from '../../helpers/electron-fixtures';
 
 test.describe('EnvironmentSwitcher Component Integration', () => {
-  test('should render environment switcher with environments', async ({ electronPage, testDbPath }) => {
+  test('should render environment switcher with environments', async ({ electronPage, _testDbPath }) => {
     // Create multiple environments
     await electronPage.evaluate(async () => {
       await window.electronAPI.env.save({
@@ -31,7 +31,7 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     await expect(envSwitcher).toBeVisible();
   });
 
-  test('should switch global environment', async ({ electronPage, testDbPath }) => {
+  test('should switch global environment', async ({ electronPage, _testDbPath }) => {
     // Create environments
     const setup = await electronPage.evaluate(async () => {
       const env1 = await window.electronAPI.env.save({
@@ -92,7 +92,7 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     expect(envSwitcherText).toContain('Global Env 2');
   });
 
-  test('should display current environment', async ({ electronPage, testDbPath }) => {
+  test('should display current environment', async ({ electronPage, _testDbPath }) => {
     // Create default environment
     const env = await electronPage.evaluate(async () => {
       return await window.electronAPI.env.save({
@@ -118,7 +118,7 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     await expect(currentEnvText).toBeVisible({ timeout: 5000 });
   });
 
-  test('should handle collection environments', async ({ electronPage, testDbPath }) => {
+  test('should handle collection environments', async ({ electronPage, _testDbPath }) => {
     // Create collection with environments
     const setup = await electronPage.evaluate(async () => {
       const collection = await window.electronAPI.collection.save({
@@ -147,7 +147,7 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     expect(collectionVisible).toBe(true);
   });
 
-  test('should call IPC to set current environment', async ({ electronPage, testDbPath }) => {
+  test('should call IPC to set current environment', async ({ electronPage, _testDbPath }) => {
     // Create environments
     const setup = await electronPage.evaluate(async () => {
       const env1 = await window.electronAPI.env.save({

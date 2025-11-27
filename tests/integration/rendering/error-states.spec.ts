@@ -1,7 +1,7 @@
 import { test, expect } from '../../helpers/electron-fixtures';
 
 test.describe('Error States', () => {
-  test('should handle invalid collection ID gracefully', async ({ electronPage, testDbPath }) => {
+  test('should handle invalid collection ID gracefully', async ({ electronPage, _testDbPath }) => {
     // Try to delete non-existent collection
     const result = await electronPage.evaluate(async () => {
       try {
@@ -15,7 +15,7 @@ test.describe('Error States', () => {
     expect(result).toBeDefined();
   });
 
-  test('should handle invalid environment ID gracefully', async ({ electronPage, testDbPath }) => {
+  test('should handle invalid environment ID gracefully', async ({ electronPage, _testDbPath }) => {
     // Try to delete non-existent environment
     const result = await electronPage.evaluate(async () => {
       try {
@@ -29,7 +29,7 @@ test.describe('Error States', () => {
     expect(result).toBeDefined();
   });
 
-  test('should handle invalid request ID gracefully', async ({ electronPage, testDbPath }) => {
+  test('should handle invalid request ID gracefully', async ({ electronPage, _testDbPath }) => {
     // Try to delete non-existent request
     const result = await electronPage.evaluate(async () => {
       try {
@@ -43,7 +43,7 @@ test.describe('Error States', () => {
     expect(result).toBeDefined();
   });
 
-  test('should handle network errors in request send', async ({ electronPage, testDbPath }) => {
+  test('should handle network errors in request send', async ({ electronPage, _testDbPath }) => {
     // Create environment
     await electronPage.evaluate(async () => {
       await window.electronAPI.env.save({
@@ -73,7 +73,7 @@ test.describe('Error States', () => {
     }
   });
 
-  test('should handle missing environment in request send', async ({ electronPage, testDbPath }) => {
+  test('should handle missing environment in request send', async ({ electronPage, _testDbPath }) => {
     // Don't create any environment - try to send request
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.request.send({

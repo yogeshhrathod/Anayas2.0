@@ -1,7 +1,7 @@
 import { test, expect } from '../../helpers/electron-fixtures';
 
 test.describe('cURL IPC Handlers', () => {
-  test('curl:parse - should parse simple GET cURL command', async ({ electronPage, testDbPath }) => {
+  test('curl:parse - should parse simple GET cURL command', async ({ electronPage, _testDbPath }) => {
     const curlCommand = 'curl https://jsonplaceholder.typicode.com/posts/1';
     
     const result = await electronPage.evaluate(async (command) => {
@@ -14,7 +14,7 @@ test.describe('cURL IPC Handlers', () => {
     expect(result.request.url).toBe('https://jsonplaceholder.typicode.com/posts/1');
   });
 
-  test('curl:parse - should parse POST cURL command with headers and body', async ({ electronPage, testDbPath }) => {
+  test('curl:parse - should parse POST cURL command with headers and body', async ({ electronPage, _testDbPath }) => {
     const curlCommand = `curl -X POST https://jsonplaceholder.typicode.com/posts \\
       -H "Content-Type: application/json" \\
       -H "Authorization: Bearer token123" \\
@@ -34,7 +34,7 @@ test.describe('cURL IPC Handlers', () => {
     expect(result.request.body).toContain('title');
   });
 
-  test('curl:parse - should handle invalid cURL command', async ({ electronPage, testDbPath }) => {
+  test('curl:parse - should handle invalid cURL command', async ({ electronPage, _testDbPath }) => {
     const invalidCommand = 'not a curl command';
     
     const result = await electronPage.evaluate(async (command) => {
@@ -46,7 +46,7 @@ test.describe('cURL IPC Handlers', () => {
     // May return success: false or throw, depending on parser implementation
   });
 
-  test('curl:generate - should generate cURL command from request', async ({ electronPage, testDbPath }) => {
+  test('curl:generate - should generate cURL command from request', async ({ electronPage, _testDbPath }) => {
     const request = {
       method: 'GET',
       url: 'https://jsonplaceholder.typicode.com/posts/1',
@@ -65,7 +65,7 @@ test.describe('cURL IPC Handlers', () => {
     expect(result.command).toContain('https://jsonplaceholder.typicode.com/posts/1');
   });
 
-  test('curl:generate - should generate POST cURL command with headers and body', async ({ electronPage, testDbPath }) => {
+  test('curl:generate - should generate POST cURL command with headers and body', async ({ electronPage, _testDbPath }) => {
     const request = {
       method: 'POST',
       url: 'https://jsonplaceholder.typicode.com/posts',
@@ -90,7 +90,7 @@ test.describe('cURL IPC Handlers', () => {
     expect(result.command).toContain('title');
   });
 
-  test('curl:import-bulk - should parse multiple cURL commands', async ({ electronPage, testDbPath }) => {
+  test('curl:import-bulk - should parse multiple cURL commands', async ({ electronPage, _testDbPath }) => {
     const commands = [
       'curl https://jsonplaceholder.typicode.com/posts/1',
       'curl -X POST https://jsonplaceholder.typicode.com/posts -H "Content-Type: application/json" -d \'{"title":"test"}\'',
@@ -106,7 +106,7 @@ test.describe('cURL IPC Handlers', () => {
     expect(result.results.length).toBeGreaterThan(0);
   });
 
-  test('curl:import-bulk - should handle empty array', async ({ electronPage, testDbPath }) => {
+  test('curl:import-bulk - should handle empty array', async ({ electronPage, _testDbPath }) => {
     const commands: string[] = [];
     
     const result = await electronPage.evaluate(async (cmds) => {

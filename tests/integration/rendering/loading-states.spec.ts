@@ -1,7 +1,7 @@
 import { test, expect } from '../../helpers/electron-fixtures';
 
 test.describe('Loading States', () => {
-  test('should handle async IPC operations', async ({ electronPage, testDbPath }) => {
+  test('should handle async IPC operations', async ({ electronPage, _testDbPath }) => {
     // Test that async operations complete
     const startTime = Date.now();
     
@@ -22,7 +22,7 @@ test.describe('Loading States', () => {
     expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
   });
 
-  test('should handle multiple concurrent IPC operations', async ({ electronPage, testDbPath }) => {
+  test('should handle multiple concurrent IPC operations', async ({ electronPage, _testDbPath }) => {
     // Create multiple collections concurrently
     const promises = Array.from({ length: 5 }, (_, i) => 
       electronPage.evaluate(async (index) => {
@@ -52,7 +52,7 @@ test.describe('Loading States', () => {
     expect(collections.length).toBe(5);
   });
 
-  test('should handle request send operation', async ({ electronPage, testDbPath }) => {
+  test('should handle request send operation', async ({ electronPage, _testDbPath }) => {
     // Create environment
     await electronPage.evaluate(async () => {
       await window.electronAPI.env.save({

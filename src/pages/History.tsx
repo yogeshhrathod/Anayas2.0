@@ -38,14 +38,16 @@ export function History() {
         case 'today':
           matchesDate = requestDate.toDateString() === now.toDateString();
           break;
-        case 'week':
+        case 'week': {
           const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
           matchesDate = requestDate >= weekAgo;
           break;
-        case 'month':
+        }
+        case 'month': {
           const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
           matchesDate = requestDate >= monthAgo;
           break;
+        }
       }
     }
     

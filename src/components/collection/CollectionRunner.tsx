@@ -206,7 +206,7 @@ export function CollectionRunner({ collectionId, collectionName, onClose, open }
           {/* Empty State */}
           {!isRunning && results.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              <p>Click "Start Run" to execute all requests in this collection</p>
+              <p>Click &quot;Start Run&quot; to execute all requests in this collection</p>
             </div>
           )}
       </div>

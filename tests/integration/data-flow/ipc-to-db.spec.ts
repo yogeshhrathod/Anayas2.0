@@ -2,7 +2,7 @@ import { test, expect } from '../../helpers/electron-fixtures';
 import { getDatabaseContents } from '../../helpers/test-db';
 
 test.describe('IPC to Database Flow', () => {
-  test('should persist collection after IPC save', async ({ electronPage, testDbPath }) => {
+  test('should persist collection after IPC save', async ({ electronPage, _testDbPath }) => {
     // Create collection via IPC
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -26,7 +26,7 @@ test.describe('IPC to Database Flow', () => {
     expect(collection?.description).toBe('Test Description');
   });
 
-  test('should persist environment after IPC save', async ({ electronPage, testDbPath }) => {
+  test('should persist environment after IPC save', async ({ electronPage, _testDbPath }) => {
     // Create environment via IPC
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.env.save({
@@ -49,7 +49,7 @@ test.describe('IPC to Database Flow', () => {
     expect(env?.variables?.base_url).toBe('https://example.com');
   });
 
-  test('should persist request after IPC save', async ({ electronPage, testDbPath }) => {
+  test('should persist request after IPC save', async ({ electronPage, _testDbPath }) => {
     // Create collection first
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -91,7 +91,7 @@ test.describe('IPC to Database Flow', () => {
     expect(request?.url).toBe('https://example.com/api');
   });
 
-  test('should update database after IPC update', async ({ electronPage, testDbPath }) => {
+  test('should update database after IPC update', async ({ electronPage, _testDbPath }) => {
     // Create collection
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -127,7 +127,7 @@ test.describe('IPC to Database Flow', () => {
     expect(collection?.description).toBe('Updated');
   });
 
-  test('should remove from database after IPC delete', async ({ electronPage, testDbPath }) => {
+  test('should remove from database after IPC delete', async ({ electronPage, _testDbPath }) => {
     // Create collection
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({

@@ -56,7 +56,7 @@ export const HeadersTab: React.FC<HeadersTabProps> = ({
       try {
         const parsed = JSON.parse(bulkEditJson);
         setRequestData({ ...requestData, headers: parsed });
-      } catch (e: any) {
+      } catch (_e: any) {
         showError('Invalid JSON', 'Please fix JSON syntax errors before switching to table view');
         return;
       }

@@ -1,7 +1,7 @@
 import { test, expect } from '../../helpers/electron-fixtures';
 
 test.describe('Component Rendering', () => {
-  test('should render app after page load', async ({ electronPage, testDbPath }) => {
+  test('should render app after page load', async ({ electronPage, _testDbPath }) => {
     // Wait for app to load
     await electronPage.waitForLoadState('networkidle');
     
@@ -13,7 +13,7 @@ test.describe('Component Rendering', () => {
     expect(hasApp).toBe(true);
   });
 
-  test('should render collections after IPC call', async ({ electronPage, testDbPath }) => {
+  test('should render collections after IPC call', async ({ electronPage, _testDbPath }) => {
     // Create a collection via IPC
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -40,7 +40,7 @@ test.describe('Component Rendering', () => {
     expect(collections[0].name).toBe('Test Collection');
   });
 
-  test('should render environments after IPC call', async ({ electronPage, testDbPath }) => {
+  test('should render environments after IPC call', async ({ electronPage, _testDbPath }) => {
     // Create an environment via IPC
     const env = await electronPage.evaluate(async () => {
       return await window.electronAPI.env.save({
@@ -65,7 +65,7 @@ test.describe('Component Rendering', () => {
     expect(environments[0].name).toBe('test-env');
   });
 
-  test('should render requests after IPC call', async ({ electronPage, testDbPath }) => {
+  test('should render requests after IPC call', async ({ electronPage, _testDbPath }) => {
     // Create collection and request
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({

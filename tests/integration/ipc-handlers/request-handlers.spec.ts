@@ -3,7 +3,7 @@ import { assertDataPersisted, assertDatabaseCount } from '../../helpers/assertio
 import { getDatabaseContents } from '../../helpers/test-db';
 
 test.describe('Request IPC Handlers', () => {
-  test('request:list - should return empty list initially', async ({ electronPage, testDbPath }) => {
+  test('request:list - should return empty list initially', async ({ electronPage, _testDbPath }) => {
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.request.list();
     });
@@ -11,7 +11,7 @@ test.describe('Request IPC Handlers', () => {
     expect(result).toEqual([]);
   });
 
-  test('request:save - should create new request', async ({ electronPage, testDbPath }) => {
+  test('request:save - should create new request', async ({ electronPage, _testDbPath }) => {
     // Create collection first
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -49,7 +49,7 @@ test.describe('Request IPC Handlers', () => {
     assertDataPersisted({ id: result.id, ...requestData }, testDbPath, 'requests');
   });
 
-  test('request:saveAfter - should save request after another', async ({ electronPage, testDbPath }) => {
+  test('request:saveAfter - should save request after another', async ({ electronPage, _testDbPath }) => {
     // Create collection
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -108,7 +108,7 @@ test.describe('Request IPC Handlers', () => {
     expect(requests[1].id).toBe(request2.id);
   });
 
-  test('request:delete - should delete request', async ({ electronPage, testDbPath }) => {
+  test('request:delete - should delete request', async ({ electronPage, _testDbPath }) => {
     // Create collection and request
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -152,7 +152,7 @@ test.describe('Request IPC Handlers', () => {
     expect(requests.length).toBe(0);
   });
 
-  test('request:send - should send HTTP request', async ({ electronPage, testDbPath }) => {
+  test('request:send - should send HTTP request', async ({ electronPage, _testDbPath }) => {
     // Create environment
     await electronPage.evaluate(async () => {
       await window.electronAPI.env.save({
@@ -194,7 +194,7 @@ test.describe('Request IPC Handlers', () => {
     expect(result.responseTime).toBeGreaterThan(0);
   });
 
-  test('request:history - should return request history', async ({ electronPage, testDbPath }) => {
+  test('request:history - should return request history', async ({ electronPage, _testDbPath }) => {
     // Create environment and send request to generate history
     await electronPage.evaluate(async () => {
       await window.electronAPI.env.save({
@@ -255,7 +255,7 @@ test.describe('Request IPC Handlers', () => {
     }
   });
 
-  test('request:deleteHistory - should delete history entry', async ({ electronPage, testDbPath }) => {
+  test('request:deleteHistory - should delete history entry', async ({ electronPage, _testDbPath }) => {
     // Create environment and send request
     await electronPage.evaluate(async () => {
       await window.electronAPI.env.save({

@@ -2,7 +2,7 @@ import { test, expect } from '../../helpers/electron-fixtures';
 import { assertRendered, assertUIUpdated } from '../../helpers/assertions';
 
 test.describe('CollectionHierarchy Component Integration', () => {
-  test('should render collection hierarchy with collections', async ({ electronPage, testDbPath }) => {
+  test('should render collection hierarchy with collections', async ({ electronPage, _testDbPath }) => {
     // Create test data
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -26,7 +26,7 @@ test.describe('CollectionHierarchy Component Integration', () => {
     expect(collectionVisible).toBe(true);
   });
 
-  test('should expand and collapse collection', async ({ electronPage, testDbPath }) => {
+  test('should expand and collapse collection', async ({ electronPage, _testDbPath }) => {
     // GIVEN: A collection with at least one request
     const setup = await electronPage.evaluate(async () => {
       const collection = await window.electronAPI.collection.save({
@@ -62,13 +62,13 @@ test.describe('CollectionHierarchy Component Integration', () => {
 
     // WHEN: Locating the collection group in the sidebar
     const collectionGroup = electronPage
-      .locator('[data-testid=\"collection-group\"][data-collection-name=\"Expandable Collection\"]')
+      .locator('[data-testid="collection-group"][data-collection-name="Expandable Collection"]')
       .first();
     await collectionGroup.waitFor({ state: 'visible', timeout: 5000 });
 
     // Capture initial expanded/collapsed state via presence of children container
     const initialChildrenCount = await collectionGroup
-      .locator('[data-testid=\"collection-children\"]')
+      .locator('[data-testid="collection-children"]')
       .count();
 
     // WHEN: Clicking the collection to toggle its state
@@ -77,7 +77,7 @@ test.describe('CollectionHierarchy Component Integration', () => {
     await electronPage.waitForTimeout(1000);
 
     const afterFirstClickChildrenCount = await collectionGroup
-      .locator('[data-testid=\"collection-children\"]')
+      .locator('[data-testid="collection-children"]')
       .count();
 
     // THEN: Children visibility should change after first click (expanded → collapsed or vice versa)
@@ -88,14 +88,14 @@ test.describe('CollectionHierarchy Component Integration', () => {
     await electronPage.waitForTimeout(1000);
 
     const afterSecondClickChildrenCount = await collectionGroup
-      .locator('[data-testid=\"collection-children\"]')
+      .locator('[data-testid="collection-children"]')
       .count();
 
     // THEN: Children visibility should return to the initial state
     expect(afterSecondClickChildrenCount).toBe(initialChildrenCount);
   });
 
-  test('should select request when clicked', async ({ electronPage, testDbPath }) => {
+  test('should select request when clicked', async ({ electronPage, _testDbPath }) => {
     // Create collection with request
     const setup = await electronPage.evaluate(async () => {
       const collection = await window.electronAPI.collection.save({
@@ -168,7 +168,7 @@ test.describe('CollectionHierarchy Component Integration', () => {
     }
   });
 
-  test('should load requests and folders via IPC', async ({ electronPage, testDbPath }) => {
+  test('should load requests and folders via IPC', async ({ electronPage, _testDbPath }) => {
     // Create collection with folder and request
     const setup = await electronPage.evaluate(async () => {
       const collection = await window.electronAPI.collection.save({
@@ -215,7 +215,7 @@ test.describe('CollectionHierarchy Component Integration', () => {
     // We verify the component rendered by checking if the data appears
   });
 
-  test('should handle empty state when no collections exist', async ({ electronPage, testDbPath }) => {
+  test('should handle empty state when no collections exist', async ({ electronPage, _testDbPath }) => {
     await electronPage.goto('/');
     await electronPage.waitForLoadState('networkidle');
 

@@ -1,7 +1,7 @@
 import { test, expect } from '../../helpers/electron-fixtures';
 
 test.describe('Settings IPC Handlers', () => {
-  test('settings:get - should return default setting', async ({ electronPage, testDbPath }) => {
+  test('settings:get - should return default setting', async ({ electronPage, _testDbPath }) => {
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.settings.get('theme');
     });
@@ -9,7 +9,7 @@ test.describe('Settings IPC Handlers', () => {
     expect(result).toBeDefined();
   });
 
-  test('settings:set - should set setting value', async ({ electronPage, testDbPath }) => {
+  test('settings:set - should set setting value', async ({ electronPage, _testDbPath }) => {
     const setResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.settings.set('testKey', 'testValue');
     });
@@ -24,7 +24,7 @@ test.describe('Settings IPC Handlers', () => {
     expect(value).toBe('testValue');
   });
 
-  test('settings:getAll - should return all settings', async ({ electronPage, testDbPath }) => {
+  test('settings:getAll - should return all settings', async ({ electronPage, _testDbPath }) => {
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.settings.getAll();
     });
@@ -34,7 +34,7 @@ test.describe('Settings IPC Handlers', () => {
     expect(result).toHaveProperty('theme');
   });
 
-  test('settings:reset - should reset all settings', async ({ electronPage, testDbPath }) => {
+  test('settings:reset - should reset all settings', async ({ electronPage, _testDbPath }) => {
     // Set a custom setting
     await electronPage.evaluate(async () => {
       await window.electronAPI.settings.set('testKey', 'testValue');

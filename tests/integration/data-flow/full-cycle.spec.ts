@@ -2,7 +2,7 @@ import { test, expect } from '../../helpers/electron-fixtures';
 import { getDatabaseContents } from '../../helpers/test-db';
 
 test.describe('Full Cycle: UI → IPC → DB → UI', () => {
-  test('should complete full cycle for collection', async ({ electronPage, testDbPath }) => {
+  test('should complete full cycle for collection', async ({ electronPage, _testDbPath }) => {
     // Step 1: UI Action - Create collection (simulated via IPC call)
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -62,7 +62,7 @@ test.describe('Full Cycle: UI → IPC → DB → UI', () => {
     expect(updatedRetrieved?.name).toBe('Updated Full Cycle');
   });
 
-  test('should complete full cycle for environment', async ({ electronPage, testDbPath }) => {
+  test('should complete full cycle for environment', async ({ electronPage, _testDbPath }) => {
     // UI → IPC → DB
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.env.save({
@@ -90,7 +90,7 @@ test.describe('Full Cycle: UI → IPC → DB → UI', () => {
     expect(retrieved?.name).toBe('full-cycle-env');
   });
 
-  test('should complete full cycle for request', async ({ electronPage, testDbPath }) => {
+  test('should complete full cycle for request', async ({ electronPage, _testDbPath }) => {
     // Create collection first
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({

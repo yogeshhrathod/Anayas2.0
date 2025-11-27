@@ -3,7 +3,7 @@ import { assertDataPersisted, assertDatabaseCount } from '../../helpers/assertio
 import { getDatabaseContents } from '../../helpers/test-db';
 
 test.describe('Collection IPC Handlers', () => {
-  test('collection:list - should return empty list initially', async ({ electronPage, testDbPath }) => {
+  test('collection:list - should return empty list initially', async ({ electronPage, _testDbPath }) => {
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.list();
     });
@@ -11,7 +11,7 @@ test.describe('Collection IPC Handlers', () => {
     expect(result).toEqual([]);
   });
 
-  test('collection:save - should create new collection', async ({ electronPage, testDbPath }) => {
+  test('collection:save - should create new collection', async ({ electronPage, _testDbPath }) => {
     const collectionData = {
       name: 'Test Collection',
       description: 'Test Description',
@@ -32,7 +32,7 @@ test.describe('Collection IPC Handlers', () => {
     assertDataPersisted({ id: result.id, ...collectionData }, testDbPath, 'collections');
   });
 
-  test('collection:save - should update existing collection', async ({ electronPage, testDbPath }) => {
+  test('collection:save - should update existing collection', async ({ electronPage, _testDbPath }) => {
     // Create collection first
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -68,7 +68,7 @@ test.describe('Collection IPC Handlers', () => {
     expect(collection.description).toBe('Updated');
   });
 
-  test('collection:delete - should delete collection', async ({ electronPage, testDbPath }) => {
+  test('collection:delete - should delete collection', async ({ electronPage, _testDbPath }) => {
     // Create collection first
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -92,7 +92,7 @@ test.describe('Collection IPC Handlers', () => {
     assertDatabaseCount(testDbPath, 'collections', 0);
   });
 
-  test('collection:toggleFavorite - should toggle favorite status', async ({ electronPage, testDbPath }) => {
+  test('collection:toggleFavorite - should toggle favorite status', async ({ electronPage, _testDbPath }) => {
     // Create collection
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -128,7 +128,7 @@ test.describe('Collection IPC Handlers', () => {
     expect(collection2.isFavorite).toBe(0);
   });
 
-  test('collection:addEnvironment - should add environment to collection', async ({ electronPage, testDbPath }) => {
+  test('collection:addEnvironment - should add environment to collection', async ({ electronPage, _testDbPath }) => {
     // Create collection
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -155,7 +155,7 @@ test.describe('Collection IPC Handlers', () => {
     expect(result.collection.environments.length).toBe(1);
   });
 
-  test('collection:setActiveEnvironment - should set active environment', async ({ electronPage, testDbPath }) => {
+  test('collection:setActiveEnvironment - should set active environment', async ({ electronPage, _testDbPath }) => {
     // Create collection with environment
     const collection = await electronPage.evaluate(async () => {
       const coll = await window.electronAPI.collection.save({
@@ -184,7 +184,7 @@ test.describe('Collection IPC Handlers', () => {
     expect(result.collection.activeEnvironmentId).toBe(collection.envId);
   });
 
-  test('collection:updateEnvironment - should update collection environment', async ({ electronPage, testDbPath }) => {
+  test('collection:updateEnvironment - should update collection environment', async ({ electronPage, _testDbPath }) => {
     // Create collection with environment
     const setup = await electronPage.evaluate(async () => {
       const coll = await window.electronAPI.collection.save({
@@ -224,7 +224,7 @@ test.describe('Collection IPC Handlers', () => {
     expect(env.variables.new_var).toBe('new-value');
   });
 
-  test('collection:deleteEnvironment - should delete collection environment', async ({ electronPage, testDbPath }) => {
+  test('collection:deleteEnvironment - should delete collection environment', async ({ electronPage, _testDbPath }) => {
     // Create collection with multiple environments
     const setup = await electronPage.evaluate(async () => {
       const coll = await window.electronAPI.collection.save({
@@ -269,7 +269,7 @@ test.describe('Collection IPC Handlers', () => {
     expect(collection.activeEnvironmentId).toBe(setup.env2Id);
   });
 
-  test('collection:deleteEnvironment - should handle deleting last environment', async ({ electronPage, testDbPath }) => {
+  test('collection:deleteEnvironment - should handle deleting last environment', async ({ electronPage, _testDbPath }) => {
     // Create collection with single environment
     const setup = await electronPage.evaluate(async () => {
       const coll = await window.electronAPI.collection.save({
@@ -299,7 +299,7 @@ test.describe('Collection IPC Handlers', () => {
     expect(result.collection.activeEnvironmentId).toBeUndefined();
   });
 
-  test('collection:run - should run all requests in collection', async ({ electronPage, testDbPath }) => {
+  test('collection:run - should run all requests in collection', async ({ electronPage, _testDbPath }) => {
     // Create environment
     const env = await electronPage.evaluate(async () => {
       return await window.electronAPI.env.save({

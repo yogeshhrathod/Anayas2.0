@@ -9,7 +9,7 @@ const LARGE_RENDER_COLLECTION_COUNT = 200;
 test.describe('Performance: Large Datasets', () => {
   // Allow more time for heavy large-dataset scenarios in CI and local runs.
   test.setTimeout(120_000);
-  test('should handle 1000+ collections efficiently', async ({ electronPage, testDbPath }) => {
+  test('should handle 1000+ collections efficiently', async ({ electronPage, _testDbPath }) => {
     const startTime = Date.now();
     const startMemory = process.memoryUsage().heapUsed;
 
@@ -58,7 +58,7 @@ test.describe('Performance: Large Datasets', () => {
     expect(memoryDelta).toBeLessThan(500);
   });
 
-  test('should handle 1000+ requests efficiently', async ({ electronPage, testDbPath }) => {
+  test('should handle 1000+ requests efficiently', async ({ electronPage, _testDbPath }) => {
     // Create collection first
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -113,7 +113,7 @@ test.describe('Performance: Large Datasets', () => {
     expect(listTime).toBeLessThan(30_000);
   });
 
-  test('should handle 1000+ environments efficiently', async ({ electronPage, testDbPath }) => {
+  test('should handle 1000+ environments efficiently', async ({ electronPage, _testDbPath }) => {
     const startTime = Date.now();
     logger.info(`Creating ${LARGE_ENV_COUNT} environments...`);
     const createStart = Date.now();
@@ -149,7 +149,7 @@ test.describe('Performance: Large Datasets', () => {
     expect(listTime).toBeLessThan(10_000);
   });
 
-  test('should render UI with large dataset', async ({ electronPage, testDbPath }) => {
+  test('should render UI with large dataset', async ({ electronPage, _testDbPath }) => {
     // Create a large number of collections for rendering
     await electronPage.evaluate(async (count) => {
       const promises = [];

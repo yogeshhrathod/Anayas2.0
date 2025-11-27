@@ -2,7 +2,7 @@ import { test, expect } from '../helpers/electron-fixtures';
 import { getDatabaseContents } from '../helpers/test-db';
 
 test.describe('Database Operations Tests', () => {
-  test('should persist environment data', async ({ electronPage, testDbPath }) => {
+  test('should persist environment data', async ({ electronPage, _testDbPath }) => {
     // Create environment via IPC
     const result = await electronPage.evaluate(async () => {
       return await (window as any).electronAPI.env.save({
@@ -25,7 +25,7 @@ test.describe('Database Operations Tests', () => {
     expect(savedEnv.variables.key).toBe('value');
   });
 
-  test('should persist collection data', async ({ electronPage, testDbPath }) => {
+  test('should persist collection data', async ({ electronPage, _testDbPath }) => {
     // Create collection via IPC
     const result = await electronPage.evaluate(async () => {
       return await (window as any).electronAPI.collection.save({
@@ -44,7 +44,7 @@ test.describe('Database Operations Tests', () => {
     expect(savedCollection.name).toBe('persist-collection');
   });
 
-  test('should persist request data', async ({ electronPage, testDbPath }) => {
+  test('should persist request data', async ({ electronPage, _testDbPath }) => {
     // Create collection first
     const collectionResult = await electronPage.evaluate(async () => {
       return await (window as any).electronAPI.collection.save({
@@ -78,7 +78,7 @@ test.describe('Database Operations Tests', () => {
     expect(savedRequest.queryParams).toHaveLength(1);
   });
 
-  test('should maintain collection-request relationships', async ({ electronPage, testDbPath }) => {
+  test('should maintain collection-request relationships', async ({ electronPage, _testDbPath }) => {
     // Create collection
     const collectionResult = await electronPage.evaluate(async () => {
       return await (window as any).electronAPI.collection.save({
@@ -116,7 +116,7 @@ test.describe('Database Operations Tests', () => {
     expect(deletedRequest).toBeUndefined();
   });
 
-  test('should maintain folder-request relationships', async ({ electronPage, testDbPath }) => {
+  test('should maintain folder-request relationships', async ({ electronPage, _testDbPath }) => {
     // Create collection
     const collectionResult = await electronPage.evaluate(async () => {
       return await (window as any).electronAPI.collection.save({
@@ -163,7 +163,7 @@ test.describe('Database Operations Tests', () => {
     expect(deletedRequest).toBeUndefined();
   });
 
-  test('should persist request history', async ({ electronPage, testDbPath }) => {
+  test('should persist request history', async ({ electronPage, _testDbPath }) => {
     // Send a request (this should create history)
     const sendResult = await electronPage.evaluate(async () => {
       // First create an environment
@@ -197,7 +197,7 @@ test.describe('Database Operations Tests', () => {
     expect(dbContents.request_history.length).toBeGreaterThan(0);
   });
 
-  test('should handle data integrity on updates', async ({ electronPage, testDbPath }) => {
+  test('should handle data integrity on updates', async ({ electronPage, _testDbPath }) => {
     // Create environment
     const envResult = await electronPage.evaluate(async () => {
       return await (window as any).electronAPI.env.save({
@@ -225,7 +225,7 @@ test.describe('Database Operations Tests', () => {
     expect(updatedEnv.displayName).toBe('Updated Integrity Test');
   });
 
-  test('should maintain settings persistence', async ({ electronPage, testDbPath }) => {
+  test('should maintain settings persistence', async ({ electronPage, _testDbPath }) => {
     // Set multiple settings
     await electronPage.evaluate(async () => {
       await (window as any).electronAPI.settings.set('testSetting1', 'value1');

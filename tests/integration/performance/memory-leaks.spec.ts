@@ -2,7 +2,7 @@ import { test, expect } from '../../helpers/electron-fixtures';
 import { logger } from '../../helpers/logger';
 
 test.describe('Performance: Memory Leak Detection', () => {
-  test('should not leak memory when creating and deleting collections', async ({ electronPage, testDbPath }) => {
+  test('should not leak memory when creating and deleting collections', async ({ electronPage, _testDbPath }) => {
     const initialMemory = process.memoryUsage().heapUsed;
     logger.logMemory('Initial state');
 
@@ -44,7 +44,7 @@ test.describe('Performance: Memory Leak Detection', () => {
     expect(memoryDelta).toBeLessThan(50);
   });
 
-  test('should not leak memory with multiple page navigations', async ({ electronPage, testDbPath }) => {
+  test('should not leak memory with multiple page navigations', async ({ electronPage, _testDbPath }) => {
     const initialMemory = process.memoryUsage().heapUsed;
     logger.logMemory('Initial state');
 
@@ -78,7 +78,7 @@ test.describe('Performance: Memory Leak Detection', () => {
     expect(memoryDelta).toBeLessThan(100);
   });
 
-  test('should cleanup event listeners on component unmount', async ({ electronPage, testDbPath }) => {
+  test('should cleanup event listeners on component unmount', async ({ electronPage, _testDbPath }) => {
     // Create data
     await electronPage.evaluate(async () => {
       await window.electronAPI.collection.save({
@@ -121,7 +121,7 @@ test.describe('Performance: Memory Leak Detection', () => {
     expect(memoryDelta).toBeLessThan(50);
   });
 
-  test('should not accumulate memory with repeated IPC calls', async ({ electronPage, testDbPath }) => {
+  test('should not accumulate memory with repeated IPC calls', async ({ electronPage, _testDbPath }) => {
     const initialMemory = process.memoryUsage().heapUsed;
     logger.logMemory('Initial state');
 
@@ -149,7 +149,7 @@ test.describe('Performance: Memory Leak Detection', () => {
     expect(memoryDelta).toBeLessThan(30);
   });
 
-  test('should cleanup database connections properly', async ({ electronPage, testDbPath }) => {
+  test('should cleanup database connections properly', async ({ electronPage, _testDbPath }) => {
     const initialMemory = process.memoryUsage().heapUsed;
 
     // Create and read many items

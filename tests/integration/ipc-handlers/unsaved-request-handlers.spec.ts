@@ -3,7 +3,7 @@ import { assertDataPersisted, assertDatabaseCount } from '../../helpers/assertio
 import { getDatabaseContents } from '../../helpers/test-db';
 
 test.describe('Unsaved Request IPC Handlers', () => {
-  test('unsaved-request:save - should create new unsaved request', async ({ electronPage, testDbPath }) => {
+  test('unsaved-request:save - should create new unsaved request', async ({ electronPage, _testDbPath }) => {
     const requestData = {
       name: 'Unsaved Request',
       method: 'GET',
@@ -30,7 +30,7 @@ test.describe('Unsaved Request IPC Handlers', () => {
     expect(unsavedRequest.url).toBe(requestData.url);
   });
 
-  test('unsaved-request:save - should update existing unsaved request', async ({ electronPage, testDbPath }) => {
+  test('unsaved-request:save - should update existing unsaved request', async ({ electronPage, _testDbPath }) => {
     // Create unsaved request first
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.unsavedRequest.save({
@@ -69,7 +69,7 @@ test.describe('Unsaved Request IPC Handlers', () => {
     expect(unsavedRequest.url).toBe('https://updated.com');
   });
 
-  test('unsaved-request:get-all - should return all unsaved requests', async ({ electronPage, testDbPath }) => {
+  test('unsaved-request:get-all - should return all unsaved requests', async ({ electronPage, _testDbPath }) => {
     // Create multiple unsaved requests
     await electronPage.evaluate(async () => {
       await window.electronAPI.unsavedRequest.save({
@@ -102,7 +102,7 @@ test.describe('Unsaved Request IPC Handlers', () => {
     expect(result[0]).toHaveProperty('url');
   });
 
-  test('unsaved-request:delete - should delete unsaved request', async ({ electronPage, testDbPath }) => {
+  test('unsaved-request:delete - should delete unsaved request', async ({ electronPage, _testDbPath }) => {
     // Create unsaved request first
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.unsavedRequest.save({
@@ -131,7 +131,7 @@ test.describe('Unsaved Request IPC Handlers', () => {
     expect(allRequests.length).toBe(0);
   });
 
-  test('unsaved-request:clear - should clear all unsaved requests', async ({ electronPage, testDbPath }) => {
+  test('unsaved-request:clear - should clear all unsaved requests', async ({ electronPage, _testDbPath }) => {
     // Create multiple unsaved requests
     await electronPage.evaluate(async () => {
       await window.electronAPI.unsavedRequest.save({
@@ -169,7 +169,7 @@ test.describe('Unsaved Request IPC Handlers', () => {
     expect(allRequests.length).toBe(0);
   });
 
-  test('unsaved-request:promote - should promote unsaved request to saved request', async ({ electronPage, testDbPath }) => {
+  test('unsaved-request:promote - should promote unsaved request to saved request', async ({ electronPage, _testDbPath }) => {
     // Create collection first
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({

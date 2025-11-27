@@ -2,7 +2,7 @@ import { test, expect } from '../../helpers/electron-fixtures';
 import { assertDataPersisted, assertDatabaseCount } from '../../helpers/assertions';
 
 test.describe('Folder IPC Handlers', () => {
-  test('folder:list - should return empty list initially', async ({ electronPage, testDbPath }) => {
+  test('folder:list - should return empty list initially', async ({ electronPage, _testDbPath }) => {
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.folder.list();
     });
@@ -10,7 +10,7 @@ test.describe('Folder IPC Handlers', () => {
     expect(result).toEqual([]);
   });
 
-  test('folder:save - should create new folder', async ({ electronPage, testDbPath }) => {
+  test('folder:save - should create new folder', async ({ electronPage, _testDbPath }) => {
     // Create collection first
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -40,7 +40,7 @@ test.describe('Folder IPC Handlers', () => {
     assertDataPersisted({ id: result.id, ...folderData }, testDbPath, 'folders');
   });
 
-  test('folder:delete - should delete folder', async ({ electronPage, testDbPath }) => {
+  test('folder:delete - should delete folder', async ({ electronPage, _testDbPath }) => {
     // Create collection and folder
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({

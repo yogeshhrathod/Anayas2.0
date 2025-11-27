@@ -1062,7 +1062,7 @@ async function setupMockElectronAPI(page: Page, testDbPath: string) {
  * The mock calls IPC handlers directly to test IPC communication.
  */
 export const test = base.extend<ElectronFixtures>({
-  testDbPath: async ({}, use, testInfo) => {
+  testDbPath: async (_fixtures, use, testInfo) => {
     // Create isolated test database for each test
     const testDbPath = createTestDatabase({
       testName: testInfo.title.replace(/\s+/g, '-').toLowerCase(),

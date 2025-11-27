@@ -2,7 +2,7 @@ import { test, expect } from '../../helpers/electron-fixtures';
 import { getDatabaseContents } from '../../helpers/test-db';
 
 test.describe('State Updates', () => {
-  test('should update database state after collection save', async ({ electronPage, testDbPath }) => {
+  test('should update database state after collection save', async ({ electronPage, _testDbPath }) => {
     // Get initial state
     const beforeState = getDatabaseContents(testDbPath);
     const beforeCount = beforeState?.collections?.length || 0;
@@ -26,7 +26,7 @@ test.describe('State Updates', () => {
     expect(afterState?.collections?.length).toBe(beforeCount + 1);
   });
 
-  test('should update database state after environment save', async ({ electronPage, testDbPath }) => {
+  test('should update database state after environment save', async ({ electronPage, _testDbPath }) => {
     // Get initial state
     const beforeState = getDatabaseContents(testDbPath);
     const beforeCount = beforeState?.environments?.length || 0;
@@ -48,7 +48,7 @@ test.describe('State Updates', () => {
     expect(afterState?.environments?.length).toBe(beforeCount + 1);
   });
 
-  test('should update database state after request save', async ({ electronPage, testDbPath }) => {
+  test('should update database state after request save', async ({ electronPage, _testDbPath }) => {
     // Create collection first
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -89,7 +89,7 @@ test.describe('State Updates', () => {
     expect(afterState?.requests?.length).toBe(beforeCount + 1);
   });
 
-  test('should update collection favorite state', async ({ electronPage, testDbPath }) => {
+  test('should update collection favorite state', async ({ electronPage, _testDbPath }) => {
     // Create collection
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({

@@ -2,7 +2,7 @@ import { test, expect } from '../../helpers/electron-fixtures';
 import { getDatabaseContents } from '../../helpers/test-db';
 
 test.describe('UI to IPC Flow', () => {
-  test('should handle collection creation from UI perspective', async ({ electronPage, testDbPath }) => {
+  test('should handle collection creation from UI perspective', async ({ electronPage, _testDbPath }) => {
     // Simulate UI action: create collection
     // In real UI, this would be triggered by user clicking a button
     // Here we simulate by calling IPC directly (which UI would do)
@@ -27,7 +27,7 @@ test.describe('UI to IPC Flow', () => {
     expect(collection?.name).toBe('UI Created Collection');
   });
 
-  test('should handle environment creation from UI perspective', async ({ electronPage, testDbPath }) => {
+  test('should handle environment creation from UI perspective', async ({ electronPage, _testDbPath }) => {
     // Simulate UI action: create environment
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.env.save({
@@ -47,7 +47,7 @@ test.describe('UI to IPC Flow', () => {
     expect(env?.name).toBe('ui-env');
   });
 
-  test('should handle request creation from UI perspective', async ({ electronPage, testDbPath }) => {
+  test('should handle request creation from UI perspective', async ({ electronPage, _testDbPath }) => {
     // Create collection first (UI would have this)
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -86,7 +86,7 @@ test.describe('UI to IPC Flow', () => {
     expect(request?.name).toBe('UI Request');
   });
 
-  test('should handle favorite toggle from UI perspective', async ({ electronPage, testDbPath }) => {
+  test('should handle favorite toggle from UI perspective', async ({ electronPage, _testDbPath }) => {
     // Create collection
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({

@@ -69,7 +69,7 @@ test.describe('UI Interaction Tests', () => {
     expect(createdCollection.name).toBe('UI Test Collection');
   });
 
-  test('should create and send request via UI', async ({ electronPage, testDbPath }) => {
+  test('should create and send request via UI', async ({ electronPage, _testDbPath }) => {
     // First, create environment and collection via API (setup)
     await electronPage.evaluate(async () => {
       await (window as any).electronAPI.env.save({

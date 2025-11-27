@@ -86,7 +86,6 @@ export function trackFeatureLoad(featureName: string): PerformanceTracker {
  * @returns Memory usage in bytes (0 if not available)
  */
 function getMemoryUsage(): number {
-  // @ts-ignore - performance.memory is not in TypeScript types but available in Chrome
   return (performance as any).memory?.usedJSHeapSize || 0;
 }
 

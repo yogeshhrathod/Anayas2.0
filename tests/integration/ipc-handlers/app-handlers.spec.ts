@@ -1,7 +1,7 @@
 import { test, expect } from '../../helpers/electron-fixtures';
 
 test.describe('App IPC Handlers', () => {
-  test('app:getVersion - should return app version', async ({ electronPage, testDbPath }) => {
+  test('app:getVersion - should return app version', async ({ electronPage, _testDbPath }) => {
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.app.getVersion();
     });
@@ -12,7 +12,7 @@ test.describe('App IPC Handlers', () => {
     expect(result).toBe('1.0.0');
   });
 
-  test('app:getPath - should return app path', async ({ electronPage, testDbPath }) => {
+  test('app:getPath - should return app path', async ({ electronPage, _testDbPath }) => {
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.app.getPath('userData');
     });
@@ -23,7 +23,7 @@ test.describe('App IPC Handlers', () => {
     expect(result).toBe('/mock/path');
   });
 
-  test('app:getPath - should return path for different path types', async ({ electronPage, testDbPath }) => {
+  test('app:getPath - should return path for different path types', async ({ electronPage, _testDbPath }) => {
     const pathTypes = ['userData', 'home', 'temp', 'desktop'];
     
     for (const pathType of pathTypes) {

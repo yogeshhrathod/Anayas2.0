@@ -67,7 +67,7 @@ export const ParamsTab: React.FC<ParamsTabProps> = ({
           enabled: true
         }));
         setRequestData({ ...requestData, queryParams: newParams });
-      } catch (e: any) {
+      } catch (_e: any) {
         showError('Invalid JSON', 'Please fix JSON syntax errors before switching to table view');
         return;
       }

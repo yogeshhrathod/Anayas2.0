@@ -910,7 +910,7 @@ export function registerIpcHandlers() {
   ipcMain.handle('unsaved-request:get-all', async () => {
     try {
       return getAllUnsavedRequests();
-    } catch (error: any) {
+    } catch (_error: any) {
       return [];
     }
   });

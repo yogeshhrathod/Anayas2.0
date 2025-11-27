@@ -1,7 +1,7 @@
 import { test, expect } from '../../helpers/electron-fixtures';
 
 test.describe('Database to UI Flow', () => {
-  test('should retrieve collections from database via IPC', async ({ electronPage, testDbPath }) => {
+  test('should retrieve collections from database via IPC', async ({ electronPage, _testDbPath }) => {
     // Create collection via IPC (which persists to DB)
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -26,7 +26,7 @@ test.describe('Database to UI Flow', () => {
     expect(collections[0].name).toBe('Test Collection');
   });
 
-  test('should retrieve environments from database via IPC', async ({ electronPage, testDbPath }) => {
+  test('should retrieve environments from database via IPC', async ({ electronPage, _testDbPath }) => {
     // Create environment via IPC
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.env.save({
@@ -49,7 +49,7 @@ test.describe('Database to UI Flow', () => {
     expect(environments[0].name).toBe('test-env');
   });
 
-  test('should retrieve requests from database via IPC', async ({ electronPage, testDbPath }) => {
+  test('should retrieve requests from database via IPC', async ({ electronPage, _testDbPath }) => {
     // Create collection and request
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -90,7 +90,7 @@ test.describe('Database to UI Flow', () => {
     expect(requests[0].name).toBe('Test Request');
   });
 
-  test('should retrieve current environment from database', async ({ electronPage, testDbPath }) => {
+  test('should retrieve current environment from database', async ({ electronPage, _testDbPath }) => {
     // Create default environment
     const env = await electronPage.evaluate(async () => {
       return await window.electronAPI.env.save({

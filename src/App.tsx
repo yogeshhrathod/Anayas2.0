@@ -57,7 +57,7 @@ function App() {
     sidebarWidth,
     setSidebarWidth,
     unsavedRequests,
-    // @ts-ignore - selectedItem is used in shortcut handlers
+    // @ts-expect-error - selectedItem is used in shortcut handlers
     selectedItem,
     setSelectedItem,
     triggerSidebarRefresh,
@@ -425,10 +425,8 @@ function App() {
     // Use requestAnimationFrame to wait for browser paint
     // This gives us a better measure of actual render completion
     // Double RAF ensures we capture after layout and paint
-    let rafId1: number;
-    let rafId2: number;
-    
-    rafId1 = requestAnimationFrame(() => {
+    let rafId2: number | undefined;
+    const rafId1 = requestAnimationFrame(() => {
       rafId2 = requestAnimationFrame(() => {
         tracker.end();
       });

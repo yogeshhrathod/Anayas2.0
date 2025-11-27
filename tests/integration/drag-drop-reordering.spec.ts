@@ -14,7 +14,7 @@ import { test, expect } from '@playwright/test';
 import { electronFixture } from '../../helpers/electron-fixtures';
 
 test.describe('Drag and Drop Reordering', () => {
-  test('should reorder request within collection', async ({ electronPage, testDbPath }) => {
+  test('should reorder request within collection', async ({ electronPage, _testDbPath }) => {
     // Given: A collection with multiple requests
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -72,7 +72,7 @@ test.describe('Drag and Drop Reordering', () => {
     expect(req2.order).toBeLessThan(req1.order);
   });
 
-  test('should move request between collections', async ({ electronPage, testDbPath }) => {
+  test('should move request between collections', async ({ electronPage, _testDbPath }) => {
     // Given: Two collections and a request in collection1
     const collection1 = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -118,7 +118,7 @@ test.describe('Drag and Drop Reordering', () => {
     expect(requestsInCollection2[0].collectionId).toBe(collection2.id);
   });
 
-  test('should move request from collection to folder', async ({ electronPage, testDbPath }) => {
+  test('should move request from collection to folder', async ({ electronPage, _testDbPath }) => {
     // Given: A collection with a folder and a request in collection root
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -166,7 +166,7 @@ test.describe('Drag and Drop Reordering', () => {
     expect(requestsInFolder[0].folderId).toBe(folder.id);
   });
 
-  test('should reorder folder within collection', async ({ electronPage, testDbPath }) => {
+  test('should reorder folder within collection', async ({ electronPage, _testDbPath }) => {
     // Given: A collection with multiple folders
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -211,7 +211,7 @@ test.describe('Drag and Drop Reordering', () => {
     expect(f2.order).toBeLessThan(f1.order);
   });
 
-  test('should move folder between collections', async ({ electronPage, testDbPath }) => {
+  test('should move folder between collections', async ({ electronPage, _testDbPath }) => {
     // Given: Two collections and a folder in collection1
     const collection1 = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({

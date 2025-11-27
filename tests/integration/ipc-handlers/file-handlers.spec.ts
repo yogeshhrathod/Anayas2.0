@@ -4,7 +4,7 @@ import * as path from 'path';
 import { tmpdir } from 'os';
 
 test.describe('File IPC Handlers', () => {
-  test('file:select - should return null (mocked dialog cancelled)', async ({ electronPage, testDbPath }) => {
+  test('file:select - should return null (mocked dialog cancelled)', async ({ electronPage, _testDbPath }) => {
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.file.select([{ name: 'Text Files', extensions: ['txt'] }]);
     });
@@ -13,7 +13,7 @@ test.describe('File IPC Handlers', () => {
     expect(result).toBeNull();
   });
 
-  test('file:selectDirectory - should return null (mocked dialog cancelled)', async ({ electronPage, testDbPath }) => {
+  test('file:selectDirectory - should return null (mocked dialog cancelled)', async ({ electronPage, _testDbPath }) => {
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.file.selectDirectory();
     });
@@ -22,7 +22,7 @@ test.describe('File IPC Handlers', () => {
     expect(result).toBeNull();
   });
 
-  test('file:save - should return success: false (mocked dialog cancelled)', async ({ electronPage, testDbPath }) => {
+  test('file:save - should return success: false (mocked dialog cancelled)', async ({ electronPage, _testDbPath }) => {
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.file.save('/path/to/file.txt', 'file content');
     });
@@ -31,7 +31,7 @@ test.describe('File IPC Handlers', () => {
     expect(result.success).toBe(false);
   });
 
-  test('file:read - should read file content', async ({ electronPage, testDbPath }) => {
+  test('file:read - should read file content', async ({ electronPage, _testDbPath }) => {
     // Create a temporary test file
     const testContent = 'Hello, World!\nThis is a test file.';
     const testFilePath = path.join(tmpdir(), `test-read-${Date.now()}.txt`);
@@ -52,7 +52,7 @@ test.describe('File IPC Handlers', () => {
     }
   });
 
-  test('file:read - should handle non-existent file', async ({ electronPage, testDbPath }) => {
+  test('file:read - should handle non-existent file', async ({ electronPage, _testDbPath }) => {
     const nonExistentPath = path.join(tmpdir(), `non-existent-${Date.now()}.txt`);
     
     const result = await electronPage.evaluate(async (filePath) => {
@@ -63,7 +63,7 @@ test.describe('File IPC Handlers', () => {
     expect(result.error).toBeDefined();
   });
 
-  test('file:write - should write file content', async ({ electronPage, testDbPath }) => {
+  test('file:write - should write file content', async ({ electronPage, _testDbPath }) => {
     const testContent = 'This is test content written by the test.';
     const testFilePath = path.join(tmpdir(), `test-write-${Date.now()}.txt`);
     
@@ -85,7 +85,7 @@ test.describe('File IPC Handlers', () => {
     }
   });
 
-  test('file:write - should overwrite existing file', async ({ electronPage, testDbPath }) => {
+  test('file:write - should overwrite existing file', async ({ electronPage, _testDbPath }) => {
     const testFilePath = path.join(tmpdir(), `test-overwrite-${Date.now()}.txt`);
     const originalContent = 'Original content';
     const newContent = 'New content';

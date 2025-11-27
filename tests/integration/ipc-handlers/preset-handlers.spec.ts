@@ -3,7 +3,7 @@ import { assertDataPersisted } from '../../helpers/assertions';
 import { getDatabaseContents } from '../../helpers/test-db';
 
 test.describe('Preset IPC Handlers', () => {
-  test('preset:list - should return empty list initially', async ({ electronPage, testDbPath }) => {
+  test('preset:list - should return empty list initially', async ({ electronPage, _testDbPath }) => {
     const result = await electronPage.evaluate(async () => {
       return await window.electronAPI.preset.list();
     });
@@ -11,7 +11,7 @@ test.describe('Preset IPC Handlers', () => {
     expect(result).toEqual([]);
   });
 
-  test('preset:list - should return presets for specific request', async ({ electronPage, testDbPath }) => {
+  test('preset:list - should return presets for specific request', async ({ electronPage, _testDbPath }) => {
     // Create collection and request
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -61,7 +61,7 @@ test.describe('Preset IPC Handlers', () => {
     expect(result[0]).toHaveProperty('requestId');
   });
 
-  test('preset:save - should create new preset', async ({ electronPage, testDbPath }) => {
+  test('preset:save - should create new preset', async ({ electronPage, _testDbPath }) => {
     // Create collection and request
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -113,7 +113,7 @@ test.describe('Preset IPC Handlers', () => {
     expect(preset.requestId).toBe(presetData.requestId);
   });
 
-  test('preset:delete - should delete preset', async ({ electronPage, testDbPath }) => {
+  test('preset:delete - should delete preset', async ({ electronPage, _testDbPath }) => {
     // Create collection and request
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({

@@ -1,6 +1,6 @@
 /**
  * useVariableResolution - Hook for resolving environment variables in text
- * 
+ *
  * Provides real-time variable resolution with collection and global context
  * Supports {{var}}, {{collection.var}}, {{global.var}}, {{$dynamic}} syntax
  * Returns resolved text and list of unresolved variables
@@ -32,25 +32,30 @@ function resolveDynamicVariable(variableName: string): string {
     case 'timestamp':
       // Unix timestamp in seconds
       return Math.floor(Date.now() / 1000).toString();
-    
+
     case 'randomInt':
       // Random integer between 0 and 999999
       return Math.floor(Math.random() * 1000000).toString();
-    
+
     case 'guid':
-    case 'uuid':
+    case 'uuid': {
       // UUID v4 (simple implementation)
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-      });
-    
-    case 'randomEmail':
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+        /[xy]/g,
+        function (c) {
+          const r = (Math.random() * 16) | 0;
+          const v = c === 'x' ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        }
+      );
+    }
+
+    case 'randomEmail': {
       // Random email address for testing
       const randomPart = Math.random().toString(36).substring(2, 15);
       return `${randomPart}@example.com`;
-    
+    }
+
     default:
       return '';
   }
@@ -71,22 +76,24 @@ export function useVariableResolution(text: string): ResolutionResult {
     // CRITICAL: Match backend fallback logic exactly - use first env if no activeEnvironmentId or if it points to deleted env
     let collectionVariables: Record<string, string> = {};
     if (selectedRequest?.collectionId) {
-      const collection = collections.find(c => c.id === selectedRequest.collectionId);
+      const collection = collections.find(
+        c => c.id === selectedRequest.collectionId
+      );
       if (collection?.environments && collection.environments.length > 0) {
         let activeEnv;
-        
+
         // If activeEnvironmentId is set, try to find that environment
         if (collection.activeEnvironmentId) {
           activeEnv = collection.environments.find(
             e => e.id === collection.activeEnvironmentId
           );
         }
-        
+
         // If activeEnvironmentId not set or points to deleted environment, use first as fallback
         if (!activeEnv) {
           activeEnv = collection.environments[0];
         }
-        
+
         if (activeEnv) {
           collectionVariables = activeEnv.variables || {};
         }
@@ -132,7 +139,10 @@ export function useVariableResolution(text: string): ResolutionResult {
           scope = 'global';
         } else {
           // No prefix - check collection first, then global
-          value = collectionVariables[variableName] || globalVariables[variableName] || '';
+          value =
+            collectionVariables[variableName] ||
+            globalVariables[variableName] ||
+            '';
           scope = collectionVariables[variableName] ? 'collection' : 'global';
         }
 
@@ -163,12 +173,28 @@ export function useVariableResolution(text: string): ResolutionResult {
 /**
  * Dynamic/system variables available
  */
-const DYNAMIC_VARIABLES: Array<{ name: string; description: string; scope: 'dynamic' }> = [
-  { name: '$timestamp', description: 'Current Unix timestamp in seconds', scope: 'dynamic' },
-  { name: '$randomInt', description: 'Random integer (0-999999)', scope: 'dynamic' },
+const DYNAMIC_VARIABLES: Array<{
+  name: string;
+  description: string;
+  scope: 'dynamic';
+}> = [
+  {
+    name: '$timestamp',
+    description: 'Current Unix timestamp in seconds',
+    scope: 'dynamic',
+  },
+  {
+    name: '$randomInt',
+    description: 'Random integer (0-999999)',
+    scope: 'dynamic',
+  },
   { name: '$guid', description: 'UUID v4', scope: 'dynamic' },
   { name: '$uuid', description: 'UUID v4 (alias)', scope: 'dynamic' },
-  { name: '$randomEmail', description: 'Random email address', scope: 'dynamic' },
+  {
+    name: '$randomEmail',
+    description: 'Random email address',
+    scope: 'dynamic',
+  },
 ];
 
 /**
@@ -182,16 +208,22 @@ export function useAvailableVariables(): Array<{
   const { currentEnvironment, selectedRequest, collections } = useStore();
 
   return useMemo(() => {
-    const result: Array<{ name: string; value: string; scope: 'collection' | 'global' | 'dynamic' }> = [];
+    const result: Array<{
+      name: string;
+      value: string;
+      scope: 'collection' | 'global' | 'dynamic';
+    }> = [];
 
     // Add dynamic variables first
     DYNAMIC_VARIABLES.forEach(dynamicVar => {
       // Get preview value for dynamic variables
-      const previewValue = resolveDynamicVariable(dynamicVar.name.replace('$', ''));
-      result.push({ 
-        name: dynamicVar.name, 
-        value: previewValue, 
-        scope: 'dynamic' 
+      const previewValue = resolveDynamicVariable(
+        dynamicVar.name.replace('$', '')
+      );
+      result.push({
+        name: dynamicVar.name,
+        value: previewValue,
+        scope: 'dynamic',
       });
     });
 
@@ -205,20 +237,24 @@ export function useAvailableVariables(): Array<{
     // Add collection environment variables if applicable
     // CRITICAL: Match backend fallback logic exactly - use first env if no activeEnvironmentId or if it points to deleted env
     if (selectedRequest?.collectionId) {
-      const collection = collections.find(c => c.id === selectedRequest.collectionId);
+      const collection = collections.find(
+        c => c.id === selectedRequest.collectionId
+      );
       if (collection?.environments && collection.environments.length > 0) {
         let activeEnv;
-        
+
         // If activeEnvironmentId is set, try to find that environment
         if (collection.activeEnvironmentId) {
-          activeEnv = collection.environments.find(e => e.id === collection.activeEnvironmentId);
+          activeEnv = collection.environments.find(
+            e => e.id === collection.activeEnvironmentId
+          );
         }
-        
+
         // If activeEnvironmentId not set or points to deleted environment, use first as fallback
         if (!activeEnv) {
           activeEnv = collection.environments[0];
         }
-        
+
         if (activeEnv?.variables) {
           Object.entries(activeEnv.variables).forEach(([name, value]) => {
             // Only add non-empty values to avoid empty rows
@@ -233,4 +269,3 @@ export function useAvailableVariables(): Array<{
     return result;
   }, [currentEnvironment, selectedRequest, collections]);
 }
-

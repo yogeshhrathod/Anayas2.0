@@ -1,7 +1,7 @@
 import { test, expect } from '../../helpers/electron-fixtures';
 
 test.describe('Notification IPC Handlers', () => {
-  test('notification:show - should show notification', async ({ electronPage, testDbPath }) => {
+  test('notification:show - should show notification', async ({ electronPage, _testDbPath }) => {
     const notificationOptions = {
       title: 'Test Notification',
       body: 'This is a test notification',
@@ -14,7 +14,7 @@ test.describe('Notification IPC Handlers', () => {
     expect(result.success).toBe(true);
   });
 
-  test('notification:show - should show notification with file path', async ({ electronPage, testDbPath }) => {
+  test('notification:show - should show notification with file path', async ({ electronPage, _testDbPath }) => {
     const notificationOptions = {
       title: 'Export Complete',
       body: 'File exported successfully',
