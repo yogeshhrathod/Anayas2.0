@@ -203,6 +203,35 @@
     "typescript": "html",
     "typescriptreact": "html"
   },
-  "emmet.triggerExpansionOnTab": true
+  "emmet.triggerExpansionOnTab": true,
+  
+  // Cursor AI Editor Optimizations
+  // These settings enhance AI-assisted development in Cursor
+  // Note: Cursor inherits all VS Code settings and works seamlessly
+  
+  // Enhanced IntelliSense for better AI context
+  // Note: maxVisibleSuggestions is deprecated but kept for compatibility
+  "editor.suggest.showMethods": true,
+  "editor.suggest.showFunctions": true,
+  "editor.suggest.showConstructors": true,
+  "editor.suggest.showFields": true,
+  "editor.suggest.showVariables": true,
+  "editor.suggest.showClasses": true,
+  "editor.suggest.showInterfaces": true,
+  "editor.suggest.showModules": true,
+  "editor.suggest.showProperties": true,
+  "editor.suggest.showSnippets": true,
+  "editor.suggest.showTypeParameters": true,
+  
+  // Better file indexing for AI understanding
+  "search.followSymlinks": false,
+  "search.useIgnoreFiles": true,
+  "search.useGlobalIgnoreFiles": true,
+  
+  // Code navigation for AI features
+  "editor.gotoLocation.multipleDefinitions": "goto",
+  "editor.gotoLocation.multipleReferences": "goto",
+  "editor.gotoLocation.multipleImplementations": "goto",
+  "editor.gotoLocation.multipleDeclarations": "goto"
 }
 

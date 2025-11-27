@@ -1,0 +1,29 @@
+{
+  "// Cursor AI Editor Specific Settings": "These enhance AI-assisted development",
+  "// Note": "Cursor inherits all VS Code settings from settings.json",
+  
+  "cursor.ai": {
+    "// Enable AI features": "All AI features are enabled by default in Cursor",
+    "enableCodeActions": true,
+    "enableInlineSuggestions": true
+  },
+  
+  "// Recommended Cursor Settings": {
+    "// These are already configured in settings.json": "",
+    "// - Enhanced IntelliSense (12 visible suggestions)": "",
+    "// - Quick suggestions (100ms delay)": "",
+    "// - Tab completion enabled": "",
+    "// - All suggestion types enabled for better AI context": "",
+    "// - Optimized file indexing": "",
+    "// - Better code navigation": ""
+  },
+  
+  "// Tips for Best AI Experience": {
+    "// 1. Install recommended extensions": "Better context for AI",
+    "// 2. Use snippets": "AI can leverage your custom snippets",
+    "// 3. Keep TypeScript strict": "Better type inference for AI",
+    "// 4. Use path aliases (@/)": "AI understands your project structure",
+    "// 5. Enable file nesting": "Cleaner workspace for AI to understand"
+  }
+}
+
