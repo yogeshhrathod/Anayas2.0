@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Fix linting issues
+npm run lint:fix
+
+# Format code
+npm run format
+
+# TypeScript compile check
+npm run type-check
+
+# Final lint check (without || true to allow failure)
+npx eslint . || exit 1
