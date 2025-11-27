@@ -65,14 +65,14 @@ export function Settings() {
     const errors: ValidationErrors = {};
 
     // Validate requestTimeout
-    const requestTimeout = localSettings.requestTimeout || 30000;
+    const requestTimeout = (typeof localSettings.requestTimeout === 'number' ? localSettings.requestTimeout : 30000);
     const requestTimeoutError = validateRequestTimeout(requestTimeout);
     if (requestTimeoutError) {
       errors.requestTimeout = requestTimeoutError;
     }
 
     // Validate maxHistory
-    const maxHistory = localSettings.maxHistory || 100;
+    const maxHistory = (typeof localSettings.maxHistory === 'number' ? localSettings.maxHistory : 100);
     const maxHistoryError = validateMaxHistory(maxHistory);
     if (maxHistoryError) {
       errors.maxHistory = maxHistoryError;
@@ -100,7 +100,7 @@ export function Settings() {
         if (!['themeMode', 'currentThemeId', 'customThemes', 'theme'].includes(key)) {
           // For font settings, only save if not empty string (empty means use default)
           if ((key === 'uiFontFamily' || key === 'codeFontFamily')) {
-            const trimmedValue = typeof value === 'string' ? value.trim() : value;
+            const trimmedValue = typeof value === 'string' ? value.trim() : String(value);
             if (trimmedValue && trimmedValue.length > 0) {
               await window.electronAPI.settings.set(key, trimmedValue);
             } else {
@@ -149,7 +149,7 @@ export function Settings() {
 
     // For font settings, update store immediately for live preview (but don't persist to DB yet)
     if (key === 'uiFontFamily' || key === 'codeFontFamily') {
-      const trimmedValue = typeof value === 'string' ? value.trim() : value;
+      const trimmedValue = typeof value === 'string' ? value.trim() : String(value);
       // Update store immediately so FontProvider can apply the font
       // Use trimmed value if not empty, otherwise undefined to use default
       const fontValue = (trimmedValue && trimmedValue.length > 0) ? trimmedValue : undefined;
@@ -201,7 +201,7 @@ export function Settings() {
               <Input
                 id="uiFontFamily"
                 type="text"
-                value={localSettings.uiFontFamily ?? ''}
+                value={typeof localSettings.uiFontFamily === 'string' ? localSettings.uiFontFamily : ''}
                 onChange={(e) => updateSetting('uiFontFamily', e.target.value)}
                 placeholder={DEFAULT_UI_FONT_STACK}
               />
@@ -211,7 +211,7 @@ export function Settings() {
               <Input
                 id="codeFontFamily"
                 type="text"
-                value={localSettings.codeFontFamily ?? ''}
+                value={typeof localSettings.codeFontFamily === 'string' ? localSettings.codeFontFamily : ''}
                 onChange={(e) => updateSetting('codeFontFamily', e.target.value)}
                 placeholder={DEFAULT_CODE_FONT_STACK}
               />
@@ -236,7 +236,7 @@ export function Settings() {
                 min="1000"
                 max="300000"
                 step="1000"
-                value={localSettings.requestTimeout || 30000}
+                value={typeof localSettings.requestTimeout === 'number' ? localSettings.requestTimeout : 30000}
                 onChange={(e) => {
                   const val = parseInt(e.target.value);
                   updateSetting('requestTimeout', val);
@@ -269,7 +269,7 @@ export function Settings() {
                 type="number"
                 min="1"
                 max="10000"
-                value={localSettings.maxHistory || 100}
+                value={typeof localSettings.maxHistory === 'number' ? localSettings.maxHistory : 100}
                 onChange={(e) => {
                   const val = parseInt(e.target.value);
                   updateSetting('maxHistory', val);
@@ -299,7 +299,7 @@ export function Settings() {
               <input
                 type="checkbox"
                 id="followRedirects"
-                checked={localSettings.followRedirects !== false}
+                checked={typeof localSettings.followRedirects === 'boolean' ? localSettings.followRedirects : true}
                 onChange={(e) => updateSetting('followRedirects', e.target.checked)}
                 className="h-4 w-4 rounded border-gray-300"
               />
@@ -312,7 +312,7 @@ export function Settings() {
               <input
                 type="checkbox"
                 id="sslVerification"
-                checked={localSettings.sslVerification !== false}
+                checked={typeof localSettings.sslVerification === 'boolean' ? localSettings.sslVerification : true}
                 onChange={(e) => updateSetting('sslVerification', e.target.checked)}
                 className="h-4 w-4 rounded border-gray-300"
               />
@@ -325,7 +325,7 @@ export function Settings() {
               <input
                 type="checkbox"
                 id="autoSaveRequests"
-                checked={localSettings.autoSaveRequests || false}
+                checked={typeof localSettings.autoSaveRequests === 'boolean' ? localSettings.autoSaveRequests : false}
                 onChange={(e) => updateSetting('autoSaveRequests', e.target.checked)}
                 className="h-4 w-4 rounded border-gray-300"
               />

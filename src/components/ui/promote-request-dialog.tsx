@@ -124,7 +124,7 @@ export function PromoteRequestDialog({
           body: unsavedRequest.body,
           queryParams: unsavedRequest.queryParams,
           auth: unsavedRequest.auth as Request['auth'],
-          collectionId: selectedCollectionId,
+          collectionId: selectedCollectionId ?? undefined,
           folderId: selectedFolderId ?? undefined,
           isFavorite: 0,
         };

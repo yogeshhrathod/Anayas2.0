@@ -125,7 +125,7 @@ export function History() {
       }
     } catch (e: unknown) {
       console.error('Failed to rerun request:', e);
-      error('Rerun Error', e?.message || 'Unknown error');
+      error('Rerun Error', e instanceof Error ? e.message : 'Unknown error');
     } finally {
       setRerunningRequest(null);
     }

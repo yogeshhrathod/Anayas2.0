@@ -179,7 +179,7 @@ function createMonacoTheme(theme: Theme): Record<string, unknown> {
  * Provides autocomplete suggestions when typing {{ in JSON editors
  */
 function registerEnvironmentVariableCompletion(
-  monaco: unknown,
+  monaco: any,
   availableVariables: Array<{
     name: string;
     value: string;
@@ -189,7 +189,7 @@ function registerEnvironmentVariableCompletion(
   return monaco.languages.registerCompletionItemProvider('json', {
     triggerCharacters: ['{', '$'],
 
-    provideCompletionItems: (model: unknown, position: unknown) => {
+    provideCompletionItems: (model: any, position: any) => {
       const lineText = model.getLineContent(position.lineNumber);
       const textUntilPosition = lineText.substring(0, position.column - 1);
 
@@ -321,7 +321,7 @@ function getDynamicVariableDescription(variableName: string): string | null {
  * Shows variable details when hovering over {{variable}} patterns
  */
 function registerEnvironmentVariableHover(
-  monaco: unknown,
+  monaco: any,
   availableVariables: Array<{
     name: string;
     value: string;
@@ -329,7 +329,7 @@ function registerEnvironmentVariableHover(
   }>
 ): { dispose: () => void } {
   return monaco.languages.registerHoverProvider('json', {
-    provideHover: (model: unknown, position: unknown) => {
+    provideHover: (model: any, position: any) => {
       const lineText = model.getLineContent(position.lineNumber);
       const column = position.column;
 
@@ -343,7 +343,7 @@ function registerEnvironmentVariableHover(
       // Find all {{variable}} patterns in the search area
       const variablePattern = /\{\{(\$)?(\w+\.)?(\w+)\}\}/g;
       let match;
-      let bestMatch: { range: unknown; contents: unknown[] } | null = null;
+      let bestMatch: { fullMatch: string; isDynamic: boolean; prefix: string; variableName: string; absoluteStart: number; absoluteEnd: number } | null = null;
       let bestDistance = Infinity;
 
       while ((match = variablePattern.exec(searchText)) !== null) {
@@ -452,16 +452,16 @@ function registerEnvironmentVariableHover(
  * This is simpler than custom tokenizer and works better with JSON
  */
 function registerEnvironmentVariableDecoration(
-  editor: unknown,
-  monaco: unknown
-): unknown {
+  editor: any,
+  monaco: any
+): any {
   const decorations: string[] = [];
   const model = editor.getModel();
 
   const updateDecorations = () => {
     const text = model.getValue();
     const variablePattern = /\{\{(\$)?(\w+\.)?(\w+)\}\}/g;
-    const newDecorations: unknown[] = [];
+    const newDecorations: any[] = [];
     let match;
 
     while ((match = variablePattern.exec(text)) !== null) {
@@ -690,7 +690,7 @@ export function MonacoEditor({
   }, []);
 
   // Handle editor mount
-  const handleEditorDidMount = (editor: unknown, monaco: unknown) => {
+  const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
 
     // Register dynamic theme if current theme exists

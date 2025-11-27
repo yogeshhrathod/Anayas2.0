@@ -111,7 +111,7 @@ export function MonacoKeyValueEditor({
   }, [codeFontFamily]);
 
   // Handle editor mount
-  const handleEditorDidMount = (editor: unknown, monaco: unknown) => {
+  const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
     
     // Configure editor options
