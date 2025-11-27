@@ -407,7 +407,7 @@ export function CollectionHierarchy({
         await window.electronAPI.request.save({
           id: requestId,
           name: requests.find(r => r.id === requestId)?.name || '',
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           method:
             (requests.find(r => r.id === requestId)?.method as any) || 'GET',
           url: requests.find(r => r.id === requestId)?.url || '',

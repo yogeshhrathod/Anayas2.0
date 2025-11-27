@@ -40,7 +40,7 @@ export function TitleBar() {
       style={{ WebkitAppRegion: 'drag' } as any}
     >
       {/* Left Side - App Branding (macOS) or Window Controls (Windows/Linux) */}
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      { }
       <div
         className="flex items-center gap-3"
         style={{ WebkitAppRegion: 'no-drag' } as any}
@@ -52,7 +52,7 @@ export function TitleBar() {
       <div className="flex-1" />
 
       {/* Right Side - Search */}
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      { }
       <div
         className="flex items-center gap-2"
         style={{ WebkitAppRegion: 'no-drag' } as any}
@@ -62,7 +62,7 @@ export function TitleBar() {
 
       {/* Window Controls - Only show on Windows/Linux */}
       {!isMac && (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         <div
           className="flex items-center"
           style={{ WebkitAppRegion: 'no-drag' } as any}

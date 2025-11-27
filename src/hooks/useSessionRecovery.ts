@@ -23,7 +23,7 @@ export function useSessionRecovery() {
 
         // Auto-restore the last active unsaved request if it exists
         if (requests.length > 0 && activeUnsavedRequestId) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           const activeRequest = requests.find(
             (r: any) => r.id === activeUnsavedRequestId
           );
