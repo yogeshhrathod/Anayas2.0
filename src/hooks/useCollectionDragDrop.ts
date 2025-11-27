@@ -129,7 +129,7 @@ export function useCollectionDragDrop(config: DragDropConfig) {
         const mouseY = e.clientY;
         const itemCenterY = rect.top + rect.height / 2;
         dropPosition = mouseY < itemCenterY ? 'above' : 'below';
-      } catch (error) {
+      } catch (_error) {
         // Fallback to inside if getBoundingClientRect fails
         dropPosition = 'inside';
       }
@@ -167,7 +167,7 @@ export function useCollectionDragDrop(config: DragDropConfig) {
         const mouseY = e.clientY;
         const itemCenterY = rect.top + rect.height / 2;
         dropPosition = mouseY < itemCenterY ? 'above' : 'below';
-      } catch (error) {
+      } catch (_error) {
         // Fallback to inside if getBoundingClientRect fails
         dropPosition = 'inside';
       }

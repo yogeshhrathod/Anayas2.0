@@ -45,6 +45,7 @@ export function ApiRequestBuilder() {
     if (requestActions.response && requestState.activeTab !== 'response') {
       requestState.setActiveTab('response');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestActions.response, requestState.activeTab, requestState.setActiveTab]);
 
   // Keyboard shortcuts
@@ -159,6 +160,7 @@ export function ApiRequestBuilder() {
       document.removeEventListener('keydown', handleSelectPreset8);
       document.removeEventListener('keydown', handleSelectPreset9);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestState.requestData, requestActions]);
 
   const handleSaveRequestClick = () => {

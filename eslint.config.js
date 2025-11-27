@@ -29,6 +29,7 @@ export default tseslint.config(
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
         },
       ],
       '@typescript-eslint/explicit-module-boundary-types': 'off',
@@ -60,6 +61,11 @@ export default tseslint.config(
       'node_modules/**',
       '*.config.js',
       '*.config.ts',
+      'tests/**',
+      'test-artifacts/**',
+      'playwright-report/**',
+      'test-results.log',
+      'specs/**',
     ],
   }
 );

@@ -30,7 +30,7 @@ export function generateDraftName(method: string, url: string): string {
     }
     
     return name;
-  } catch (e) {
+  } catch (_e) {
     // If URL parsing fails, just use method and part of URL
     const cleanUrl = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
     const parts = cleanUrl.split('/').filter(s => s);

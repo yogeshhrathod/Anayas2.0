@@ -81,7 +81,7 @@ export const CollectionEnvironmentForm = forwardRef<CollectionEnvironmentFormRef
     
     try {
       await onSave(formData);
-    } catch (error) {
+    } catch {
       // Error handling is done in parent component
     }
   }, [formData, validateForm, onSave]);

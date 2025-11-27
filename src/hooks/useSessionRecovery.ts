@@ -23,11 +23,13 @@ export function useSessionRecovery() {
 
         // Auto-restore the last active unsaved request if it exists
         if (requests.length > 0 && activeUnsavedRequestId) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const activeRequest = requests.find((r: any) => r.id === activeUnsavedRequestId);
           if (activeRequest) {
             setSelectedRequest({
               id: undefined,
               name: activeRequest.name,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               method: activeRequest.method as any,
               url: activeRequest.url,
               headers: activeRequest.headers,
@@ -41,12 +43,13 @@ export function useSessionRecovery() {
             setCurrentPage('home');
           }
         }
-      } catch (error) {
-        console.error('Failed to load unsaved requests:', error);
+      } catch (_error) {
+        console.error('Failed to load unsaved requests:', _error);
       }
     };
 
     loadUnsavedRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
 
   // Hook doesn't need to return anything, it just loads data on mount

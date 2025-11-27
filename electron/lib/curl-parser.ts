@@ -75,7 +75,7 @@ export function parseCurlCommand(curlCommand: string): Request {
   try {
     const urlObj = new URL(result.url);
     result.url = `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
-  } catch (e) {
+  } catch {
     const queryIndex = result.url.indexOf('?');
     if (queryIndex > 0) {
       result.url = result.url.substring(0, queryIndex);
@@ -304,7 +304,7 @@ function parseQueryParams(url: string): Array<{ key: string; value: string; enab
     });
 
     return params;
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -314,7 +314,7 @@ function generateRequestName(method: string, url: string): string {
     const urlObj = new URL(url);
     const path = urlObj.pathname.split('/').filter(Boolean).pop() || 'request';
     return `${method} ${path}`;
-  } catch (e) {
+  } catch {
     return `${method} Request`;
   }
 }
@@ -324,7 +324,7 @@ export function parseCurlCommands(commands: string[]): Array<{ success: boolean;
     try {
       const request = parseCurlCommand(command);
       return { success: true, request };
-    } catch (_error: any) {
+    } catch {
       return {
         success: false,
         error: error.message || `Failed to parse command ${index + 1}`,

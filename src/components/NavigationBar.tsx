@@ -171,6 +171,7 @@ export function NavigationBar() {
       data-testid="primary-navigation"
     >
       {/* Primary Navigation (Left) */}
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div className="flex items-center gap-2" style={{ WebkitAppRegion: "no-drag" } as any}>
         {primaryNavItems.map((item) => {
           const Icon = item.icon;
@@ -201,6 +202,7 @@ export function NavigationBar() {
       <div className="flex-1" />
 
       {/* Secondary Navigation (Right) */}
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div className="flex items-center gap-2" style={{ WebkitAppRegion: "no-drag" } as any}>
         {/* Action Buttons - Only visible on home page */}
         {currentPage === 'home' && (

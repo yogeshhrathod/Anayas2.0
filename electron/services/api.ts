@@ -1,3 +1,4 @@
+ 
 import { createLogger } from './logger';
 
 const logger = createLogger('api');
@@ -5,6 +6,7 @@ const logger = createLogger('api');
 interface FetchOptions {
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
   headers?: Record<string, string>;
+   
   body?: any;
   isJson?: boolean;
   timeout?: number;
@@ -14,12 +16,13 @@ interface ApiResponse {
   status: number;
   statusText: string;
   headers: Record<string, string>;
+   
   body: any;
   responseTime: number;
 }
 
 export class ApiService {
-  private async request<T>(url: string, options: FetchOptions): Promise<ApiResponse> {
+  private async request(_url: string, options: FetchOptions): Promise<ApiResponse> {
     const startTime = Date.now();
     
     try {
@@ -55,13 +58,14 @@ export class ApiService {
         responseHeaders[key] = value;
       });
 
+       
       let responseBody: any;
       const contentType = response.headers.get('content-type') || '';
 
       if (contentType.includes('application/json')) {
         try {
           responseBody = await response.json();
-        } catch (e) {
+        } catch {
           responseBody = await response.text();
         }
       } else if (contentType.includes('text/')) {
@@ -95,6 +99,8 @@ export class ApiService {
       }
 
       return result;
+     
+     
     } catch (err: any) {
       const responseTime = Date.now() - startTime;
       
@@ -112,14 +118,17 @@ export class ApiService {
     return this.request(url, { method: 'GET', headers, timeout });
   }
 
+   
   async postJson(url: string, data: any, headers?: Record<string, string>, timeout?: number): Promise<ApiResponse> {
     return this.request(url, { method: 'POST', body: data, headers, isJson: true, timeout });
   }
 
+   
   async putJson(url: string, data: any, headers?: Record<string, string>, timeout?: number): Promise<ApiResponse> {
     return this.request(url, { method: 'PUT', body: data, headers, isJson: true, timeout });
   }
 
+   
   async patchJson(url: string, data: any, headers?: Record<string, string>, timeout?: number): Promise<ApiResponse> {
     return this.request(url, { method: 'PATCH', body: data, headers, isJson: true, timeout });
   }

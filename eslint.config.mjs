@@ -1,8 +1,8 @@
 import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   js.configs.recommended,
@@ -41,6 +41,18 @@ export default tseslint.config(
     },
   },
   {
+    files: ['tests/**/*.ts', 'tests/**/*.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
+    files: ['electron/**/*.ts', 'src/lib/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
     ignores: [
       'dist/**',
       'dist-electron/**',
@@ -48,7 +60,10 @@ export default tseslint.config(
       'node_modules/**',
       '*.config.js',
       '*.config.ts',
+      'tests/**',
+      'test-artifacts/**',
+      'playwright-report/**',
+      'test-results.log',
     ],
-  },
+  }
 );
-

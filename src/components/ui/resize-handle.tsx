@@ -13,9 +13,50 @@ export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, 
   const isDragging = useRef(false);
   const startX = useRef(0);
   const onResizeRef = useRef(onResize);
+  const onResizeEndRef = useRef(onResizeEnd);
+  const handleMouseMoveRef = useRef<(e: MouseEvent) => void>();
+  const handleMouseUpRef = useRef<() => void>();
 
-  // Keep the ref updated
+  // Keep the refs updated
   onResizeRef.current = onResize;
+  onResizeEndRef.current = onResizeEnd;
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging.current) return;
+    
+    e.preventDefault();
+    const deltaX = e.clientX - startX.current;
+    // Use deltaX directly - dragging left (negative) shrinks, dragging right (positive) expands
+    onResizeRef.current(deltaX);
+    startX.current = e.clientX;
+     
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    if (!isDragging.current) return;
+    
+    isDragging.current = false;
+    
+    // Call resize end callback
+    onResizeEndRef.current?.();
+    
+    // Remove global event listeners
+    if (handleMouseMoveRef.current) {
+      document.removeEventListener('mousemove', handleMouseMoveRef.current);
+    }
+    if (handleMouseUpRef.current) {
+      document.removeEventListener('mouseup', handleMouseUpRef.current);
+    }
+    
+    // Reset cursor
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+     
+  }, []);
+
+  // Keep refs updated
+  handleMouseMoveRef.current = handleMouseMove;
+  handleMouseUpRef.current = handleMouseUp;
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (disabled) return;
@@ -35,34 +76,8 @@ export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, 
     // Change cursor globally
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
-  }, [disabled, onResizeStart]);
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging.current) return;
-    
-    e.preventDefault();
-    const deltaX = e.clientX - startX.current;
-    // Use deltaX directly - dragging left (negative) shrinks, dragging right (positive) expands
-    onResizeRef.current(deltaX);
-    startX.current = e.clientX;
-  }, []);
-
-  const handleMouseUp = useCallback(() => {
-    if (!isDragging.current) return;
-    
-    isDragging.current = false;
-    
-    // Call resize end callback
-    onResizeEnd?.();
-    
-    // Remove global event listeners
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-    
-    // Reset cursor
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-  }, [handleMouseMove, onResizeEnd]);
+     
+  }, [disabled, onResizeStart, handleMouseMove, handleMouseUp]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

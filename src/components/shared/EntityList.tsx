@@ -70,6 +70,7 @@ export interface EntityListProps<T> {
 
 type SortDirection = 'asc' | 'desc' | null;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const EntityList = <T extends Record<string, any>>({
   items,
   columns,

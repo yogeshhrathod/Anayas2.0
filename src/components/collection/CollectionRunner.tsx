@@ -92,6 +92,7 @@ export function CollectionRunner({ collectionId, collectionName, onClose, open }
       // Auto-run when dialog opens (optional - can be changed to manual trigger)
       // runCollection();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const progress = summary ? (results.length / summary.total) * 100 : 0;

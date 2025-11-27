@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Monaco Editor types require 'any' for proper integration
 import { Editor } from '@monaco-editor/react';
 import { AlignLeft, Braces, Check, Copy } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -343,7 +345,14 @@ function registerEnvironmentVariableHover(
       // Find all {{variable}} patterns in the search area
       const variablePattern = /\{\{(\$)?(\w+\.)?(\w+)\}\}/g;
       let match;
-      let bestMatch: { fullMatch: string; isDynamic: boolean; prefix: string; variableName: string; absoluteStart: number; absoluteEnd: number } | null = null;
+      let bestMatch: {
+        fullMatch: string;
+        isDynamic: boolean;
+        prefix: string;
+        variableName: string;
+        absoluteStart: number;
+        absoluteEnd: number;
+      } | null = null;
       let bestDistance = Infinity;
 
       while ((match = variablePattern.exec(searchText)) !== null) {
@@ -451,10 +460,7 @@ function registerEnvironmentVariableHover(
  * Register syntax highlighting for {{variable}} patterns using decorations
  * This is simpler than custom tokenizer and works better with JSON
  */
-function registerEnvironmentVariableDecoration(
-  editor: any,
-  monaco: any
-): any {
+function registerEnvironmentVariableDecoration(editor: any, monaco: any): any {
   const decorations: string[] = [];
   const model = editor.getModel();
 
@@ -814,7 +820,7 @@ export function MonacoEditor({
         const formatted = JSON.stringify(parsed, null, tabSize);
         onChange(formatted);
         success('Formatted', 'JSON has been formatted');
-      } catch (_e: unknown) {
+      } catch {
         showError('Format Error', 'Invalid JSON cannot be formatted');
       }
     } else {
@@ -832,7 +838,7 @@ export function MonacoEditor({
         const minified = JSON.stringify(parsed);
         onChange(minified);
         success('Minified', 'JSON has been minified');
-      } catch (_e: unknown) {
+      } catch {
         showError('Minify Error', 'Invalid JSON cannot be minified');
       }
     }

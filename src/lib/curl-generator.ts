@@ -67,7 +67,7 @@ function buildUrl(baseUrl: string, queryParams: Array<{ key: string; value: stri
       });
 
     return url.toString();
-  } catch (e) {
+  } catch (_e) {
     // If URL is invalid, just append query string manually
     const enabledParams = queryParams.filter(param => param.enabled && param.key);
     if (enabledParams.length === 0) {

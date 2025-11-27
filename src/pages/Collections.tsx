@@ -102,7 +102,7 @@ export function Collections() {
 
       setIsEditing(false);
       setEditingCollection(null);
-    } catch (error) {
+    } catch (_error) {
       // Error handling is done in the hook
     } finally {
       setIsSaving(false);

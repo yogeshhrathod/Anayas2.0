@@ -1,10 +1,16 @@
-import { useState, useEffect } from 'react';
+import { AlertCircle, FolderPlus, Plus } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from './button';
+import { Dialog } from './dialog';
 import { Input } from './input';
 import { Label } from './label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
-import { Dialog } from './dialog';
-import { AlertCircle, FolderPlus, Plus } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './select';
 import { useToast } from './use-toast';
 
 interface Collection {
@@ -25,7 +31,11 @@ interface Folder {
 interface SaveRequestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (data: { name: string; collectionId: number; folderId?: number }) => void;
+  onSave: (data: {
+    name: string;
+    collectionId: number;
+    folderId?: number;
+  }) => void;
   currentRequestName?: string;
   currentCollectionId?: number;
   currentFolderId?: number;
@@ -42,16 +52,36 @@ export function SaveRequestDialog({
   onSave,
   currentRequestName = '',
   currentCollectionId,
-  currentFolderId
+  currentFolderId,
 }: SaveRequestDialogProps) {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [requestName, setRequestName] = useState(currentRequestName);
-  const [selectedCollectionId, setSelectedCollectionId] = useState<number | null>(currentCollectionId || null);
-  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(currentFolderId || null);
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [selectedCollectionId, setSelectedCollectionId] = useState<
+    number | null
+  >(currentCollectionId || null);
+  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(
+    currentFolderId || null
+  );
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
+    {}
+  );
   const [isLoading, setIsLoading] = useState(false);
   const { error } = useToast();
+
+  const loadData = useCallback(async () => {
+    try {
+      const [collectionsData, foldersData] = await Promise.all([
+        window.electronAPI.collection.list(),
+        window.electronAPI.folder.list(),
+      ]);
+      setCollections(collectionsData);
+      setFolders(foldersData);
+    } catch (e: unknown) {
+      console.error('Failed to load collections and folders:', e);
+      error('Load failed', 'Failed to load collections and folders');
+    }
+  }, [error]);
 
   // Load collections and folders when dialog opens
   useEffect(() => {
@@ -62,21 +92,13 @@ export function SaveRequestDialog({
       setSelectedFolderId(currentFolderId || null);
       setValidationErrors({});
     }
-  }, [open, currentRequestName, currentCollectionId, currentFolderId]);
-
-  const loadData = async () => {
-    try {
-      const [collectionsData, foldersData] = await Promise.all([
-        window.electronAPI.collection.list(),
-        window.electronAPI.folder.list()
-      ]);
-      setCollections(collectionsData);
-      setFolders(foldersData);
-    } catch (e: unknown) {
-      console.error('Failed to load collections and folders:', e);
-      error('Load failed', 'Failed to load collections and folders');
-    }
-  };
+  }, [
+    open,
+    currentRequestName,
+    currentCollectionId,
+    currentFolderId,
+    loadData,
+  ]);
 
   const validateForm = (): boolean => {
     const errors: ValidationErrors = {};
@@ -99,7 +121,10 @@ export function SaveRequestDialog({
 
   const handleSave = async () => {
     if (!validateForm()) {
-      error('Validation failed', 'Please fix all validation errors before saving');
+      error(
+        'Validation failed',
+        'Please fix all validation errors before saving'
+      );
       return;
     }
 
@@ -108,7 +133,7 @@ export function SaveRequestDialog({
       onSave({
         name: requestName.trim(),
         collectionId: selectedCollectionId!,
-        folderId: selectedFolderId || undefined
+        folderId: selectedFolderId || undefined,
       });
       onOpenChange(false);
     } catch (e: unknown) {
@@ -134,7 +159,7 @@ export function SaveRequestDialog({
     const id = parseInt(collectionId);
     setSelectedCollectionId(id);
     setSelectedFolderId(null); // Reset folder selection when collection changes
-    
+
     // Clear collection validation error
     if (validationErrors.collection) {
       setValidationErrors({ ...validationErrors, collection: undefined });
@@ -176,75 +201,83 @@ export function SaveRequestDialog({
       className="max-h-[80vh]"
     >
       <div className="space-y-4" onKeyDown={handleKeyDown}>
-          {/* Request Name */}
-          <div className="space-y-2">
-            <Label htmlFor="request-name">Request Name</Label>
-            <Input
-              id="request-name"
-              value={requestName}
-              onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="Enter request name"
-              className={validationErrors.name ? 'border-red-500' : ''}
-              autoFocus
-            />
-            {validationErrors.name && (
-              <div className="flex items-center gap-1 text-xs text-red-500">
-                <AlertCircle className="h-3 w-3" />
-                <span>{validationErrors.name}</span>
-              </div>
-            )}
-          </div>
+        {/* Request Name */}
+        <div className="space-y-2">
+          <Label htmlFor="request-name">Request Name</Label>
+          <Input
+            id="request-name"
+            value={requestName}
+            onChange={e => handleNameChange(e.target.value)}
+            placeholder="Enter request name"
+            className={validationErrors.name ? 'border-red-500' : ''}
+            autoFocus
+          />
+          {validationErrors.name && (
+            <div className="flex items-center gap-1 text-xs text-red-500">
+              <AlertCircle className="h-3 w-3" />
+              <span>{validationErrors.name}</span>
+            </div>
+          )}
+        </div>
 
-          {/* Collection Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="collection-select">Collection</Label>
-            <Select
-              value={selectedCollectionId?.toString() || ''}
-              onValueChange={handleCollectionChange}
+        {/* Collection Selection */}
+        <div className="space-y-2">
+          <Label htmlFor="collection-select">Collection</Label>
+          <Select
+            value={selectedCollectionId?.toString() || ''}
+            onValueChange={handleCollectionChange}
+          >
+            <SelectTrigger
+              className={validationErrors.collection ? 'border-red-500' : ''}
             >
-              <SelectTrigger className={validationErrors.collection ? 'border-red-500' : ''}>
-                <SelectValue placeholder="Select a collection" />
-              </SelectTrigger>
-              <SelectContent>
-                {collections.length === 0 ? (
-                  <div className="p-2 text-sm text-muted-foreground">No collections available</div>
-                ) : (
-                  collections.map((collection) => (
-                    <SelectItem key={collection.id} value={collection.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <span>{collection.name}</span>
-                        {collection.isFavorite === 1 && (
-                          <span className="text-yellow-500">★</span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-            {validationErrors.collection && (
-              <div className="flex items-center gap-1 text-xs text-red-500">
-                <AlertCircle className="h-3 w-3" />
-                <span>{validationErrors.collection}</span>
-              </div>
-            )}
-            {collections.length === 0 && (
-              <div className="text-xs text-muted-foreground">
-                No collections available. 
-                <Button
-                  variant="link"
-                  size="sm"
-                  onClick={handleCreateCollection}
-                  className="h-auto p-0 ml-1"
-                >
-                  Create one first
-                </Button>
-              </div>
-            )}
-          </div>
+              <SelectValue placeholder="Select a collection" />
+            </SelectTrigger>
+            <SelectContent>
+              {collections.length === 0 ? (
+                <div className="p-2 text-sm text-muted-foreground">
+                  No collections available
+                </div>
+              ) : (
+                collections.map(collection => (
+                  <SelectItem
+                    key={collection.id}
+                    value={collection.id.toString()}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>{collection.name}</span>
+                      {collection.isFavorite === 1 && (
+                        <span className="text-yellow-500">★</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          {validationErrors.collection && (
+            <div className="flex items-center gap-1 text-xs text-red-500">
+              <AlertCircle className="h-3 w-3" />
+              <span>{validationErrors.collection}</span>
+            </div>
+          )}
+          {collections.length === 0 && (
+            <div className="text-xs text-muted-foreground">
+              No collections available.
+              <Button
+                variant="link"
+                size="sm"
+                onClick={handleCreateCollection}
+                className="h-auto p-0 ml-1"
+              >
+                Create one first
+              </Button>
+            </div>
+          )}
+        </div>
 
-          {/* Folder Selection (Optional) */}
-          {selectedCollectionId && getFoldersForCollection(selectedCollectionId).length > 0 && (
+        {/* Folder Selection (Optional) */}
+        {selectedCollectionId &&
+          getFoldersForCollection(selectedCollectionId).length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="folder-select">Folder (Optional)</Label>
               <Select
@@ -256,7 +289,7 @@ export function SaveRequestDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No folder</SelectItem>
-                  {getFoldersForCollection(selectedCollectionId).map((folder) => (
+                  {getFoldersForCollection(selectedCollectionId).map(folder => (
                     <SelectItem key={folder.id} value={folder.id.toString()}>
                       {folder.name}
                     </SelectItem>
@@ -266,33 +299,33 @@ export function SaveRequestDialog({
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex gap-2 pt-4">
-            <Button 
-              onClick={handleSave} 
-              disabled={isLoading || !requestName.trim() || !selectedCollectionId}
-              className="flex-1"
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Save Request
-                </>
-              )}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-          </div>
+        {/* Action Buttons */}
+        <div className="flex gap-2 pt-4">
+          <Button
+            onClick={handleSave}
+            disabled={isLoading || !requestName.trim() || !selectedCollectionId}
+            className="flex-1"
+          >
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Saving...
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-2" />
+                Save Request
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+        </div>
       </div>
     </Dialog>
   );

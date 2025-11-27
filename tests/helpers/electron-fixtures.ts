@@ -1068,6 +1068,7 @@ export const test = base.extend<ElectronFixtures>({
       testName: testInfo.title.replace(/\s+/g, '-').toLowerCase(),
     });
     
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture, not React hook
     await use(testDbPath);
     
     // Cleanup after test
@@ -1092,6 +1093,7 @@ export const test = base.extend<ElectronFixtures>({
       throw new Error('electronAPI not available after setup');
     }
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture, not React hook
     await use(page);
   },
 });

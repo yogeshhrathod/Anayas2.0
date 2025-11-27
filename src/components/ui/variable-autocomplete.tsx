@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { cn } from '../../lib/utils';
 import { Check, Building2, Globe, Sparkles } from 'lucide-react';
 
@@ -28,32 +28,36 @@ export function VariableAutocomplete({
 
   // Filter variables based on search term
   // If showOnlyDynamic is true, show only dynamic variables
-  const filteredVariables = showOnlyDynamic
-    ? variables.filter(v => v.scope === 'dynamic')
-    : searchTerm && searchTerm.length > 0
-    ? variables.filter(v => {
-        const searchLower = searchTerm.toLowerCase();
+  const filteredVariables = useMemo(() => {
+    if (showOnlyDynamic) {
+      return variables.filter(v => v.scope === 'dynamic');
+    }
+    if (searchTerm && searchTerm.length > 0) {
+      const searchLower = searchTerm.toLowerCase();
+      return variables.filter(v => {
         const nameLower = v.name.toLowerCase();
         // Allow searching without $ prefix for dynamic variables
         if (v.scope === 'dynamic' && nameLower.startsWith('$')) {
           return nameLower.includes(searchLower) || nameLower.slice(1).includes(searchLower);
         }
         return nameLower.includes(searchLower);
-      })
-    : variables;
+      });
+    }
+    return variables;
+  }, [variables, showOnlyDynamic, searchTerm]);
 
   // Group variables by scope
-  const groupedVariables = {
+  const groupedVariables = useMemo(() => ({
     dynamic: filteredVariables.filter(v => v.scope === 'dynamic'),
     collection: filteredVariables.filter(v => v.scope === 'collection'),
     global: filteredVariables.filter(v => v.scope === 'global'),
-  };
+  }), [filteredVariables]);
 
-  const allVariables = [
+  const allVariables = useMemo(() => [
     ...groupedVariables.collection,
     ...groupedVariables.global,
     ...groupedVariables.dynamic,
-  ];
+  ], [groupedVariables]);
 
   // Keyboard navigation
   useEffect(() => {

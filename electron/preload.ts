@@ -72,6 +72,7 @@ export interface RequestOptions {
   body?: string;
   auth?: any;
   collectionId?: number;
+  environmentId?: number;
   queryParams?: Array<{ key: string; value: string; enabled: boolean }>;
 }
 

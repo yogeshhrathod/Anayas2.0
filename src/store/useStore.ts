@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Theme } from '../lib/themes';
@@ -86,6 +87,7 @@ interface AppState {
   setRequestProgress: (progress: RequestProgress | null) => void;
 
   // Settings
+
   settings: Record<string, any>;
   setSettings: (settings: Record<string, any>) => void;
 

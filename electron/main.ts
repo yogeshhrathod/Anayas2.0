@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, Notification, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
 import path from 'path';
 import { initDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
@@ -9,7 +9,6 @@ const logger = createLogger('main');
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 let mainWindow: BrowserWindow | null = null;
-const lastGeneratedFilePath: string | null = null;
 
 function createWindow() {
   const isDarkMode = nativeTheme.shouldUseDarkColors;

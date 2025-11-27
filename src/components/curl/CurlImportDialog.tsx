@@ -74,6 +74,7 @@ export function CurlImportDialog({
       setSelectedCollectionId(null);
       setSelectedFolderId(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const loadCollections = async () => {

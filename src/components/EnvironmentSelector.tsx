@@ -57,7 +57,7 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
         triggerSidebarRefresh(); // Refresh sidebar to show updated state
         setIsOpen(false);
       }
-    } catch (error) {
+    } catch {
       // Error handling is done by the IPC handler
     }
   };

@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { cn } from '../../lib/utils';
 
 interface VerticalResizeHandleProps {
@@ -9,12 +9,12 @@ interface VerticalResizeHandleProps {
   disabled?: boolean;
 }
 
-export function VerticalResizeHandle({ 
-  onResize, 
-  onResizeStart, 
-  onResizeEnd, 
-  className, 
-  disabled = false 
+export function VerticalResizeHandle({
+  onResize,
+  onResizeStart,
+  onResizeEnd,
+  className,
+  disabled = false,
 }: VerticalResizeHandleProps) {
   const isDragging = useRef(false);
   const startY = useRef(0);
@@ -23,29 +23,33 @@ export function VerticalResizeHandle({
   // Keep the ref updated
   onResizeRef.current = onResize;
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (disabled) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    isDragging.current = true;
-    startY.current = e.clientY;
-    
-    // Call resize start callback
-    onResizeStart?.();
-    
-    // Add global event listeners
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    
-    // Change cursor globally
-    document.body.style.cursor = 'row-resize';
-    document.body.style.userSelect = 'none';
-  }, [disabled, onResizeStart]);
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (disabled) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      isDragging.current = true;
+      startY.current = e.clientY;
+
+      // Call resize start callback
+      onResizeStart?.();
+
+      // Add global event listeners
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+
+      // Change cursor globally
+      document.body.style.cursor = 'row-resize';
+      document.body.style.userSelect = 'none';
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [disabled, onResizeStart]
+  );
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging.current) return;
-    
+
     e.preventDefault();
     const deltaY = e.clientY - startY.current;
     // Use deltaY directly - dragging down (positive) increases, dragging up (negative) decreases
@@ -55,16 +59,16 @@ export function VerticalResizeHandle({
 
   const handleMouseUp = useCallback(() => {
     if (!isDragging.current) return;
-    
+
     isDragging.current = false;
-    
+
     // Call resize end callback
     onResizeEnd?.();
-    
+
     // Remove global event listeners
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
-    
+
     // Reset cursor
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
@@ -78,8 +82,8 @@ export function VerticalResizeHandle({
   return (
     <div
       className={cn(
-        "h-2 w-full bg-transparent hover:bg-primary/30 transition-colors cursor-row-resize group z-50 relative",
-        disabled && "cursor-default hover:bg-transparent",
+        'h-2 w-full bg-transparent hover:bg-primary/30 transition-colors cursor-row-resize group z-50 relative',
+        disabled && 'cursor-default hover:bg-transparent',
         className
       )}
       onMouseDown={handleMouseDown}
@@ -93,11 +97,10 @@ export function VerticalResizeHandle({
           <div className="w-1 h-1 rounded-full bg-primary/40" />
         </div>
       </div>
-      
+
       {/* Border line on hover */}
       <div className="absolute inset-x-0 top-0 h-px bg-border opacity-50 group-hover:opacity-100 transition-opacity" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-border opacity-50 group-hover:opacity-100 transition-opacity" />
     </div>
   );
 }
-

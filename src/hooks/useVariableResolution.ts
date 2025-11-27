@@ -6,6 +6,7 @@
  * Returns resolved text and list of unresolved variables
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo } from 'react';
 import { useStore } from '../store/useStore';
 
@@ -40,9 +41,11 @@ function resolveDynamicVariable(variableName: string): string {
     case 'guid':
     case 'uuid': {
       // UUID v4 (simple implementation)
+
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
         /[xy]/g,
-        function (c) {
+
+        function (c: any) {
           const r = (Math.random() * 16) | 0;
           const v = c === 'x' ? r : (r & 0x3) | 0x8;
           return v.toString(16);
@@ -85,7 +88,7 @@ export function useVariableResolution(text: string): ResolutionResult {
         // If activeEnvironmentId is set, try to find that environment
         if (collection.activeEnvironmentId) {
           activeEnv = collection.environments.find(
-            e => e.id === collection.activeEnvironmentId
+            env => env.id === collection.activeEnvironmentId
           );
         }
 
@@ -107,10 +110,8 @@ export function useVariableResolution(text: string): ResolutionResult {
 
     VARIABLE_REGEX.lastIndex = 0;
     let match;
-    let matchCount = 0;
 
     while ((match = VARIABLE_REGEX.exec(text)) !== null) {
-      matchCount++;
       const [fullMatch, isDynamic, prefix, variableName] = match;
       const matchIndex = match.index;
       const matchLength = fullMatch.length;
@@ -246,7 +247,7 @@ export function useAvailableVariables(): Array<{
         // If activeEnvironmentId is set, try to find that environment
         if (collection.activeEnvironmentId) {
           activeEnv = collection.environments.find(
-            e => e.id === collection.activeEnvironmentId
+            env => env.id === collection.activeEnvironmentId
           );
         }
 

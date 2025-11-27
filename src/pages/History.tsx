@@ -29,7 +29,7 @@ import {
 } from '../components/ui/select';
 import { useToast } from '../components/ui/use-toast';
 import { useStore } from '../store/useStore';
-import { RequestHistory } from '../types/entities';
+import { Request, RequestHistory } from '../types/entities';
 
 export function History() {
   const { requestHistory, setRequestHistory, currentEnvironment } = useStore();
@@ -38,7 +38,9 @@ export function History() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterMethod, setFilterMethod] = useState<string>('all');
   const [filterDate, setFilterDate] = useState<string>('all');
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RequestHistory | null>(
+    null
+  );
   const [showDetails, setShowDetails] = useState(false);
   const [rerunningRequest, setRerunningRequest] = useState<number | null>(null);
 
@@ -100,7 +102,7 @@ export function History() {
     setRerunningRequest(request.id);
     try {
       const result = await window.electronAPI.request.send({
-        method: request.method,
+        method: request.method as Request['method'],
         url: request.url,
         headers:
           typeof request.headers === 'string'
@@ -392,7 +394,7 @@ export function History() {
                 </div>
                 <div>
                   <span className="font-medium">Date:</span>{' '}
-                  {new Date(selectedRequest.created_at).toLocaleString()}
+                  {new Date(selectedRequest.createdAt || '').toLocaleString()}
                 </div>
               </div>
             </div>

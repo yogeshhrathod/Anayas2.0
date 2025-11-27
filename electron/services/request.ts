@@ -89,17 +89,18 @@ export class RequestService {
         }
         
         data = result;
-      } catch (_error: any) {
+      } catch (err: unknown) {
         // Handle HTTP errors
-        if (error.message.includes('API Error:')) {
-          const statusMatch = error.message.match(/API Error: (\d+)/);
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        if (err instanceof Error && err.message.includes('API Error:')) {
+          const statusMatch = err.message.match(/API Error: (\d+)/);
           status = statusMatch ? parseInt(statusMatch[1]) : 500;
-          statusText = error.message;
+          statusText = err.message;
         } else {
           status = 0; // Network error
-          statusText = error.message;
+          statusText = errorMessage;
         }
-        data = { error: error.message };
+        data = { error: errorMessage };
       }
 
       const responseTime = Date.now() - startTime;
@@ -120,8 +121,8 @@ export class RequestService {
         responseTime,
         size: responseSize,
       };
-    } catch (_error: any) {
-      this.sendProgress('error', error.message || 'Request failed', 0);
+    } catch (error: unknown) {
+      this.sendProgress('error', error instanceof Error ? error.message : 'Request failed', 0);
       throw error;
     }
   }
@@ -130,7 +131,7 @@ export class RequestService {
     try {
       const result = await apiService.testConnection(url);
       return result;
-    } catch (_error: any) {
+    } catch (error: unknown) {
       logger.error('Connection test failed', error);
       return false;
     }

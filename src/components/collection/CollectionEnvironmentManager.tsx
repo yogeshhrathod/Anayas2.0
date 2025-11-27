@@ -80,7 +80,7 @@ export function CollectionEnvironmentManager({
       }
       setIsDialogOpen(false);
       setEditingEnvironment(null);
-    } catch (error) {
+    } catch {
       // Error handling is done in the hook
     }
   }, [editingEnvironment, updateEnvironment, createEnvironment]);

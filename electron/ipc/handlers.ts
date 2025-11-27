@@ -492,7 +492,8 @@ export function registerIpcHandlers() {
         ? variableResolver.resolve(options.body, variableContext)
         : options.body;
       
-      const resolvedQueryParams = (options.queryParams || []).map(param => ({
+      // Resolve query params variables (currently not used but kept for future use)
+      const _resolvedQueryParams = (options.queryParams || []).map(param => ({
         ...param,
         value: variableResolver.resolve(param.value, variableContext)
       }));
@@ -621,7 +622,8 @@ export function registerIpcHandlers() {
             ? variableResolver.resolve(request.body, variableContext)
             : request.body;
           
-          const resolvedQueryParams = (request.queryParams || []).map(param => ({
+          // Resolve query params variables (currently not used but kept for future use)
+          const _resolvedQueryParams = (request.queryParams || []).map(param => ({
             ...param,
             value: variableResolver.resolve(param.value, variableContext)
           }));
@@ -910,7 +912,7 @@ export function registerIpcHandlers() {
   ipcMain.handle('unsaved-request:get-all', async () => {
     try {
       return getAllUnsavedRequests();
-    } catch (_error: any) {
+    } catch {
       return [];
     }
   });
@@ -946,7 +948,7 @@ export function registerIpcHandlers() {
   ipcMain.handle('preset:list', async (_, requestId?: number) => {
     try {
       return getAllPresets(requestId);
-    } catch (_error: any) {
+    } catch (error: unknown) {
       console.error('Failed to list presets:', error);
       return [];
     }

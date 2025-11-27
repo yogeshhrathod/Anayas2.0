@@ -66,7 +66,7 @@ function buildUrl(baseUrl: string, queryParams: Array<{ key: string; value: stri
       });
 
     return url.toString();
-  } catch (e) {
+  } catch {
     const enabledParams = queryParams.filter(param => param.enabled && param.key);
     if (enabledParams.length === 0) {
       return baseUrl;
@@ -129,7 +129,7 @@ function getAuthHeaders(auth: Request['auth']): string[] {
   }
 }
 
-function generateBodyFlags(body: string, headers: Record<string, string>): string[] {
+function generateBodyFlags(body: string, _headers: Record<string, string>): string[] {
   return ['--data-raw', escapeShellString(body)];
 }
 

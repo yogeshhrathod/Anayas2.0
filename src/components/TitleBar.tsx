@@ -36,9 +36,11 @@ export function TitleBar() {
         "flex h-10 items-center justify-between border-b border-border bg-card/60 backdrop-blur-md glass select-none",
         isMac ? "pl-20 pr-4" : "px-4"
       )}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       style={{ WebkitAppRegion: "drag" } as any}
     >
       {/* Left Side - App Branding (macOS) or Window Controls (Windows/Linux) */}
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div className="flex items-center gap-3" style={{ WebkitAppRegion: "no-drag" } as any}>
         <Logo size={20} showText={true} className="text-sm" />
       </div>
@@ -47,12 +49,14 @@ export function TitleBar() {
       <div className="flex-1" />
 
       {/* Right Side - Search */}
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div className="flex items-center gap-2" style={{ WebkitAppRegion: "no-drag" } as any}>
         <GlobalSearch />
       </div>
 
       {/* Window Controls - Only show on Windows/Linux */}
       {!isMac && (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         <div className="flex items-center" style={{ WebkitAppRegion: "no-drag" } as any}>
           <button
             onClick={handleMinimize}

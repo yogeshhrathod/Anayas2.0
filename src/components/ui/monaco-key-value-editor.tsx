@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Monaco Editor types require 'any' for proper integration
 import { Editor } from '@monaco-editor/react';
 import { useStore } from '../../store/useStore';
 import { getThemeById } from '../../lib/themes';
@@ -177,7 +179,7 @@ export function MonacoKeyValueEditor({
       const formatted = JSON.stringify(parsed, null, 2);
       setJsonValue(formatted);
       success('Formatted', 'JSON has been formatted');
-    } catch (_e: unknown) {
+    } catch {
       showError('Format Error', 'Invalid JSON cannot be formatted');
     }
   };
@@ -188,7 +190,7 @@ export function MonacoKeyValueEditor({
       const minified = JSON.stringify(parsed);
       setJsonValue(minified);
       success('Minified', 'JSON has been minified');
-    } catch (_e: unknown) {
+    } catch {
       showError('Minify Error', 'Invalid JSON cannot be minified');
     }
   };

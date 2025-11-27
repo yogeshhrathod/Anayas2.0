@@ -213,6 +213,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
           const savedRequest = {
             id: result.id,
             name: data.data.name,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             method: data.data.method as any,
             url: data.data.url,
             headers: data.data.headers,
@@ -358,6 +359,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         await window.electronAPI.request.save({
           id: requestId,
           name: requests.find(r => r.id === requestId)?.name || '',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           method: requests.find(r => r.id === requestId)?.method as any || 'GET',
           url: requests.find(r => r.id === requestId)?.url || '',
           headers: requests.find(r => r.id === requestId)?.headers || {},

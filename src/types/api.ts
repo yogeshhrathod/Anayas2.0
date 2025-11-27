@@ -3,9 +3,17 @@
  * Request/response types for Electron API communication
  */
 
-import { Request, Environment, Collection, Folder, RequestHistory, ResponseData } from './entities';
+import {
+  Collection,
+  Environment,
+  Folder,
+  Request,
+  RequestHistory,
+  ResponseData,
+} from './entities';
 
 // Generic API response wrapper
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
@@ -130,23 +138,37 @@ export interface ApiError {
 export interface ElectronAPI {
   collection: {
     list: () => Promise<Collection[]>;
-    save: (data: CollectionCreateRequest | CollectionUpdateRequest) => Promise<CollectionSaveResponse>;
+    save: (
+      data: CollectionCreateRequest | CollectionUpdateRequest
+    ) => Promise<CollectionSaveResponse>;
     delete: (id: number) => Promise<ApiResponse<void>>;
     toggleFavorite: (id: number) => Promise<ApiResponse<void>>;
   };
   env: {
     list: () => Promise<Environment[]>;
     getCurrent: () => Promise<Environment | null>;
-    save: (data: EnvironmentCreateRequest | EnvironmentUpdateRequest) => Promise<EnvironmentSaveResponse>;
+    save: (
+      data: EnvironmentCreateRequest | EnvironmentUpdateRequest
+    ) => Promise<EnvironmentSaveResponse>;
     delete: (id: number) => Promise<ApiResponse<void>>;
     test: (data: EnvironmentTestRequest) => Promise<EnvironmentTestResponse>;
-    import: (filePath: string) => Promise<ApiResponse<EnvironmentCreateRequest>>;
+    import: (
+      filePath: string
+    ) => Promise<ApiResponse<EnvironmentCreateRequest>>;
   };
   request: {
     list: (collectionId?: number) => Promise<Request[]>;
-    save: (data: RequestCreateRequest | RequestUpdateRequest) => Promise<RequestSaveResponse>;
-    saveAfter: (data: RequestCreateRequest, afterRequestId: number) => Promise<RequestSaveResponse>;
-    reorder: (requestId: number, newOrder: number) => Promise<ApiResponse<void>>;
+    save: (
+      data: RequestCreateRequest | RequestUpdateRequest
+    ) => Promise<RequestSaveResponse>;
+    saveAfter: (
+      data: RequestCreateRequest,
+      afterRequestId: number
+    ) => Promise<RequestSaveResponse>;
+    reorder: (
+      requestId: number,
+      newOrder: number
+    ) => Promise<ApiResponse<void>>;
     delete: (id: number) => Promise<ApiResponse<void>>;
     send: (data: RequestSendRequest) => Promise<RequestSendResponse>;
     history: (limit?: number) => Promise<RequestHistory[]>;
@@ -154,8 +176,13 @@ export interface ElectronAPI {
   };
   folder: {
     list: (collectionId?: number) => Promise<Folder[]>;
-    save: (data: FolderCreateRequest | FolderUpdateRequest) => Promise<FolderSaveResponse>;
-    saveAfter: (data: FolderCreateRequest, afterFolderId: number) => Promise<FolderSaveResponse>;
+    save: (
+      data: FolderCreateRequest | FolderUpdateRequest
+    ) => Promise<FolderSaveResponse>;
+    saveAfter: (
+      data: FolderCreateRequest,
+      afterFolderId: number
+    ) => Promise<FolderSaveResponse>;
     reorder: (folderId: number, newOrder: number) => Promise<ApiResponse<void>>;
     delete: (id: number) => Promise<ApiResponse<void>>;
   };
@@ -165,6 +192,8 @@ export interface ElectronAPI {
     reset: () => Promise<void>;
   };
   file: {
-    selectFile: (filters: Array<{ name: string; extensions: string[] }>) => Promise<string>;
+    selectFile: (
+      filters: Array<{ name: string; extensions: string[] }>
+    ) => Promise<string>;
   };
 }

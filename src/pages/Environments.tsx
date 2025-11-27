@@ -76,7 +76,7 @@ export function Environments() {
       
       setIsEditing(false);
       setEditingEnvironment(null);
-    } catch (error) {
+    } catch (_error) {
       // Error handling is done in the hook
     } finally {
       setIsSaving(false);

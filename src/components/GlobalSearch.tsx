@@ -33,6 +33,7 @@ export function GlobalSearch() {
   } = useStore();
 
   // Load all requests for search
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [allRequests, setAllRequests] = useState<any[]>([]);
 
   useEffect(() => {

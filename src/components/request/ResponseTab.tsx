@@ -55,9 +55,11 @@ export function ResponseTab({
 }: ResponseTabProps) {
   // Performance tracking: Memory usage
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const memoryBefore = (performance as any).memory?.usedJSHeapSize || 0;
     
     return () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const memoryAfter = (performance as any).memory?.usedJSHeapSize || 0;
       const memoryDelta = (memoryAfter - memoryBefore) / 1024 / 1024;
       console.log('[Performance] Response tab memory:', memoryDelta.toFixed(2), 'MB');

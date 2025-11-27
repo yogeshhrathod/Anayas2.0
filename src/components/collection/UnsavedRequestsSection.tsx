@@ -37,6 +37,7 @@ export function UnsavedRequestsSection() {
     const request: Request = {
       id: undefined,
       name: unsaved.name,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       method: unsaved.method as any,
       url: unsaved.url,
       headers: unsaved.headers,

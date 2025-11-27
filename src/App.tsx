@@ -59,6 +59,7 @@ function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isResizing, setIsResizing] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [_requests, setRequests] = useState<any[]>([]);
   const {
     currentPage,
@@ -76,6 +77,7 @@ function App() {
     setSidebarWidth,
     unsavedRequests,
     // @ts-expect-error - selectedItem is used in shortcut handlers
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     selectedItem,
     setSelectedItem,
     triggerSidebarRefresh,
@@ -129,6 +131,7 @@ function App() {
     loadData().catch(error => {
       console.error('[App] Critical error during initialization:', error);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load sidebar state on mount

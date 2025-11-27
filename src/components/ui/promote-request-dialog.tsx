@@ -1,13 +1,19 @@
-import { useState, useEffect } from 'react';
+import { AlertCircle, Save } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { UnsavedRequest, useStore } from '../../store/useStore';
+import { Request } from '../../types/entities';
 import { Button } from './button';
+import { Dialog } from './dialog';
 import { Input } from './input';
 import { Label } from './label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
-import { Dialog } from './dialog';
-import { AlertCircle, Save } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './select';
 import { useToast } from './use-toast';
-import { useStore, UnsavedRequest } from '../../store/useStore';
-import { Request } from '../../types/entities';
 
 interface Collection {
   id: number;
@@ -43,12 +49,30 @@ export function PromoteRequestDialog({
   const [collections, setCollections] = useState<Collection[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [requestName, setRequestName] = useState(unsavedRequest?.name || '');
-  const [selectedCollectionId, setSelectedCollectionId] = useState<number | null>(null);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<
+    number | null
+  >(null);
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
+    {}
+  );
   const [isLoading, setIsLoading] = useState(false);
   const { error, success } = useToast();
   const { triggerSidebarRefresh, setActiveUnsavedRequestId } = useStore();
+
+  const loadData = useCallback(async () => {
+    try {
+      const [collectionsData, foldersData] = await Promise.all([
+        window.electronAPI.collection.list(),
+        window.electronAPI.folder.list(),
+      ]);
+      setCollections(collectionsData);
+      setFolders(foldersData);
+    } catch (e: unknown) {
+      console.error('Failed to load collections and folders:', e);
+      error('Load failed', 'Failed to load collections and folders');
+    }
+  }, [error]);
 
   // Load collections and folders when dialog opens
   useEffect(() => {
@@ -59,21 +83,7 @@ export function PromoteRequestDialog({
       setSelectedFolderId(null);
       setValidationErrors({});
     }
-  }, [open, unsavedRequest]);
-
-  const loadData = async () => {
-    try {
-      const [collectionsData, foldersData] = await Promise.all([
-        window.electronAPI.collection.list(),
-        window.electronAPI.folder.list()
-      ]);
-      setCollections(collectionsData);
-      setFolders(foldersData);
-    } catch (e: unknown) {
-      console.error('Failed to load collections and folders:', e);
-      error('Load failed', 'Failed to load collections and folders');
-    }
-  };
+  }, [open, unsavedRequest, loadData]);
 
   const validateForm = (): boolean => {
     const errors: ValidationErrors = {};
@@ -96,24 +106,30 @@ export function PromoteRequestDialog({
 
   const handleSave = async () => {
     if (!unsavedRequest) return;
-    
+
     if (!validateForm()) {
-      error('Validation failed', 'Please fix all validation errors before saving');
+      error(
+        'Validation failed',
+        'Please fix all validation errors before saving'
+      );
       return;
     }
 
     setIsLoading(true);
     try {
-      const result = await window.electronAPI.unsavedRequest.promote(unsavedRequest.id, {
-        name: requestName.trim(),
-        collectionId: selectedCollectionId,
-        folderId: selectedFolderId || undefined,
-        isFavorite: false,
-      });
-      
+      const result = await window.electronAPI.unsavedRequest.promote(
+        unsavedRequest.id,
+        {
+          name: requestName.trim(),
+          collectionId: selectedCollectionId,
+          folderId: selectedFolderId || undefined,
+          isFavorite: false,
+        }
+      );
+
       if (result.success) {
         success('Request saved');
-        
+
         // Load the newly saved request and set it as selected
         const savedRequest: Request = {
           id: result.id,
@@ -128,27 +144,31 @@ export function PromoteRequestDialog({
           folderId: selectedFolderId ?? undefined,
           isFavorite: 0,
         };
-        
+
         // Clear active unsaved request and set the saved request as selected
         setActiveUnsavedRequestId(null);
-        const { setSelectedRequest, setCurrentPage, setUnsavedRequests } = useStore.getState();
+        const { setSelectedRequest, setCurrentPage, setUnsavedRequests } =
+          useStore.getState();
         setSelectedRequest(savedRequest);
         setCurrentPage('home');
-        
+
         // Reload unsaved requests to reflect the removal
         const updatedUnsaved = await window.electronAPI.unsavedRequest.getAll();
         setUnsavedRequests(updatedUnsaved);
-        
+
         // Trigger sidebar refresh
         triggerSidebarRefresh();
-        
+
         onOpenChange(false);
       } else {
         throw new Error(result.error || 'Failed to save request');
       }
     } catch (e: unknown) {
       console.error('Failed to promote unsaved request:', e);
-      error('Save failed', e instanceof Error ? e.message : 'Failed to save request');
+      error(
+        'Save failed',
+        e instanceof Error ? e.message : 'Failed to save request'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -162,7 +182,7 @@ export function PromoteRequestDialog({
     const id = parseInt(collectionId);
     setSelectedCollectionId(id);
     setSelectedFolderId(null);
-    
+
     if (validationErrors.collection) {
       setValidationErrors({ ...validationErrors, collection: undefined });
     }
@@ -204,59 +224,67 @@ export function PromoteRequestDialog({
       className="max-h-[80vh]"
     >
       <div className="space-y-4" onKeyDown={handleKeyDown}>
-          <div className="space-y-2">
-            <Label htmlFor="request-name">Request Name</Label>
-            <Input
-              id="request-name"
-              value={requestName}
-              onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="Enter request name"
-              className={validationErrors.name ? 'border-red-500' : ''}
-              autoFocus
-            />
-            {validationErrors.name && (
-              <div className="flex items-center gap-1 text-xs text-red-500">
-                <AlertCircle className="h-3 w-3" />
-                <span>{validationErrors.name}</span>
-              </div>
-            )}
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="request-name">Request Name</Label>
+          <Input
+            id="request-name"
+            value={requestName}
+            onChange={e => handleNameChange(e.target.value)}
+            placeholder="Enter request name"
+            className={validationErrors.name ? 'border-red-500' : ''}
+            autoFocus
+          />
+          {validationErrors.name && (
+            <div className="flex items-center gap-1 text-xs text-red-500">
+              <AlertCircle className="h-3 w-3" />
+              <span>{validationErrors.name}</span>
+            </div>
+          )}
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="collection-select">Collection</Label>
-            <Select
-              value={selectedCollectionId?.toString() || ''}
-              onValueChange={handleCollectionChange}
+        <div className="space-y-2">
+          <Label htmlFor="collection-select">Collection</Label>
+          <Select
+            value={selectedCollectionId?.toString() || ''}
+            onValueChange={handleCollectionChange}
+          >
+            <SelectTrigger
+              className={validationErrors.collection ? 'border-red-500' : ''}
             >
-              <SelectTrigger className={validationErrors.collection ? 'border-red-500' : ''}>
-                <SelectValue placeholder="Select a collection" />
-              </SelectTrigger>
-              <SelectContent>
-                {collections.length === 0 ? (
-                  <div className="p-2 text-sm text-muted-foreground">No collections available</div>
-                ) : (
-                  collections.map((collection) => (
-                    <SelectItem key={collection.id} value={collection.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <span>{collection.name}</span>
-                        {collection.isFavorite === 1 && (
-                          <span className="text-yellow-500">★</span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-            {validationErrors.collection && (
-              <div className="flex items-center gap-1 text-xs text-red-500">
-                <AlertCircle className="h-3 w-3" />
-                <span>{validationErrors.collection}</span>
-              </div>
-            )}
-          </div>
+              <SelectValue placeholder="Select a collection" />
+            </SelectTrigger>
+            <SelectContent>
+              {collections.length === 0 ? (
+                <div className="p-2 text-sm text-muted-foreground">
+                  No collections available
+                </div>
+              ) : (
+                collections.map(collection => (
+                  <SelectItem
+                    key={collection.id}
+                    value={collection.id.toString()}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>{collection.name}</span>
+                      {collection.isFavorite === 1 && (
+                        <span className="text-yellow-500">★</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          {validationErrors.collection && (
+            <div className="flex items-center gap-1 text-xs text-red-500">
+              <AlertCircle className="h-3 w-3" />
+              <span>{validationErrors.collection}</span>
+            </div>
+          )}
+        </div>
 
-          {selectedCollectionId && getFoldersForCollection(selectedCollectionId).length > 0 && (
+        {selectedCollectionId &&
+          getFoldersForCollection(selectedCollectionId).length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="folder-select">Folder (Optional)</Label>
               <Select
@@ -268,7 +296,7 @@ export function PromoteRequestDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No folder</SelectItem>
-                  {getFoldersForCollection(selectedCollectionId).map((folder) => (
+                  {getFoldersForCollection(selectedCollectionId).map(folder => (
                     <SelectItem key={folder.id} value={folder.id.toString()}>
                       {folder.name}
                     </SelectItem>
@@ -278,34 +306,33 @@ export function PromoteRequestDialog({
             </div>
           )}
 
-          <div className="flex gap-2 pt-4">
-            <Button 
-              onClick={handleSave} 
-              disabled={isLoading || !requestName.trim() || !selectedCollectionId}
-              className="flex-1"
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Request
-                </>
-              )}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-          </div>
+        <div className="flex gap-2 pt-4">
+          <Button
+            onClick={handleSave}
+            disabled={isLoading || !requestName.trim() || !selectedCollectionId}
+            className="flex-1"
+          >
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Request
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+        </div>
       </div>
     </Dialog>
   );
 }
-

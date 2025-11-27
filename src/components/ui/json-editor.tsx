@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Button } from './button';
-import { Textarea } from './textarea';
-import { Card, CardContent, CardHeader, CardTitle } from './card';
+import { AlertCircle, CheckCircle, Copy } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Alert, AlertDescription } from './alert';
-import { CheckCircle, AlertCircle, Copy } from 'lucide-react';
-import { useToast } from './use-toast';
+import { Button } from './button';
+import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { MonacoEditor } from './monaco-editor';
+import { Textarea } from './textarea';
+import { useToast } from './use-toast';
 
 interface JsonEditorProps {
   value: string;
@@ -38,7 +38,7 @@ export function JsonEditor({
   height = 400,
   readOnly = false,
   minimap = true,
-  fontSize = 14
+  fontSize = 14,
 }: JsonEditorProps) {
   const [isValid, setIsValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +71,7 @@ export function JsonEditor({
       const formatted = JSON.stringify(parsed, null, 2);
       onChange(formatted);
       success('Formatted', 'JSON has been formatted');
-    } catch (_e: unknown) {
+    } catch {
       showError('Format Error', 'Invalid JSON cannot be formatted');
     }
   };
@@ -82,7 +82,7 @@ export function JsonEditor({
       const minified = JSON.stringify(parsed);
       onChange(minified);
       success('Minified', 'JSON has been minified');
-    } catch (_e: unknown) {
+    } catch {
       showError('Minify Error', 'Invalid JSON cannot be minified');
     }
   };
@@ -137,7 +137,7 @@ export function JsonEditor({
         <div className="space-y-2">
           <Textarea
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={e => onChange(e.target.value)}
             placeholder={placeholder}
             rows={rows}
             className={`font-mono text-sm resize-none ${
