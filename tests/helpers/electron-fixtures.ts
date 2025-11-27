@@ -3,6 +3,12 @@ import { createTestDatabase, cleanTestDatabase } from './test-db';
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 import { getDatabaseContents } from './test-db';
+import * as fs from 'fs';
+import * as db from '../../electron/database/json-db';
+import { apiService } from '../../electron/services/api';
+import * as variableResolver from '../../electron/services/variable-resolver';
+import { parseCurlCommand, parseCurlCommands } from '../../electron/lib/curl-parser';
+import { generateCurlCommand } from '../../electron/lib/curl-generator';
 
 export interface ElectronFixtures {
   electronPage: Page;
@@ -17,11 +23,6 @@ async function createIPCHandlers(testDbPath: string) {
   // Initialize database with test path
   process.env.TEST_MODE = 'true';
   process.env.TEST_DB_PATH = testDbPath;
-  
-  // Use require for Node.js modules in test context
-  const db = require('../../electron/database/json-db');
-  const apiService = require('../../electron/services/api');
-  const variableResolver = require('../../electron/services/variable-resolver');
   
   await db.initDatabase(testDbPath);
   
@@ -83,7 +84,7 @@ async function createIPCHandlers(testDbPath: string) {
         try {
           const baseUrl = env.variables?.base_url || env.baseUrl;
           if (baseUrl) {
-            const isReachable = await apiService.apiService.testConnection(baseUrl);
+            const isReachable = await apiService.testConnection(baseUrl);
             return { success: isReachable, message: isReachable ? 'Connection successful' : 'Connection failed' };
           }
           return { success: true, message: 'No base URL to test' };
@@ -93,7 +94,6 @@ async function createIPCHandlers(testDbPath: string) {
       },
       import: async (filePath: string) => {
         try {
-          const fs = require('fs');
           const content = fs.readFileSync(filePath, 'utf-8');
           const lines = content.split('\n');
           const envData: any = {};
@@ -323,25 +323,25 @@ async function createIPCHandlers(testDbPath: string) {
               let result: any;
               switch (request.method) {
                 case 'GET':
-                  result = await apiService.apiService.getJson(finalUrl, resolvedHeaders);
+                  result = await apiService.getJson(finalUrl, resolvedHeaders);
                   break;
                 case 'POST':
-                  result = await apiService.apiService.postJson(finalUrl, resolvedBody, resolvedHeaders);
+                  result = await apiService.postJson(finalUrl, resolvedBody, resolvedHeaders);
                   break;
                 case 'PUT':
-                  result = await apiService.apiService.putJson(finalUrl, resolvedBody, resolvedHeaders);
+                  result = await apiService.putJson(finalUrl, resolvedBody, resolvedHeaders);
                   break;
                 case 'PATCH':
-                  result = await apiService.apiService.patchJson(finalUrl, resolvedBody, resolvedHeaders);
+                  result = await apiService.patchJson(finalUrl, resolvedBody, resolvedHeaders);
                   break;
                 case 'DELETE':
-                  result = await apiService.apiService.deleteJson(finalUrl, resolvedHeaders);
+                  result = await apiService.deleteJson(finalUrl, resolvedHeaders);
                   break;
                 case 'HEAD':
-                  result = await apiService.apiService.headJson(finalUrl, resolvedHeaders);
+                  result = await apiService.headJson(finalUrl, resolvedHeaders);
                   break;
                 case 'OPTIONS':
-                  result = await apiService.apiService.optionsJson(finalUrl, resolvedHeaders);
+                  result = await apiService.optionsJson(finalUrl, resolvedHeaders);
                   break;
                 default:
                   throw new Error(`Unsupported HTTP method: ${request.method}`);
@@ -534,25 +534,25 @@ async function createIPCHandlers(testDbPath: string) {
           
           switch (method) {
             case 'GET':
-              result = await apiService.apiService.getJson(finalUrl, resolvedHeaders);
+              result = await apiService.getJson(finalUrl, resolvedHeaders);
               break;
             case 'POST':
-              result = await apiService.apiService.postJson(finalUrl, resolvedBody, resolvedHeaders);
+              result = await apiService.postJson(finalUrl, resolvedBody, resolvedHeaders);
               break;
             case 'PUT':
-              result = await apiService.apiService.putJson(finalUrl, resolvedBody, resolvedHeaders);
+              result = await apiService.putJson(finalUrl, resolvedBody, resolvedHeaders);
               break;
             case 'PATCH':
-              result = await apiService.apiService.patchJson(finalUrl, resolvedBody, resolvedHeaders);
+              result = await apiService.patchJson(finalUrl, resolvedBody, resolvedHeaders);
               break;
             case 'DELETE':
-              result = await apiService.apiService.deleteJson(finalUrl, resolvedHeaders);
+              result = await apiService.deleteJson(finalUrl, resolvedHeaders);
               break;
             case 'HEAD':
-              result = await apiService.apiService.headJson(finalUrl, resolvedHeaders);
+              result = await apiService.headJson(finalUrl, resolvedHeaders);
               break;
             case 'OPTIONS':
-              result = await apiService.apiService.optionsJson(finalUrl, resolvedHeaders);
+              result = await apiService.optionsJson(finalUrl, resolvedHeaders);
               break;
             default:
               throw new Error(`Unsupported HTTP method: ${method}`);
@@ -729,7 +729,6 @@ async function createIPCHandlers(testDbPath: string) {
     curl: {
       parse: async (command: string) => {
         try {
-          const parseCurlCommand = require('../../electron/lib/curl-parser').parseCurlCommand;
           const request = parseCurlCommand(command);
           return { success: true, request };
         } catch (error: any) {
@@ -738,7 +737,6 @@ async function createIPCHandlers(testDbPath: string) {
       },
       generate: async (request: any) => {
         try {
-          const generateCurlCommand = require('../../electron/lib/curl-generator').generateCurlCommand;
           const curlCommand = generateCurlCommand(request);
           return { success: true, command: curlCommand };
         } catch (error: any) {
@@ -747,7 +745,6 @@ async function createIPCHandlers(testDbPath: string) {
       },
       importBulk: async (commands: string[]) => {
         try {
-          const parseCurlCommands = require('../../electron/lib/curl-parser').parseCurlCommands;
           const results = parseCurlCommands(commands);
           return { success: true, results };
         } catch (error: any) {
@@ -770,7 +767,6 @@ async function createIPCHandlers(testDbPath: string) {
       },
       read: async (filePath: string) => {
         try {
-          const fs = require('fs');
           const content = fs.readFileSync(filePath, 'utf-8');
           return { success: true, content };
         } catch (error: any) {
@@ -779,7 +775,6 @@ async function createIPCHandlers(testDbPath: string) {
       },
       write: async (filePath: string, content: string) => {
         try {
-          const fs = require('fs');
           fs.writeFileSync(filePath, content, 'utf-8');
           return { success: true };
         } catch (error: any) {

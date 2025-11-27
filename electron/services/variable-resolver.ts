@@ -87,10 +87,11 @@ export class VariableResolver {
         // UUID v4
         return randomUUID();
       
-      case 'randomEmail':
+      case 'randomEmail': {
         // Random email address for testing
         const randomPart = Math.random().toString(36).substring(2, 15);
         return `${randomPart}@example.com`;
+      }
       
       default:
         return '';

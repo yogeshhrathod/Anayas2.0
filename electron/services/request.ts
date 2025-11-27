@@ -58,7 +58,7 @@ export class RequestService {
       let result: any;
       let status = 200;
       let statusText = 'OK';
-      let headers: Record<string, string> = {};
+      const headers: Record<string, string> = {};
       let data: any = null;
 
       try {

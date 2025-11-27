@@ -1,4 +1,4 @@
-import { ipcMain, dialog, app, BrowserWindow } from 'electron';
+import { ipcMain, dialog, app, BrowserWindow, Notification, shell } from 'electron';
 import {
   getDatabase,
   saveDatabase,
@@ -855,7 +855,6 @@ export function registerIpcHandlers() {
   // Notification operations
   ipcMain.handle('notification:show', async (_, options: { title: string; body: string; filePath?: string }) => {
     try {
-      const { Notification } = require('electron');
       const notification = new Notification({
         title: options.title,
         body: options.body,
@@ -865,7 +864,6 @@ export function registerIpcHandlers() {
       // Store file path for click handler
       if (options.filePath) {
         notification.on('click', async () => {
-          const { shell } = require('electron');
           await shell.openPath(options.filePath!);
         });
       }

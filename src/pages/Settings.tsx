@@ -37,7 +37,7 @@ export function Settings() {
 
   useEffect(() => {
     setLocalSettings(createLocalSettings(settings));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [settings]);
 
   // Number validation helpers

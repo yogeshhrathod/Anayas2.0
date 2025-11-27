@@ -41,7 +41,7 @@ export function parseCurlCommand(curlCommand: string): Request {
     .replace(/\s+/g, ' ')
     .trim();
 
-  let command = normalized.replace(/^curl\s+/, '').trim();
+  const command = normalized.replace(/^curl\s+/, '').trim();
 
   if (!command) {
     throw new Error('Invalid cURL command: no arguments found');
