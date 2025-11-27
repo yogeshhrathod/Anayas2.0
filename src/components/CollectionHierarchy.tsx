@@ -44,6 +44,8 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
   const [folders, setFolders] = useState<Folder[]>([]);
   const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set());
   const prevCollectionIdsRef = useRef<Set<number>>(new Set());
+  // Track unsaved request drag state for visual feedback
+  const [unsavedDragOver, setUnsavedDragOver] = useState<{ type: 'collection' | 'folder'; id: number } | null>(null);
 
   // Load requests and folders when collections change or refresh is triggered
   useEffect(() => {
@@ -163,9 +165,27 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     };
   }, [setCollections]);
 
+  // Check if dragging an unsaved request
+  // Note: getData() doesn't work during dragOver, so we check for the data type
+  const isDraggingUnsavedRequest = (e: React.DragEvent): boolean => {
+    // Check if the drag contains JSON data (unsaved requests use application/json)
+    // Regular drag-drop items don't set this type
+    return e.dataTransfer.types.includes('application/json');
+  };
+
+  // Handle drag over for unsaved requests (visual feedback)
+  const handleUnsavedDragOver = (e: React.DragEvent, type: 'collection' | 'folder', id: number) => {
+    if (isDraggingUnsavedRequest(e)) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      setUnsavedDragOver({ type, id });
+    }
+  };
+
   // Handle drop on collection (including unsaved requests)
-  const handleCollectionDrop = async (e: React.DragEvent, collectionId: number) => {
+  const handleCollectionDrop = async (e: React.DragEvent, collectionId: number, folderId?: number) => {
     e.preventDefault();
+    setUnsavedDragOver(null); // Clear drag over state
     
     try {
       // Only handle unsaved requests here - regular drag-drop is handled by dragDrop hook
@@ -178,16 +198,16 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       const data = JSON.parse(jsonData);
       
       if (data.type === 'unsaved-request') {
-        // Promote unsaved request to this collection
+        // Promote unsaved request to this collection (and optionally folder)
         const result = await window.electronAPI.unsavedRequest.promote(data.id, {
           name: data.data.name,
           collectionId: collectionId,
-          folderId: undefined,
+          folderId: folderId,
           isFavorite: false,
         });
         
         if (result.success) {
-          showSuccess('Unsaved request saved to collection');
+          showSuccess(folderId ? 'Unsaved request saved to folder' : 'Unsaved request saved to collection');
           
           // Load the newly saved request and set it as selected
           const savedRequest = {
@@ -200,12 +220,19 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
             queryParams: data.data.queryParams,
             auth: data.data.auth,
             collectionId: collectionId,
-            folderId: undefined,
+            folderId: folderId,
             isFavorite: 0,
             lastResponse: undefined,
           };
           
           setSelectedRequest(savedRequest);
+          setCurrentPage('home');
+          
+          // Clear active unsaved request ID if it was the one being dropped
+          const { setActiveUnsavedRequestId, setUnsavedRequests } = useStore.getState();
+          if (data.id) {
+            setActiveUnsavedRequestId(null);
+          }
           
           // Refresh data including unsaved requests
           const [requestsData, foldersData, unsavedData] = await Promise.all([
@@ -217,7 +244,6 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
           setFolders(foldersData);
           
           // Update unsaved requests in store
-          const { setUnsavedRequests } = useStore.getState();
           setUnsavedRequests(unsavedData);
           
           // Trigger sidebar refresh
@@ -674,10 +700,22 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
               }}
               dragProps={{
                 draggable: true,
-                onDragStart: (e) => dragDrop.handleDragStart(e, { type: 'collection', id: collection.id! }),
+                onDragStart: (e) => {
+                  dragDrop.handleDragStart(e, { type: 'collection', id: collection.id! });
+                  setUnsavedDragOver(null);
+                },
                 onDragOver: (e) => {
-                  e.preventDefault();
-                  dragDrop.handleDragOver(e, { type: 'collection', id: collection.id! });
+                  // Check for unsaved requests first
+                  if (isDraggingUnsavedRequest(e)) {
+                    handleUnsavedDragOver(e, 'collection', collection.id!);
+                  } else {
+                    // Clear unsaved drag over state when dragging regular items
+                    if (unsavedDragOver) {
+                      setUnsavedDragOver(null);
+                    }
+                    e.preventDefault();
+                    dragDrop.handleDragOver(e, { type: 'collection', id: collection.id! });
+                  }
                 },
                 onDrop: async (e) => {
                   // Handle unsaved requests first
@@ -685,18 +723,84 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                   // Then handle regular drag-drop
                   await dragDrop.handleDrop(e, { type: 'collection', id: collection.id! });
                 },
-                onDragEnd: dragDrop.handleDragEnd,
+                onDragEnd: () => {
+                  dragDrop.handleDragEnd();
+                  setUnsavedDragOver(null);
+                },
+                onDragLeave: (e) => {
+                  // Only clear if we're actually leaving the collection group entirely
+                  const relatedTarget = e.relatedTarget as HTMLElement;
+                  if (relatedTarget) {
+                    const collectionGroup = e.currentTarget.closest('[data-testid="collection-group"]');
+                    // Only clear if the relatedTarget is outside the collection group
+                    if (collectionGroup && !collectionGroup.contains(relatedTarget)) {
+                      setUnsavedDragOver(null);
+                    }
+                  }
+                  // If no relatedTarget, don't clear - might be moving to expanded area
+                },
               }}
               isDragging={dragDrop.draggedItem?.type === 'collection' && dragDrop.draggedItem?.id === collection.id}
-              isDragOver={dragDrop.dragOverItem?.type === 'collection' && dragDrop.dragOverItem?.id === collection.id}
-              dropPosition={dragDrop.dropPosition}
+              isDragOver={
+                (unsavedDragOver?.type === 'collection' && unsavedDragOver?.id === collection.id) ||
+                (dragDrop.dragOverItem?.type === 'collection' && dragDrop.dragOverItem?.id === collection.id)
+              }
+              dropPosition={unsavedDragOver?.type === 'collection' && unsavedDragOver?.id === collection.id ? 'inside' : dragDrop.dropPosition}
             />
 
             {/* Expanded Content */}
             {isExpanded && (
               <div
-                className="ml-4 space-y-1"
+                className={`ml-4 space-y-1 min-h-[20px] rounded-md transition-all duration-150 ${
+                  (unsavedDragOver?.type === 'collection' && unsavedDragOver?.id === collection.id) ||
+                  (dragDrop.dragOverItem?.type === 'collection' && dragDrop.dragOverItem?.id === collection.id)
+                    ? 'bg-primary/5 border-l-2 border-primary/50 pl-2 -ml-4' : ''
+                }`}
                 data-testid="collection-children"
+                onDragOver={(e) => {
+                  // Check for unsaved requests first
+                  if (isDraggingUnsavedRequest(e)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.dataTransfer.dropEffect = 'move';
+                    handleUnsavedDragOver(e, 'collection', collection.id!);
+                  } else {
+                    // Clear unsaved drag over state when dragging regular items
+                    if (unsavedDragOver?.type === 'collection' && unsavedDragOver?.id === collection.id) {
+                      setUnsavedDragOver(null);
+                    }
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dragDrop.handleDragOver(e, { type: 'collection', id: collection.id! });
+                  }
+                }}
+                onDrop={async (e) => {
+                  e.stopPropagation();
+                  // Handle unsaved requests first
+                  await handleCollectionDrop(e, collection.id!);
+                  // Then handle regular drag-drop
+                  await dragDrop.handleDrop(e, { type: 'collection', id: collection.id! });
+                }}
+                onDragEnter={(e) => {
+                  // When entering the expanded area, ensure we show the collection as drag-over
+                  if (isDraggingUnsavedRequest(e)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleUnsavedDragOver(e, 'collection', collection.id!);
+                  }
+                }}
+                onDragLeave={(e) => {
+                  // Only clear if we're actually leaving the collection group entirely
+                  const relatedTarget = e.relatedTarget as HTMLElement;
+                  if (relatedTarget) {
+                    const collectionGroup = e.currentTarget.closest('[data-testid="collection-group"]');
+                    // Only clear if the relatedTarget is outside the collection group
+                    if (collectionGroup && !collectionGroup.contains(relatedTarget)) {
+                      setUnsavedDragOver(null);
+                    }
+                  }
+                  // If no relatedTarget, don't clear - might be moving to collection header
+                }}
               >
                 {/* Folders */}
                 {collectionFolders.map((folder) => {
@@ -718,23 +822,42 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                         onAddRequest={() => handleAddRequest(collection.id!)}
                         dragProps={{
                           draggable: true,
-                          onDragStart: (e) => dragDrop.handleDragStart(e, { 
-                            type: 'folder', 
-                            id: folder.id!,
-                            collectionId: folder.collectionId
-                          }),
-                          onDragOver: (e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const mouseY = e.clientY;
-                            const itemCenterY = rect.top + rect.height / 2;
-                            const position = mouseY < itemCenterY ? 'above' : 'below';
-                            dragDrop.handleDragOver(e, { 
+                          onDragStart: (e) => {
+                            dragDrop.handleDragStart(e, { 
                               type: 'folder', 
                               id: folder.id!,
                               collectionId: folder.collectionId
-                            }, position);
+                            });
+                            setUnsavedDragOver(null);
                           },
-                          onDrop: (e) => {
+                          onDragOver: (e) => {
+                            // Check for unsaved requests first
+                            if (isDraggingUnsavedRequest(e)) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              e.dataTransfer.dropEffect = 'move';
+                              handleUnsavedDragOver(e, 'folder', folder.id!);
+                            } else {
+                              // Clear unsaved drag over state when dragging regular items
+                              if (unsavedDragOver?.type === 'folder' && unsavedDragOver?.id === folder.id) {
+                                setUnsavedDragOver(null);
+                              }
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const mouseY = e.clientY;
+                              const itemCenterY = rect.top + rect.height / 2;
+                              const position = mouseY < itemCenterY ? 'above' : 'below';
+                              dragDrop.handleDragOver(e, { 
+                                type: 'folder', 
+                                id: folder.id!,
+                                collectionId: folder.collectionId
+                              }, position);
+                            }
+                          },
+                          onDrop: async (e) => {
+                            e.stopPropagation();
+                            // Handle unsaved requests first
+                            await handleCollectionDrop(e, folder.collectionId, folder.id!);
+                            // Then handle regular drag-drop
                             const rect = e.currentTarget.getBoundingClientRect();
                             const mouseY = e.clientY;
                             const itemCenterY = rect.top + rect.height / 2;
@@ -745,15 +868,94 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                               collectionId: folder.collectionId
                             }, position);
                           },
-                          onDragEnd: dragDrop.handleDragEnd,
+                          onDragEnd: () => {
+                            dragDrop.handleDragEnd();
+                            setUnsavedDragOver(null);
+                          },
+                          onDragLeave: (e) => {
+                            // Only clear if we're actually leaving the folder group entirely
+                            const relatedTarget = e.relatedTarget as HTMLElement;
+                            if (relatedTarget) {
+                              // Check if we're moving to the expanded area or another part of the folder
+                              const folderContainer = e.currentTarget.closest('div');
+                              if (folderContainer && !folderContainer.contains(relatedTarget)) {
+                                setUnsavedDragOver(null);
+                              }
+                            }
+                            // If no relatedTarget, don't clear - might be moving to expanded area
+                          },
                         }}
                         isDragging={dragDrop.draggedItem?.type === 'folder' && dragDrop.draggedItem?.id === folder.id}
-                        isDragOver={dragDrop.dragOverItem?.type === 'folder' && dragDrop.dragOverItem?.id === folder.id}
-                        dropPosition={dragDrop.dropPosition}
+                        isDragOver={
+                          (unsavedDragOver?.type === 'folder' && unsavedDragOver?.id === folder.id) ||
+                          (dragDrop.dragOverItem?.type === 'folder' && dragDrop.dragOverItem?.id === folder.id)
+                        }
+                        dropPosition={unsavedDragOver?.type === 'folder' && unsavedDragOver?.id === folder.id ? 'inside' : dragDrop.dropPosition}
                       />
 
+                      {/* Folder Expanded Content */}
+                      {isFolderExpanded && (
+                        <div
+                          className={`ml-8 space-y-1 min-h-[20px] rounded-md transition-all duration-150 ${
+                            (unsavedDragOver?.type === 'folder' && unsavedDragOver?.id === folder.id) ||
+                            (dragDrop.dragOverItem?.type === 'folder' && dragDrop.dragOverItem?.id === folder.id)
+                              ? 'bg-primary/5 border-l-2 border-primary/50 pl-2 -ml-8' : ''
+                          }`}
+                          onDragOver={(e) => {
+                            // Check for unsaved requests first
+                            if (isDraggingUnsavedRequest(e)) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              e.dataTransfer.dropEffect = 'move';
+                              handleUnsavedDragOver(e, 'folder', folder.id!);
+                            } else {
+                              // Clear unsaved drag over state when dragging regular items
+                              if (unsavedDragOver?.type === 'folder' && unsavedDragOver?.id === folder.id) {
+                                setUnsavedDragOver(null);
+                              }
+                              e.preventDefault();
+                              e.stopPropagation();
+                              dragDrop.handleDragOver(e, { 
+                                type: 'folder', 
+                                id: folder.id!,
+                                collectionId: folder.collectionId
+                              }, 'inside');
+                            }
+                          }}
+                          onDrop={async (e) => {
+                            e.stopPropagation();
+                            // Handle unsaved requests first
+                            await handleCollectionDrop(e, folder.collectionId, folder.id!);
+                            // Then handle regular drag-drop
+                            await dragDrop.handleDrop(e, { 
+                              type: 'folder', 
+                              id: folder.id!,
+                              collectionId: folder.collectionId
+                            }, 'inside');
+                          }}
+                          onDragEnter={(e) => {
+                            // When entering the expanded area, ensure we show the folder as drag-over
+                            if (isDraggingUnsavedRequest(e)) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleUnsavedDragOver(e, 'folder', folder.id!);
+                            }
+                          }}
+                          onDragLeave={(e) => {
+                            // Only clear if we're actually leaving the folder group entirely
+                            const relatedTarget = e.relatedTarget as HTMLElement;
+                            if (relatedTarget) {
+                              const folderGroup = e.currentTarget.closest('div');
+                              // Only clear if the relatedTarget is outside the folder group
+                              if (folderGroup && !folderGroup.contains(relatedTarget)) {
+                                setUnsavedDragOver(null);
+                              }
+                            }
+                            // If no relatedTarget, don't clear - might be moving to folder header
+                          }}
+                        >
                       {/* Folder Requests */}
-                      {isFolderExpanded && folderRequests.map((request) => (
+                      {folderRequests.map((request) => (
                         <RequestItem
                           key={request.id}
                           request={request}
@@ -808,9 +1010,11 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                           dropPosition={dragDrop.dropPosition}
                         />
                       ))}
-                      {isFolderExpanded && folderRequests.length === 0 && (
+                      {folderRequests.length === 0 && (
                         <div className="ml-8 text-xs text-muted-foreground p-2">
                           No requests in this folder
+                        </div>
+                      )}
                         </div>
                       )}
                     </div>
