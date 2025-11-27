@@ -138,7 +138,7 @@ test.describe('Environment IPC Handlers', () => {
     testDbPath,
   }) => {
     // Create two environments
-    const env1 = await electronPage.evaluate(async () => {
+    const _env1 = await electronPage.evaluate(async () => {
       return await window.electronAPI.env.save({
         name: 'env1',
         displayName: 'Environment 1',

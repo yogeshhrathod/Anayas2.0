@@ -18,6 +18,7 @@ import { KEYMAP, createKeymapHandler } from '../lib/keymap';
 import { useRequestState } from '../hooks/useRequestState';
 import { useRequestActions } from '../hooks/useRequestActions';
 import { RequestHeader } from './request/RequestHeader';
+import { RequestPreset } from '../types/entities';
 import { RequestTabs } from './request/RequestTabs';
 import { ParamsTab } from './request/ParamsTab';
 import { HeadersTab } from './request/HeadersTab';
@@ -69,7 +70,7 @@ export function ApiRequestBuilder() {
     });
 
     // Handlers for selecting presets 1-9
-    const applyPresetToForm = (preset: any) => {
+    const applyPresetToForm = (preset: RequestPreset) => {
       requestActions.applyPreset(preset, (data) => {
         requestState.setRequestData({
           ...requestState.requestData,
@@ -217,7 +218,7 @@ export function ApiRequestBuilder() {
           isFavorite: requestState.requestData.isFavorite ? 1 : 0,
         });
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to save request:', e);
     }
   };

@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { Globe, Check, ChevronDown, Building2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useClickOutside } from '../hooks/useClickOutside';
+import { CollectionEnvironment, Environment } from '../types/entities';
 
 interface EnvironmentSelectorProps {
   className?: string;
@@ -31,7 +32,7 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
   const activeCollectionEnvId = currentCollection?.activeEnvironmentId;
   const activeCollectionEnv = collectionEnvironments.find(e => e.id === activeCollectionEnvId);
 
-  const handleSelectGlobalEnvironment = async (env: any) => {
+  const handleSelectGlobalEnvironment = async (env: Environment) => {
     try {
       await window.electronAPI.env.setCurrent(env.id);
       setCurrentEnvironment(env);
@@ -103,10 +104,10 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
                   <span>Collection: {currentCollection.name}</span>
                 </div>
                 <div className="space-y-1">
-                  {collectionEnvironments.map((env: any) => (
+                  {collectionEnvironments.map((env: CollectionEnvironment) => (
                     <button
                       key={env.id}
-                      onClick={() => handleSelectCollectionEnvironment(env.id)}
+                      onClick={() => env.id && handleSelectCollectionEnvironment(env.id)}
                       className={cn(
                         'flex w-full items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-accent',
                         activeCollectionEnvId === env.id && 'bg-accent'
@@ -136,7 +137,7 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
                     No global environments configured
                   </div>
                 ) : (
-                  environments.map((env: any) => (
+                  environments.map((env: Environment) => (
                     <button
                       key={env.id}
                       onClick={() => handleSelectGlobalEnvironment(env)}

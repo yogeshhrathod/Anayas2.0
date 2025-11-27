@@ -106,14 +106,14 @@ export function NavigationBar() {
           } else {
             showError('Invalid file format', 'Please select a valid request JSON file');
           }
-        } catch (error: any) {
-          showError('Failed to parse file', error.message || 'Invalid JSON format');
+        } catch (error: unknown) {
+          showError('Failed to parse file', error instanceof Error ? error.message : 'Invalid JSON format');
         }
       };
       
       input.click();
-    } catch (error: any) {
-      showError('Failed to import request', error.message);
+    } catch (error: unknown) {
+      showError('Failed to import request', error instanceof Error ? error.message : 'Failed to import request');
     }
   };
 
@@ -156,9 +156,9 @@ export function NavigationBar() {
           ? `Loaded first request (${requests.length} total parsed)`
           : 'Request loaded into builder',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to import cURL request:', error);
-      showError('Import failed', error.message || 'Failed to import request');
+      showError('Import failed', error instanceof Error ? error.message : 'Failed to import request');
       throw error;
     }
   };

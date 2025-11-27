@@ -57,7 +57,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         ]);
         setRequests(requestsData);
         setFolders(foldersData);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Failed to load requests and folders:', error);
       }
     };
@@ -108,7 +108,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
   // In test environments, the mocked electronAPI does not provide these events, so we
   // guard access to keep the UI rendering instead of crashing.
   useEffect(() => {
-    const api: any = (window as any).electronAPI;
+    const api = window.electronAPI;
     if (!api || !api.collection || !api.request || !api.folder) {
       return;
     }
@@ -250,14 +250,14 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
           triggerSidebarRefresh();
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Only show error if it's not a JSON parse error (which is expected for regular drag-drop)
       if (error instanceof SyntaxError && error.message.includes('JSON')) {
         // This is expected when dragging regular items - they don't have JSON data
         return;
       }
       console.error('Drop failed:', error);
-      showError('Failed to save request', error.message);
+      showError('Failed to save request', error instanceof Error ? error.message : 'Failed to save request');
     }
   };
 
@@ -302,8 +302,8 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       setRequests(requestsData);
       
       triggerSidebarRefresh();
-    } catch (error: any) {
-      showError('Failed to reorder request', error.message);
+    } catch (error: unknown) {
+      showError('Failed to reorder request', error instanceof Error ? error.message : 'Failed to reorder request');
     }
   };
 
@@ -339,8 +339,8 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       setFolders(foldersData);
       
       triggerSidebarRefresh();
-    } catch (error: any) {
-      showError('Failed to reorder folder', error.message);
+    } catch (error: unknown) {
+      showError('Failed to reorder folder', error instanceof Error ? error.message : 'Failed to reorder folder');
     }
   };
 
@@ -379,8 +379,8 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         
         // Trigger sidebar refresh for real-time updates
         triggerSidebarRefresh();
-      } catch (error: any) {
-        showError('Failed to move request', error.message);
+      } catch (error: unknown) {
+        showError('Failed to move request', error instanceof Error ? error.message : 'Failed to move request');
       }
     },
     onMoveFolder: async (folderId, targetCollectionId) => {
@@ -398,8 +398,8 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         
         // Trigger sidebar refresh for real-time updates
         triggerSidebarRefresh();
-      } catch (error: any) {
-        showError('Failed to move folder', error.message);
+      } catch (error: unknown) {
+        showError('Failed to move folder', error instanceof Error ? error.message : 'Failed to move folder');
       }
     },
     onReorderRequest: handleReorderRequest,
@@ -518,8 +518,8 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         // Trigger sidebar refresh
         triggerSidebarRefresh();
       }
-    } catch (error: any) {
-      showError('Failed to create folder', error.message);
+    } catch (error: unknown) {
+      showError('Failed to create folder', error instanceof Error ? error.message : 'Failed to create folder');
     }
   };
 
@@ -530,8 +530,8 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       setCollections(collections.filter(c => c.id !== collectionId));
       // Trigger sidebar refresh for real-time updates
       triggerSidebarRefresh();
-    } catch (error: any) {
-      showError('Failed to delete collection', error.message);
+    } catch (error: unknown) {
+      showError('Failed to delete collection', error instanceof Error ? error.message : 'Failed to delete collection');
     }
   };
 
@@ -593,8 +593,8 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       
       // Trigger sidebar refresh for real-time updates
       triggerSidebarRefresh();
-    } catch (error: any) {
-      showError('Failed to duplicate collection', error.message);
+    } catch (error: unknown) {
+      showError('Failed to duplicate collection', error instanceof Error ? error.message : 'Failed to duplicate collection');
     }
   };
 
@@ -605,8 +605,8 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       setFolders(folders.filter(f => f.id !== folderId));
       // Trigger sidebar refresh for real-time updates
       triggerSidebarRefresh();
-    } catch (error: any) {
-      showError('Failed to delete folder', error.message);
+    } catch (error: unknown) {
+      showError('Failed to delete folder', error instanceof Error ? error.message : 'Failed to delete folder');
     }
   };
 
@@ -617,8 +617,8 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       setRequests(requests.filter(r => r.id !== requestId));
       // Trigger sidebar refresh for real-time updates
       triggerSidebarRefresh();
-    } catch (error: any) {
-      showError('Failed to delete request', error.message);
+    } catch (error: unknown) {
+      showError('Failed to delete request', error instanceof Error ? error.message : 'Failed to delete request');
     }
   };
 
@@ -650,8 +650,8 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       
       // Trigger sidebar refresh for real-time updates
       triggerSidebarRefresh();
-    } catch (error: any) {
-      showError('Failed to duplicate request', error.message);
+    } catch (error: unknown) {
+      showError('Failed to duplicate request', error instanceof Error ? error.message : 'Failed to duplicate request');
     }
   };
 
@@ -726,18 +726,6 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                 onDragEnd: () => {
                   dragDrop.handleDragEnd();
                   setUnsavedDragOver(null);
-                },
-                onDragLeave: (e) => {
-                  // Only clear if we're actually leaving the collection group entirely
-                  const relatedTarget = e.relatedTarget as HTMLElement;
-                  if (relatedTarget) {
-                    const collectionGroup = e.currentTarget.closest('[data-testid="collection-group"]');
-                    // Only clear if the relatedTarget is outside the collection group
-                    if (collectionGroup && !collectionGroup.contains(relatedTarget)) {
-                      setUnsavedDragOver(null);
-                    }
-                  }
-                  // If no relatedTarget, don't clear - might be moving to expanded area
                 },
               }}
               isDragging={dragDrop.draggedItem?.type === 'collection' && dragDrop.draggedItem?.id === collection.id}

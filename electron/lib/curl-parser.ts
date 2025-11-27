@@ -324,7 +324,7 @@ export function parseCurlCommands(commands: string[]): Array<{ success: boolean;
     try {
       const request = parseCurlCommand(command);
       return { success: true, request };
-    } catch (error: any) {
+    } catch (_error: any) {
       return {
         success: false,
         error: error.message || `Failed to parse command ${index + 1}`,

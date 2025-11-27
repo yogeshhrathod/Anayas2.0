@@ -375,10 +375,10 @@ export function parseCurlCommands(commands: string[]): Array<{ success: boolean;
     try {
       const request = parseCurlCommand(command);
       return { success: true, request };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message || `Failed to parse command ${index + 1}`,
+        error: error instanceof Error ? error.message : `Failed to parse command ${index + 1}`,
       };
     }
   });

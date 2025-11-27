@@ -54,8 +54,8 @@ export function useCollectionOperations() {
       
       // Also update global store for real-time sidebar updates
       setGlobalCollections(collectionsData);
-    } catch (error: any) {
-      showError('Failed to load data', error.message);
+    } catch (error: unknown) {
+      showError('Failed to load data', error instanceof Error ? error.message : 'Failed to load data');
     } finally {
       setIsLoading(false);
     }
@@ -112,8 +112,8 @@ export function useCollectionOperations() {
         showSuccess('Collection created', { description: `${data.name} has been created successfully` });
         return result;
       }
-    } catch (error: any) {
-      showError('Failed to create collection', error.message);
+    } catch (error: unknown) {
+      showError('Failed to create collection', error instanceof Error ? error.message : 'Failed to create collection');
       throw error;
     }
   }, [loadData, showSuccess, showError, triggerSidebarRefresh]);
@@ -136,8 +136,8 @@ export function useCollectionOperations() {
         showSuccess('Collection updated', { description: `${data.name} has been updated successfully` });
         return result;
       }
-    } catch (error: any) {
-      showError('Failed to update collection', error.message);
+    } catch (error: unknown) {
+      showError('Failed to update collection', error instanceof Error ? error.message : 'Failed to update collection');
       throw error;
     }
   }, [loadData, showSuccess, showError, triggerSidebarRefresh]);
@@ -149,8 +149,8 @@ export function useCollectionOperations() {
       // Trigger sidebar refresh for real-time updates
       triggerSidebarRefresh();
       showSuccess('Collection deleted', { description: 'Collection has been deleted successfully' });
-    } catch (error: any) {
-      showError('Failed to delete collection', error.message);
+    } catch (error: unknown) {
+      showError('Failed to delete collection', error instanceof Error ? error.message : 'Failed to delete collection');
       throw error;
     }
   }, [loadData, showSuccess, showError, triggerSidebarRefresh]);
@@ -197,8 +197,8 @@ export function useCollectionOperations() {
       }
 
       showSuccess('Collection and requests duplicated successfully');
-    } catch (error: any) {
-      showError('Failed to duplicate collection', error.message);
+    } catch (error: unknown) {
+      showError('Failed to duplicate collection', error instanceof Error ? error.message : 'Failed to duplicate collection');
       throw error;
     }
   }, [createCollection, showError, showSuccess]);
@@ -211,8 +211,8 @@ export function useCollectionOperations() {
         environments: collection.environments || [],
         isFavorite: !collection.isFavorite
       });
-    } catch (error: any) {
-      showError('Failed to update collection', error.message);
+    } catch (error: unknown) {
+      showError('Failed to update collection', error instanceof Error ? error.message : 'Failed to update collection');
       throw error;
     }
   }, [updateCollection, showError]);
@@ -233,8 +233,8 @@ export function useCollectionOperations() {
       URL.revokeObjectURL(url);
       
       showSuccess('Export successful', { description: 'Collections have been exported successfully' });
-    } catch (error: any) {
-      showError('Failed to export collections', error.message);
+    } catch (error: unknown) {
+      showError('Failed to export collections', error instanceof Error ? error.message : 'Failed to export collections');
     }
   }, [collections, showSuccess, showError]);
 
@@ -267,8 +267,8 @@ export function useCollectionOperations() {
       };
       
       input.click();
-    } catch (error: any) {
-      showError('Failed to import collections', error.message);
+    } catch (error: unknown) {
+      showError('Failed to import collections', error instanceof Error ? error.message : 'Failed to import collections');
     }
   }, [createCollection, showSuccess, showError]);
 

@@ -91,7 +91,7 @@ export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>
     }
   };
 
-  const handleInputChange = (field: keyof CollectionFormData, value: any) => {
+  const handleInputChange = (field: keyof CollectionFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     clearFieldError(field);
   };

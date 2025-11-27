@@ -7,6 +7,7 @@ import { Dialog } from './dialog';
 import { AlertCircle, Save } from 'lucide-react';
 import { useToast } from './use-toast';
 import { useStore, UnsavedRequest } from '../../store/useStore';
+import { Request } from '../../types/entities';
 
 interface Collection {
   id: number;
@@ -68,7 +69,7 @@ export function PromoteRequestDialog({
       ]);
       setCollections(collectionsData);
       setFolders(foldersData);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to load collections and folders:', e);
       error('Load failed', 'Failed to load collections and folders');
     }
@@ -114,17 +115,17 @@ export function PromoteRequestDialog({
         success('Request saved');
         
         // Load the newly saved request and set it as selected
-        const savedRequest: any = {
+        const savedRequest: Request = {
           id: result.id,
           name: requestName.trim(),
-          method: unsavedRequest.method,
+          method: unsavedRequest.method as Request['method'],
           url: unsavedRequest.url,
           headers: unsavedRequest.headers,
           body: unsavedRequest.body,
           queryParams: unsavedRequest.queryParams,
-          auth: unsavedRequest.auth,
+          auth: unsavedRequest.auth as Request['auth'],
           collectionId: selectedCollectionId,
-          folderId: selectedFolderId || undefined,
+          folderId: selectedFolderId ?? undefined,
           isFavorite: 0,
         };
         
@@ -145,9 +146,9 @@ export function PromoteRequestDialog({
       } else {
         throw new Error(result.error || 'Failed to save request');
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to promote unsaved request:', e);
-      error('Save failed', e.message || 'Failed to save request');
+      error('Save failed', e instanceof Error ? e.message : 'Failed to save request');
     } finally {
       setIsLoading(false);
     }

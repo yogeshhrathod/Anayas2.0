@@ -29,8 +29,8 @@ export interface ShortcutDefinition {
 
 export interface ContextState {
   page: string;
-  selectedItem: { type: string | null; id: number | null; data: any };
-  selectedRequest: any;
+  selectedItem: { type: string | null; id: number | null; data: unknown };
+  selectedRequest: unknown;
   focusedElement: Element | null;
   sidebarOpen: boolean;
   focusedContext: 'sidebar' | 'editor' | 'page' | null;

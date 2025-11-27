@@ -89,7 +89,7 @@ export class RequestService {
         }
         
         data = result;
-      } catch (error: any) {
+      } catch (_error: any) {
         // Handle HTTP errors
         if (error.message.includes('API Error:')) {
           const statusMatch = error.message.match(/API Error: (\d+)/);
@@ -120,7 +120,7 @@ export class RequestService {
         responseTime,
         size: responseSize,
       };
-    } catch (error: any) {
+    } catch (_error: any) {
       this.sendProgress('error', error.message || 'Request failed', 0);
       throw error;
     }
@@ -130,7 +130,7 @@ export class RequestService {
     try {
       const result = await apiService.testConnection(url);
       return result;
-    } catch (error: any) {
+    } catch (_error: any) {
       logger.error('Connection test failed', error);
       return false;
     }

@@ -86,7 +86,7 @@ export const CollectionEnvironmentForm = forwardRef<CollectionEnvironmentFormRef
     }
   }, [formData, validateForm, onSave]);
 
-  const handleInputChange = useCallback((field: keyof typeof formData, value: any) => {
+  const handleInputChange = useCallback((field: keyof typeof formData, value: string | Record<string, string>) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     clearFieldError(field);
   }, [clearFieldError]);

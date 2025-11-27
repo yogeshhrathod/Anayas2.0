@@ -219,8 +219,8 @@ export function useCollectionDragDrop(config: DragDropConfig) {
           }
         }
       }
-    } catch (error: any) {
-      showError('Move Failed', error.message || 'Failed to move item');
+    } catch (error: unknown) {
+      showError('Move Failed', error instanceof Error ? error.message : 'Failed to move item');
     }
   }, [state.draggedItem, canDrop, config, showError]);
 

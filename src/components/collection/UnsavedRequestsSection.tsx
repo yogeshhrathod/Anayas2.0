@@ -78,9 +78,9 @@ export function UnsavedRequestsSection() {
       
       // Trigger sidebar refresh
       triggerSidebarRefresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete unsaved request:', error);
-      showError('Failed to delete', error.message || 'Failed to delete unsaved request');
+      showError('Failed to delete', error instanceof Error ? error.message : 'Failed to delete unsaved request');
     }
   };
 

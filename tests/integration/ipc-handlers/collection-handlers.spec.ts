@@ -236,7 +236,7 @@ test.describe('Collection IPC Handlers', () => {
         isFavorite: false,
       });
       
-      const env1 = await window.electronAPI.collection.addEnvironment(coll.id, {
+      const _env1 = await window.electronAPI.collection.addEnvironment(coll.id, {
         name: 'Env 1',
         variables: {},
       });
@@ -301,7 +301,7 @@ test.describe('Collection IPC Handlers', () => {
 
   test('collection:run - should run all requests in collection', async ({ electronPage, _testDbPath }) => {
     // Create environment
-    const env = await electronPage.evaluate(async () => {
+    const _env = await electronPage.evaluate(async () => {
       return await window.electronAPI.env.save({
         name: 'test-env',
         displayName: 'Test',

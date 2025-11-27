@@ -31,7 +31,7 @@ export interface FormValidationState {
 }
 
 export interface FormValidationActions {
-  validateField: (field: string, value: any) => string | undefined;
+  validateField: (field: string, value: unknown) => string | undefined;
   validateForm: (data: Record<string, any>) => boolean;
   setFieldError: (field: string, error: string) => void;
   clearFieldError: (field: string) => void;
@@ -46,7 +46,7 @@ export function useFormValidation(schema: ValidationSchema) {
     touched: {}
   });
 
-  const validateField = useCallback((field: string, value: any): string | undefined => {
+  const validateField = useCallback((field: string, value: unknown): string | undefined => {
     const rules = schema[field];
     if (!rules) return undefined;
 

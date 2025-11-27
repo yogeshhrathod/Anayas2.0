@@ -135,8 +135,8 @@ export function useRequestActions(requestData: RequestFormData) {
           console.error('Failed to save response with request:', error);
         }
       }
-    } catch (err: any) {
-      showError('Request Failed', err.message || 'An error occurred while sending the request');
+    } catch (err: unknown) {
+      showError('Request Failed', err instanceof Error ? err.message : 'An error occurred while sending the request');
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
@@ -185,7 +185,7 @@ export function useRequestActions(requestData: RequestFormData) {
           isFavorite: requestData.isFavorite ? 1 : 0,
         });
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to save request:', e);
       showError('Save failed', 'Failed to save request');
     }
@@ -257,7 +257,7 @@ export function useRequestActions(requestData: RequestFormData) {
       }));
       
       showSuccess('Preset Created', { description: `"${preset.name}" has been saved successfully` });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to save preset:', error);
       showError('Save Failed', 'Failed to save preset to database');
     }
@@ -279,7 +279,7 @@ export function useRequestActions(requestData: RequestFormData) {
         presets: prev.presets.filter(p => p.id !== presetId),
       }));
       showSuccess('Preset Deleted', { description: 'Preset has been removed successfully' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete preset:', error);
       showError('Delete Failed', 'Failed to delete preset from database');
     }

@@ -3,13 +3,14 @@ import { useStore } from '../store/useStore';
 import { Globe, Check, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useClickOutside } from '../hooks/useClickOutside';
+import { Environment } from '../types/entities';
 
 export function EnvironmentSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { environments, currentEnvironment, setCurrentEnvironment } = useStore();
 
-  const handleSelectEnvironment = async (env: any) => {
+  const handleSelectEnvironment = async (env: Environment) => {
     try {
       await window.electronAPI.env.setCurrent(env.id);
       setCurrentEnvironment(env);
@@ -19,7 +20,7 @@ export function EnvironmentSwitcher() {
     }
   };
 
-  const getStatusColor = (env: any) => {
+  const getStatusColor = (env: Environment) => {
     // Simple heuristic: if it has a base URL, show green
     if (env.variables?.base_url) {
       return 'bg-green-500';
@@ -56,7 +57,7 @@ export function EnvironmentSwitcher() {
                   No environments configured
                 </div>
               ) : (
-                environments.map((env: any) => (
+                environments.map((env: Environment) => (
                   <button
                     key={env.id}
                     onClick={() => handleSelectEnvironment(env)}

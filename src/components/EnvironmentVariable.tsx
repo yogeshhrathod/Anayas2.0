@@ -40,8 +40,8 @@ export function EnvironmentVariable({
       try {
         const parsed = JSON.parse(bulkEditJson);
         onVariablesChange(parsed);
-      } catch (e: any) {
-        console.error('Invalid JSON:', e.message);
+      } catch (e: unknown) {
+        console.error('Invalid JSON:', e instanceof Error ? e.message : 'Invalid JSON');
         return;
       }
     }

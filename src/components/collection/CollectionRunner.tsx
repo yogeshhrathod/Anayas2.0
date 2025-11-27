@@ -74,8 +74,8 @@ export function CollectionRunner({ collectionId, collectionName, onClose, open }
       } else {
         showError('Collection Run Failed', response.error || 'Unknown error occurred');
       }
-    } catch (error: any) {
-      showError('Collection Run Failed', error.message || 'Failed to run collection');
+    } catch (error: unknown) {
+      showError('Collection Run Failed', error instanceof Error ? error.message : 'Failed to run collection');
     } finally {
       setIsRunning(false);
     }

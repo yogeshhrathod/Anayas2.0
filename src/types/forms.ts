@@ -78,7 +78,7 @@ export interface ValidationRule {
   minLength?: number;
   maxLength?: number;
   pattern?: RegExp;
-  custom?: (value: any) => string | undefined;
+  custom?: (value: unknown) => string | undefined;
 }
 
 export interface ValidationSchema {
@@ -97,7 +97,7 @@ export interface FormState<T> {
 export interface FormAction<T> {
   type: 'SET_FIELD' | 'SET_ERROR' | 'SET_SUBMITTING' | 'RESET' | 'SET_DATA';
   field?: keyof T;
-  value?: any;
+  value?: unknown;
   error?: string;
   data?: T;
 }

@@ -46,7 +46,7 @@ test.describe('Additional IPC Test Cases', () => {
 
     test('should handle multiple default environments (only one should be default)', async ({ electronPage }) => {
       // Create first default
-      const env1 = await electronPage.evaluate(async () => {
+      const _env1 = await electronPage.evaluate(async () => {
         return await (window as any).electronAPI.env.save({
           name: 'default-1',
           displayName: 'Default 1',

@@ -101,9 +101,9 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
       } else {
         showError('Failed to generate cURL', result.error || 'Unknown error');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to copy as cURL:', error);
-      showError('Failed to copy as cURL', error.message || 'Unknown error');
+      showError('Failed to copy as cURL', error instanceof Error ? error.message : 'Unknown error');
     }
   };
 

@@ -4,7 +4,7 @@ import { assertRendered, assertUIUpdated } from '../../helpers/assertions';
 test.describe('CollectionHierarchy Component Integration', () => {
   test('should render collection hierarchy with collections', async ({ electronPage, _testDbPath }) => {
     // Create test data
-    const collection = await electronPage.evaluate(async () => {
+    const _collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
         name: 'Test Collection',
         description: 'Test Description',
@@ -28,7 +28,7 @@ test.describe('CollectionHierarchy Component Integration', () => {
 
   test('should expand and collapse collection', async ({ electronPage, _testDbPath }) => {
     // GIVEN: A collection with at least one request
-    const setup = await electronPage.evaluate(async () => {
+    const _setup = await electronPage.evaluate(async () => {
       const collection = await window.electronAPI.collection.save({
         name: 'Expandable Collection',
         description: '',
@@ -97,7 +97,7 @@ test.describe('CollectionHierarchy Component Integration', () => {
 
   test('should select request when clicked', async ({ electronPage, _testDbPath }) => {
     // Create collection with request
-    const setup = await electronPage.evaluate(async () => {
+    const _setup = await electronPage.evaluate(async () => {
       const collection = await window.electronAPI.collection.save({
         name: 'Selectable Collection',
         description: '',
@@ -170,7 +170,7 @@ test.describe('CollectionHierarchy Component Integration', () => {
 
   test('should load requests and folders via IPC', async ({ electronPage, _testDbPath }) => {
     // Create collection with folder and request
-    const setup = await electronPage.evaluate(async () => {
+    const _setup = await electronPage.evaluate(async () => {
       const collection = await window.electronAPI.collection.save({
         name: 'IPC Test Collection',
         description: '',

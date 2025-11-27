@@ -9,10 +9,10 @@ import { useToast } from './use-toast';
 interface BulkEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: Record<string, string> | Array<{ key: string; value: string; enabled: boolean }>) => void;
   title: string;
   description: string;
-  initialData: any;
+  initialData: Record<string, string> | Array<{ key: string; value: string; enabled: boolean }>;
   dataType: 'queryParams' | 'envVars';
   placeholder?: string;
 }
@@ -39,7 +39,7 @@ export function BulkEditModal({
       
       if (dataType === 'queryParams') {
         // Convert query params array to JSON
-        const paramsObj = initialData.reduce((acc: any, param: any) => {
+        const paramsObj = (initialData as Array<{ key: string; value: string; enabled: boolean }>).reduce((acc: Record<string, string>, param) => {
           if (param.key && param.value) {
             acc[param.key] = param.value;
           }
@@ -61,9 +61,9 @@ export function BulkEditModal({
         JSON.parse(jsonValue);
         setIsValid(true);
         setError(null);
-      } catch (e: any) {
+      } catch (e: unknown) {
         setIsValid(false);
-        setError(e.message);
+        setError(e instanceof Error ? e.message : 'Invalid JSON');
       }
     } else {
       setIsValid(true);
@@ -96,8 +96,8 @@ export function BulkEditModal({
       onSave(convertedData);
       success('Saved', 'Bulk edit completed successfully');
       onClose();
-    } catch (e: any) {
-      showError('Save Error', e.message);
+    } catch (e: unknown) {
+      showError('Save Error', e instanceof Error ? e.message : 'Failed to save changes');
     }
   };
 

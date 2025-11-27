@@ -48,7 +48,6 @@ export interface CollectionItemProps {
     onDragOver: (e: React.DragEvent) => void;
     onDrop: (e: React.DragEvent) => void;
     onDragEnd: () => void;
-    onDragLeave?: (e: React.DragEvent) => void;
   };
   isDragging?: boolean;
   isDragOver?: boolean;

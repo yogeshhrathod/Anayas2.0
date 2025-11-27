@@ -91,9 +91,9 @@ export function MonacoKeyValueEditor({
         JSON.parse(jsonValue);
         setIsValid(true);
         setError(null);
-      } catch (e: any) {
+      } catch (e: unknown) {
         setIsValid(false);
-        setError(e.message);
+        setError(e instanceof Error ? e.message : 'Invalid JSON');
       }
     } else {
       setIsValid(true);
@@ -111,7 +111,7 @@ export function MonacoKeyValueEditor({
   }, [codeFontFamily]);
 
   // Handle editor mount
-  const handleEditorDidMount = (editor: any, monaco: any) => {
+  const handleEditorDidMount = (editor: unknown, monaco: unknown) => {
     editorRef.current = editor;
     
     // Configure editor options
@@ -177,7 +177,7 @@ export function MonacoKeyValueEditor({
       const formatted = JSON.stringify(parsed, null, 2);
       setJsonValue(formatted);
       success('Formatted', 'JSON has been formatted');
-    } catch (e: any) {
+    } catch (_e: unknown) {
       showError('Format Error', 'Invalid JSON cannot be formatted');
     }
   };
@@ -188,7 +188,7 @@ export function MonacoKeyValueEditor({
       const minified = JSON.stringify(parsed);
       setJsonValue(minified);
       success('Minified', 'JSON has been minified');
-    } catch (e: any) {
+    } catch (_e: unknown) {
       showError('Minify Error', 'Invalid JSON cannot be minified');
     }
   };
@@ -213,8 +213,8 @@ export function MonacoKeyValueEditor({
       onChange(newData);
       setShowJsonEditor(false);
       success('Applied', 'JSON data applied successfully');
-    } catch (e: any) {
-      showError('Apply Error', e.message);
+    } catch (e: unknown) {
+      showError('Apply Error', e instanceof Error ? e.message : 'Failed to apply JSON data');
     }
   };
 

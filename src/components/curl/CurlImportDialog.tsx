@@ -84,7 +84,7 @@ export function CurlImportDialog({
       ]);
       setCollections(collectionsData);
       setFolders(foldersData);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to load collections:', e);
       showError('Load failed', 'Failed to load collections');
     }
@@ -144,9 +144,9 @@ export function CurlImportDialog({
           setError(results.error || 'Failed to parse cURL commands');
         }
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to parse cURL:', e);
-      setError(e.message || 'Failed to parse cURL command');
+      setError(e instanceof Error ? e.message : 'Failed to parse cURL command');
       setParsedRequests([]);
     } finally {
       setIsParsing(false);
@@ -164,7 +164,7 @@ export function CurlImportDialog({
       setTimeout(() => {
         handleParse();
       }, 100);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to read file:', e);
       showError('File read failed', 'Failed to read the selected file');
     }
@@ -206,9 +206,9 @@ export function CurlImportDialog({
         description: `Imported ${successfulRequests.length} request(s)`,
       });
       onOpenChange(false);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to import requests:', e);
-      showError('Import failed', e.message || 'Failed to import requests');
+      showError('Import failed', e instanceof Error ? e.message : 'Failed to import requests');
     } finally {
       setIsImporting(false);
     }

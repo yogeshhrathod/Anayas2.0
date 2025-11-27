@@ -93,8 +93,8 @@ export function registerIpcHandlers() {
         return { success: isReachable, message: isReachable ? 'Connection successful' : 'Connection failed' };
       }
       return { success: true, message: 'No base URL to test' };
-    } catch (error: any) {
-      return { success: false, message: error.message };
+    } catch (_error: any) {
+      return { success: false, message: _error.message };
     }
   });
 
@@ -120,8 +120,8 @@ export function registerIpcHandlers() {
           variables: envData,
         },
       };
-    } catch (error: any) {
-      return { success: false, message: error.message };
+    } catch (_error: any) {
+      return { success: false, message: _error.message };
     }
   });
 
@@ -546,8 +546,8 @@ export function registerIpcHandlers() {
         statusText: result.statusText,
         headers: result.headers
       };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (_error: any) {
+      return { success: false, error: _error.message };
     }
   });
 
@@ -683,12 +683,12 @@ export function registerIpcHandlers() {
               status: 'completed'
             });
           }
-        } catch (error: any) {
+        } catch (_error: any) {
           results.push({
             requestId: request.id!,
             requestName: request.name,
             success: false,
-            error: error.message
+            error: _error.message
           });
 
           // Send progress update for error
@@ -699,7 +699,7 @@ export function registerIpcHandlers() {
               requestName: request.name,
               requestId: request.id,
               status: 'error',
-              error: error.message
+              error: _error.message
             });
           }
         }
@@ -714,8 +714,8 @@ export function registerIpcHandlers() {
           failed: results.filter(r => !r.success || (r.status && r.status >= 400)).length
         }
       };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (_error: any) {
+      return { success: false, error: _error.message };
     }
   });
 
@@ -802,8 +802,8 @@ export function registerIpcHandlers() {
     try {
       const content = fs.readFileSync(filePath, 'utf-8');
       return { success: true, content };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (_error: any) {
+      return { success: false, error: _error.message };
     }
   });
 
@@ -811,8 +811,8 @@ export function registerIpcHandlers() {
     try {
       fs.writeFileSync(filePath, content, 'utf-8');
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (_error: any) {
+      return { success: false, error: _error.message };
     }
   });
 
@@ -870,8 +870,8 @@ export function registerIpcHandlers() {
 
       notification.show();
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (_error: any) {
+      return { success: false, error: _error.message };
     }
   });
 
@@ -902,8 +902,8 @@ export function registerIpcHandlers() {
         });
         return { success: true, id };
       }
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (_error: any) {
+      return { success: false, error: _error.message };
     }
   });
 
@@ -919,8 +919,8 @@ export function registerIpcHandlers() {
     try {
       deleteUnsavedRequest(id);
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (_error: any) {
+      return { success: false, error: _error.message };
     }
   });
 
@@ -928,8 +928,8 @@ export function registerIpcHandlers() {
     try {
       clearUnsavedRequests();
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (_error: any) {
+      return { success: false, error: _error.message };
     }
   });
 
@@ -937,8 +937,8 @@ export function registerIpcHandlers() {
     try {
       const savedId = promoteUnsavedRequest(id, data);
       return { success: true, id: savedId };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (_error: any) {
+      return { success: false, error: _error.message };
     }
   });
 
@@ -946,7 +946,7 @@ export function registerIpcHandlers() {
   ipcMain.handle('preset:list', async (_, requestId?: number) => {
     try {
       return getAllPresets(requestId);
-    } catch (error: any) {
+    } catch (_error: any) {
       console.error('Failed to list presets:', error);
       return [];
     }
@@ -956,9 +956,9 @@ export function registerIpcHandlers() {
     try {
       const id = addPreset(preset);
       return { success: true, id };
-    } catch (error: any) {
+    } catch (_error: any) {
       console.error('Failed to save preset:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: _error.message };
     }
   });
 
@@ -966,9 +966,9 @@ export function registerIpcHandlers() {
     try {
       deletePreset(id);
       return { success: true };
-    } catch (error: any) {
+    } catch (_error: any) {
       console.error('Failed to delete preset:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: _error.message };
     }
   });
 
@@ -977,9 +977,9 @@ export function registerIpcHandlers() {
     try {
       const request = parseCurlCommand(command);
       return { success: true, request };
-    } catch (error: any) {
+    } catch (_error: any) {
       console.error('Failed to parse cURL command:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: _error.message };
     }
   });
 
@@ -987,9 +987,9 @@ export function registerIpcHandlers() {
     try {
       const curlCommand = generateCurlCommand(request);
       return { success: true, command: curlCommand };
-    } catch (error: any) {
+    } catch (_error: any) {
       console.error('Failed to generate cURL command:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: _error.message };
     }
   });
 
@@ -997,9 +997,9 @@ export function registerIpcHandlers() {
     try {
       const results = parseCurlCommands(commands);
       return { success: true, results };
-    } catch (error: any) {
+    } catch (_error: any) {
       console.error('Failed to parse bulk cURL commands:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: _error.message };
     }
   });
 }

@@ -10,7 +10,7 @@ interface LogEntry {
   level: string;
   message: string;
   module?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export function Logs() {
@@ -92,7 +92,7 @@ export function Logs() {
       setLogs([]);
       setFilteredLogs([]);
       success('Logs cleared', 'All logs have been cleared');
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to clear logs:', e);
       error('Clear failed', 'Failed to clear logs. Please try again.');
     }
@@ -103,7 +103,7 @@ export function Logs() {
       const content = filteredLogs.map(log => JSON.stringify(log)).join('\n');
       await window.electronAPI.file.saveFile('logs-export.log', content);
       success('Logs exported', 'Filtered logs exported to logs-export.log');
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to export logs:', e);
       error('Export failed', 'Could not export logs');
     }

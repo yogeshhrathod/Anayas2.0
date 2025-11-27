@@ -92,7 +92,7 @@ export const EnvironmentForm = forwardRef<EnvironmentFormRef, EnvironmentFormPro
     }
   };
 
-  const handleInputChange = (field: keyof EnvironmentFormData, value: any) => {
+  const handleInputChange = (field: keyof EnvironmentFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     clearFieldError(field);
   };

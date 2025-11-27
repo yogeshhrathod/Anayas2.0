@@ -104,8 +104,8 @@ export function useInlineEdit(config: InlineEditConfig) {
         isEditing: false,
         editValue: trimmedValue,
       });
-    } catch (error: any) {
-      showError('Save Failed', error.message || 'Failed to save changes');
+    } catch (error: unknown) {
+      showError('Save Failed', error instanceof Error ? error.message : 'Failed to save changes');
     }
   }, [state.editValue, config, showError, cancelEdit]);
 

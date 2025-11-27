@@ -72,7 +72,7 @@ export function SaveRequestDialog({
       ]);
       setCollections(collectionsData);
       setFolders(foldersData);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to load collections and folders:', e);
       error('Load failed', 'Failed to load collections and folders');
     }
@@ -111,7 +111,7 @@ export function SaveRequestDialog({
         folderId: selectedFolderId || undefined
       });
       onOpenChange(false);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to save request:', e);
       error('Save failed', 'Failed to save request');
     } finally {

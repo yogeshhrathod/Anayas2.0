@@ -1,13 +1,35 @@
+import {
+  CheckCircle2,
+  Clock,
+  Eye,
+  Filter,
+  Play,
+  Search,
+  Trash2,
+  XCircle,
+} from 'lucide-react';
 import { useState } from 'react';
-import { useStore } from '../store/useStore';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Dialog } from '../components/ui/dialog';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Trash2, Search, Filter, Clock, CheckCircle2, XCircle, Play, Eye } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/card';
+import { Dialog } from '../components/ui/dialog';
+import { Input } from '../components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import { useToast } from '../components/ui/use-toast';
+import { useStore } from '../store/useStore';
+import { RequestHistory } from '../types/entities';
 
 export function History() {
   const { requestHistory, setRequestHistory, currentEnvironment } = useStore();
@@ -20,20 +42,24 @@ export function History() {
   const [showDetails, setShowDetails] = useState(false);
   const [rerunningRequest, setRerunningRequest] = useState<number | null>(null);
 
-  const filteredHistory = requestHistory.filter((request: any) => {
-    const matchesSearch = request.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.method.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || 
-                         (filterStatus === 'success' && request.status === 200) ||
-                         (filterStatus === 'error' && request.status !== 200);
-    const matchesMethod = filterMethod === 'all' || request.method.toLowerCase() === filterMethod.toLowerCase();
-    
+  const filteredHistory = requestHistory.filter((request: RequestHistory) => {
+    const matchesSearch =
+      request.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.method.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      filterStatus === 'all' ||
+      (filterStatus === 'success' && request.status === 200) ||
+      (filterStatus === 'error' && request.status !== 200);
+    const matchesMethod =
+      filterMethod === 'all' ||
+      request.method.toLowerCase() === filterMethod.toLowerCase();
+
     // Date filtering
     let matchesDate = true;
-    if (filterDate !== 'all') {
+    if (filterDate !== 'all' && request.createdAt) {
       const requestDate = new Date(request.createdAt);
       const now = new Date();
-      
+
       switch (filterDate) {
         case 'today':
           matchesDate = requestDate.toDateString() === now.toDateString();
@@ -50,47 +76,54 @@ export function History() {
         }
       }
     }
-    
+
     return matchesSearch && matchesStatus && matchesMethod && matchesDate;
   });
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this request from history?')) return;
+    if (!confirm('Are you sure you want to delete this request from history?'))
+      return;
 
     try {
       await window.electronAPI.request.deleteHistory(id);
       const updatedHistory = await window.electronAPI.request.history(100);
       setRequestHistory(updatedHistory);
       success('Request deleted', 'The request has been removed from history');
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to delete request:', e);
       error('Delete failed', 'Could not delete request from history');
     }
   };
 
-  const handleRerun = async (request: any) => {
+  const handleRerun = async (request: RequestHistory) => {
+    if (!request.id) return;
     setRerunningRequest(request.id);
     try {
       const result = await window.electronAPI.request.send({
         method: request.method,
         url: request.url,
-        headers: typeof request.headers === 'string' 
-          ? JSON.parse(request.headers) 
-          : (request.headers || {}),
-        body: typeof request.response_body === 'string' 
-          ? JSON.parse(request.response_body) 
-          : request.response_body,
-        environmentId: currentEnvironment?.id
+        headers:
+          typeof request.headers === 'string'
+            ? JSON.parse(request.headers)
+            : request.headers || {},
+        body:
+          typeof request.response_body === 'string'
+            ? JSON.parse(request.response_body)
+            : request.response_body,
+        environmentId: currentEnvironment?.id,
       });
 
       if (result.success) {
         const updatedHistory = await window.electronAPI.request.history(100);
         setRequestHistory(updatedHistory);
-        success('Request Rerun', `Request completed in ${result.responseTime}ms`);
+        success(
+          'Request Rerun',
+          `Request completed in ${result.responseTime}ms`
+        );
       } else {
         error('Rerun Failed', result.error || 'Request failed');
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to rerun request:', e);
       error('Rerun Error', e?.message || 'Unknown error');
     } finally {
@@ -98,13 +131,15 @@ export function History() {
     }
   };
 
-  const handleViewDetails = (request: any) => {
+  const handleViewDetails = (request: RequestHistory) => {
     setSelectedRequest(request);
     setShowDetails(true);
   };
 
   const getUniqueMethods = () => {
-    const methods = new Set(requestHistory.map((r: any) => r.method));
+    const methods = new Set(
+      requestHistory.map((r: RequestHistory) => r.method)
+    );
     return Array.from(methods).sort();
   };
 
@@ -148,7 +183,9 @@ export function History() {
             </div>
             <div>
               <CardTitle>Filters</CardTitle>
-              <CardDescription>Search and filter your request history</CardDescription>
+              <CardDescription>
+                Search and filter your request history
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -159,7 +196,7 @@ export function History() {
               <Input
                 placeholder="Search by URL or method..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -179,7 +216,7 @@ export function History() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Methods</SelectItem>
-                {getUniqueMethods().map((method) => (
+                {getUniqueMethods().map(method => (
                   <SelectItem key={method} value={method}>
                     {method}
                   </SelectItem>
@@ -224,16 +261,18 @@ export function History() {
               <Clock className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-bold mb-2">No requests found</h3>
               <p className="text-muted-foreground">
-                {requestHistory.length === 0 
+                {requestHistory.length === 0
                   ? "You haven't made any requests yet. Start by sending your first API request."
-                  : "Try adjusting your search or filter criteria."
-                }
+                  : 'Try adjusting your search or filter criteria.'}
               </p>
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredHistory.map((request: any) => (
-                <div key={request.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
+              {filteredHistory.map((request: RequestHistory) => (
+                <div
+                  key={request.id}
+                  className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -245,9 +284,13 @@ export function History() {
                           {request.responseTime}ms
                         </span>
                       </div>
-                      <p className="font-medium text-sm mb-1 break-all">{request.url}</p>
+                      <p className="font-medium text-sm mb-1 break-all">
+                        {request.url}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(request.createdAt).toLocaleString()}
+                        {request.createdAt
+                          ? new Date(request.createdAt).toLocaleString()
+                          : 'Unknown date'}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 ml-4">
@@ -275,7 +318,7 @@ export function History() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDelete(request.id)}
+                        onClick={() => request.id && handleDelete(request.id)}
                         className="hover:bg-red-50 dark:hover:bg-red-950"
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
@@ -288,7 +331,7 @@ export function History() {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Request Details Modal */}
       {selectedRequest && (
         <Dialog
@@ -309,47 +352,51 @@ export function History() {
           maxWidth="4xl"
           className="w-4/5 max-h-[80vh]"
         >
-              <div className="space-y-4">
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-2">Request Headers</h4>
+              <pre className="bg-muted p-3 rounded text-xs overflow-auto">
+                {selectedRequest.headers
+                  ? JSON.stringify(
+                      typeof selectedRequest.headers === 'string'
+                        ? JSON.parse(selectedRequest.headers)
+                        : selectedRequest.headers,
+                      null,
+                      2
+                    )
+                  : 'No headers'}
+              </pre>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-2">Response Body</h4>
+              <pre className="bg-muted p-3 rounded text-xs overflow-auto max-h-96">
+                {selectedRequest.response_body || 'No response body'}
+              </pre>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-2">Request Details</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <h4 className="font-semibold mb-2">Request Headers</h4>
-                  <pre className="bg-muted p-3 rounded text-xs overflow-auto">
-                    {selectedRequest.headers 
-                      ? JSON.stringify(
-                          typeof selectedRequest.headers === 'string' 
-                            ? JSON.parse(selectedRequest.headers) 
-                            : selectedRequest.headers, 
-                          null, 
-                          2
-                        ) 
-                      : 'No headers'}
-                  </pre>
+                  <span className="font-medium">Status:</span>{' '}
+                  {selectedRequest.status}
                 </div>
-                
                 <div>
-                  <h4 className="font-semibold mb-2">Response Body</h4>
-                  <pre className="bg-muted p-3 rounded text-xs overflow-auto max-h-96">
-                    {selectedRequest.response_body || 'No response body'}
-                  </pre>
+                  <span className="font-medium">Response Time:</span>{' '}
+                  {selectedRequest.responseTime}ms
                 </div>
-                
                 <div>
-                  <h4 className="font-semibold mb-2">Request Details</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Status:</span> {selectedRequest.status}
-                    </div>
-                    <div>
-                      <span className="font-medium">Response Time:</span> {selectedRequest.responseTime}ms
-                    </div>
-                    <div>
-                      <span className="font-medium">Method:</span> {selectedRequest.method}
-                    </div>
-                    <div>
-                      <span className="font-medium">Date:</span> {new Date(selectedRequest.created_at).toLocaleString()}
-                    </div>
-                  </div>
+                  <span className="font-medium">Method:</span>{' '}
+                  {selectedRequest.method}
+                </div>
+                <div>
+                  <span className="font-medium">Date:</span>{' '}
+                  {new Date(selectedRequest.created_at).toLocaleString()}
                 </div>
               </div>
+            </div>
+          </div>
         </Dialog>
       )}
     </div>

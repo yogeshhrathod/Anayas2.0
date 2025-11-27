@@ -44,8 +44,8 @@ export function useEnvironmentOperations() {
       setIsLoading(true);
       const environmentsData = await window.electronAPI.env.list();
       setEnvironments(environmentsData);
-    } catch (error: any) {
-      showError('Failed to load environments', error.message);
+    } catch (error: unknown) {
+      showError('Failed to load environments', error instanceof Error ? error.message : 'Failed to load environments');
     } finally {
       setIsLoading(false);
     }
@@ -91,8 +91,8 @@ export function useEnvironmentOperations() {
         showSuccess('Environment created', { description: `${data.display_name} has been created successfully` });
         return result;
       }
-    } catch (error: any) {
-      showError('Failed to create environment', error.message);
+    } catch (error: unknown) {
+      showError('Failed to create environment', error instanceof Error ? error.message : 'Failed to create environment');
       throw error;
     }
   }, [loadEnvironments, showSuccess, showError]);
@@ -117,8 +117,8 @@ export function useEnvironmentOperations() {
         showSuccess('Environment updated', { description: `${data.display_name} has been updated successfully` });
         return result;
       }
-    } catch (error: any) {
-      showError('Failed to update environment', error.message);
+    } catch (error: unknown) {
+      showError('Failed to update environment', error instanceof Error ? error.message : 'Failed to update environment');
       throw error;
     }
   }, [loadEnvironments, showSuccess, showError]);
@@ -128,8 +128,8 @@ export function useEnvironmentOperations() {
       await window.electronAPI.env.delete(id);
       await loadEnvironments();
       showSuccess('Environment deleted', { description: 'Environment has been deleted successfully' });
-    } catch (error: any) {
-      showError('Failed to delete environment', error.message);
+    } catch (error: unknown) {
+      showError('Failed to delete environment', error instanceof Error ? error.message : 'Failed to delete environment');
       throw error;
     }
   }, [loadEnvironments, showSuccess, showError]);
@@ -145,8 +145,8 @@ export function useEnvironmentOperations() {
       };
 
       await createEnvironment(duplicatedData);
-    } catch (error: any) {
-      showError('Failed to duplicate environment', error.message);
+    } catch (error: unknown) {
+      showError('Failed to duplicate environment', error instanceof Error ? error.message : 'Failed to duplicate environment');
       throw error;
     }
   }, [createEnvironment, showError]);
@@ -172,8 +172,8 @@ export function useEnvironmentOperations() {
 
       await loadEnvironments();
       showSuccess('Default environment set', { description: `${environment.displayName} is now the default environment` });
-    } catch (error: any) {
-      showError('Failed to set default environment', error.message);
+    } catch (error: unknown) {
+      showError('Failed to set default environment', error instanceof Error ? error.message : 'Failed to set default environment');
       throw error;
     }
   }, [environments, loadEnvironments, showSuccess, showError]);
@@ -193,8 +193,8 @@ export function useEnvironmentOperations() {
       } else {
         showSuccess('Environment test completed', { description: `${environment.displayName} configuration is valid` });
       }
-    } catch (error: any) {
-      showError('Connection test failed', error.message);
+    } catch (error: unknown) {
+      showError('Connection test failed', error instanceof Error ? error.message : 'Connection test failed');
     } finally {
       setTestingEnvironmentId(null);
     }
@@ -216,8 +216,8 @@ export function useEnvironmentOperations() {
       URL.revokeObjectURL(url);
       
       showSuccess('Export successful', { description: 'Environments have been exported successfully' });
-    } catch (error: any) {
-      showError('Failed to export environments', error.message);
+    } catch (error: unknown) {
+      showError('Failed to export environments', error instanceof Error ? error.message : 'Failed to export environments');
     }
   }, [environments, showSuccess, showError]);
 
@@ -251,8 +251,8 @@ export function useEnvironmentOperations() {
       };
       
       input.click();
-    } catch (error: any) {
-      showError('Failed to import environments', error.message);
+    } catch (error: unknown) {
+      showError('Failed to import environments', error instanceof Error ? error.message : 'Failed to import environments');
     }
   }, [createEnvironment, showSuccess, showError]);
 

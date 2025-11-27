@@ -50,9 +50,9 @@ export function JsonEditor({
         JSON.parse(value);
         setIsValid(true);
         setError(null);
-      } catch (e: any) {
+      } catch (e: unknown) {
         setIsValid(false);
-        setError(e.message);
+        setError(e instanceof Error ? e.message : 'Invalid JSON');
       }
     } else {
       setIsValid(true);
@@ -71,7 +71,7 @@ export function JsonEditor({
       const formatted = JSON.stringify(parsed, null, 2);
       onChange(formatted);
       success('Formatted', 'JSON has been formatted');
-    } catch (e: any) {
+    } catch (_e: unknown) {
       showError('Format Error', 'Invalid JSON cannot be formatted');
     }
   };
@@ -82,7 +82,7 @@ export function JsonEditor({
       const minified = JSON.stringify(parsed);
       onChange(minified);
       success('Minified', 'JSON has been minified');
-    } catch (e: any) {
+    } catch (_e: unknown) {
       showError('Minify Error', 'Invalid JSON cannot be minified');
     }
   };

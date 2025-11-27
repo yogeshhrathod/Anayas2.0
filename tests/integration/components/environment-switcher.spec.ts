@@ -34,7 +34,7 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
   test('should switch global environment', async ({ electronPage, _testDbPath }) => {
     // Create environments
     const setup = await electronPage.evaluate(async () => {
-      const env1 = await window.electronAPI.env.save({
+      const _env1 = await window.electronAPI.env.save({
         name: 'global-env-1',
         displayName: 'Global Env 1',
         variables: { api_key: 'global1' },
@@ -150,7 +150,7 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
   test('should call IPC to set current environment', async ({ electronPage, _testDbPath }) => {
     // Create environments
     const setup = await electronPage.evaluate(async () => {
-      const env1 = await window.electronAPI.env.save({
+      const _env1 = await window.electronAPI.env.save({
         name: 'ipc-env-1',
         displayName: 'IPC Env 1',
         variables: {},

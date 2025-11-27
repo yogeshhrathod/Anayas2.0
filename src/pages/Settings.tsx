@@ -17,7 +17,7 @@ interface ValidationErrors {
 }
 
 export function Settings() {
-  const createLocalSettings = (incoming: Record<string, any>) => ({
+  const createLocalSettings = (incoming: Record<string, unknown>) => ({
     ...incoming,
     // Preserve actual values, only default to empty string if truly undefined
     uiFontFamily: incoming.uiFontFamily !== undefined ? incoming.uiFontFamily : '',
@@ -31,7 +31,7 @@ export function Settings() {
     currentThemeId,
     customThemes,
   } = useStore();
-  const [localSettings, setLocalSettings] = useState<Record<string, any>>(() => createLocalSettings(settings));
+  const [localSettings, setLocalSettings] = useState<Record<string, unknown>>(() => createLocalSettings(settings));
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const { success, error } = useToast();
 
@@ -120,7 +120,7 @@ export function Settings() {
       setLocalSettings(createLocalSettings(updatedSettings));
       
       success('Settings saved', 'Your changes have been saved');
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to save settings:', e);
       error('Save failed', 'Failed to save settings');
     }
@@ -136,14 +136,14 @@ export function Settings() {
       setLocalSettings(createLocalSettings(updatedSettings));
       setValidationErrors({});
       success('Settings reset', 'All settings restored to defaults');
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to reset settings:', e);
       error('Reset failed', 'Failed to reset settings');
     }
   };
 
 
-  const updateSetting = (key: string, value: any) => {
+  const updateSetting = (key: string, value: unknown) => {
     const newSettings = { ...localSettings, [key]: value };
     setLocalSettings(newSettings);
 

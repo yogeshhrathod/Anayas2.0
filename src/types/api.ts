@@ -103,11 +103,11 @@ export type FolderListResponse = ApiResponse<Folder[]>;
 export type FolderSaveResponse = ApiResponse<{ id: number }>;
 
 // Settings API types
-export type SettingsGetAllResponse = ApiResponse<Record<string, any>>;
+export type SettingsGetAllResponse = ApiResponse<Record<string, unknown>>;
 
 export interface SettingsSetRequest {
   key: string;
-  value: any;
+  value: unknown;
 }
 
 export type SettingsSetResponse = ApiResponse<void>;
@@ -123,7 +123,7 @@ export type FileSelectResponse = ApiResponse<string>;
 export interface ApiError {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
 // Electron API interface (matches preload.ts)
@@ -160,8 +160,8 @@ export interface ElectronAPI {
     delete: (id: number) => Promise<ApiResponse<void>>;
   };
   settings: {
-    getAll: () => Promise<Record<string, any>>;
-    set: (key: string, value: any) => Promise<void>;
+    getAll: () => Promise<Record<string, unknown>>;
+    set: (key: string, value: unknown) => Promise<void>;
     reset: () => Promise<void>;
   };
   file: {
