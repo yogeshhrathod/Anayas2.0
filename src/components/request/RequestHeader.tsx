@@ -1,13 +1,13 @@
 /**
  * RequestHeader - Name editing, save status, method selector, URL input
- * 
+ *
  * Handles the top section of the request builder with:
  * - Request name with inline editing
  * - Save status indicator
  * - HTTP method selector
  * - URL input field
  * - Send button
- * 
+ *
  * @example
  * ```tsx
  * <RequestHeader
@@ -28,19 +28,40 @@ import React from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { VariableInputUnified } from '../ui/variable-input-unified';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip';
 import { Badge } from '../ui/badge';
 import { Send, Loader2, Check, Circle, Copy } from 'lucide-react';
 import { RequestFormData } from '../../types/forms';
 import { KEYMAP, getShortcutDisplay } from '../../lib/keymap';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
 
-const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const;
+const METHODS = [
+  'GET',
+  'POST',
+  'PUT',
+  'PATCH',
+  'DELETE',
+  'HEAD',
+  'OPTIONS',
+] as const;
 
 export interface RequestHeaderProps {
   requestData: RequestFormData;
-  setRequestData: (data: RequestFormData | ((prev: RequestFormData) => RequestFormData)) => void;
+  setRequestData: (
+    data: RequestFormData | ((prev: RequestFormData) => RequestFormData)
+  ) => void;
   isSaved: boolean;
   lastSavedAt: Date | null;
   isEditingName: boolean;
@@ -64,7 +85,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
   tempName,
   onNameEdit,
   onSend,
-  isLoading
+  isLoading,
 }) => {
   const { showSuccess, showError } = useToastNotifications();
 
@@ -79,7 +100,10 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
   const handleCopyAsCurl = async () => {
     try {
       if (!requestData.url.trim()) {
-        showError('Invalid request', 'URL is required to generate cURL command');
+        showError(
+          'Invalid request',
+          'URL is required to generate cURL command'
+        );
         return;
       }
 
@@ -94,16 +118,21 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
       };
 
       const result = await window.electronAPI.curl.generate(request);
-      
+
       if (result.success && result.command) {
         await navigator.clipboard.writeText(result.command);
-        showSuccess('Copied', { description: 'cURL command copied to clipboard' });
+        showSuccess('Copied', {
+          description: 'cURL command copied to clipboard',
+        });
       } else {
         showError('Failed to generate cURL', result.error || 'Unknown error');
       }
     } catch (error: unknown) {
       console.error('Failed to copy as cURL:', error);
-      showError('Failed to copy as cURL', error instanceof Error ? error.message : 'Unknown error');
+      showError(
+        'Failed to copy as cURL',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
     }
   };
 
@@ -116,7 +145,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
             {isEditingName ? (
               <Input
                 value={tempName}
-                onChange={(e) => onNameEdit.setTempName(e.target.value)}
+                onChange={e => onNameEdit.setTempName(e.target.value)}
                 onBlur={() => onNameEdit.save()}
                 onKeyDown={handleNameKeyDown}
                 placeholder="Enter request name"
@@ -134,7 +163,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
                 >
                   {requestData.name || 'Untitled Request'}
                 </div>
-                
+
                 {/* Unsaved indicator */}
                 {!requestData.id && !requestData.collectionId && (
                   <Badge variant="outline" className="text-xs">
@@ -163,28 +192,44 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
             )}
           </div>
         </div>
-        
+
         {/* Method and URL Row */}
         <div className="flex items-center gap-4">
           {/* Method Selector */}
-          <Select 
-            value={requestData.method} 
-            onValueChange={(value) => setRequestData({ ...requestData, method: value as RequestFormData['method'] })}
+          <Select
+            value={requestData.method}
+            onValueChange={value =>
+              setRequestData({
+                ...requestData,
+                method: value as RequestFormData['method'],
+              })
+            }
           >
-            <SelectTrigger className="w-24" data-testid="method-select" aria-label="HTTP method select">
+            <SelectTrigger
+              className="w-24"
+              data-testid="method-select"
+              aria-label="HTTP method select"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {METHODS.map(method => (
                 <SelectItem key={method} value={method}>
-                  <span className={`font-mono text-sm font-bold ${
-                    method === 'GET' ? 'text-green-600' :
-                    method === 'POST' ? 'text-blue-600' :
-                    method === 'PUT' ? 'text-orange-600' :
-                    method === 'PATCH' ? 'text-purple-600' :
-                    method === 'DELETE' ? 'text-red-600' :
-                    'text-gray-600'
-                  }`}>
+                  <span
+                    className={`font-mono text-sm font-bold ${
+                      method === 'GET'
+                        ? 'text-green-600'
+                        : method === 'POST'
+                          ? 'text-blue-600'
+                          : method === 'PUT'
+                            ? 'text-orange-600'
+                            : method === 'PATCH'
+                              ? 'text-purple-600'
+                              : method === 'DELETE'
+                                ? 'text-red-600'
+                                : 'text-gray-600'
+                    }`}
+                  >
                     {method}
                   </span>
                 </SelectItem>
@@ -197,7 +242,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
             <VariableInputUnified
               variant="overlay"
               value={requestData.url}
-              onChange={(url) => setRequestData({ ...requestData, url })}
+              onChange={url => setRequestData({ ...requestData, url })}
               placeholder="Enter request URL or use {{variable}}"
               className="font-mono text-xs"
             />
@@ -224,8 +269,8 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
           </TooltipProvider>
 
           {/* Send Button */}
-          <Button 
-            onClick={onSend} 
+          <Button
+            onClick={onSend}
             disabled={isLoading || !requestData.url.trim()}
             title={`Send Request (${getShortcutDisplay(KEYMAP.SEND_REQUEST)})`}
           >

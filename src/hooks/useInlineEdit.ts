@@ -1,12 +1,12 @@
 /**
  * useInlineEdit - Inline name editing hook
- * 
+ *
  * Provides inline editing functionality for names with:
  * - Edit state management
  * - Validation
  * - Save/cancel operations
  * - Keyboard shortcuts
- * 
+ *
  * @example
  * ```tsx
  * const {
@@ -78,7 +78,7 @@ export function useInlineEdit(config: InlineEditConfig) {
 
   const saveEdit = useCallback(async () => {
     const trimmedValue = state.editValue.trim();
-    
+
     if (!trimmedValue) {
       showError('Validation Error', 'Name cannot be empty');
       return;
@@ -105,7 +105,10 @@ export function useInlineEdit(config: InlineEditConfig) {
         editValue: trimmedValue,
       });
     } catch (error: unknown) {
-      showError('Save Failed', error instanceof Error ? error.message : 'Failed to save changes');
+      showError(
+        'Save Failed',
+        error instanceof Error ? error.message : 'Failed to save changes'
+      );
     }
   }, [state.editValue, config, showError, cancelEdit]);
 
@@ -113,15 +116,18 @@ export function useInlineEdit(config: InlineEditConfig) {
     setState(prev => ({ ...prev, editValue: value }));
   }, []);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      saveEdit();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      cancelEdit();
-    }
-  }, [saveEdit, cancelEdit]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveEdit();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelEdit();
+      }
+    },
+    [saveEdit, cancelEdit]
+  );
 
   return {
     ...state,

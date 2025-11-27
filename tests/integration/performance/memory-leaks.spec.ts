@@ -2,15 +2,18 @@ import { test, expect } from '../../helpers/electron-fixtures';
 import { logger } from '../../helpers/logger';
 
 test.describe('Performance: Memory Leak Detection', () => {
-  test('should not leak memory when creating and deleting collections', async ({ electronPage, _testDbPath }) => {
+  test('should not leak memory when creating and deleting collections', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     const initialMemory = process.memoryUsage().heapUsed;
     logger.logMemory('Initial state');
 
     // Create and delete collections in a loop
     for (let i = 0; i < 10; i++) {
       const createStart = Date.now();
-      
-      const collection = await electronPage.evaluate(async (index) => {
+
+      const collection = await electronPage.evaluate(async index => {
         return await window.electronAPI.collection.save({
           name: `Memory Test Collection ${index}`,
           description: '',
@@ -21,7 +24,7 @@ test.describe('Performance: Memory Leak Detection', () => {
         });
       }, i);
 
-      await electronPage.evaluate(async (id) => {
+      await electronPage.evaluate(async id => {
         return await window.electronAPI.collection.delete(id);
       }, collection.id);
 
@@ -44,7 +47,10 @@ test.describe('Performance: Memory Leak Detection', () => {
     expect(memoryDelta).toBeLessThan(50);
   });
 
-  test('should not leak memory with multiple page navigations', async ({ electronPage, _testDbPath }) => {
+  test('should not leak memory with multiple page navigations', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     const initialMemory = process.memoryUsage().heapUsed;
     logger.logMemory('Initial state');
 
@@ -52,13 +58,13 @@ test.describe('Performance: Memory Leak Detection', () => {
     for (let i = 0; i < 20; i++) {
       await electronPage.goto('/');
       await electronPage.waitForLoadState('networkidle');
-      
+
       await electronPage.click('text=Collections');
       await electronPage.waitForLoadState('networkidle');
-      
+
       await electronPage.click('text=Environments');
       await electronPage.waitForLoadState('networkidle');
-      
+
       await electronPage.click('text=Home');
       await electronPage.waitForLoadState('networkidle');
     }
@@ -78,7 +84,10 @@ test.describe('Performance: Memory Leak Detection', () => {
     expect(memoryDelta).toBeLessThan(100);
   });
 
-  test('should cleanup event listeners on component unmount', async ({ electronPage, _testDbPath }) => {
+  test('should cleanup event listeners on component unmount', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     // Create data
     await electronPage.evaluate(async () => {
       await window.electronAPI.collection.save({
@@ -97,11 +106,11 @@ test.describe('Performance: Memory Leak Detection', () => {
     for (let i = 0; i < 10; i++) {
       await electronPage.goto('/');
       await electronPage.waitForLoadState('networkidle');
-      
+
       await electronPage.click('text=Collections');
       await electronPage.waitForLoadState('networkidle');
       await electronPage.waitForTimeout(500);
-      
+
       await electronPage.goto('/');
       await electronPage.waitForLoadState('networkidle');
     }
@@ -121,7 +130,10 @@ test.describe('Performance: Memory Leak Detection', () => {
     expect(memoryDelta).toBeLessThan(50);
   });
 
-  test('should not accumulate memory with repeated IPC calls', async ({ electronPage, _testDbPath }) => {
+  test('should not accumulate memory with repeated IPC calls', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     const initialMemory = process.memoryUsage().heapUsed;
     logger.logMemory('Initial state');
 
@@ -149,7 +161,10 @@ test.describe('Performance: Memory Leak Detection', () => {
     expect(memoryDelta).toBeLessThan(30);
   });
 
-  test('should cleanup database connections properly', async ({ electronPage, _testDbPath }) => {
+  test('should cleanup database connections properly', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     const initialMemory = process.memoryUsage().heapUsed;
 
     // Create and read many items
@@ -166,26 +181,29 @@ test.describe('Performance: Memory Leak Detection', () => {
 
     // Create many requests
     for (let i = 0; i < 50; i++) {
-      await electronPage.evaluate(async ({ collectionId, index }) => {
-        await window.electronAPI.request.save({
-          name: `Request ${index}`,
-          method: 'GET',
-          url: `https://example.com/${index}`,
-          headers: {},
-          body: null,
-          queryParams: [],
-          auth: null,
-          collectionId,
-          folderId: null,
-          isFavorite: false,
-          order: index,
-        });
-      }, { collectionId: collection.id, index: i });
+      await electronPage.evaluate(
+        async ({ collectionId, index }) => {
+          await window.electronAPI.request.save({
+            name: `Request ${index}`,
+            method: 'GET',
+            url: `https://example.com/${index}`,
+            headers: {},
+            body: null,
+            queryParams: [],
+            auth: null,
+            collectionId,
+            folderId: null,
+            isFavorite: false,
+            order: index,
+          });
+        },
+        { collectionId: collection.id, index: i }
+      );
     }
 
     // Read all requests multiple times
     for (let i = 0; i < 20; i++) {
-      await electronPage.evaluate(async (collectionId) => {
+      await electronPage.evaluate(async collectionId => {
         return await window.electronAPI.request.list(collectionId);
       }, collection.id);
     }
@@ -205,4 +223,3 @@ test.describe('Performance: Memory Leak Detection', () => {
     expect(memoryDelta).toBeLessThan(100);
   });
 });
-

@@ -14,7 +14,7 @@ let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
   const isDarkMode = nativeTheme.shouldUseDarkColors;
-  
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -89,7 +89,7 @@ app.whenReady().then(async () => {
     // Initialize database with test path if provided
     const testDbPath = process.env.TEST_DB_PATH;
     await initDatabase(testDbPath);
-    
+
     registerIpcHandlers();
     registerTestHandlers();
     createWindow();
@@ -115,4 +115,3 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   logger.info('Test application shutting down');
 });
-

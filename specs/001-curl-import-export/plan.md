@@ -11,8 +11,10 @@ Implement cURL import/export functionality by creating parser and generator util
 ## Architecture Decisions
 
 ### Decision 1: Parser Library vs Custom Implementation
+
 **Context**: Need to parse cURL commands reliably with support for various flags and formats  
 **Options Considered**:
+
 - Option A: Use npm library (curl-to-json, curlconverter) - Pros: Less code, community maintained. Cons: Dependency, potential compatibility issues
 - Option B: Custom parser - Pros: Full control, no dependencies. Cons: More code to maintain
 
@@ -21,8 +23,10 @@ Implement cURL import/export functionality by creating parser and generator util
 **Trade-offs**: Library may have limitations, custom parser requires more testing
 
 ### Decision 2: Generator Implementation
+
 **Context**: Need to generate valid cURL commands from Request objects  
 **Options Considered**:
+
 - Option A: Use library - Pros: Consistent output. Cons: May not match our exact needs
 - Option B: Custom generator - Pros: Full control, readable output. Cons: More code
 
@@ -33,10 +37,12 @@ Implement cURL import/export functionality by creating parser and generator util
 ## Implementation Phases
 
 ### Phase 1: Core Utilities
+
 **Goal**: Create parser and generator utilities  
 **Duration**: 1 day
 
 **Tasks**:
+
 - [x] Research and evaluate cURL parsing libraries
 - [x] Create curl-parser.ts utility
 - [x] Create curl-generator.ts utility
@@ -46,10 +52,12 @@ Implement cURL import/export functionality by creating parser and generator util
 **Deliverables**: Parser and generator utilities with tests
 
 ### Phase 2: IPC Integration
+
 **Goal**: Expose parser and generator via IPC  
 **Duration**: 0.5 days
 
 **Tasks**:
+
 - [x] Add IPC handlers in handlers.ts
 - [x] Expose APIs in preload.ts
 - [x] Test IPC communication
@@ -58,10 +66,12 @@ Implement cURL import/export functionality by creating parser and generator util
 **Deliverables**: Working IPC handlers and preload APIs
 
 ### Phase 3: UI Components
+
 **Goal**: Build import/export UI  
 **Duration**: 1 day
 
 **Tasks**:
+
 - [x] Add Copy as cURL button to RequestHeader
 - [x] Create CurlImportDialog component
 - [x] Add import options to Collections page
@@ -71,10 +81,12 @@ Implement cURL import/export functionality by creating parser and generator util
 **Deliverables**: Complete UI for import/export
 
 ### Phase 4: Testing & Polish
+
 **Goal**: Test and refine implementation  
 **Duration**: 0.5 days
 
 **Tasks**:
+
 - [x] Test with various cURL formats
 - [x] Test edge cases and error scenarios
 - [x] Test bulk import
@@ -86,6 +98,7 @@ Implement cURL import/export functionality by creating parser and generator util
 ## File Structure
 
 ### New Files
+
 ```
 src/lib/curl-parser.ts
 src/lib/curl-generator.ts
@@ -93,6 +106,7 @@ src/components/curl/CurlImportDialog.tsx
 ```
 
 ### Modified Files
+
 ```
 electron/ipc/handlers.ts
   - Add curl:parse handler
@@ -112,9 +126,11 @@ src/pages/Collections.tsx
 ## Implementation Details
 
 ### Component 1: curl-parser.ts
+
 **Location**: `src/lib/curl-parser.ts`  
 **Purpose**: Parse cURL command strings into Request objects  
 **Key Functions**:
+
 - `parseCurlCommand(command: string): Request` - Main parsing function
 - `parseMethod(args: string[]): string` - Extract HTTP method
 - `parseUrl(args: string[]): string` - Extract and parse URL
@@ -123,13 +139,16 @@ src/pages/Collections.tsx
 - `parseAuth(args: string[]): AuthConfig` - Extract authentication
 
 **Dependencies**:
+
 - Internal: Request types from `src/types/entities.ts`
 - External: None (or npm library if chosen)
 
 ### Component 2: curl-generator.ts
+
 **Location**: `src/lib/curl-generator.ts`  
 **Purpose**: Generate cURL commands from Request objects  
 **Key Functions**:
+
 - `generateCurlCommand(request: Request): string` - Main generation function
 - `escapeShellString(str: string): string` - Escape special characters
 - `formatHeaders(headers: Record<string, string>): string[]` - Format header flags
@@ -137,13 +156,16 @@ src/pages/Collections.tsx
 - `formatAuth(auth: AuthConfig): string[]` - Format auth flags
 
 **Dependencies**:
+
 - Internal: Request types from `src/types/entities.ts`
 - External: None
 
 ### Component 3: CurlImportDialog
+
 **Location**: `src/components/curl/CurlImportDialog.tsx`  
 **Purpose**: Dialog for importing cURL commands  
 **Key Functions**:
+
 - Textarea for pasting cURL commands
 - File upload for importing from file
 - Preview of parsed request
@@ -151,12 +173,14 @@ src/pages/Collections.tsx
 - Bulk import support
 
 **Dependencies**:
+
 - Internal: Dialog component, Request types, IPC APIs
 - External: shadcn/ui components
 
 ## Data Flow
 
 ### Import Flow
+
 ```
 User pastes cURL → CurlImportDialog → electronAPI.curl.parse()
   → IPC handler → curl-parser.ts → Returns Request object
@@ -164,6 +188,7 @@ User pastes cURL → CurlImportDialog → electronAPI.curl.parse()
 ```
 
 ### Export Flow
+
 ```
 User clicks Copy → RequestHeader → electronAPI.curl.generate()
   → IPC handler → curl-generator.ts → Returns cURL string
@@ -173,16 +198,19 @@ User clicks Copy → RequestHeader → electronAPI.curl.generate()
 ## Testing Strategy
 
 ### Unit Tests
+
 - [x] Test parser with various cURL formats
 - [x] Test generator with all request types
 - [x] Test edge cases (special chars, multi-line, etc.)
 
 ### Integration Tests
+
 - [x] Test IPC handlers
 - [x] Test end-to-end import flow
 - [x] Test end-to-end export flow
 
 ### Manual Testing Checklist
+
 - [x] Import simple GET request
 - [x] Import POST with JSON body
 - [x] Import with Bearer auth
@@ -215,6 +243,7 @@ User clicks Copy → RequestHeader → electronAPI.curl.generate()
 ## Rollback Plan
 
 If issues arise:
+
 1. Disable feature via feature flag (if implemented)
 2. Remove UI buttons/menu items
 3. Keep utilities for future use

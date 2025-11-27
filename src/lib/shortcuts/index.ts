@@ -5,10 +5,8 @@
 export { ShortcutRegistry } from './registry';
 export { detectContext, isMac, getModifierKey } from './contexts';
 export { SHORTCUTS } from './shortcuts';
-export type { 
-  ShortcutContext, 
-  ShortcutDefinition, 
-  ContextState 
+export type {
+  ShortcutContext,
+  ShortcutDefinition,
+  ContextState,
 } from './types';
-
-

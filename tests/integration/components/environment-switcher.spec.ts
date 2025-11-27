@@ -1,7 +1,10 @@
 import { test, expect } from '../../helpers/electron-fixtures';
 
 test.describe('EnvironmentSwitcher Component Integration', () => {
-  test('should render environment switcher with environments', async ({ electronPage, _testDbPath }) => {
+  test('should render environment switcher with environments', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     // Create multiple environments
     await electronPage.evaluate(async () => {
       await window.electronAPI.env.save({
@@ -27,11 +30,16 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     await electronPage.waitForLoadState('networkidle');
     await electronPage.waitForTimeout(1000);
 
-    const envSwitcher = electronPage.locator('[data-testid="environment-switcher"]');
+    const envSwitcher = electronPage.locator(
+      '[data-testid="environment-switcher"]'
+    );
     await expect(envSwitcher).toBeVisible();
   });
 
-  test('should switch global environment', async ({ electronPage, _testDbPath }) => {
+  test('should switch global environment', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     // Create environments
     const setup = await electronPage.evaluate(async () => {
       const _env1 = await window.electronAPI.env.save({
@@ -62,7 +70,11 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     // Find and click environment switcher button
     // The EnvironmentSwitcher uses a button with Globe icon and environment name
     // Look for button containing the current environment name or "No Environment"
-    const envSwitcher = electronPage.locator('button:has-text("Global Env 1"), button:has-text("No Environment"), button:has([class*="Globe"])').first();
+    const envSwitcher = electronPage
+      .locator(
+        'button:has-text("Global Env 1"), button:has-text("No Environment"), button:has([class*="Globe"])'
+      )
+      .first();
     await envSwitcher.waitFor({ state: 'visible', timeout: 10000 });
     await envSwitcher.click();
     await electronPage.waitForTimeout(1500); // Wait for dropdown to open
@@ -70,7 +82,9 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     // Select different environment from dropdown
     // The dropdown uses button elements with the environment displayName
     // Each button has the structure: button > div > div > font-medium (displayName)
-    const env2Option = electronPage.locator('button:has-text("Global Env 2")').first();
+    const env2Option = electronPage
+      .locator('button:has-text("Global Env 2")')
+      .first();
     await env2Option.waitFor({ state: 'visible', timeout: 10000 });
     await env2Option.click();
     await electronPage.waitForTimeout(1000);
@@ -82,17 +96,22 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
 
     expect(currentEnv).toBeDefined();
     expect(currentEnv.id).toBe(setup.env2Id);
-    
+
     // Also verify UI shows the new environment
     // Re-locate the switcher after the switch to get updated text
     await electronPage.waitForTimeout(500); // Wait for UI update
-    const updatedEnvSwitcher = electronPage.locator('button:has-text("Global Env 2"), button:has([class*="Globe"])').first();
+    const updatedEnvSwitcher = electronPage
+      .locator('button:has-text("Global Env 2"), button:has([class*="Globe"])')
+      .first();
     await updatedEnvSwitcher.waitFor({ state: 'visible', timeout: 5000 });
     const envSwitcherText = await updatedEnvSwitcher.textContent();
     expect(envSwitcherText).toContain('Global Env 2');
   });
 
-  test('should display current environment', async ({ electronPage, _testDbPath }) => {
+  test('should display current environment', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     // Create default environment
     const env = await electronPage.evaluate(async () => {
       return await window.electronAPI.env.save({
@@ -112,13 +131,19 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     await electronPage.waitForTimeout(1000);
 
     // Verify current environment is displayed
-    const currentEnvText = electronPage.locator('[data-testid="environment-switcher"] span', {
-      hasText: 'Current Environment'
-    });
+    const currentEnvText = electronPage.locator(
+      '[data-testid="environment-switcher"] span',
+      {
+        hasText: 'Current Environment',
+      }
+    );
     await expect(currentEnvText).toBeVisible({ timeout: 5000 });
   });
 
-  test('should handle collection environments', async ({ electronPage, _testDbPath }) => {
+  test('should handle collection environments', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     // Create collection with environments
     const setup = await electronPage.evaluate(async () => {
       const collection = await window.electronAPI.collection.save({
@@ -130,10 +155,13 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
         isFavorite: false,
       });
 
-      const envResult = await window.electronAPI.collection.addEnvironment(collection.id, {
-        name: 'Collection Env',
-        variables: { api_key: 'collection-key' },
-      });
+      const envResult = await window.electronAPI.collection.addEnvironment(
+        collection.id,
+        {
+          name: 'Collection Env',
+          variables: { api_key: 'collection-key' },
+        }
+      );
 
       return { collectionId: collection.id, envId: envResult.id };
     });
@@ -143,11 +171,16 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
 
     // Select a request from the collection to trigger collection environment display
     // EnvironmentSwitcher should show collection environments when a request from that collection is selected
-    const collectionVisible = await electronPage.locator('text=Collection with Envs').isVisible({ timeout: 5000 });
+    const collectionVisible = await electronPage
+      .locator('text=Collection with Envs')
+      .isVisible({ timeout: 5000 });
     expect(collectionVisible).toBe(true);
   });
 
-  test('should call IPC to set current environment', async ({ electronPage, _testDbPath }) => {
+  test('should call IPC to set current environment', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     // Create environments
     const setup = await electronPage.evaluate(async () => {
       const _env1 = await window.electronAPI.env.save({
@@ -168,7 +201,7 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     });
 
     // Switch environment via IPC (simulating what component does)
-    const switchResult = await electronPage.evaluate(async (envId) => {
+    const switchResult = await electronPage.evaluate(async envId => {
       return await window.electronAPI.env.setCurrent(envId);
     }, setup.env2Id);
 
@@ -182,4 +215,3 @@ test.describe('EnvironmentSwitcher Component Integration', () => {
     expect(currentEnv.id).toBe(setup.env2Id);
   });
 });
-

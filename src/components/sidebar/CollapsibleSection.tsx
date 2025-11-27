@@ -1,6 +1,6 @@
 /**
  * CollapsibleSection - VS Code-style collapsible sidebar section
- * 
+ *
  * A reusable component for creating collapsible sections in the sidebar.
  * Features:
  * - VS Code-style appearance with header and chevron icon
@@ -17,28 +17,28 @@ import { cn } from '../../lib/utils';
 export interface CollapsibleSectionProps {
   /** Unique section identifier */
   id: string;
-  
+
   /** Section title displayed in header */
   title: string;
-  
+
   /** Is section expanded? */
   isExpanded: boolean;
-  
+
   /** Toggle handler */
   onToggle: () => void;
-  
+
   /** Section content (only rendered when expanded) */
   children: React.ReactNode;
-  
+
   /** Additional CSS classes */
   className?: string;
-  
+
   /** Icon to display in header (optional) */
   icon?: React.ComponentType<{ className?: string }>;
-  
+
   /** Actions to display on the right side of header (optional) */
   headerActions?: React.ReactNode;
-  
+
   /** Test ID for testing */
   testId?: string;
 }
@@ -63,7 +63,6 @@ export function CollapsibleSection({
       onToggle();
     }
   };
-
 
   return (
     <div
@@ -114,10 +113,10 @@ export function CollapsibleSection({
 
         {/* Header Actions */}
         {headerActions && (
-          <div 
+          <div
             className="flex items-center gap-1 flex-shrink-0"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
+            onKeyDown={e => e.stopPropagation()}
           >
             {headerActions}
           </div>
@@ -142,4 +141,3 @@ export function CollapsibleSection({
     </div>
   );
 }
-

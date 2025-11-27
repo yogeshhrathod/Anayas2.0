@@ -14,10 +14,10 @@ export function ShortcutHelp() {
   const [open, setOpen] = useState(false);
   const context = useShortcutContext();
   const activeContexts = detectContext(context);
-  
+
   // Show only relevant shortcuts for current context
   const relevantShortcuts = Object.entries(SHORTCUTS)
-    .filter(([_, shortcut]) => 
+    .filter(([_, shortcut]) =>
       shortcut.contexts.some(ctx => activeContexts.includes(ctx))
     )
     .sort((a, b) => {
@@ -27,31 +27,39 @@ export function ShortcutHelp() {
       const bContext = b[1].contexts[0];
       return contextOrder.indexOf(aContext) - contextOrder.indexOf(bContext);
     });
-  
+
   // Group shortcuts by context
-  const groupedShortcuts = relevantShortcuts.reduce((acc, [id, shortcut]) => {
-    const context = shortcut.contexts[0];
-    if (!acc[context]) {
-      acc[context] = [];
-    }
-    acc[context].push([id, shortcut]);
-    return acc;
-  }, {} as Record<string, Array<[string, typeof SHORTCUTS[string]]>>);
-  
+  const groupedShortcuts = relevantShortcuts.reduce(
+    (acc, [id, shortcut]) => {
+      const context = shortcut.contexts[0];
+      if (!acc[context]) {
+        acc[context] = [];
+      }
+      acc[context].push([id, shortcut]);
+      return acc;
+    },
+    {} as Record<string, Array<[string, (typeof SHORTCUTS)[string]]>>
+  );
+
   const getContextTitle = (context: string) => {
     switch (context) {
-      case 'global': return 'Global Shortcuts';
-      case 'sidebar': return 'Sidebar Shortcuts';
-      case 'editor': return 'Request Editor Shortcuts';
-      case 'collections-page': return 'Collections Page Shortcuts';
-      default: return 'Other Shortcuts';
+      case 'global':
+        return 'Global Shortcuts';
+      case 'sidebar':
+        return 'Sidebar Shortcuts';
+      case 'editor':
+        return 'Request Editor Shortcuts';
+      case 'collections-page':
+        return 'Collections Page Shortcuts';
+      default:
+        return 'Other Shortcuts';
     }
   };
-  
+
   return (
     <>
-      <Button 
-        variant="ghost" 
+      <Button
+        variant="ghost"
         size="sm"
         onClick={() => setOpen(true)}
         className="w-full justify-start"
@@ -59,7 +67,7 @@ export function ShortcutHelp() {
         <Keyboard className="h-4 w-4" />
         <span className="ml-2">Keyboard Shortcuts</span>
       </Button>
-      
+
       <Dialog
         open={open}
         onOpenChange={setOpen}
@@ -68,25 +76,28 @@ export function ShortcutHelp() {
         className="max-h-[80vh]"
       >
         <div className="space-y-6">
-              {Object.entries(groupedShortcuts).map(([context, shortcuts]) => (
-                <div key={context}>
-                  <h3 className="text-lg font-semibold mb-3">
-                    {getContextTitle(context)}
-                  </h3>
-                  <div className="space-y-2">
-                    {shortcuts.map(([id, shortcut]) => (
-                      <div key={id} className="flex justify-between items-center py-1">
-                        <span className="text-sm text-muted-foreground">
-                          {shortcut.description}
-                        </span>
-                        <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">
-                          {getShortcutDisplay(shortcut)}
-                        </kbd>
-                      </div>
-                    ))}
+          {Object.entries(groupedShortcuts).map(([context, shortcuts]) => (
+            <div key={context}>
+              <h3 className="text-lg font-semibold mb-3">
+                {getContextTitle(context)}
+              </h3>
+              <div className="space-y-2">
+                {shortcuts.map(([id, shortcut]) => (
+                  <div
+                    key={id}
+                    className="flex justify-between items-center py-1"
+                  >
+                    <span className="text-sm text-muted-foreground">
+                      {shortcut.description}
+                    </span>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">
+                      {getShortcutDisplay(shortcut)}
+                    </kbd>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </Dialog>
     </>

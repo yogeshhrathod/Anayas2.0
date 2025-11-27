@@ -14,51 +14,61 @@ Consolidate duplicated form validation logic across 3 components (`SaveRequestDi
 ## Goal Alignment Summary
 
 **How this feature supports the performance-first project goal:**
+
 - Reduces code duplication (~80 lines), improving maintainability
 - Ensures consistent validation behavior across all forms
 - Reduces bundle size slightly by removing duplicate validation logic
 - Improves developer experience with a single source of truth for validation patterns
 
 **Success Criteria:**
+
 - All 3 components use `useFormValidation` hook
 - No duplicated validation logic remains
 - Consistent validation behavior: same rules, same error messages, same UX
 - ~80 lines of code eliminated
 
 **Constraints:**
+
 - Must maintain existing validation rules and error messages
 - Must support custom validation for number fields (Settings page)
 - Performance: <1MB memory, <1ms load time (refactoring only)
 
 **Unclear Points (to confirm):**
+
 - None - clear consolidation pattern
 
 ## Performance Impact Analysis (MANDATORY)
 
 ### Memory Impact
+
 - **Estimated Memory Footprint**: <1MB (Target: <50MB per feature)
 - **Memory Budget**: Minimal - this is refactoring, not new functionality
 - **Memory Cleanup Strategy**: No new cleanup needed, existing cleanup remains
 
 ### Load Time Impact (PRIMARY)
+
 - **Estimated Load Time**: <1ms (Target: <200ms)
 - **Initialization Strategy**: No initialization needed - refactoring only
 - **Performance Tracking**: N/A - refactoring doesn't change runtime behavior
 
 ### Lazy Loading Strategy (REQUIRED)
+
 - **How feature loads on-demand**: N/A - this is refactoring existing code
 - **Code Splitting Plan**: N/A - no new code splitting needed
 - **Trigger**: N/A - refactoring only
 
 ### Bundle Size Impact (INFORMATIONAL - Not Primary)
+
 - **Estimated Bundle Size**: ~2KB reduction (removing duplicate code)
 
 ### Performance Monitoring (PRIMARY)
+
 - [x] Memory usage will be tracked (before/after feature load) - N/A (refactoring)
 - [x] Load time will be measured and logged - N/A (refactoring)
 - [x] Performance metrics will be logged to monitoring system - N/A (refactoring)
 
 **Optional/Informational:**
+
 - [x] Bundle size will be tracked in build (for awareness)
 
 ## Goals
@@ -74,6 +84,7 @@ Consolidate duplicated form validation logic across 3 components (`SaveRequestDi
 ### As a developer, I want all forms to use the same validation hook so that validation behavior is consistent and maintainable
 
 **Acceptance Criteria:**
+
 - [x] SaveRequestDialog uses `useFormValidation` hook
 - [x] PromoteRequestDialog uses `useFormValidation` hook
 - [x] Settings page uses `useFormValidation` hook (with custom number validation)
@@ -88,13 +99,15 @@ Consolidate duplicated form validation logic across 3 components (`SaveRequestDi
 ## Technical Requirements
 
 ### Existing Code to Leverage
+
 - [x] Hook: `src/hooks/useFormValidation.ts` - Already exists and is used by other forms
 - [x] Type: `src/types/forms.ts` - `ValidationSchema` and `ValidationRule` types already defined
 - [x] Component: `src/components/environment/EnvironmentForm.tsx` - Example of using `useFormValidation`
 - [x] Component: `src/components/collection/CollectionForm.tsx` - Example of using `useFormValidation`
 
 ### Integration Points
-- **Where to modify**: 
+
+- **Where to modify**:
   - `src/components/ui/save-request-dialog.tsx` - Replace manual validation with `useFormValidation`
   - `src/components/ui/promote-request-dialog.tsx` - Replace manual validation with `useFormValidation`
   - `src/pages/Settings.tsx` - Replace manual validation with `useFormValidation` (with custom validation)
@@ -102,6 +115,7 @@ Consolidate duplicated form validation logic across 3 components (`SaveRequestDi
 ### Architecture Decisions
 
 **Decision 1: Use existing `useFormValidation` hook**
+
 - **Context**: Three components have duplicated validation logic
 - **Options Considered**:
   - Option A: Create new validation hook - Cons: More code, duplication
@@ -111,6 +125,7 @@ Consolidate duplicated form validation logic across 3 components (`SaveRequestDi
 - **Trade-offs**: Need to ensure hook supports custom validation for number fields
 
 **Decision 2: Custom validation for number fields**
+
 - **Context**: Settings page has custom number validation (min/max ranges)
 - **Options Considered**:
   - Option A: Extend `useFormValidation` to support number validation - Cons: More complexity
@@ -120,10 +135,12 @@ Consolidate duplicated form validation logic across 3 components (`SaveRequestDi
 - **Trade-offs**: None - this is the intended way to handle custom validation
 
 ### Dependencies
+
 - Internal: `useFormValidation` hook, `ValidationSchema` type
 - External: None
 
 ### File Structure Changes
+
 ```
 Modified Files:
 - src/components/ui/save-request-dialog.tsx - Replace manual validation
@@ -132,14 +149,17 @@ Modified Files:
 ```
 
 ### Data Model Changes
+
 None - no data model changes
 
 ### API Changes
+
 None - no API changes
 
 ## Acceptance Criteria
 
 ### Functional Requirements
+
 - [x] SaveRequestDialog validates name (required, minLength: 2, maxLength: 100) and collection (required)
 - [x] PromoteRequestDialog validates name (required, minLength: 2, maxLength: 100) and collection (required)
 - [x] Settings page validates requestTimeout (min: 1000, max: 300000) and maxHistory (min: 1, max: 10000)
@@ -147,7 +167,8 @@ None - no API changes
 - [x] All validation triggers match existing behavior (on blur, on submit)
 
 ### Non-Functional Requirements
-- [x] **Performance (PRIMARY)**: 
+
+- [x] **Performance (PRIMARY)**:
   - Memory: <1MB (refactoring only) - ✅
   - Load time: <1ms (refactoring only) - ✅
   - Lazy-loaded: N/A (refactoring only)
@@ -173,11 +194,11 @@ None - no API changes
 
 ## Risks & Mitigation
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|------------|------------|
-| Breaking existing validation behavior | High | Low | Test all forms thoroughly, maintain same rules/messages |
-| Custom number validation doesn't work | Medium | Low | Use `custom` validation function which is already supported |
-| Error message format changes | Low | Low | Ensure error messages match existing format |
+| Risk                                  | Impact | Probability | Mitigation                                                  |
+| ------------------------------------- | ------ | ----------- | ----------------------------------------------------------- |
+| Breaking existing validation behavior | High   | Low         | Test all forms thoroughly, maintain same rules/messages     |
+| Custom number validation doesn't work | Medium | Low         | Use `custom` validation function which is already supported |
+| Error message format changes          | Low    | Low         | Ensure error messages match existing format                 |
 
 ## References
 

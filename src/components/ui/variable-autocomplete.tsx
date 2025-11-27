@@ -8,7 +8,11 @@ export interface AutocompletePosition {
 }
 
 interface VariableAutocompleteProps {
-  variables: Array<{ name: string; value: string; scope: 'collection' | 'global' | 'dynamic' }>;
+  variables: Array<{
+    name: string;
+    value: string;
+    scope: 'collection' | 'global' | 'dynamic';
+  }>;
   onSelect: (variableName: string) => void;
   onClose: () => void;
   position: AutocompletePosition;
@@ -38,7 +42,10 @@ export function VariableAutocomplete({
         const nameLower = v.name.toLowerCase();
         // Allow searching without $ prefix for dynamic variables
         if (v.scope === 'dynamic' && nameLower.startsWith('$')) {
-          return nameLower.includes(searchLower) || nameLower.slice(1).includes(searchLower);
+          return (
+            nameLower.includes(searchLower) ||
+            nameLower.slice(1).includes(searchLower)
+          );
         }
         return nameLower.includes(searchLower);
       });
@@ -47,17 +54,23 @@ export function VariableAutocomplete({
   }, [variables, showOnlyDynamic, searchTerm]);
 
   // Group variables by scope
-  const groupedVariables = useMemo(() => ({
-    dynamic: filteredVariables.filter(v => v.scope === 'dynamic'),
-    collection: filteredVariables.filter(v => v.scope === 'collection'),
-    global: filteredVariables.filter(v => v.scope === 'global'),
-  }), [filteredVariables]);
+  const groupedVariables = useMemo(
+    () => ({
+      dynamic: filteredVariables.filter(v => v.scope === 'dynamic'),
+      collection: filteredVariables.filter(v => v.scope === 'collection'),
+      global: filteredVariables.filter(v => v.scope === 'global'),
+    }),
+    [filteredVariables]
+  );
 
-  const allVariables = useMemo(() => [
-    ...groupedVariables.collection,
-    ...groupedVariables.global,
-    ...groupedVariables.dynamic,
-  ], [groupedVariables]);
+  const allVariables = useMemo(
+    () => [
+      ...groupedVariables.collection,
+      ...groupedVariables.global,
+      ...groupedVariables.dynamic,
+    ],
+    [groupedVariables]
+  );
 
   // Keyboard navigation
   useEffect(() => {
@@ -188,7 +201,10 @@ export function VariableAutocomplete({
           </div>
         )}
         {groupedVariables.dynamic.map((variable, index) => {
-          const dynamicIndex = groupedVariables.collection.length + groupedVariables.global.length + index;
+          const dynamicIndex =
+            groupedVariables.collection.length +
+            groupedVariables.global.length +
+            index;
           const isSelected = selectedIndex === dynamicIndex;
           return (
             <button

@@ -1,13 +1,13 @@
 /**
  * CollectionHierarchy - Main collection hierarchy component (refactored)
- * 
+ *
  * Orchestrates the collection hierarchy display using smaller, focused components:
  * - CollectionItem for individual collections
  * - FolderItem for folders within collections
  * - RequestItem for individual requests
  * - Drag and drop functionality
  * - Context menus and actions
- * 
+ *
  * This refactored version is much smaller and more maintainable than the original.
  */
 
@@ -25,27 +25,34 @@ export interface CollectionHierarchyProps {
   onRequestSelect: (request: Request) => void;
 }
 
-export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProps) {
-  const { 
-    collections, 
-    setCollections, 
-    expandedCollections, 
-    setExpandedCollections, 
-    setCurrentPage, 
-    setSelectedRequest, 
+export function CollectionHierarchy({
+  onRequestSelect,
+}: CollectionHierarchyProps) {
+  const {
+    collections,
+    setCollections,
+    expandedCollections,
+    setExpandedCollections,
+    setCurrentPage,
+    setSelectedRequest,
     setSelectedItem,
     setFocusedContext,
     sidebarRefreshTrigger,
-    triggerSidebarRefresh
+    triggerSidebarRefresh,
   } = useStore();
-  
+
   const { showSuccess, showError } = useToastNotifications();
   const [requests, setRequests] = useState<Request[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
-  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set());
+  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(
+    new Set()
+  );
   const prevCollectionIdsRef = useRef<Set<number>>(new Set());
   // Track unsaved request drag state for visual feedback
-  const [unsavedDragOver, setUnsavedDragOver] = useState<{ type: 'collection' | 'folder'; id: number } | null>(null);
+  const [unsavedDragOver, setUnsavedDragOver] = useState<{
+    type: 'collection' | 'folder';
+    id: number;
+  } | null>(null);
 
   // Load requests and folders when collections change or refresh is triggered
   useEffect(() => {
@@ -53,7 +60,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       try {
         const [requestsData, foldersData] = await Promise.all([
           window.electronAPI.request.list(),
-          window.electronAPI.folder.list()
+          window.electronAPI.folder.list(),
         ]);
         setRequests(requestsData);
         setFolders(foldersData);
@@ -75,7 +82,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     const prevIds = prevCollectionIdsRef.current;
     const currentIds = new Set<number>();
 
-    collections.forEach((collection) => {
+    collections.forEach(collection => {
       if (typeof collection.id === 'number') {
         currentIds.add(collection.id);
       }
@@ -85,7 +92,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     const newExpanded = new Set(expandedCollections);
     let changed = false;
 
-    collections.forEach((collection) => {
+    collections.forEach(collection => {
       if (
         typeof collection.id === 'number' &&
         !prevIds.has(collection.id) &&
@@ -174,7 +181,11 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
   };
 
   // Handle drag over for unsaved requests (visual feedback)
-  const handleUnsavedDragOver = (e: React.DragEvent, type: 'collection' | 'folder', id: number) => {
+  const handleUnsavedDragOver = (
+    e: React.DragEvent,
+    type: 'collection' | 'folder',
+    id: number
+  ) => {
     if (isDraggingUnsavedRequest(e)) {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
@@ -183,10 +194,14 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
   };
 
   // Handle drop on collection (including unsaved requests)
-  const handleCollectionDrop = async (e: React.DragEvent, collectionId: number, folderId?: number) => {
+  const handleCollectionDrop = async (
+    e: React.DragEvent,
+    collectionId: number,
+    folderId?: number
+  ) => {
     e.preventDefault();
     setUnsavedDragOver(null); // Clear drag over state
-    
+
     try {
       // Only handle unsaved requests here - regular drag-drop is handled by dragDrop hook
       const jsonData = e.dataTransfer.getData('application/json');
@@ -194,21 +209,28 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         // No data means it's a regular drag-drop, not an unsaved request
         return;
       }
-      
+
       const data = JSON.parse(jsonData);
-      
+
       if (data.type === 'unsaved-request') {
         // Promote unsaved request to this collection (and optionally folder)
-        const result = await window.electronAPI.unsavedRequest.promote(data.id, {
-          name: data.data.name,
-          collectionId: collectionId,
-          folderId: folderId,
-          isFavorite: false,
-        });
-        
+        const result = await window.electronAPI.unsavedRequest.promote(
+          data.id,
+          {
+            name: data.data.name,
+            collectionId: collectionId,
+            folderId: folderId,
+            isFavorite: false,
+          }
+        );
+
         if (result.success) {
-          showSuccess(folderId ? 'Unsaved request saved to folder' : 'Unsaved request saved to collection');
-          
+          showSuccess(
+            folderId
+              ? 'Unsaved request saved to folder'
+              : 'Unsaved request saved to collection'
+          );
+
           // Load the newly saved request and set it as selected
           const savedRequest = {
             id: result.id,
@@ -225,28 +247,29 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
             isFavorite: 0,
             lastResponse: undefined,
           };
-          
+
           setSelectedRequest(savedRequest);
           setCurrentPage('home');
-          
+
           // Clear active unsaved request ID if it was the one being dropped
-          const { setActiveUnsavedRequestId, setUnsavedRequests } = useStore.getState();
+          const { setActiveUnsavedRequestId, setUnsavedRequests } =
+            useStore.getState();
           if (data.id) {
             setActiveUnsavedRequestId(null);
           }
-          
+
           // Refresh data including unsaved requests
           const [requestsData, foldersData, unsavedData] = await Promise.all([
             window.electronAPI.request.list(),
             window.electronAPI.folder.list(),
-            window.electronAPI.unsavedRequest.getAll()
+            window.electronAPI.unsavedRequest.getAll(),
           ]);
           setRequests(requestsData);
           setFolders(foldersData);
-          
+
           // Update unsaved requests in store
           setUnsavedRequests(unsavedData);
-          
+
           // Trigger sidebar refresh
           triggerSidebarRefresh();
         }
@@ -258,90 +281,115 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         return;
       }
       console.error('Drop failed:', error);
-      showError('Failed to save request', error instanceof Error ? error.message : 'Failed to save request');
+      showError(
+        'Failed to save request',
+        error instanceof Error ? error.message : 'Failed to save request'
+      );
     }
   };
 
   // Reorder handlers
-  const handleReorderRequest = async (requestId: number, targetRequestId: number, position: 'above' | 'below') => {
+  const handleReorderRequest = async (
+    requestId: number,
+    targetRequestId: number,
+    position: 'above' | 'below'
+  ) => {
     try {
       const draggedRequest = requests.find(r => r.id === requestId);
       const targetRequest = requests.find(r => r.id === targetRequestId);
-      
+
       if (!draggedRequest || !targetRequest) {
         throw new Error('Request not found');
       }
-      
+
       // Verify both requests are in the same container
-      if (draggedRequest.collectionId !== targetRequest.collectionId ||
-          draggedRequest.folderId !== targetRequest.folderId) {
+      if (
+        draggedRequest.collectionId !== targetRequest.collectionId ||
+        draggedRequest.folderId !== targetRequest.folderId
+      ) {
         throw new Error('Requests must be in the same container');
       }
-      
+
       // Get all requests in the same container
       const containerRequests = draggedRequest.folderId
         ? getRequestsForFolder(draggedRequest.folderId)
         : getRequestsForCollection(draggedRequest.collectionId!);
-      
+
       // Find target index
-      const targetIndex = containerRequests.findIndex(r => r.id === targetRequestId);
+      const targetIndex = containerRequests.findIndex(
+        r => r.id === targetRequestId
+      );
       if (targetIndex === -1) {
         throw new Error('Target request not found in container');
       }
-      
+
       // Calculate drop index
       const dropIndex = position === 'above' ? targetIndex : targetIndex + 1;
-      
+
       // Calculate new order value
       const newOrder = calculateOrderForPosition(containerRequests, dropIndex);
-      
+
       // Update order
       await window.electronAPI.request.reorder(requestId, newOrder);
-      
+
       // Refresh data
       const requestsData = await window.electronAPI.request.list();
       setRequests(requestsData);
-      
+
       triggerSidebarRefresh();
     } catch (error: unknown) {
-      showError('Failed to reorder request', error instanceof Error ? error.message : 'Failed to reorder request');
+      showError(
+        'Failed to reorder request',
+        error instanceof Error ? error.message : 'Failed to reorder request'
+      );
     }
   };
 
-  const handleReorderFolder = async (folderId: number, targetFolderId: number, position: 'above' | 'below') => {
+  const handleReorderFolder = async (
+    folderId: number,
+    targetFolderId: number,
+    position: 'above' | 'below'
+  ) => {
     try {
       const draggedFolder = folders.find(f => f.id === folderId);
       const targetFolder = folders.find(f => f.id === targetFolderId);
-      
+
       if (!draggedFolder || !targetFolder) {
         throw new Error('Folder not found');
       }
-      
+
       // Get all folders in the same collection
-      const collectionFolders = getFoldersForCollection(draggedFolder.collectionId);
-      
+      const collectionFolders = getFoldersForCollection(
+        draggedFolder.collectionId
+      );
+
       // Find target index
-      const targetIndex = collectionFolders.findIndex(f => f.id === targetFolderId);
+      const targetIndex = collectionFolders.findIndex(
+        f => f.id === targetFolderId
+      );
       if (targetIndex === -1) {
         throw new Error('Target folder not found in collection');
       }
-      
+
       // Calculate drop index
       const dropIndex = position === 'above' ? targetIndex : targetIndex + 1;
-      
+
       // Calculate new order value
       const newOrder = calculateOrderForPosition(collectionFolders, dropIndex);
-      
+
       // Update order
       await window.electronAPI.folder.reorder(folderId, newOrder);
-      
+
       // Refresh data
       const foldersData = await window.electronAPI.folder.list();
       setFolders(foldersData);
-      
+
       triggerSidebarRefresh();
     } catch (error: unknown) {
-      showError('Failed to reorder folder', error instanceof Error ? error.message : 'Failed to reorder folder');
+      showError(
+        'Failed to reorder folder',
+        error instanceof Error ? error.message : 'Failed to reorder folder'
+      );
     }
   };
 
@@ -360,29 +408,38 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
           id: requestId,
           name: requests.find(r => r.id === requestId)?.name || '',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          method: requests.find(r => r.id === requestId)?.method as any || 'GET',
+          method:
+            (requests.find(r => r.id === requestId)?.method as any) || 'GET',
           url: requests.find(r => r.id === requestId)?.url || '',
           headers: requests.find(r => r.id === requestId)?.headers || {},
           body: requests.find(r => r.id === requestId)?.body || '',
-          queryParams: requests.find(r => r.id === requestId)?.queryParams || [],
-          auth: requests.find(r => r.id === requestId)?.auth || { type: 'none' },
+          queryParams:
+            requests.find(r => r.id === requestId)?.queryParams || [],
+          auth: requests.find(r => r.id === requestId)?.auth || {
+            type: 'none',
+          },
           collectionId: targetCollectionId,
           folderId: targetFolderId,
-          isFavorite: Boolean(requests.find(r => r.id === requestId)?.isFavorite),
+          isFavorite: Boolean(
+            requests.find(r => r.id === requestId)?.isFavorite
+          ),
         });
         showSuccess('Request moved successfully');
         // Refresh data
         const [requestsData, foldersData] = await Promise.all([
           window.electronAPI.request.list(),
-          window.electronAPI.folder.list()
+          window.electronAPI.folder.list(),
         ]);
         setRequests(requestsData);
         setFolders(foldersData);
-        
+
         // Trigger sidebar refresh for real-time updates
         triggerSidebarRefresh();
       } catch (error: unknown) {
-        showError('Failed to move request', error instanceof Error ? error.message : 'Failed to move request');
+        showError(
+          'Failed to move request',
+          error instanceof Error ? error.message : 'Failed to move request'
+        );
       }
     },
     onMoveFolder: async (folderId, targetCollectionId) => {
@@ -397,11 +454,14 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         // Refresh data
         const foldersData = await window.electronAPI.folder.list();
         setFolders(foldersData);
-        
+
         // Trigger sidebar refresh for real-time updates
         triggerSidebarRefresh();
       } catch (error: unknown) {
-        showError('Failed to move folder', error instanceof Error ? error.message : 'Failed to move folder');
+        showError(
+          'Failed to move folder',
+          error instanceof Error ? error.message : 'Failed to move folder'
+        );
       }
     },
     onReorderRequest: handleReorderRequest,
@@ -471,9 +531,13 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     // Set selected collection for keyboard shortcuts
     const collection = collections.find(c => c.id === collectionId);
     if (collection) {
-      setSelectedItem({ type: 'collection', id: collectionId, data: collection });
+      setSelectedItem({
+        type: 'collection',
+        id: collectionId,
+        data: collection,
+      });
     }
-    
+
     // Create a new empty request and set it as selected
     const newRequest: Request = {
       name: '',
@@ -487,7 +551,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       folderId: undefined,
       isFavorite: 0,
     };
-    
+
     setSelectedRequest(newRequest);
     setCurrentPage('home');
   };
@@ -497,31 +561,40 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       // Set selected collection for keyboard shortcuts
       const collection = collections.find(c => c.id === collectionId);
       if (collection) {
-        setSelectedItem({ type: 'collection', id: collectionId, data: collection });
+        setSelectedItem({
+          type: 'collection',
+          id: collectionId,
+          data: collection,
+        });
       }
-      
+
       // Create a new folder with a default name
-      const folderCount = folders.filter(f => f.collectionId === collectionId).length;
+      const folderCount = folders.filter(
+        f => f.collectionId === collectionId
+      ).length;
       const folderName = `New Folder${folderCount > 0 ? ` ${folderCount + 1}` : ''}`;
-      
+
       const result = await window.electronAPI.folder.save({
         name: folderName,
         description: '',
         collectionId: collectionId,
       });
-      
+
       if (result.success) {
         showSuccess('Folder created successfully');
-        
+
         // Refresh folders
         const foldersData = await window.electronAPI.folder.list();
         setFolders(foldersData);
-        
+
         // Trigger sidebar refresh
         triggerSidebarRefresh();
       }
     } catch (error: unknown) {
-      showError('Failed to create folder', error instanceof Error ? error.message : 'Failed to create folder');
+      showError(
+        'Failed to create folder',
+        error instanceof Error ? error.message : 'Failed to create folder'
+      );
     }
   };
 
@@ -533,7 +606,10 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       // Trigger sidebar refresh for real-time updates
       triggerSidebarRefresh();
     } catch (error: unknown) {
-      showError('Failed to delete collection', error instanceof Error ? error.message : 'Failed to delete collection');
+      showError(
+        'Failed to delete collection',
+        error instanceof Error ? error.message : 'Failed to delete collection'
+      );
     }
   };
 
@@ -549,11 +625,14 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       const duplicateCollection = {
         name: `${collection.name} (Copy)`,
         description: collection.description || '',
-        environments: collection.environments ? collection.environments.map(env => ({ ...env, id: undefined })) : [],
-        isFavorite: false
+        environments: collection.environments
+          ? collection.environments.map(env => ({ ...env, id: undefined }))
+          : [],
+        isFavorite: false,
       };
 
-      const result = await window.electronAPI.collection.save(duplicateCollection);
+      const result =
+        await window.electronAPI.collection.save(duplicateCollection);
       if (!result.success) {
         showError('Failed to create duplicate collection');
         return;
@@ -562,8 +641,9 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       const newCollectionId = result.id;
 
       // Get all requests for the original collection
-      const originalRequests = await window.electronAPI.request.list(collectionId);
-      
+      const originalRequests =
+        await window.electronAPI.request.list(collectionId);
+
       // Duplicate all requests for the new collection
       for (const request of originalRequests) {
         const duplicateRequest = {
@@ -576,27 +656,32 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
           auth: request.auth,
           collectionId: newCollectionId,
           folderId: undefined, // Reset folder association for simplicity
-          isFavorite: false
+          isFavorite: false,
         };
-        
+
         await window.electronAPI.request.save(duplicateRequest);
-        
+
         // Small delay to ensure unique IDs
         await new Promise(resolve => setTimeout(resolve, 1));
       }
 
       showSuccess('Collection and requests duplicated successfully');
-      
+
       // Refresh collections and requests
       const updatedCollections = await window.electronAPI.collection.list();
       const updatedRequests = await window.electronAPI.request.list();
       setCollections(updatedCollections);
       setRequests(updatedRequests);
-      
+
       // Trigger sidebar refresh for real-time updates
       triggerSidebarRefresh();
     } catch (error: unknown) {
-      showError('Failed to duplicate collection', error instanceof Error ? error.message : 'Failed to duplicate collection');
+      showError(
+        'Failed to duplicate collection',
+        error instanceof Error
+          ? error.message
+          : 'Failed to duplicate collection'
+      );
     }
   };
 
@@ -608,7 +693,10 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       // Trigger sidebar refresh for real-time updates
       triggerSidebarRefresh();
     } catch (error: unknown) {
-      showError('Failed to delete folder', error instanceof Error ? error.message : 'Failed to delete folder');
+      showError(
+        'Failed to delete folder',
+        error instanceof Error ? error.message : 'Failed to delete folder'
+      );
     }
   };
 
@@ -620,7 +708,10 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       // Trigger sidebar refresh for real-time updates
       triggerSidebarRefresh();
     } catch (error: unknown) {
-      showError('Failed to delete request', error instanceof Error ? error.message : 'Failed to delete request');
+      showError(
+        'Failed to delete request',
+        error instanceof Error ? error.message : 'Failed to delete request'
+      );
     }
   };
 
@@ -645,31 +736,38 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       // Use saveAfter to insert the duplicate right after the original request
       await window.electronAPI.request.saveAfter(duplicatedRequest, requestId);
       showSuccess('Request duplicated successfully');
-      
+
       // Refresh requests
       const requestsData = await window.electronAPI.request.list();
       setRequests(requestsData);
-      
+
       // Trigger sidebar refresh for real-time updates
       triggerSidebarRefresh();
     } catch (error: unknown) {
-      showError('Failed to duplicate request', error instanceof Error ? error.message : 'Failed to duplicate request');
+      showError(
+        'Failed to duplicate request',
+        error instanceof Error ? error.message : 'Failed to duplicate request'
+      );
     }
   };
 
   return (
-    <div 
+    <div
       className="space-y-1"
       data-testid="collection-hierarchy"
       onFocus={() => setFocusedContext('sidebar')}
       onBlur={() => setFocusedContext(null)}
     >
-      {collections.map((collection) => {
+      {collections.map(collection => {
         const isExpanded = expandedCollections.has(collection.id!);
         const collectionRequests = getRequestsForCollection(collection.id!);
         const collectionFolders = getFoldersForCollection(collection.id!);
-        const totalRequests = collectionRequests.length + 
-          collectionFolders.reduce((sum, folder) => sum + getRequestsForFolder(folder.id!).length, 0);
+        const totalRequests =
+          collectionRequests.length +
+          collectionFolders.reduce(
+            (sum, folder) => sum + getRequestsForFolder(folder.id!).length,
+            0
+          );
 
         return (
           <div
@@ -683,7 +781,13 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
               isExpanded={isExpanded}
               requestCount={totalRequests}
               onToggle={() => toggleCollection(collection.id!)}
-              onSelect={() => setSelectedItem({ type: 'collection', id: collection.id!, data: collection })}
+              onSelect={() =>
+                setSelectedItem({
+                  type: 'collection',
+                  id: collection.id!,
+                  data: collection,
+                })
+              }
               onEdit={() => {
                 // Handle edit collection
                 console.log('Edit collection:', collection.id);
@@ -702,11 +806,14 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
               }}
               dragProps={{
                 draggable: true,
-                onDragStart: (e) => {
-                  dragDrop.handleDragStart(e, { type: 'collection', id: collection.id! });
+                onDragStart: e => {
+                  dragDrop.handleDragStart(e, {
+                    type: 'collection',
+                    id: collection.id!,
+                  });
                   setUnsavedDragOver(null);
                 },
-                onDragOver: (e) => {
+                onDragOver: e => {
                   // Check for unsaved requests first
                   if (isDraggingUnsavedRequest(e)) {
                     handleUnsavedDragOver(e, 'collection', collection.id!);
@@ -716,38 +823,57 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                       setUnsavedDragOver(null);
                     }
                     e.preventDefault();
-                    dragDrop.handleDragOver(e, { type: 'collection', id: collection.id! });
+                    dragDrop.handleDragOver(e, {
+                      type: 'collection',
+                      id: collection.id!,
+                    });
                   }
                 },
-                onDrop: async (e) => {
+                onDrop: async e => {
                   // Handle unsaved requests first
                   await handleCollectionDrop(e, collection.id!);
                   // Then handle regular drag-drop
-                  await dragDrop.handleDrop(e, { type: 'collection', id: collection.id! });
+                  await dragDrop.handleDrop(e, {
+                    type: 'collection',
+                    id: collection.id!,
+                  });
                 },
                 onDragEnd: () => {
                   dragDrop.handleDragEnd();
                   setUnsavedDragOver(null);
                 },
               }}
-              isDragging={dragDrop.draggedItem?.type === 'collection' && dragDrop.draggedItem?.id === collection.id}
-              isDragOver={
-                (unsavedDragOver?.type === 'collection' && unsavedDragOver?.id === collection.id) ||
-                (dragDrop.dragOverItem?.type === 'collection' && dragDrop.dragOverItem?.id === collection.id)
+              isDragging={
+                dragDrop.draggedItem?.type === 'collection' &&
+                dragDrop.draggedItem?.id === collection.id
               }
-              dropPosition={unsavedDragOver?.type === 'collection' && unsavedDragOver?.id === collection.id ? 'inside' : dragDrop.dropPosition}
+              isDragOver={
+                (unsavedDragOver?.type === 'collection' &&
+                  unsavedDragOver?.id === collection.id) ||
+                (dragDrop.dragOverItem?.type === 'collection' &&
+                  dragDrop.dragOverItem?.id === collection.id)
+              }
+              dropPosition={
+                unsavedDragOver?.type === 'collection' &&
+                unsavedDragOver?.id === collection.id
+                  ? 'inside'
+                  : dragDrop.dropPosition
+              }
             />
 
             {/* Expanded Content */}
             {isExpanded && (
               <div
                 className={`ml-4 space-y-1 min-h-[20px] rounded-md transition-all duration-150 ${
-                  (unsavedDragOver?.type === 'collection' && unsavedDragOver?.id === collection.id) ||
-                  (dragDrop.dragOverItem?.type === 'collection' && dragDrop.dragOverItem?.id === collection.id)
-                    ? 'bg-primary/5 border-l-2 border-primary/50 pl-2 -ml-4' : ''
+                  (unsavedDragOver?.type === 'collection' &&
+                    unsavedDragOver?.id === collection.id) ||
+                  (dragDrop.dragOverItem?.type === 'collection' &&
+                    dragDrop.dragOverItem?.id === collection.id)
+                    ? 'bg-primary/5 border-l-2 border-primary/50 pl-2 -ml-4'
+                    : ''
                 }`}
                 data-testid="collection-children"
-                onDragOver={(e) => {
+                onDragOver={e => {
                   // Check for unsaved requests first
                   if (isDraggingUnsavedRequest(e)) {
                     e.preventDefault();
@@ -756,22 +882,31 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                     handleUnsavedDragOver(e, 'collection', collection.id!);
                   } else {
                     // Clear unsaved drag over state when dragging regular items
-                    if (unsavedDragOver?.type === 'collection' && unsavedDragOver?.id === collection.id) {
+                    if (
+                      unsavedDragOver?.type === 'collection' &&
+                      unsavedDragOver?.id === collection.id
+                    ) {
                       setUnsavedDragOver(null);
                     }
                     e.preventDefault();
                     e.stopPropagation();
-                    dragDrop.handleDragOver(e, { type: 'collection', id: collection.id! });
+                    dragDrop.handleDragOver(e, {
+                      type: 'collection',
+                      id: collection.id!,
+                    });
                   }
                 }}
-                onDrop={async (e) => {
+                onDrop={async e => {
                   e.stopPropagation();
                   // Handle unsaved requests first
                   await handleCollectionDrop(e, collection.id!);
                   // Then handle regular drag-drop
-                  await dragDrop.handleDrop(e, { type: 'collection', id: collection.id! });
+                  await dragDrop.handleDrop(e, {
+                    type: 'collection',
+                    id: collection.id!,
+                  });
                 }}
-                onDragEnter={(e) => {
+                onDragEnter={e => {
                   // When entering the expanded area, ensure we show the collection as drag-over
                   if (isDraggingUnsavedRequest(e)) {
                     e.preventDefault();
@@ -779,13 +914,18 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                     handleUnsavedDragOver(e, 'collection', collection.id!);
                   }
                 }}
-                onDragLeave={(e) => {
+                onDragLeave={e => {
                   // Only clear if we're actually leaving the collection group entirely
                   const relatedTarget = e.relatedTarget as HTMLElement;
                   if (relatedTarget) {
-                    const collectionGroup = e.currentTarget.closest('[data-testid="collection-group"]');
+                    const collectionGroup = e.currentTarget.closest(
+                      '[data-testid="collection-group"]'
+                    );
                     // Only clear if the relatedTarget is outside the collection group
-                    if (collectionGroup && !collectionGroup.contains(relatedTarget)) {
+                    if (
+                      collectionGroup &&
+                      !collectionGroup.contains(relatedTarget)
+                    ) {
                       setUnsavedDragOver(null);
                     }
                   }
@@ -793,7 +933,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                 }}
               >
                 {/* Folders */}
-                {collectionFolders.map((folder) => {
+                {collectionFolders.map(folder => {
                   const folderRequests = getRequestsForFolder(folder.id!);
                   const isFolderExpanded = expandedFolders.has(folder.id!);
                   return (
@@ -803,7 +943,13 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                         requestCount={folderRequests.length}
                         isExpanded={isFolderExpanded}
                         onToggle={() => toggleFolder(folder.id!)}
-                        onSelect={() => setSelectedItem({ type: 'folder', id: folder.id!, data: folder })}
+                        onSelect={() =>
+                          setSelectedItem({
+                            type: 'folder',
+                            id: folder.id!,
+                            data: folder,
+                          })
+                        }
                         onEdit={() => {
                           // Handle edit folder
                           console.log('Edit folder:', folder.id);
@@ -812,15 +958,15 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                         onAddRequest={() => handleAddRequest(collection.id!)}
                         dragProps={{
                           draggable: true,
-                          onDragStart: (e) => {
-                            dragDrop.handleDragStart(e, { 
-                              type: 'folder', 
+                          onDragStart: e => {
+                            dragDrop.handleDragStart(e, {
+                              type: 'folder',
                               id: folder.id!,
-                              collectionId: folder.collectionId
+                              collectionId: folder.collectionId,
                             });
                             setUnsavedDragOver(null);
                           },
-                          onDragOver: (e) => {
+                          onDragOver: e => {
                             // Check for unsaved requests first
                             if (isDraggingUnsavedRequest(e)) {
                               e.preventDefault();
@@ -829,69 +975,106 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                               handleUnsavedDragOver(e, 'folder', folder.id!);
                             } else {
                               // Clear unsaved drag over state when dragging regular items
-                              if (unsavedDragOver?.type === 'folder' && unsavedDragOver?.id === folder.id) {
+                              if (
+                                unsavedDragOver?.type === 'folder' &&
+                                unsavedDragOver?.id === folder.id
+                              ) {
                                 setUnsavedDragOver(null);
                               }
-                              const rect = e.currentTarget.getBoundingClientRect();
+                              const rect =
+                                e.currentTarget.getBoundingClientRect();
                               const mouseY = e.clientY;
                               const itemCenterY = rect.top + rect.height / 2;
-                              const position = mouseY < itemCenterY ? 'above' : 'below';
-                              dragDrop.handleDragOver(e, { 
-                                type: 'folder', 
-                                id: folder.id!,
-                                collectionId: folder.collectionId
-                              }, position);
+                              const position =
+                                mouseY < itemCenterY ? 'above' : 'below';
+                              dragDrop.handleDragOver(
+                                e,
+                                {
+                                  type: 'folder',
+                                  id: folder.id!,
+                                  collectionId: folder.collectionId,
+                                },
+                                position
+                              );
                             }
                           },
-                          onDrop: async (e) => {
+                          onDrop: async e => {
                             e.stopPropagation();
                             // Handle unsaved requests first
-                            await handleCollectionDrop(e, folder.collectionId, folder.id!);
+                            await handleCollectionDrop(
+                              e,
+                              folder.collectionId,
+                              folder.id!
+                            );
                             // Then handle regular drag-drop
-                            const rect = e.currentTarget.getBoundingClientRect();
+                            const rect =
+                              e.currentTarget.getBoundingClientRect();
                             const mouseY = e.clientY;
                             const itemCenterY = rect.top + rect.height / 2;
-                            const position = mouseY < itemCenterY ? 'above' : 'below';
-                            dragDrop.handleDrop(e, { 
-                              type: 'folder', 
-                              id: folder.id!,
-                              collectionId: folder.collectionId
-                            }, position);
+                            const position =
+                              mouseY < itemCenterY ? 'above' : 'below';
+                            dragDrop.handleDrop(
+                              e,
+                              {
+                                type: 'folder',
+                                id: folder.id!,
+                                collectionId: folder.collectionId,
+                              },
+                              position
+                            );
                           },
                           onDragEnd: () => {
                             dragDrop.handleDragEnd();
                             setUnsavedDragOver(null);
                           },
-                          onDragLeave: (e) => {
+                          onDragLeave: e => {
                             // Only clear if we're actually leaving the folder group entirely
-                            const relatedTarget = e.relatedTarget as HTMLElement;
+                            const relatedTarget =
+                              e.relatedTarget as HTMLElement;
                             if (relatedTarget) {
                               // Check if we're moving to the expanded area or another part of the folder
-                              const folderContainer = e.currentTarget.closest('div');
-                              if (folderContainer && !folderContainer.contains(relatedTarget)) {
+                              const folderContainer =
+                                e.currentTarget.closest('div');
+                              if (
+                                folderContainer &&
+                                !folderContainer.contains(relatedTarget)
+                              ) {
                                 setUnsavedDragOver(null);
                               }
                             }
                             // If no relatedTarget, don't clear - might be moving to expanded area
                           },
                         }}
-                        isDragging={dragDrop.draggedItem?.type === 'folder' && dragDrop.draggedItem?.id === folder.id}
-                        isDragOver={
-                          (unsavedDragOver?.type === 'folder' && unsavedDragOver?.id === folder.id) ||
-                          (dragDrop.dragOverItem?.type === 'folder' && dragDrop.dragOverItem?.id === folder.id)
+                        isDragging={
+                          dragDrop.draggedItem?.type === 'folder' &&
+                          dragDrop.draggedItem?.id === folder.id
                         }
-                        dropPosition={unsavedDragOver?.type === 'folder' && unsavedDragOver?.id === folder.id ? 'inside' : dragDrop.dropPosition}
+                        isDragOver={
+                          (unsavedDragOver?.type === 'folder' &&
+                            unsavedDragOver?.id === folder.id) ||
+                          (dragDrop.dragOverItem?.type === 'folder' &&
+                            dragDrop.dragOverItem?.id === folder.id)
+                        }
+                        dropPosition={
+                          unsavedDragOver?.type === 'folder' &&
+                          unsavedDragOver?.id === folder.id
+                            ? 'inside'
+                            : dragDrop.dropPosition
+                        }
                       />
 
                       {/* Folder Expanded Content */}
                       {isFolderExpanded && (
                         <div
                           className={`ml-8 space-y-1 min-h-[20px] rounded-md transition-all duration-150 ${
-                            (unsavedDragOver?.type === 'folder' && unsavedDragOver?.id === folder.id) ||
-                            (dragDrop.dragOverItem?.type === 'folder' && dragDrop.dragOverItem?.id === folder.id)
-                              ? 'bg-primary/5 border-l-2 border-primary/50 pl-2 -ml-8' : ''
+                            (unsavedDragOver?.type === 'folder' &&
+                              unsavedDragOver?.id === folder.id) ||
+                            (dragDrop.dragOverItem?.type === 'folder' &&
+                              dragDrop.dragOverItem?.id === folder.id)
+                              ? 'bg-primary/5 border-l-2 border-primary/50 pl-2 -ml-8'
+                              : ''
                           }`}
-                          onDragOver={(e) => {
+                          onDragOver={e => {
                             // Check for unsaved requests first
                             if (isDraggingUnsavedRequest(e)) {
                               e.preventDefault();
@@ -900,30 +1083,45 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                               handleUnsavedDragOver(e, 'folder', folder.id!);
                             } else {
                               // Clear unsaved drag over state when dragging regular items
-                              if (unsavedDragOver?.type === 'folder' && unsavedDragOver?.id === folder.id) {
+                              if (
+                                unsavedDragOver?.type === 'folder' &&
+                                unsavedDragOver?.id === folder.id
+                              ) {
                                 setUnsavedDragOver(null);
                               }
                               e.preventDefault();
                               e.stopPropagation();
-                              dragDrop.handleDragOver(e, { 
-                                type: 'folder', 
-                                id: folder.id!,
-                                collectionId: folder.collectionId
-                              }, 'inside');
+                              dragDrop.handleDragOver(
+                                e,
+                                {
+                                  type: 'folder',
+                                  id: folder.id!,
+                                  collectionId: folder.collectionId,
+                                },
+                                'inside'
+                              );
                             }
                           }}
-                          onDrop={async (e) => {
+                          onDrop={async e => {
                             e.stopPropagation();
                             // Handle unsaved requests first
-                            await handleCollectionDrop(e, folder.collectionId, folder.id!);
+                            await handleCollectionDrop(
+                              e,
+                              folder.collectionId,
+                              folder.id!
+                            );
                             // Then handle regular drag-drop
-                            await dragDrop.handleDrop(e, { 
-                              type: 'folder', 
-                              id: folder.id!,
-                              collectionId: folder.collectionId
-                            }, 'inside');
+                            await dragDrop.handleDrop(
+                              e,
+                              {
+                                type: 'folder',
+                                id: folder.id!,
+                                collectionId: folder.collectionId,
+                              },
+                              'inside'
+                            );
                           }}
-                          onDragEnter={(e) => {
+                          onDragEnter={e => {
                             // When entering the expanded area, ensure we show the folder as drag-over
                             if (isDraggingUnsavedRequest(e)) {
                               e.preventDefault();
@@ -931,80 +1129,114 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                               handleUnsavedDragOver(e, 'folder', folder.id!);
                             }
                           }}
-                          onDragLeave={(e) => {
+                          onDragLeave={e => {
                             // Only clear if we're actually leaving the folder group entirely
-                            const relatedTarget = e.relatedTarget as HTMLElement;
+                            const relatedTarget =
+                              e.relatedTarget as HTMLElement;
                             if (relatedTarget) {
-                              const folderGroup = e.currentTarget.closest('div');
+                              const folderGroup =
+                                e.currentTarget.closest('div');
                               // Only clear if the relatedTarget is outside the folder group
-                              if (folderGroup && !folderGroup.contains(relatedTarget)) {
+                              if (
+                                folderGroup &&
+                                !folderGroup.contains(relatedTarget)
+                              ) {
                                 setUnsavedDragOver(null);
                               }
                             }
                             // If no relatedTarget, don't clear - might be moving to folder header
                           }}
                         >
-                      {/* Folder Requests */}
-                      {folderRequests.map((request) => (
-                        <RequestItem
-                          key={request.id}
-                          request={request}
-                          onSelect={onRequestSelect}
-                          onItemSelect={() => setSelectedItem({ type: 'request', id: request.id!, data: request })}
-                          onEdit={() => {
-                            // Handle edit request
-                            console.log('Edit request:', request.id);
-                          }}
-                          onDelete={() => handleDeleteRequest(request.id!)}
-                          onDuplicate={() => handleDuplicateRequest(request.id!)}
-                          onExport={() => {
-                            // Handle export request
-                            console.log('Export request:', request.id);
-                          }}
-                          dragProps={{
-                            draggable: true,
-                            onDragStart: (e) => dragDrop.handleDragStart(e, { 
-                              type: 'request', 
-                              id: request.id!,
-                              collectionId: request.collectionId,
-                              folderId: request.folderId
-                            }),
-                            onDragOver: (e) => {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const mouseY = e.clientY;
-                              const itemCenterY = rect.top + rect.height / 2;
-                              const position = mouseY < itemCenterY ? 'above' : 'below';
-                              dragDrop.handleDragOver(e, { 
-                                type: 'request', 
-                                id: request.id!,
-                                collectionId: request.collectionId,
-                                folderId: request.folderId
-                              }, position);
-                            },
-                            onDrop: (e) => {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const mouseY = e.clientY;
-                              const itemCenterY = rect.top + rect.height / 2;
-                              const position = mouseY < itemCenterY ? 'above' : 'below';
-                              dragDrop.handleDrop(e, { 
-                                type: 'request', 
-                                id: request.id!,
-                                collectionId: request.collectionId,
-                                folderId: request.folderId
-                              }, position);
-                            },
-                            onDragEnd: dragDrop.handleDragEnd,
-                          }}
-                          isDragging={dragDrop.draggedItem?.type === 'request' && dragDrop.draggedItem?.id === request.id}
-                          isDragOver={dragDrop.dragOverItem?.type === 'request' && dragDrop.dragOverItem?.id === request.id}
-                          dropPosition={dragDrop.dropPosition}
-                        />
-                      ))}
-                      {folderRequests.length === 0 && (
-                        <div className="ml-8 text-xs text-muted-foreground p-2">
-                          No requests in this folder
-                        </div>
-                      )}
+                          {/* Folder Requests */}
+                          {folderRequests.map(request => (
+                            <RequestItem
+                              key={request.id}
+                              request={request}
+                              onSelect={onRequestSelect}
+                              onItemSelect={() =>
+                                setSelectedItem({
+                                  type: 'request',
+                                  id: request.id!,
+                                  data: request,
+                                })
+                              }
+                              onEdit={() => {
+                                // Handle edit request
+                                console.log('Edit request:', request.id);
+                              }}
+                              onDelete={() => handleDeleteRequest(request.id!)}
+                              onDuplicate={() =>
+                                handleDuplicateRequest(request.id!)
+                              }
+                              onExport={() => {
+                                // Handle export request
+                                console.log('Export request:', request.id);
+                              }}
+                              dragProps={{
+                                draggable: true,
+                                onDragStart: e =>
+                                  dragDrop.handleDragStart(e, {
+                                    type: 'request',
+                                    id: request.id!,
+                                    collectionId: request.collectionId,
+                                    folderId: request.folderId,
+                                  }),
+                                onDragOver: e => {
+                                  const rect =
+                                    e.currentTarget.getBoundingClientRect();
+                                  const mouseY = e.clientY;
+                                  const itemCenterY =
+                                    rect.top + rect.height / 2;
+                                  const position =
+                                    mouseY < itemCenterY ? 'above' : 'below';
+                                  dragDrop.handleDragOver(
+                                    e,
+                                    {
+                                      type: 'request',
+                                      id: request.id!,
+                                      collectionId: request.collectionId,
+                                      folderId: request.folderId,
+                                    },
+                                    position
+                                  );
+                                },
+                                onDrop: e => {
+                                  const rect =
+                                    e.currentTarget.getBoundingClientRect();
+                                  const mouseY = e.clientY;
+                                  const itemCenterY =
+                                    rect.top + rect.height / 2;
+                                  const position =
+                                    mouseY < itemCenterY ? 'above' : 'below';
+                                  dragDrop.handleDrop(
+                                    e,
+                                    {
+                                      type: 'request',
+                                      id: request.id!,
+                                      collectionId: request.collectionId,
+                                      folderId: request.folderId,
+                                    },
+                                    position
+                                  );
+                                },
+                                onDragEnd: dragDrop.handleDragEnd,
+                              }}
+                              isDragging={
+                                dragDrop.draggedItem?.type === 'request' &&
+                                dragDrop.draggedItem?.id === request.id
+                              }
+                              isDragOver={
+                                dragDrop.dragOverItem?.type === 'request' &&
+                                dragDrop.dragOverItem?.id === request.id
+                              }
+                              dropPosition={dragDrop.dropPosition}
+                            />
+                          ))}
+                          {folderRequests.length === 0 && (
+                            <div className="ml-8 text-xs text-muted-foreground p-2">
+                              No requests in this folder
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1012,12 +1244,18 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                 })}
 
                 {/* Collection Requests (not in folders) */}
-                {collectionRequests.map((request) => (
+                {collectionRequests.map(request => (
                   <RequestItem
                     key={request.id}
                     request={request}
                     onSelect={onRequestSelect}
-                    onItemSelect={() => setSelectedItem({ type: 'request', id: request.id!, data: request })}
+                    onItemSelect={() =>
+                      setSelectedItem({
+                        type: 'request',
+                        id: request.id!,
+                        data: request,
+                      })
+                    }
                     onEdit={() => {
                       // Handle edit request
                       console.log('Edit request:', request.id);
@@ -1030,40 +1268,57 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                     }}
                     dragProps={{
                       draggable: true,
-                      onDragStart: (e) => dragDrop.handleDragStart(e, { 
-                        type: 'request', 
-                        id: request.id!,
-                        collectionId: request.collectionId,
-                        folderId: request.folderId
-                      }),
-                      onDragOver: (e) => {
+                      onDragStart: e =>
+                        dragDrop.handleDragStart(e, {
+                          type: 'request',
+                          id: request.id!,
+                          collectionId: request.collectionId,
+                          folderId: request.folderId,
+                        }),
+                      onDragOver: e => {
                         const rect = e.currentTarget.getBoundingClientRect();
                         const mouseY = e.clientY;
                         const itemCenterY = rect.top + rect.height / 2;
-                        const position = mouseY < itemCenterY ? 'above' : 'below';
-                        dragDrop.handleDragOver(e, { 
-                          type: 'request', 
-                          id: request.id!,
-                          collectionId: request.collectionId,
-                          folderId: request.folderId
-                        }, position);
+                        const position =
+                          mouseY < itemCenterY ? 'above' : 'below';
+                        dragDrop.handleDragOver(
+                          e,
+                          {
+                            type: 'request',
+                            id: request.id!,
+                            collectionId: request.collectionId,
+                            folderId: request.folderId,
+                          },
+                          position
+                        );
                       },
-                      onDrop: (e) => {
+                      onDrop: e => {
                         const rect = e.currentTarget.getBoundingClientRect();
                         const mouseY = e.clientY;
                         const itemCenterY = rect.top + rect.height / 2;
-                        const position = mouseY < itemCenterY ? 'above' : 'below';
-                        dragDrop.handleDrop(e, { 
-                          type: 'request', 
-                          id: request.id!,
-                          collectionId: request.collectionId,
-                          folderId: request.folderId
-                        }, position);
+                        const position =
+                          mouseY < itemCenterY ? 'above' : 'below';
+                        dragDrop.handleDrop(
+                          e,
+                          {
+                            type: 'request',
+                            id: request.id!,
+                            collectionId: request.collectionId,
+                            folderId: request.folderId,
+                          },
+                          position
+                        );
                       },
                       onDragEnd: dragDrop.handleDragEnd,
                     }}
-                    isDragging={dragDrop.draggedItem?.type === 'request' && dragDrop.draggedItem?.id === request.id}
-                    isDragOver={dragDrop.dragOverItem?.type === 'request' && dragDrop.dragOverItem?.id === request.id}
+                    isDragging={
+                      dragDrop.draggedItem?.type === 'request' &&
+                      dragDrop.draggedItem?.id === request.id
+                    }
+                    isDragOver={
+                      dragDrop.dragOverItem?.type === 'request' &&
+                      dragDrop.dragOverItem?.id === request.id
+                    }
                     dropPosition={dragDrop.dropPosition}
                   />
                 ))}

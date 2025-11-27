@@ -31,7 +31,7 @@ export function VariableInput({
       const rect = inputRef.current.getBoundingClientRect();
       setDropdownPosition({
         top: rect.bottom,
-        left: rect.left
+        left: rect.left,
       });
     }
   };
@@ -66,7 +66,7 @@ export function VariableInput({
     const beforeBraces = value.substring(0, lastBraces);
     const afterCurrentVar = value.substring(lastBraces + 2 + searchTerm.length);
     const newValue = beforeBraces + `{{${variableName}}}` + afterCurrentVar;
-    
+
     onChange(newValue);
     setShowAutocomplete(false);
 

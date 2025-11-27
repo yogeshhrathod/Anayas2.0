@@ -1,7 +1,10 @@
 import { useState, useRef, useMemo } from 'react';
 import { VariableAutocomplete } from './variable-autocomplete';
 import { VariableContextMenu } from './variable-context-menu';
-import { useAvailableVariables, useVariableResolution } from '../../hooks/useVariableResolution';
+import {
+  useAvailableVariables,
+  useVariableResolution,
+} from '../../hooks/useVariableResolution';
 import { cn } from '../../lib/utils';
 import { useClickOutside } from '../../hooks/useClickOutside';
 
@@ -35,7 +38,10 @@ export interface OverlayVariableInputProps {
   disabled?: boolean;
 }
 
-function parseTextToSegments(text: string, resolvedVariables: Array<{ name: string; value: string }>): Segment[] {
+function parseTextToSegments(
+  text: string,
+  resolvedVariables: Array<{ name: string; value: string }>
+): Segment[] {
   const VARIABLE_REGEX = /\{\{(\$)?[\w.]+\}\}/g; // Allow $ for dynamic variables
   const segments: Segment[] = [];
   let lastIndex = 0;
@@ -88,25 +94,34 @@ export function OverlayVariableInput({
   const [showOnlyDynamic, setShowOnlyDynamic] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuVariable, setContextMenuVariable] = useState<string>('');
-  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
-  const [autocompletePosition, setAutocompletePosition] = useState({ top: 0, left: 0 });
-  
+  const [contextMenuPosition, setContextMenuPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+  const [autocompletePosition, setAutocompletePosition] = useState({
+    top: 0,
+    left: 0,
+  });
+
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  
+
   const variables = useAvailableVariables();
   const { variables: resolvedVariables } = useVariableResolution(value);
-  
+
   // Parse text into segments
-  const segments = useMemo(() => parseTextToSegments(value, resolvedVariables), [value, resolvedVariables]);
+  const segments = useMemo(
+    () => parseTextToSegments(value, resolvedVariables),
+    [value, resolvedVariables]
+  );
 
   const updateAutocompletePosition = () => {
     if (inputRef.current) {
       const rect = inputRef.current.getBoundingClientRect();
       setAutocompletePosition({
         top: rect.bottom + 4,
-        left: rect.left
+        left: rect.left,
       });
     }
   };
@@ -123,11 +138,14 @@ export function OverlayVariableInput({
       if (!afterBraces.includes('}}')) {
         // Still typing variable name
         // Check if user typed {{$ (wants dynamic variables)
-        const isDynamicSearch = afterBraces.startsWith('$') && afterBraces.length === 1;
+        const isDynamicSearch =
+          afterBraces.startsWith('$') && afterBraces.length === 1;
         setShowOnlyDynamic(isDynamicSearch);
-        
+
         // Remove $ prefix from search term if present (for dynamic variables)
-        const search = afterBraces.startsWith('$') ? afterBraces.substring(1) : afterBraces;
+        const search = afterBraces.startsWith('$')
+          ? afterBraces.substring(1)
+          : afterBraces;
         setSearchTerm(search);
         updateAutocompletePosition();
         setShowAutocomplete(true);
@@ -143,19 +161,19 @@ export function OverlayVariableInput({
 
   const handleAutocompleteSelect = (variableName: string) => {
     if (!inputRef.current) return;
-    
+
     const lastBraces = value.lastIndexOf('{{');
     if (lastBraces === -1) return;
 
     const beforeBraces = value.substring(0, lastBraces);
     // Calculate the actual length of what was typed after {{ (including $ if present)
     const afterBraces = value.substring(lastBraces + 2);
-    const actualTypedLength = afterBraces.includes('}}') 
-      ? afterBraces.indexOf('}}') 
+    const actualTypedLength = afterBraces.includes('}}')
+      ? afterBraces.indexOf('}}')
       : afterBraces.length;
     const afterCurrentVar = value.substring(lastBraces + 2 + actualTypedLength);
     const newValue = beforeBraces + `{{${variableName}}}` + afterCurrentVar;
-    
+
     onChange(newValue);
     setShowAutocomplete(false);
 
@@ -176,10 +194,10 @@ export function OverlayVariableInput({
   // Handle double-click on capsule
   const handleDoubleClick = (varName: string) => {
     if (!inputRef.current) return;
-    
+
     const varText = `{{${varName}}}`;
     const index = value.indexOf(varText);
-    
+
     if (index !== -1) {
       inputRef.current.focus();
       inputRef.current.setSelectionRange(index, index + varText.length);
@@ -190,32 +208,35 @@ export function OverlayVariableInput({
   const handleContextMenu = (e: React.MouseEvent, varName: string) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Focus the input to maintain keyboard interaction
     if (inputRef.current) {
       inputRef.current.focus();
     }
-    
+
     setContextMenuVariable(varName);
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
     setShowContextMenu(true);
   };
-
 
   // Close autocomplete and context menu on escape or click outside
   const handleCloseAll = () => {
     setShowAutocomplete(false);
     setShowContextMenu(false);
   };
-  
-  useClickOutside(wrapperRef, handleCloseAll, showAutocomplete || showContextMenu);
+
+  useClickOutside(
+    wrapperRef,
+    handleCloseAll,
+    showAutocomplete || showContextMenu
+  );
 
   return (
-    <div 
-      ref={wrapperRef} 
+    <div
+      ref={wrapperRef}
       className={cn(
-        "relative w-full flex h-10 rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
-        disabled && "cursor-not-allowed opacity-50",
+        'relative w-full flex h-10 rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
+        disabled && 'cursor-not-allowed opacity-50',
         className
       )}
     >
@@ -243,8 +264,10 @@ export function OverlayVariableInput({
           MozOsxFontSmoothing: 'grayscale',
         }}
       >
-        <span style={{ display: 'inline-block', width: '100%', lineHeight: '20px' }}>
-          {segments.map((seg, i) => 
+        <span
+          style={{ display: 'inline-block', width: '100%', lineHeight: '20px' }}
+        >
+          {segments.map((seg, i) =>
             seg.type === 'variable' ? (
               <span
                 key={i}
@@ -254,13 +277,13 @@ export function OverlayVariableInput({
                     ? 'text-green-700 dark:text-green-400'
                     : 'text-red-700 dark:text-red-400'
                 )}
-                style={{ 
+                style={{
                   pointerEvents: 'auto', // Only capsules receive pointer events
                   verticalAlign: 'baseline',
                   cursor: 'pointer',
                   display: 'inline',
                   lineHeight: 'inherit',
-                  backgroundColor: seg.resolved 
+                  backgroundColor: seg.resolved
                     ? 'rgba(34, 197, 94, 0.2)' // green-500 with opacity
                     : 'rgba(239, 68, 68, 0.2)', // red-500 with opacity
                   borderRadius: '3px',
@@ -270,13 +293,15 @@ export function OverlayVariableInput({
                   border: 'none',
                   outline: 'none',
                 }}
-                onContextMenu={(e) => handleContextMenu(e, seg.name!)}
+                onContextMenu={e => handleContextMenu(e, seg.name!)}
                 onDoubleClick={() => handleDoubleClick(seg.name!)}
               >
                 {`{{${seg.name}}}`}
               </span>
             ) : (
-              <span key={i} style={{ display: 'inline' }}>{seg.content}</span>
+              <span key={i} style={{ display: 'inline' }}>
+                {seg.content}
+              </span>
             )
           )}
           {!value && placeholder && (
@@ -290,12 +315,12 @@ export function OverlayVariableInput({
         ref={inputRef}
         value={value}
         onChange={handleChange}
-        onContextMenu={(e) => {
+        onContextMenu={e => {
           // Check if we're clicking on a capsule by examining click position
           const clickX = e.clientX;
           const rect = inputRef.current?.getBoundingClientRect();
           if (!rect) return;
-          
+
           // Find which segment is at the click position
           let charPos = 0;
           for (const seg of segments) {
@@ -307,7 +332,7 @@ export function OverlayVariableInput({
               const charWidth = 8;
               const relativeX = clickX - rect.left - 12;
               const clickedChar = Math.floor(relativeX / charWidth);
-              
+
               if (clickedChar >= startPos && clickedChar <= endPos) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -373,4 +398,3 @@ export function OverlayVariableInput({
     </div>
   );
 }
-

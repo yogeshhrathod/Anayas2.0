@@ -1,19 +1,19 @@
-import * as React from "react"
-import { Button } from "./button"
-import { Input } from "./input"
-import { Label } from "./label"
-import { Dialog } from "./dialog"
+import * as React from 'react';
+import { Button } from './button';
+import { Input } from './input';
+import { Label } from './label';
+import { Dialog } from './dialog';
 
 interface InputDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  title: string
-  description?: string
-  placeholder?: string
-  defaultValue?: string
-  onConfirm: (value: string) => void
-  confirmText?: string
-  cancelText?: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: string;
+  placeholder?: string;
+  defaultValue?: string;
+  onConfirm: (value: string) => void;
+  confirmText?: string;
+  cancelText?: string;
 }
 
 export function InputDialog({
@@ -21,36 +21,36 @@ export function InputDialog({
   onOpenChange,
   title,
   description,
-  placeholder = "Enter value",
-  defaultValue = "",
+  placeholder = 'Enter value',
+  defaultValue = '',
   onConfirm,
-  confirmText = "Confirm",
-  cancelText = "Cancel"
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
 }: InputDialogProps) {
-  const [value, setValue] = React.useState(defaultValue)
+  const [value, setValue] = React.useState(defaultValue);
 
   React.useEffect(() => {
     if (open) {
-      setValue(defaultValue)
+      setValue(defaultValue);
     }
-  }, [open, defaultValue])
+  }, [open, defaultValue]);
 
   const handleConfirm = () => {
     if (value.trim()) {
-      onConfirm(value.trim())
-      onOpenChange(false)
+      onConfirm(value.trim());
+      onOpenChange(false);
     }
-  }
+  };
 
   const handleCancel = () => {
-    onOpenChange(false)
-  }
+    onOpenChange(false);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleConfirm()
+      handleConfirm();
     }
-  }
+  };
 
   return (
     <Dialog
@@ -67,12 +67,12 @@ export function InputDialog({
             id="input-dialog"
             placeholder={placeholder}
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={e => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
             autoFocus
           />
         </div>
-        
+
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={handleCancel}>
             {cancelText}
@@ -83,5 +83,5 @@ export function InputDialog({
         </div>
       </div>
     </Dialog>
-  )
+  );
 }

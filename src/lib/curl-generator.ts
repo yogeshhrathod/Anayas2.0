@@ -1,6 +1,6 @@
 /**
  * cURL Generator
- * 
+ *
  * Generates cURL command strings from Request objects.
  * Produces readable, multi-line cURL commands with proper escaping.
  */
@@ -51,14 +51,17 @@ export function generateCurlCommand(request: Request): string {
 /**
  * Build URL with query parameters
  */
-function buildUrl(baseUrl: string, queryParams: Array<{ key: string; value: string; enabled: boolean }>): string {
+function buildUrl(
+  baseUrl: string,
+  queryParams: Array<{ key: string; value: string; enabled: boolean }>
+): string {
   if (!queryParams || queryParams.length === 0) {
     return baseUrl;
   }
 
   try {
     const url = new URL(baseUrl);
-    
+
     // Add enabled query parameters
     queryParams
       .filter(param => param.enabled && param.key)
@@ -69,13 +72,18 @@ function buildUrl(baseUrl: string, queryParams: Array<{ key: string; value: stri
     return url.toString();
   } catch (_e) {
     // If URL is invalid, just append query string manually
-    const enabledParams = queryParams.filter(param => param.enabled && param.key);
+    const enabledParams = queryParams.filter(
+      param => param.enabled && param.key
+    );
     if (enabledParams.length === 0) {
       return baseUrl;
     }
 
     const queryString = enabledParams
-      .map(param => `${encodeURIComponent(param.key)}=${encodeURIComponent(param.value || '')}`)
+      .map(
+        param =>
+          `${encodeURIComponent(param.key)}=${encodeURIComponent(param.value || '')}`
+      )
       .join('&');
 
     const separator = baseUrl.includes('?') ? '&' : '?';
@@ -96,13 +104,16 @@ function generateAuthFlags(auth: Request['auth']): string[] {
   switch (auth.type) {
     case 'bearer':
       if (auth.token) {
-        flags.push('-H', escapeShellString(`Authorization: Bearer ${auth.token}`));
+        flags.push(
+          '-H',
+          escapeShellString(`Authorization: Bearer ${auth.token}`)
+        );
       }
       break;
 
     case 'basic':
       if (auth.username) {
-        const credentials = auth.password 
+        const credentials = auth.password
           ? `${auth.username}:${auth.password}`
           : auth.username;
         flags.push('-u', escapeShellString(credentials));
@@ -111,7 +122,10 @@ function generateAuthFlags(auth: Request['auth']): string[] {
 
     case 'apikey':
       if (auth.apiKey && auth.apiKeyHeader) {
-        flags.push('-H', escapeShellString(`${auth.apiKeyHeader}: ${auth.apiKey}`));
+        flags.push(
+          '-H',
+          escapeShellString(`${auth.apiKeyHeader}: ${auth.apiKey}`)
+        );
       }
       break;
   }
@@ -140,7 +154,10 @@ function getAuthHeaders(auth: Request['auth']): string[] {
 /**
  * Generate body/data flags
  */
-function generateBodyFlags(body: string, _headers: Record<string, string>): string[] {
+function generateBodyFlags(
+  body: string,
+  _headers: Record<string, string>
+): string[] {
   // Use --data-raw for better compatibility
   return ['--data-raw', escapeShellString(body)];
 }
@@ -151,11 +168,17 @@ function generateBodyFlags(body: string, _headers: Record<string, string>): stri
 function escapeShellString(str: string): string {
   // If string contains spaces, quotes, or special characters, wrap in single quotes
   // and escape any single quotes inside
-  if (str.includes(' ') || str.includes("'") || str.includes('"') || str.includes('$') || str.includes('\\')) {
+  if (
+    str.includes(' ') ||
+    str.includes("'") ||
+    str.includes('"') ||
+    str.includes('$') ||
+    str.includes('\\')
+  ) {
     // Escape single quotes by ending the string, adding escaped quote, and continuing
     return `'${str.replace(/'/g, "'\\''")}'`;
   }
-  
+
   return str;
 }
 
@@ -174,10 +197,10 @@ function formatMultiLine(parts: string[]): string {
 
   for (let i = 1; i < parts.length; i++) {
     const part = parts[i];
-    
+
     // Estimate line length (rough)
     const estimatedLength = currentLine.length + part.length + 1;
-    
+
     if (estimatedLength > 80 && currentLine !== 'curl') {
       // Start new line
       lines.push(currentLine + ' \\');
@@ -193,4 +216,3 @@ function formatMultiLine(parts: string[]): string {
 
   return lines.join('\n');
 }
-

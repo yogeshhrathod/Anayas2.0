@@ -16,7 +16,7 @@ export type SidebarSectionId = 'unsaved' | 'collections';
 export interface SidebarState {
   /** Array of section IDs that are expanded */
   expandedSections: SidebarSectionId[];
-  
+
   /** Order of sections (for future customization) */
   sectionOrder?: SidebarSectionId[];
 }
@@ -37,14 +37,13 @@ export const DEFAULT_SIDEBAR_STATE: SidebarState = {
 export interface SidebarSectionConfig {
   /** Unique section identifier */
   id: SidebarSectionId;
-  
+
   /** Display title */
   title: string;
-  
+
   /** Optional icon */
   icon?: React.ComponentType<{ className?: string }>;
-  
+
   /** Default expanded state */
   defaultExpanded?: boolean;
 }
-

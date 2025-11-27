@@ -1,12 +1,12 @@
 /**
  * ResponseBodyView - Display response body in full-width Monaco editor
- * 
+ *
  * Shows:
  * - Response body in Monaco editor (read-only)
  * - Formatted JSON with syntax highlighting
  * - Status badge and response time
  * - Optional Copy/Download action buttons
- * 
+ *
  * @example
  * ```tsx
  * <ResponseBodyView
@@ -47,7 +47,7 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
   }
 
   // Format response body for display
-  const formattedBody = response.data 
+  const formattedBody = response.data
     ? JSON.stringify(response.data, null, 2)
     : '';
 
@@ -58,8 +58,12 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
         <div className="flex items-center gap-4">
           <h3 className="text-lg font-semibold">Response Body</h3>
           <div className="flex items-center gap-2">
-            <Badge 
-              variant={response.status >= 200 && response.status < 300 ? 'default' : 'destructive'}
+            <Badge
+              variant={
+                response.status >= 200 && response.status < 300
+                  ? 'default'
+                  : 'destructive'
+              }
             >
               {response.status} {response.statusText}
             </Badge>
@@ -69,7 +73,7 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
             </div>
           </div>
         </div>
-        
+
         {showActions && (onCopy || onDownload) && (
           <div className="flex gap-2">
             {onCopy && (
@@ -87,7 +91,7 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Monaco Editor - Full Width */}
       <div className="flex-1 px-4 pb-4">
         <MonacoEditor
@@ -109,4 +113,3 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
     </div>
   );
 };
-

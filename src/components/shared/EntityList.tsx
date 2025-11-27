@@ -1,13 +1,13 @@
 /**
  * EntityList - Generic list component with filtering, search, and sorting
- * 
+ *
  * Provides a consistent list layout with:
  * - Search and filter controls
  * - Sortable columns
  * - Pagination
  * - Empty state handling
  * - Loading states
- * 
+ *
  * @example
  * ```tsx
  * <EntityList
@@ -30,7 +30,13 @@
 import React, { useState, useMemo } from 'react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 import { Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -82,12 +88,14 @@ export const EntityList = <T extends Record<string, any>>({
   emptyState,
   loading = false,
   className = '',
-  itemClassName = ''
+  itemClassName = '',
 }: EntityListProps<T>) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
-  const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+  const [activeFilters, setActiveFilters] = useState<Record<string, string>>(
+    {}
+  );
 
   // Filter and search items
   const filteredItems = useMemo(() => {
@@ -98,7 +106,10 @@ export const EntityList = <T extends Record<string, any>>({
       filtered = filtered.filter(item =>
         searchKeys.some(key => {
           const value = item[key];
-          return value && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+          return (
+            value &&
+            value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+          );
         })
       );
     }
@@ -148,7 +159,11 @@ export const EntityList = <T extends Record<string, any>>({
 
   const getSortIcon = (columnKey: string) => {
     if (sortColumn !== columnKey) return <ArrowUpDown className="h-4 w-4" />;
-    return sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
+    return sortDirection === 'asc' ? (
+      <ArrowUp className="h-4 w-4" />
+    ) : (
+      <ArrowDown className="h-4 w-4" />
+    );
   };
 
   if (loading) {
@@ -165,10 +180,13 @@ export const EntityList = <T extends Record<string, any>>({
 
   if (sortedItems.length === 0 && emptyState) {
     return (
-      <div className={cn('flex flex-col items-center justify-center py-12', className)}>
-        <div className="text-muted-foreground mb-4">
-          {emptyState.icon}
-        </div>
+      <div
+        className={cn(
+          'flex flex-col items-center justify-center py-12',
+          className
+        )}
+      >
+        <div className="text-muted-foreground mb-4">{emptyState.icon}</div>
         <h3 className="text-lg font-semibold mb-2">{emptyState.title}</h3>
         <p className="text-sm text-muted-foreground mb-4 text-center">
           {emptyState.description}
@@ -187,16 +205,16 @@ export const EntityList = <T extends Record<string, any>>({
           <Input
             placeholder={searchPlaceholder}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             className="pl-10"
           />
         </div>
-        
-        {filters.map((filter) => (
+
+        {filters.map(filter => (
           <Select
             key={filter.key}
             value={activeFilters[filter.key] || 'all'}
-            onValueChange={(value) => 
+            onValueChange={value =>
               setActiveFilters(prev => ({ ...prev, [filter.key]: value }))
             }
           >
@@ -205,7 +223,7 @@ export const EntityList = <T extends Record<string, any>>({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All {filter.label}</SelectItem>
-              {filter.options.map((option) => (
+              {filter.options.map(option => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
@@ -238,8 +256,11 @@ export const EntityList = <T extends Record<string, any>>({
               renderItem(item)
             ) : (
               <div className="space-y-2">
-                {columns.map((column) => (
-                  <div key={String(column.key)} className="flex items-center justify-between">
+                {columns.map(column => (
+                  <div
+                    key={String(column.key)}
+                    className="flex items-center justify-between"
+                  >
                     <span className="text-sm font-medium">{column.label}:</span>
                     <div className="flex items-center gap-2">
                       {column.render ? (
@@ -254,7 +275,7 @@ export const EntityList = <T extends Record<string, any>>({
                           variant="ghost"
                           size="sm"
                           className="h-6 w-6 p-0"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             handleSort(String(column.key));
                           }}

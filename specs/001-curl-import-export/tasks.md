@@ -14,6 +14,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Phase 1: Core Parser
 
 #### Task 1.1: Research cURL Parsing Libraries
+
 - **File**: N/A
 - **Description**: Research and evaluate npm libraries for cURL parsing (curl-to-json, curlconverter, etc.)
 - **Dependencies**: None
@@ -21,6 +22,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **Status**: `completed`
 
 #### Task 1.2: Create cURL Parser Utility
+
 - **File**: `src/lib/curl-parser.ts`
 - **Description**: Implement parser to convert cURL commands to Request objects. Support method, URL, headers, data, auth, query params
 - **Dependencies**: Task 1.1
@@ -28,6 +30,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **Status**: `completed`
 
 #### Task 1.3: Create cURL Generator Utility `[P]`
+
 - **File**: `src/lib/curl-generator.ts`
 - **Description**: Implement generator to convert Request objects to cURL commands. Support all request types, proper escaping
 - **Dependencies**: None
@@ -39,6 +42,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Phase 2: IPC Integration
 
 #### Task 2.1: Add IPC Handlers
+
 - **File**: `electron/ipc/handlers.ts`
 - **Description**: Add curl:parse, curl:generate, and curl:import-bulk IPC handlers
 - **Dependencies**: Task 1.2, Task 1.3
@@ -46,6 +50,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **Status**: `completed`
 
 #### Task 2.2: Expose Preload APIs
+
 - **File**: `electron/preload.ts`
 - **Description**: Add electronAPI.curl namespace with parse, generate, importBulk methods
 - **Dependencies**: Task 2.1
@@ -57,6 +62,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Phase 3: Import UI
 
 #### Task 3.1: Create Import Dialog Component
+
 - **File**: `src/components/curl/CurlImportDialog.tsx`
 - **Description**: Create dialog with textarea, file upload, preview, and save options. Support bulk import
 - **Dependencies**: Task 2.2
@@ -64,6 +70,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **Status**: `completed`
 
 #### Task 3.2: Add Import Options to UI
+
 - **File**: `src/pages/Collections.tsx`, `src/components/collection/RequestItem.tsx`
 - **Description**: Add Import cURL button/menu items to Collections page and context menus
 - **Dependencies**: Task 3.1
@@ -77,6 +84,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Phase 1: Export UI
 
 #### Task 4.1: Add Copy as cURL Button
+
 - **File**: `src/components/request/RequestHeader.tsx`
 - **Description**: Add Copy as cURL button next to Send button. Call generator and copy to clipboard
 - **Dependencies**: Task 2.2
@@ -90,6 +98,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Phase 1: Bulk Import Support
 
 #### Task 5.1: Implement Bulk Import Logic
+
 - **File**: `src/components/curl/CurlImportDialog.tsx`, `src/lib/curl-parser.ts`
 - **Description**: Add support for importing multiple cURL commands separated by newlines
 - **Dependencies**: Task 3.1
@@ -103,12 +112,14 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Unit Tests
 
 #### Test Task 1: Parser Tests
+
 - **File**: `src/lib/__tests__/curl-parser.test.ts` (if test setup exists)
 - **Description**: Test parser with various cURL formats, edge cases, error handling
 - **Dependencies**: Task 1.2
 - **Status**: `completed`
 
 #### Test Task 2: Generator Tests
+
 - **File**: `src/lib/__tests__/curl-generator.test.ts` (if test setup exists)
 - **Description**: Test generator with all request types, auth types, special characters
 - **Dependencies**: Task 1.3
@@ -117,6 +128,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Integration Tests
 
 #### Test Task 3: IPC Handler Tests
+
 - **File**: Integration test file (if exists)
 - **Description**: Test IPC handlers with various inputs
 - **Dependencies**: Task 2.1
@@ -125,6 +137,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Manual Testing
 
 #### Test Task 4: Manual Testing Checklist
+
 - **File**: N/A
 - **Description**: Test all scenarios manually: import/export, various formats, edge cases
 - **Dependencies**: All implementation tasks
@@ -135,6 +148,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ## Task Execution Order
 
 ### Sequential Tasks
+
 1. Task 1.1 (Research libraries)
 2. Task 1.2 (Create parser) - can start in parallel with 1.3
 3. Task 1.3 (Create generator) - can start in parallel with 1.2
@@ -146,6 +160,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 9. Task 5.1 (Bulk import) - depends on 3.1
 
 ### Parallel Tasks
+
 - Task 1.2 and Task 1.3 can run in parallel
 - Task 3.2 and Task 4.1 can run in parallel after Task 2.2
 

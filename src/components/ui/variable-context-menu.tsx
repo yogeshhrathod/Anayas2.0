@@ -8,11 +8,10 @@ interface VariableContextMenuProps {
   onClose: () => void;
 }
 
-export const VariableContextMenu = forwardRef<HTMLDivElement, VariableContextMenuProps>(({
-  variableName,
-  position,
-  onClose,
-}, ref) => {
+export const VariableContextMenu = forwardRef<
+  HTMLDivElement,
+  VariableContextMenuProps
+>(({ variableName, position, onClose }, ref) => {
   const { variables } = useVariableResolution(`{{${variableName}}}`);
   const variable = variables.find(v => v.name === variableName);
   const isResolved = variable?.value !== '';
@@ -45,7 +44,7 @@ export const VariableContextMenu = forwardRef<HTMLDivElement, VariableContextMen
       ref={ref}
       className="fixed z-context-menu w-56 rounded-md border bg-popover p-1 shadow-lg"
       style={{ left: position.x, top: position.y }}
-      onClick={(e) => e.stopPropagation()}
+      onClick={e => e.stopPropagation()}
     >
       <button
         onClick={handleCopyName}
@@ -83,4 +82,3 @@ export const VariableContextMenu = forwardRef<HTMLDivElement, VariableContextMen
 });
 
 VariableContextMenu.displayName = 'VariableContextMenu';
-

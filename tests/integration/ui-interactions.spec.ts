@@ -1,36 +1,52 @@
 import { test, expect } from '../helpers/electron-fixtures';
 
 test.describe('UI Interaction Tests', () => {
-  test('should create collection via UI: click button → fill form → save', async ({ electronPage }) => {
+  test('should create collection via UI: click button → fill form → save', async ({
+    electronPage,
+  }) => {
     // First, verify the UI is actually rendering
     await electronPage.waitForSelector('body', { state: 'visible' });
     const bodyText = await electronPage.textContent('body');
     console.log('Body text:', bodyText?.substring(0, 200));
-    
+
     // Take a screenshot to verify UI is visible
-    await electronPage.screenshot({ path: 'test-artifacts/ui-visible-check.png', fullPage: true });
-    
+    await electronPage.screenshot({
+      path: 'test-artifacts/ui-visible-check.png',
+      fullPage: true,
+    });
+
     // Navigate to collections page
     await electronPage.click('text=Collections');
     await electronPage.waitForLoadState('networkidle');
-    
+
     // Verify we're on collections page
     const collectionsPageText = await electronPage.textContent('body');
-    console.log('Collections page text:', collectionsPageText?.substring(0, 200));
-    await electronPage.screenshot({ path: 'test-artifacts/collections-page.png', fullPage: true });
-    
+    console.log(
+      'Collections page text:',
+      collectionsPageText?.substring(0, 200)
+    );
+    await electronPage.screenshot({
+      path: 'test-artifacts/collections-page.png',
+      fullPage: true,
+    });
+
     // Verify "New Collection" button exists and is visible
-    const newCollectionButton = electronPage.locator('button:has-text("New Collection")');
+    const newCollectionButton = electronPage.locator(
+      'button:has-text("New Collection")'
+    );
     await newCollectionButton.waitFor({ state: 'visible', timeout: 5000 });
     const buttonVisible = await newCollectionButton.isVisible();
     console.log('New Collection button visible:', buttonVisible);
-    
+
     // Click "New Collection" button
     await newCollectionButton.click();
     await electronPage.waitForTimeout(1000); // Wait for form to appear
-    
+
     // Verify form appeared
-    await electronPage.screenshot({ path: 'test-artifacts/collection-form.png', fullPage: true });
+    await electronPage.screenshot({
+      path: 'test-artifacts/collection-form.png',
+      fullPage: true,
+    });
     const formVisible = await electronPage.locator('input#name').isVisible();
     console.log('Collection form visible:', formVisible);
 
@@ -39,20 +55,29 @@ test.describe('UI Interaction Tests', () => {
     await nameInput.waitFor({ state: 'visible' });
     await nameInput.fill('UI Test Collection');
     await electronPage.waitForTimeout(300);
-    await electronPage.screenshot({ path: 'test-artifacts/name-filled.png', fullPage: true });
-    
+    await electronPage.screenshot({
+      path: 'test-artifacts/name-filled.png',
+      fullPage: true,
+    });
+
     const descInput = electronPage.locator('textarea#description');
     await descInput.waitFor({ state: 'visible' });
     await descInput.fill('Created via UI test');
     await electronPage.waitForTimeout(300);
-    await electronPage.screenshot({ path: 'test-artifacts/description-filled.png', fullPage: true });
+    await electronPage.screenshot({
+      path: 'test-artifacts/description-filled.png',
+      fullPage: true,
+    });
 
     // Click Save button
     const saveButton = electronPage.locator('button:has-text("Save")');
     await saveButton.waitFor({ state: 'visible' });
     await saveButton.click();
     await electronPage.waitForTimeout(1000); // Wait for save to complete
-    await electronPage.screenshot({ path: 'test-artifacts/after-save.png', fullPage: true });
+    await electronPage.screenshot({
+      path: 'test-artifacts/after-save.png',
+      fullPage: true,
+    });
 
     // Verify collection appears in the list
     const collectionExists = await electronPage.evaluate(() => {
@@ -64,25 +89,30 @@ test.describe('UI Interaction Tests', () => {
     const collections = await electronPage.evaluate(() => {
       return (window as any).electronAPI.collection.list();
     });
-    const createdCollection = collections.find((c: any) => c.name === 'UI Test Collection');
+    const createdCollection = collections.find(
+      (c: any) => c.name === 'UI Test Collection'
+    );
     expect(createdCollection).toBeDefined();
     expect(createdCollection.name).toBe('UI Test Collection');
   });
 
-  test('should create and send request via UI', async ({ electronPage, _testDbPath }) => {
+  test('should create and send request via UI', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     // First, create environment and collection via API (setup)
     await electronPage.evaluate(async () => {
       await (window as any).electronAPI.env.save({
         name: 'ui-test-env',
         displayName: 'UI Test Environment',
         variables: { base_url: 'https://jsonplaceholder.typicode.com' },
-        isDefault: true
+        isDefault: true,
       });
-      
+
       const collection = await (window as any).electronAPI.collection.save({
         name: 'UI Test Collection',
         description: 'For UI testing',
-        environments: []
+        environments: [],
       });
       return collection.id;
     });
@@ -93,28 +123,36 @@ test.describe('UI Interaction Tests', () => {
     await electronPage.waitForTimeout(1000); // Wait for request builder to load
 
     // Fill in request details - use placeholder text that matches VariableInputUnified
-    const urlInput = electronPage.locator('input[placeholder*="Enter request URL"], input[placeholder*="URL"]').first();
+    const urlInput = electronPage
+      .locator(
+        'input[placeholder*="Enter request URL"], input[placeholder*="URL"]'
+      )
+      .first();
     await urlInput.waitFor({ state: 'visible', timeout: 5000 });
     await urlInput.fill('{{base_url}}/posts/1');
     await electronPage.waitForTimeout(500); // Wait for input to settle
 
     // Select GET method (if not already selected)
     const methodSelect = electronPage.locator('button:has-text("GET")').first();
-    if (await methodSelect.count() > 0) {
+    if ((await methodSelect.count()) > 0) {
       await methodSelect.click();
     }
 
     // Click Send button - handle potential overlay interception
-    const sendButton = electronPage.locator('button:has-text("Send"), button[title*="Send"]').first();
+    const sendButton = electronPage
+      .locator('button:has-text("Send"), button[title*="Send"]')
+      .first();
     await sendButton.waitFor({ state: 'visible', timeout: 5000 });
-    
+
     // Wait a bit for any animations/overlays to settle
     await electronPage.waitForTimeout(500);
-    
+
     // Use page.evaluate to click directly if normal click fails
     const clicked = await electronPage.evaluate(() => {
       const button = Array.from(document.querySelectorAll('button')).find(
-        (btn) => btn.textContent?.includes('Send') || btn.getAttribute('title')?.includes('Send')
+        btn =>
+          btn.textContent?.includes('Send') ||
+          btn.getAttribute('title')?.includes('Send')
       );
       if (button) {
         (button as HTMLElement).click();
@@ -122,26 +160,30 @@ test.describe('UI Interaction Tests', () => {
       }
       return false;
     });
-    
+
     if (!clicked) {
       // Fallback to Playwright click with force
       await sendButton.click({ force: true });
     }
-    
+
     // Wait for response
     await electronPage.waitForTimeout(3000);
 
     // Verify response appears (check for status code or response body)
     const hasResponse = await electronPage.evaluate(() => {
-      return document.body.textContent?.includes('200') || 
-             document.body.textContent?.includes('status') ||
-             document.body.textContent?.includes('response') ||
-             false;
+      return (
+        document.body.textContent?.includes('200') ||
+        document.body.textContent?.includes('status') ||
+        document.body.textContent?.includes('response') ||
+        false
+      );
     });
     expect(hasResponse).toBe(true);
   });
 
-  test('should navigate between pages via sidebar', async ({ electronPage }) => {
+  test('should navigate between pages via sidebar', async ({
+    electronPage,
+  }) => {
     // Test navigation to Collections
     await electronPage.click('text=Collections');
     await electronPage.waitForTimeout(500);
@@ -173,25 +215,31 @@ test.describe('UI Interaction Tests', () => {
     await electronPage.waitForTimeout(500);
 
     // Click "New Environment" button
-    const newEnvButton = electronPage.locator('button:has-text("New Environment")').first();
-    if (await newEnvButton.count() > 0) {
+    const newEnvButton = electronPage
+      .locator('button:has-text("New Environment")')
+      .first();
+    if ((await newEnvButton.count()) > 0) {
       await newEnvButton.click();
       await electronPage.waitForTimeout(500);
 
       // Fill environment form - use id selectors if available, otherwise try placeholder
-      const nameInput = electronPage.locator('input#name, input[placeholder*="name"]').first();
-      if (await nameInput.count() > 0) {
+      const nameInput = electronPage
+        .locator('input#name, input[placeholder*="name"]')
+        .first();
+      if ((await nameInput.count()) > 0) {
         await nameInput.fill('UI Test Env');
       }
-      
-      const displayNameInput = electronPage.locator('input#displayName, input[placeholder*="Display"]').first();
-      if (await displayNameInput.count() > 0) {
+
+      const displayNameInput = electronPage
+        .locator('input#displayName, input[placeholder*="Display"]')
+        .first();
+      if ((await displayNameInput.count()) > 0) {
         await displayNameInput.fill('UI Test Environment');
       }
 
       // Add a variable (if form supports it)
       // This depends on the actual form structure
-      
+
       // Click Save
       await electronPage.click('button:has-text("Save")');
       await electronPage.waitForTimeout(1000);
@@ -200,28 +248,32 @@ test.describe('UI Interaction Tests', () => {
       const environments = await electronPage.evaluate(() => {
         return (window as any).electronAPI.env.list();
       });
-      const createdEnv = environments.find((e: any) => e.name === 'UI Test Env');
+      const createdEnv = environments.find(
+        (e: any) => e.name === 'UI Test Env'
+      );
       expect(createdEnv).toBeDefined();
     }
   });
 
-  test('should search collections via UI search input', async ({ electronPage }) => {
+  test('should search collections via UI search input', async ({
+    electronPage,
+  }) => {
     // Create test collections via API
     await electronPage.evaluate(async () => {
       await (window as any).electronAPI.collection.save({
         name: 'Searchable Collection 1',
         description: 'First collection',
-        environments: []
+        environments: [],
       });
       await (window as any).electronAPI.collection.save({
         name: 'Searchable Collection 2',
         description: 'Second collection',
-        environments: []
+        environments: [],
       });
       await (window as any).electronAPI.collection.save({
         name: 'Other Collection',
         description: 'Third collection',
-        environments: []
+        environments: [],
       });
     });
 
@@ -230,8 +282,10 @@ test.describe('UI Interaction Tests', () => {
     await electronPage.waitForTimeout(500);
 
     // Find and use search input
-    const searchInput = electronPage.locator('input[placeholder*="Search"]').first();
-    if (await searchInput.count() > 0) {
+    const searchInput = electronPage
+      .locator('input[placeholder*="Search"]')
+      .first();
+    if ((await searchInput.count()) > 0) {
       await searchInput.fill('Searchable');
       await electronPage.waitForTimeout(500);
 
@@ -243,26 +297,32 @@ test.describe('UI Interaction Tests', () => {
     }
   });
 
-  test('should interact with request builder: change method, URL, headers', async ({ electronPage }) => {
+  test('should interact with request builder: change method, URL, headers', async ({
+    electronPage,
+  }) => {
     // Navigate to home page
     await electronPage.click('text=Home');
     await electronPage.waitForTimeout(500);
 
     // Change HTTP method to POST
     const methodButton = electronPage.locator('button:has-text("GET")').first();
-    if (await methodButton.count() > 0) {
+    if ((await methodButton.count()) > 0) {
       await methodButton.click();
       await electronPage.waitForTimeout(300);
-      
+
       // Select POST from dropdown (this depends on actual UI implementation)
       const postOption = electronPage.locator('text=POST').first();
-      if (await postOption.count() > 0) {
+      if ((await postOption.count()) > 0) {
         await postOption.click();
       }
     }
 
     // Fill URL
-    const urlInput = electronPage.locator('input[placeholder*="Enter request URL"], input[placeholder*="URL"]').first();
+    const urlInput = electronPage
+      .locator(
+        'input[placeholder*="Enter request URL"], input[placeholder*="URL"]'
+      )
+      .first();
     await urlInput.waitFor({ state: 'visible', timeout: 5000 });
     await urlInput.fill('https://jsonplaceholder.typicode.com/posts');
     await electronPage.waitForTimeout(500);
@@ -280,7 +340,7 @@ test.describe('UI Interaction Tests', () => {
       const collection = await (window as any).electronAPI.collection.save({
         name: 'Save Test Collection',
         description: 'For save dialog test',
-        environments: []
+        environments: [],
       });
       return collection.id;
     });
@@ -290,28 +350,40 @@ test.describe('UI Interaction Tests', () => {
     await electronPage.waitForTimeout(500);
 
     // Fill request details
-    const urlInput = electronPage.locator('input[placeholder*="Enter request URL"], input[placeholder*="URL"]').first();
+    const urlInput = electronPage
+      .locator(
+        'input[placeholder*="Enter request URL"], input[placeholder*="URL"]'
+      )
+      .first();
     await urlInput.waitFor({ state: 'visible', timeout: 5000 });
     await urlInput.fill('https://api.example.com/test');
 
     // Look for Save button or Save Request button
-    const saveButton = electronPage.locator('button:has-text("Save"), button:has-text("Save Request")').first();
-    if (await saveButton.count() > 0) {
+    const saveButton = electronPage
+      .locator('button:has-text("Save"), button:has-text("Save Request")')
+      .first();
+    if ((await saveButton.count()) > 0) {
       await saveButton.click();
       await electronPage.waitForTimeout(500);
 
       // Fill save dialog if it appears
-      const dialogNameInput = electronPage.locator('input[placeholder*="Request name"], input[placeholder*="Name"]').first();
-      if (await dialogNameInput.count() > 0) {
+      const dialogNameInput = electronPage
+        .locator(
+          'input[placeholder*="Request name"], input[placeholder*="Name"]'
+        )
+        .first();
+      if ((await dialogNameInput.count()) > 0) {
         await dialogNameInput.fill('UI Saved Request');
         await electronPage.waitForTimeout(300);
 
         // Select collection in dialog (if dropdown exists)
         // This depends on the actual dialog implementation
-        
+
         // Click Save in dialog
-        const dialogSaveButton = electronPage.locator('button:has-text("Save Request"), button:has-text("Save")').first();
-        if (await dialogSaveButton.count() > 0) {
+        const dialogSaveButton = electronPage
+          .locator('button:has-text("Save Request"), button:has-text("Save")')
+          .first();
+        if ((await dialogSaveButton.count()) > 0) {
           await dialogSaveButton.click();
           await electronPage.waitForTimeout(1000);
 
@@ -319,14 +391,18 @@ test.describe('UI Interaction Tests', () => {
           const requests = await electronPage.evaluate(() => {
             return (window as any).electronAPI.request.list();
           });
-          const savedRequest = requests.find((r: any) => r.name === 'UI Saved Request');
+          const savedRequest = requests.find(
+            (r: any) => r.name === 'UI Saved Request'
+          );
           expect(savedRequest).toBeDefined();
         }
       }
     }
   });
 
-  test('should display error messages for invalid inputs', async ({ electronPage }) => {
+  test('should display error messages for invalid inputs', async ({
+    electronPage,
+  }) => {
     // Navigate to collections page
     await electronPage.click('text=Collections');
     await electronPage.waitForTimeout(500);
@@ -337,16 +413,18 @@ test.describe('UI Interaction Tests', () => {
 
     // Try to save without filling required fields
     const saveButton = electronPage.locator('button:has-text("Save")').first();
-    if (await saveButton.count() > 0) {
+    if ((await saveButton.count()) > 0) {
       await saveButton.click();
       await electronPage.waitForTimeout(500);
 
       // Check for validation error messages
       const hasError = await electronPage.evaluate(() => {
-        return document.body.textContent?.includes('required') ||
-               document.body.textContent?.includes('error') ||
-               document.body.textContent?.includes('invalid') ||
-               false;
+        return (
+          document.body.textContent?.includes('required') ||
+          document.body.textContent?.includes('error') ||
+          document.body.textContent?.includes('invalid') ||
+          false
+        );
       });
       // Error might be shown or form might prevent submission
       // This test verifies the UI handles validation
@@ -361,7 +439,7 @@ test.describe('UI Interaction Tests', () => {
         const collection = await (window as any).electronAPI.collection.save({
           name: 'Collection To Edit',
           description: 'Original description',
-          environments: []
+          environments: [],
         });
         return collection.id;
       });
@@ -372,19 +450,26 @@ test.describe('UI Interaction Tests', () => {
       await electronPage.waitForTimeout(1000);
 
       // Find the collection card
-      const collectionCard = electronPage.locator('[data-testid="collection-card"][data-collection-name="Collection To Edit"]').first();
+      const collectionCard = electronPage
+        .locator(
+          '[data-testid="collection-card"][data-collection-name="Collection To Edit"]'
+        )
+        .first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
-      const actionMenuButton = collectionCard.locator('button[aria-label="Open actions menu"]').first();
-      
+      const actionMenuButton = collectionCard
+        .locator('button[aria-label="Open actions menu"]')
+        .first();
+
       // Alternative: find all buttons with SVG and click the one that opens a menu
       let menuOpened = false;
-      if (await actionMenuButton.count() > 0) {
+      if ((await actionMenuButton.count()) > 0) {
         try {
           await actionMenuButton.click();
           await electronPage.waitForTimeout(500);
           // Check if dropdown menu appeared
-          const dropdownVisible = await electronPage.locator('[role="menu"]').count() > 0;
+          const dropdownVisible =
+            (await electronPage.locator('[role="menu"]').count()) > 0;
           if (dropdownVisible) {
             menuOpened = true;
             const dropdown = electronPage.locator('[role="menu"]').last();
@@ -395,7 +480,7 @@ test.describe('UI Interaction Tests', () => {
           // Menu didn't open, try fallback
         }
       }
-      
+
       if (!menuOpened) {
         // Fallback: try double-clicking the collection name to edit
         await collectionCard.dblclick();
@@ -404,7 +489,7 @@ test.describe('UI Interaction Tests', () => {
 
       // Update collection name
       const nameInput = electronPage.locator('input#name').first();
-      if (await nameInput.count() > 0) {
+      if ((await nameInput.count()) > 0) {
         await nameInput.clear();
         await nameInput.fill('Edited Collection Name');
         await electronPage.waitForTimeout(300);
@@ -412,7 +497,7 @@ test.describe('UI Interaction Tests', () => {
 
       // Update description
       const descInput = electronPage.locator('textarea#description').first();
-      if (await descInput.count() > 0) {
+      if ((await descInput.count()) > 0) {
         await descInput.clear();
         await descInput.fill('Updated description');
         await electronPage.waitForTimeout(300);
@@ -426,7 +511,9 @@ test.describe('UI Interaction Tests', () => {
       const collections = await electronPage.evaluate(() => {
         return (window as any).electronAPI.collection.list();
       });
-      const editedCollection = collections.find((c: any) => c.id === collectionId);
+      const editedCollection = collections.find(
+        (c: any) => c.id === collectionId
+      );
       expect(editedCollection).toBeDefined();
       expect(editedCollection.name).toBe('Edited Collection Name');
       expect(editedCollection.description).toBe('Updated description');
@@ -434,24 +521,26 @@ test.describe('UI Interaction Tests', () => {
 
     test('should duplicate collection via UI', async ({ electronPage }) => {
       // Create a collection with a request
-      const { collectionId, requestId } = await electronPage.evaluate(async () => {
-        const collection = await (window as any).electronAPI.collection.save({
-          name: 'Collection To Duplicate',
-          description: 'Original collection',
-          environments: []
-        });
-        const request = await (window as any).electronAPI.request.save({
-          name: 'Request in Collection',
-          method: 'GET',
-          url: 'https://api.example.com/test',
-          headers: {},
-          body: null,
-          queryParams: [],
-          auth: { type: 'none' },
-          collectionId: collection.id
-        });
-        return { collectionId: collection.id, requestId: request.id };
-      });
+      const { collectionId, requestId } = await electronPage.evaluate(
+        async () => {
+          const collection = await (window as any).electronAPI.collection.save({
+            name: 'Collection To Duplicate',
+            description: 'Original collection',
+            environments: [],
+          });
+          const request = await (window as any).electronAPI.request.save({
+            name: 'Request in Collection',
+            method: 'GET',
+            url: 'https://api.example.com/test',
+            headers: {},
+            body: null,
+            queryParams: [],
+            auth: { type: 'none' },
+            collectionId: collection.id,
+          });
+          return { collectionId: collection.id, requestId: request.id };
+        }
+      );
 
       // Navigate to collections page
       await electronPage.click('text=Collections');
@@ -460,18 +549,24 @@ test.describe('UI Interaction Tests', () => {
 
       // Find collection card
       const collectionCard = electronPage
-        .locator('[data-testid="collection-card"][data-collection-name="Collection To Duplicate"]')
+        .locator(
+          '[data-testid="collection-card"][data-collection-name="Collection To Duplicate"]'
+        )
         .first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
-      const actionMenuButton = collectionCard.locator('button[aria-label="Open actions menu"]').first();
-      
-      if (await actionMenuButton.count() > 0) {
+      const actionMenuButton = collectionCard
+        .locator('button[aria-label="Open actions menu"]')
+        .first();
+
+      if ((await actionMenuButton.count()) > 0) {
         await actionMenuButton.click();
         await electronPage.waitForTimeout(800);
         // Wait for dropdown menu to appear
         const dropdown = electronPage.locator('[role="menu"]').last();
-        await dropdown.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+        await dropdown
+          .waitFor({ state: 'visible', timeout: 2000 })
+          .catch(() => {});
         await dropdown.locator('text=Duplicate').first().click();
         await electronPage.waitForTimeout(1000);
       }
@@ -480,8 +575,9 @@ test.describe('UI Interaction Tests', () => {
       const collections = await electronPage.evaluate(() => {
         return (window as any).electronAPI.collection.list();
       });
-      const duplicatedCollection = collections.find((c: any) => 
-        c.name.includes('Collection To Duplicate') && c.id !== collectionId
+      const duplicatedCollection = collections.find(
+        (c: any) =>
+          c.name.includes('Collection To Duplicate') && c.id !== collectionId
       );
       expect(duplicatedCollection).toBeDefined();
       expect(duplicatedCollection.name).toContain('Copy');
@@ -494,7 +590,7 @@ test.describe('UI Interaction Tests', () => {
           name: 'Favorite Test Collection',
           description: 'For favorite testing',
           environments: [],
-          isFavorite: false
+          isFavorite: false,
         });
         return collection.id;
       });
@@ -505,18 +601,29 @@ test.describe('UI Interaction Tests', () => {
       await electronPage.waitForTimeout(1000);
 
       // Find collection and click favorite button (star icon)
-      const collectionCard = electronPage.locator('[data-testid="collection-card"][data-collection-name="Favorite Test Collection"]').first();
+      const collectionCard = electronPage
+        .locator(
+          '[data-testid="collection-card"][data-collection-name="Favorite Test Collection"]'
+        )
+        .first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
       // Look for star/favorite button
-      const favoriteButton = electronPage.locator('button[aria-label*="favorite"], button[aria-label*="star"], svg[class*="star"]').first();
-      if (await favoriteButton.count() > 0) {
+      const favoriteButton = electronPage
+        .locator(
+          'button[aria-label*="favorite"], button[aria-label*="star"], svg[class*="star"]'
+        )
+        .first();
+      if ((await favoriteButton.count()) > 0) {
         await favoriteButton.click();
         await electronPage.waitForTimeout(1000);
       } else {
         // Try clicking on star icon directly
-        const starIcon = electronPage.locator('svg').filter({ hasText: /star/i }).first();
-        if (await starIcon.count() > 0) {
+        const starIcon = electronPage
+          .locator('svg')
+          .filter({ hasText: /star/i })
+          .first();
+        if ((await starIcon.count()) > 0) {
           await starIcon.click();
           await electronPage.waitForTimeout(1000);
         }
@@ -526,19 +633,23 @@ test.describe('UI Interaction Tests', () => {
       const collections = await electronPage.evaluate(() => {
         return (window as any).electronAPI.collection.list();
       });
-      const updatedCollection = collections.find((c: any) => c.id === collectionId);
+      const updatedCollection = collections.find(
+        (c: any) => c.id === collectionId
+      );
       expect(updatedCollection).toBeDefined();
       // Favorite status should have changed
       expect(updatedCollection.isFavorite).toBeDefined();
     });
 
-    test('should delete collection via UI with confirmation', async ({ electronPage }) => {
+    test('should delete collection via UI with confirmation', async ({
+      electronPage,
+    }) => {
       // Create a collection
       const collectionId = await electronPage.evaluate(async () => {
         const collection = await (window as any).electronAPI.collection.save({
           name: 'Collection To Delete',
           description: 'Will be deleted',
-          environments: []
+          environments: [],
         });
         return collection.id;
       });
@@ -550,15 +661,19 @@ test.describe('UI Interaction Tests', () => {
 
       // Find collection card
       const collectionCard = electronPage
-        .locator('[data-testid="collection-card"][data-collection-name="Collection To Delete"]')
+        .locator(
+          '[data-testid="collection-card"][data-collection-name="Collection To Delete"]'
+        )
         .first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
-      const actionMenuButton = collectionCard.locator('button[aria-label="Open actions menu"]').first();
-      
-      if (await actionMenuButton.count() > 0) {
+      const actionMenuButton = collectionCard
+        .locator('button[aria-label="Open actions menu"]')
+        .first();
+
+      if ((await actionMenuButton.count()) > 0) {
         // Auto-accept native confirm dialog triggered by useConfirmation
-        electronPage.once('dialog', async (dialog) => {
+        electronPage.once('dialog', async dialog => {
           await dialog.accept();
         });
 
@@ -566,14 +681,20 @@ test.describe('UI Interaction Tests', () => {
         await electronPage.waitForTimeout(800);
         // Wait for dropdown menu to appear
         const dropdown = electronPage.locator('[role="menu"]').last();
-        await dropdown.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+        await dropdown
+          .waitFor({ state: 'visible', timeout: 2000 })
+          .catch(() => {});
         await dropdown.locator('text=Delete').first().click();
         await electronPage.waitForTimeout(1000);
       }
 
       // Confirm deletion in dialog
-      const confirmButton = electronPage.locator('button:has-text("Confirm"), button:has-text("Delete"), button:has-text("Yes")').first();
-      if (await confirmButton.count() > 0) {
+      const confirmButton = electronPage
+        .locator(
+          'button:has-text("Confirm"), button:has-text("Delete"), button:has-text("Yes")'
+        )
+        .first();
+      if ((await confirmButton.count()) > 0) {
         await confirmButton.click();
         await electronPage.waitForTimeout(1500);
       }
@@ -582,17 +703,21 @@ test.describe('UI Interaction Tests', () => {
       const collections = await electronPage.evaluate(() => {
         return (window as any).electronAPI.collection.list();
       });
-      const deletedCollection = collections.find((c: any) => c.id === collectionId);
+      const deletedCollection = collections.find(
+        (c: any) => c.id === collectionId
+      );
       expect(deletedCollection).toBeUndefined();
     });
 
-    test('should cancel collection deletion via UI', async ({ electronPage }) => {
+    test('should cancel collection deletion via UI', async ({
+      electronPage,
+    }) => {
       // Create a collection
       const collectionId = await electronPage.evaluate(async () => {
         const collection = await (window as any).electronAPI.collection.save({
           name: 'Collection To Keep',
           description: 'Should not be deleted',
-          environments: []
+          environments: [],
         });
         return collection.id;
       });
@@ -604,15 +729,19 @@ test.describe('UI Interaction Tests', () => {
 
       // Find collection card
       const collectionCard = electronPage
-        .locator('[data-testid="collection-card"][data-collection-name="Collection To Keep"]')
+        .locator(
+          '[data-testid="collection-card"][data-collection-name="Collection To Keep"]'
+        )
         .first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
-      const actionMenuButton = collectionCard.locator('button[aria-label="Open actions menu"]').first();
-      
-      if (await actionMenuButton.count() > 0) {
+      const actionMenuButton = collectionCard
+        .locator('button[aria-label="Open actions menu"]')
+        .first();
+
+      if ((await actionMenuButton.count()) > 0) {
         // Auto-dismiss native confirm dialog triggered by useConfirmation
-        electronPage.once('dialog', async (dialog) => {
+        electronPage.once('dialog', async dialog => {
           await dialog.dismiss();
         });
 
@@ -620,14 +749,18 @@ test.describe('UI Interaction Tests', () => {
         await electronPage.waitForTimeout(800);
         // Wait for dropdown menu to appear
         const dropdown = electronPage.locator('[role="menu"]').last();
-        await dropdown.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+        await dropdown
+          .waitFor({ state: 'visible', timeout: 2000 })
+          .catch(() => {});
         await dropdown.locator('text=Delete').first().click();
         await electronPage.waitForTimeout(1000);
       }
 
       // Cancel deletion in dialog
-      const cancelButton = electronPage.locator('button:has-text("Cancel"), button:has-text("No")').first();
-      if (await cancelButton.count() > 0) {
+      const cancelButton = electronPage
+        .locator('button:has-text("Cancel"), button:has-text("No")')
+        .first();
+      if ((await cancelButton.count()) > 0) {
         await cancelButton.click();
         await electronPage.waitForTimeout(1000);
       }
@@ -636,7 +769,9 @@ test.describe('UI Interaction Tests', () => {
       const collections = await electronPage.evaluate(() => {
         return (window as any).electronAPI.collection.list();
       });
-      const keptCollection = collections.find((c: any) => c.id === collectionId);
+      const keptCollection = collections.find(
+        (c: any) => c.id === collectionId
+      );
       expect(keptCollection).toBeDefined();
       expect(keptCollection.name).toBe('Collection To Keep');
     });
@@ -648,13 +783,13 @@ test.describe('UI Interaction Tests', () => {
           name: 'run-test-env',
           displayName: 'Run Test Environment',
           variables: { base_url: 'https://jsonplaceholder.typicode.com' },
-          isDefault: true
+          isDefault: true,
         });
 
         const collection = await (window as any).electronAPI.collection.save({
           name: 'Collection To Run',
           description: 'For running tests',
-          environments: []
+          environments: [],
         });
 
         // Add a request to the collection
@@ -666,7 +801,7 @@ test.describe('UI Interaction Tests', () => {
           body: null,
           queryParams: [],
           auth: { type: 'none' },
-          collectionId: collection.id
+          collectionId: collection.id,
         });
 
         return { collectionId: collection.id };
@@ -679,13 +814,17 @@ test.describe('UI Interaction Tests', () => {
 
       // Find collection and click Run button
       const collectionCard = electronPage
-        .locator('[data-testid="collection-card"][data-collection-name="Collection To Run"]')
+        .locator(
+          '[data-testid="collection-card"][data-collection-name="Collection To Run"]'
+        )
         .first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
       // Open the action menu on the collection card
-      const actionMenu = collectionCard.locator('button[aria-label="Open actions menu"]').first();
-      if (await actionMenu.count() > 0) {
+      const actionMenu = collectionCard
+        .locator('button[aria-label="Open actions menu"]')
+        .first();
+      if ((await actionMenu.count()) > 0) {
         await actionMenu.click();
         await electronPage.waitForTimeout(500);
         const dropdown = electronPage.locator('[role="menu"]').last();
@@ -695,22 +834,26 @@ test.describe('UI Interaction Tests', () => {
 
       // Verify collection runner dialog/modal appeared
       const hasRunner = await electronPage.evaluate(() => {
-        return document.body.textContent?.includes('Run') ||
-               document.body.textContent?.includes('Collection') ||
-               document.body.textContent?.includes('Running') ||
-               false;
+        return (
+          document.body.textContent?.includes('Run') ||
+          document.body.textContent?.includes('Collection') ||
+          document.body.textContent?.includes('Running') ||
+          false
+        );
       });
       // Runner might be visible or might have started running
       expect(typeof hasRunner).toBe('boolean');
     });
 
-    test('should add request to collection via UI', async ({ electronPage }) => {
+    test('should add request to collection via UI', async ({
+      electronPage,
+    }) => {
       // Create a collection
       const collectionId = await electronPage.evaluate(async () => {
         const collection = await (window as any).electronAPI.collection.save({
           name: 'Collection For Requests',
           description: 'For adding requests',
-          environments: []
+          environments: [],
         });
         return collection.id;
       });
@@ -721,17 +864,25 @@ test.describe('UI Interaction Tests', () => {
       await electronPage.waitForTimeout(1000);
 
       // Find collection and look for "Add Request" or "New Request" button
-      const collectionCard = electronPage.locator('text=Collection For Requests').first();
+      const collectionCard = electronPage
+        .locator('text=Collection For Requests')
+        .first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
       // Look for Add Request button or action menu
-      const addRequestButton = electronPage.locator('button:has-text("New Request"), button:has-text("Add Request"), button:has-text("+ Request")').first();
-      const actionMenu = electronPage.locator('button[aria-label*="menu"], button[aria-label*="actions"]').first();
+      const addRequestButton = electronPage
+        .locator(
+          'button:has-text("New Request"), button:has-text("Add Request"), button:has-text("+ Request")'
+        )
+        .first();
+      const actionMenu = electronPage
+        .locator('button[aria-label*="menu"], button[aria-label*="actions"]')
+        .first();
 
-      if (await addRequestButton.count() > 0) {
+      if ((await addRequestButton.count()) > 0) {
         await addRequestButton.click();
         await electronPage.waitForTimeout(1000);
-      } else if (await actionMenu.count() > 0) {
+      } else if ((await actionMenu.count()) > 0) {
         await actionMenu.click();
         await electronPage.waitForTimeout(500);
         await electronPage.click('text=Add Request');
@@ -746,13 +897,15 @@ test.describe('UI Interaction Tests', () => {
       expect(typeof isHomePage).toBe('boolean');
     });
 
-    test('should view collection details and request count', async ({ electronPage }) => {
+    test('should view collection details and request count', async ({
+      electronPage,
+    }) => {
       // Create a collection with requests
       const { collectionId } = await electronPage.evaluate(async () => {
         const collection = await (window as any).electronAPI.collection.save({
           name: 'Collection With Requests',
           description: 'Has multiple requests',
-          environments: []
+          environments: [],
         });
 
         // Add multiple requests
@@ -765,7 +918,7 @@ test.describe('UI Interaction Tests', () => {
             body: null,
             queryParams: [],
             auth: { type: 'none' },
-            collectionId: collection.id
+            collectionId: collection.id,
           });
         }
 
@@ -778,7 +931,9 @@ test.describe('UI Interaction Tests', () => {
       await electronPage.waitForTimeout(1000);
 
       // Find collection card
-      const collectionCard = electronPage.locator('text=Collection With Requests').first();
+      const collectionCard = electronPage
+        .locator('text=Collection With Requests')
+        .first();
       await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
 
       // Verify request count is displayed (should show "3 requests" or similar)
@@ -789,13 +944,15 @@ test.describe('UI Interaction Tests', () => {
       expect(hasRequestCount).toBe(true);
     });
 
-    test('should expand and collapse collection in sidebar', async ({ electronPage }) => {
+    test('should expand and collapse collection in sidebar', async ({
+      electronPage,
+    }) => {
       // GIVEN: A collection with a request rendered in the sidebar
       await electronPage.evaluate(async () => {
         const collection = await (window as any).electronAPI.collection.save({
           name: 'Expandable Collection',
           description: 'For expand/collapse test',
-          environments: []
+          environments: [],
         });
 
         await (window as any).electronAPI.request.save({
@@ -806,7 +963,7 @@ test.describe('UI Interaction Tests', () => {
           body: null,
           queryParams: [],
           auth: { type: 'none' },
-          collectionId: collection.id
+          collectionId: collection.id,
         });
       });
 
@@ -817,7 +974,9 @@ test.describe('UI Interaction Tests', () => {
 
       // WHEN: Finding the collection group in the sidebar
       const collectionGroup = electronPage
-        .locator('[data-testid="collection-group"][data-collection-name="Expandable Collection"]')
+        .locator(
+          '[data-testid="collection-group"][data-collection-name="Expandable Collection"]'
+        )
         .first();
       try {
         await collectionGroup.waitFor({ state: 'visible', timeout: 10000 });
@@ -837,7 +996,8 @@ test.describe('UI Interaction Tests', () => {
           '[data-testid="collection-group"][data-collection-name="Expandable Collection"]'
         ) as HTMLElement | null;
         if (!group) return;
-        const clickable = (group.querySelector('.group') as HTMLElement | null) ?? group;
+        const clickable =
+          (group.querySelector('.group') as HTMLElement | null) ?? group;
         clickable.click();
       });
       await electronPage.waitForTimeout(1000);
@@ -855,7 +1015,8 @@ test.describe('UI Interaction Tests', () => {
           '[data-testid="collection-group"][data-collection-name="Expandable Collection"]'
         ) as HTMLElement | null;
         if (!group) return;
-        const clickable = (group.querySelector('.group') as HTMLElement | null) ?? group;
+        const clickable =
+          (group.querySelector('.group') as HTMLElement | null) ?? group;
         clickable.click();
       });
       await electronPage.waitForTimeout(1000);
@@ -869,4 +1030,3 @@ test.describe('UI Interaction Tests', () => {
     });
   });
 });
-

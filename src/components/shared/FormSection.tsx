@@ -1,12 +1,12 @@
 /**
  * FormSection - Consistent form layout with validation support
- * 
+ *
  * Provides a standardized form section with:
  * - Section title and description
  * - Grid layout for form fields
  * - Validation error display
  * - Consistent spacing and styling
- * 
+ *
  * @example
  * ```tsx
  * <FormSection
@@ -28,7 +28,13 @@
  */
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../ui/card';
 import { AlertCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -47,7 +53,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
   children,
   className = '',
   errors = {},
-  required = false
+  required = false,
 }) => {
   const hasErrors = Object.keys(errors).length > 0;
 
@@ -57,22 +63,21 @@ export const FormSection: React.FC<FormSectionProps> = ({
         <CardTitle className="flex items-center gap-2">
           {title}
           {required && <span className="text-red-500">*</span>}
-          {hasErrors && (
-            <AlertCircle className="h-4 w-4 text-red-500" />
-          )}
+          {hasErrors && <AlertCircle className="h-4 w-4 text-red-500" />}
         </CardTitle>
-        {description && (
-          <CardDescription>{description}</CardDescription>
-        )}
+        {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent className="space-y-4">
         {children}
-        
+
         {/* Display validation errors */}
         {hasErrors && (
           <div className="space-y-2">
             {Object.entries(errors).map(([field, error]) => (
-              <div key={field} className="flex items-center gap-1 text-xs text-red-500">
+              <div
+                key={field}
+                className="flex items-center gap-1 text-xs text-red-500"
+              >
                 <AlertCircle className="h-3 w-3" />
                 <span>{error}</span>
               </div>

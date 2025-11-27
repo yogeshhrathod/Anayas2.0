@@ -3,16 +3,19 @@
 ## When to Create New vs Reuse
 
 ### ✅ Reuse When:
+
 - Utility exists and can be extended
 - Functionality is similar
 - Can be parameterized for your use case
 
 ### ❌ Don't Create When:
+
 - Duplicate existing functionality
 - Can use existing utility with minor changes
 - Functionality already exists in a library
 
 ### ✅ Create When:
+
 - Truly new functionality needed
 - No existing utility matches
 - Performance-critical custom implementation needed
@@ -20,6 +23,7 @@
 ## Renderer Utilities (`src/lib/`)
 
 ### `utils.ts`
+
 **Purpose**: Tailwind class merging utility
 
 ```typescript
@@ -32,12 +36,15 @@ import { cn } from '@/lib/utils';
 **When to use**: Always use this for className merging in components
 
 ### `curl-parser.ts`
+
 **Purpose**: Parse cURL commands into request objects
 
 ```typescript
 import { parseCurl } from '@/lib/curl-parser';
 
-const request = parseCurl('curl -X POST https://api.example.com -H "Content-Type: application/json"');
+const request = parseCurl(
+  'curl -X POST https://api.example.com -H "Content-Type: application/json"'
+);
 ```
 
 **When to use**: When importing cURL commands
@@ -45,6 +52,7 @@ const request = parseCurl('curl -X POST https://api.example.com -H "Content-Type
 **Performance**: Uses regex parsing, consider worker thread for large commands
 
 ### `curl-generator.ts`
+
 **Purpose**: Generate cURL commands from request objects
 
 ```typescript
@@ -63,6 +71,7 @@ const curlCommand = generateCurl({
 **Performance**: Fast, no performance concerns
 
 ### `themes.ts`
+
 **Purpose**: Theme management and utilities
 
 ```typescript
@@ -78,6 +87,7 @@ const themes = getAvailableThemes();
 **Performance**: Themes are lazy-loaded, no upfront cost
 
 ### `keymap.ts`
+
 **Purpose**: Keyboard shortcut definitions and utilities
 
 ```typescript
@@ -92,6 +102,7 @@ registerShortcut('cmd+k', () => openCommandPalette());
 **Performance**: Lightweight, no performance concerns
 
 ### `draftNaming.ts`
+
 **Purpose**: Generate draft request names
 
 ```typescript
@@ -105,6 +116,7 @@ const name = generateDraftName(); // "New Request", "New Request 2", etc.
 **Performance**: Fast, no performance concerns
 
 ### Z-Index Management (Tailwind Config)
+
 **Purpose**: Centralized z-index values using Tailwind config extension
 
 **Approach**: Define z-index values in `tailwind.config.js` under `theme.extend.zIndex` for semantic class names.
@@ -133,6 +145,7 @@ theme: {
 ```
 
 **Usage in components**:
+
 ```tsx
 // Use semantic Tailwind classes - no imports needed
 <div className="fixed inset-0 z-dialog">
@@ -144,13 +157,15 @@ theme: {
 </div>
 ```
 
-**When to use**: 
+**When to use**:
+
 - Always use semantic Tailwind z-index classes (`z-dialog`, `z-dropdown`, etc.)
 - Never hardcode z-index values like `z-[9999]` or `z-[10000]`
 - Add new z-index values to `tailwind.config.js` if needed
 - Use `z-dialog-dropdown` for dropdowns that appear inside dialogs
 
 **Benefits**:
+
 - Type-safe via Tailwind IntelliSense autocomplete
 - No runtime overhead (no string interpolation or imports)
 - Better purging (Tailwind optimizes unused classes)
@@ -162,6 +177,7 @@ theme: {
 ## Main Process Utilities (`electron/services/`)
 
 ### `logger.ts`
+
 **Purpose**: Winston logger for main process
 
 ```typescript
@@ -179,6 +195,7 @@ logger.warn('Warning', { data });
 **Performance**: Async logging, no performance impact
 
 ### `request.ts` (RequestService)
+
 **Purpose**: HTTP request service
 
 ```typescript
@@ -200,15 +217,16 @@ const response = await service.sendRequest({
 **Memory**: Singleton pattern, lazy initialization
 
 ### `variable-resolver.ts`
+
 **Purpose**: Resolve variables in strings ({{variableName}})
 
 ```typescript
 import { resolveVariables } from './services/variable-resolver';
 
-const resolved = resolveVariables(
-  'https://{{base_url}}/api/{{endpoint}}',
-  { base_url: 'https://api.example.com', endpoint: 'users' }
-);
+const resolved = resolveVariables('https://{{base_url}}/api/{{endpoint}}', {
+  base_url: 'https://api.example.com',
+  endpoint: 'users',
+});
 // Result: 'https://api.example.com/api/users'
 ```
 
@@ -217,6 +235,7 @@ const resolved = resolveVariables(
 **Performance**: Fast regex-based, no performance concerns
 
 ### `api.ts` (ApiService)
+
 **Purpose**: API service wrapper
 
 ```typescript
@@ -232,6 +251,7 @@ const response = await apiService.get('/endpoint');
 ## Main Process Libraries (`electron/lib/`)
 
 ### `curl-parser.ts`
+
 **Purpose**: Parse cURL commands (main process version)
 
 ```typescript
@@ -245,6 +265,7 @@ const request = parseCurl('curl -X POST https://api.example.com');
 **Performance**: Consider worker thread for large commands
 
 ### `curl-generator.ts`
+
 **Purpose**: Generate cURL commands (main process version)
 
 ```typescript
@@ -260,6 +281,7 @@ const curl = generateCurl(requestObject);
 ## Database Utilities (`electron/database/`)
 
 ### `json-db.ts`
+
 **Purpose**: JSON-based database operations
 
 ```typescript
@@ -280,6 +302,7 @@ await db.deleteCollection(id);
 ## React Hooks (`src/hooks/`)
 
 ### `useShortcuts.ts`
+
 **Purpose**: Keyboard shortcut handling
 
 ```typescript
@@ -293,6 +316,7 @@ useShortcuts();
 **Performance**: Event listeners, efficient
 
 ### `useSessionRecovery.ts`
+
 **Purpose**: Recover unsaved requests on startup
 
 ```typescript
@@ -306,6 +330,7 @@ useSessionRecovery();
 **Performance**: Runs once on startup, efficient
 
 ### `useClickOutside.ts`
+
 **Purpose**: Close dropdowns/modals on click outside or Escape key
 
 ```typescript
@@ -320,21 +345,24 @@ useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
 // With options (disable escape, custom close condition)
 useClickOutside(dropdownRef, handleClose, isOpen, {
   handleEscape: false, // Only handle click outside
-  shouldClose: (e) => !e.defaultPrevented // Custom condition
+  shouldClose: e => !e.defaultPrevented, // Custom condition
 });
 ```
 
-**When to use**: 
+**When to use**:
+
 - Dropdown menus that should close on outside click
 - Modals that should close on Escape key
 - Any component that needs click-outside or escape handling
 
-**Performance**: 
+**Performance**:
+
 - Minimal memory footprint (<1MB)
 - Event listeners are properly cleaned up
 - No performance impact
 
 **Features**:
+
 - Click outside detection
 - Escape key support (configurable)
 - Conditional activation
@@ -342,6 +370,7 @@ useClickOutside(dropdownRef, handleClose, isOpen, {
 - Automatic cleanup
 
 ### `useVariableInput.ts`
+
 **Purpose**: Shared hook for variable input components with autocomplete
 
 ```typescript
@@ -356,24 +385,27 @@ const {
   handleChange,
   handleAutocompleteSelect,
   handleClose,
-  variables
+  variables,
 } = useVariableInput({
   value,
-  onChange
+  onChange,
 });
 ```
 
-**When to use**: 
+**When to use**:
+
 - Building variable input components
 - Components that need variable autocomplete
 - Inputs that support `{{variable}}` syntax
 
-**Performance**: 
+**Performance**:
+
 - Minimal memory footprint (<1MB)
 - Efficient state management
 - No performance impact
 
 **Features**:
+
 - Variable detection (`{{variable}}` syntax)
 - Autocomplete trigger on `{{` typing
 - Dynamic variable support (`{{$variable}}`)
@@ -383,6 +415,7 @@ const {
 ## Performance Utilities
 
 ### Performance Tracking (to be created)
+
 **Purpose**: Track feature load times and memory usage
 
 ```typescript
@@ -409,15 +442,15 @@ tracker.end();
 
 ### Utility Template
 
-```typescript
+````typescript
 /**
  * [Utility Name]
- * 
+ *
  * Purpose: [What this utility does]
- * 
+ *
  * Performance: [Performance characteristics]
  * Memory: [Memory impact]
- * 
+ *
  * @example
  * ```typescript
  * import { utilityFunction } from '@/lib/utility';
@@ -427,11 +460,12 @@ tracker.end();
 export function utilityFunction(input: InputType): OutputType {
   // Implementation
 }
-```
+````
 
 ## React Components (`src/components/ui/`)
 
 ### `dialog.tsx`
+
 **Purpose**: Unified dialog component with backdrop, portal, and escape key handling
 
 ```typescript
@@ -465,17 +499,20 @@ import { Dialog } from '@/components/ui/dialog';
 </Dialog>
 ```
 
-**When to use**: 
+**When to use**:
+
 - All dialogs in the application
 - Replaces all custom backdrop implementations
 - Supports both string and ReactNode for title/description
 
-**Performance**: 
+**Performance**:
+
 - Minimal memory footprint (<1MB)
 - Portal rendering for proper z-index stacking
 - No performance impact
 
 **Features**:
+
 - Backdrop click to close
 - Escape key to close (built-in)
 - Portal rendering (outside form elements)
@@ -484,44 +521,48 @@ import { Dialog } from '@/components/ui/dialog';
 - Custom header support (ReactNode)
 
 ### `variable-input-unified.tsx`
+
 **Purpose**: Unified variable input component with multiple variants
 
 ```typescript
 import { VariableInputUnified } from '@/components/ui/variable-input-unified';
 
 // Basic variant (simple input with autocomplete)
-<VariableInputUnified 
-  value={value} 
-  onChange={setValue} 
-  variant="basic" 
+<VariableInputUnified
+  value={value}
+  onChange={setValue}
+  variant="basic"
 />
 
 // Highlighted variant (shows variable highlights)
-<VariableInputUnified 
-  value={value} 
-  onChange={setValue} 
-  variant="highlighted" 
+<VariableInputUnified
+  value={value}
+  onChange={setValue}
+  variant="highlighted"
 />
 
 // Overlay variant (shows resolved values overlay)
-<VariableInputUnified 
-  value={value} 
-  onChange={setValue} 
-  variant="overlay" 
+<VariableInputUnified
+  value={value}
+  onChange={setValue}
+  variant="overlay"
 />
 ```
 
-**When to use**: 
+**When to use**:
+
 - Any input that needs variable support
 - Replaces old `VariableInput`, `HighlightedVariableInput`, `OverlayVariableInput` components
 - Use `variant="overlay"` for most cases (shows resolved values)
 
-**Performance**: 
+**Performance**:
+
 - Minimal memory footprint (<1MB)
 - Efficient rendering with variants
 - No performance impact
 
 **Features**:
+
 - Variable autocomplete
 - Dynamic variable support (`{{$variable}}`)
 - Context menu for variables (highlighted/overlay variants)
@@ -531,6 +572,7 @@ import { VariableInputUnified } from '@/components/ui/variable-input-unified';
 ## Common Patterns
 
 ### Debouncing
+
 ```typescript
 import { debounce } from 'lodash';
 
@@ -542,6 +584,7 @@ const debouncedFn = debounce((value: string) => {
 **When to use**: Search, auto-save, input validation
 
 ### Memoization
+
 ```typescript
 import { useMemo } from 'react';
 
@@ -553,6 +596,7 @@ const expensiveValue = useMemo(() => {
 **When to use**: Expensive calculations, derived values
 
 ### Lazy Loading
+
 ```typescript
 import { lazy } from 'react';
 
@@ -560,4 +604,3 @@ const HeavyComponent = lazy(() => import('./HeavyComponent'));
 ```
 
 **When to use**: Heavy components, features not always used
-

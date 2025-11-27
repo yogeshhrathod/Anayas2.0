@@ -98,7 +98,8 @@ export interface RequestPreset {
 
 const createIpcSubscription = (channel: string) => {
   return (callback: (data?: any) => void) => {
-    const subscription = (_event: IpcRendererEvent, data: any) => callback(data);
+    const subscription = (_event: IpcRendererEvent, data: any) =>
+      callback(data);
     ipcRenderer.on(channel, subscription);
     return () => {
       ipcRenderer.removeListener(channel, subscription);
@@ -125,41 +126,79 @@ const api = {
   // Collection operations
   collection: {
     list: () => ipcRenderer.invoke('collection:list'),
-    save: (collection: Collection) => ipcRenderer.invoke('collection:save', collection),
+    save: (collection: Collection) =>
+      ipcRenderer.invoke('collection:save', collection),
     delete: (id: number) => ipcRenderer.invoke('collection:delete', id),
-    toggleFavorite: (id: number) => ipcRenderer.invoke('collection:toggleFavorite', id),
-    addEnvironment: (collectionId: number, environment: { name: string; variables: Record<string, string> }) => 
-      ipcRenderer.invoke('collection:addEnvironment', collectionId, environment),
-    updateEnvironment: (collectionId: number, environmentId: number, updates: Partial<CollectionEnvironment>) => 
-      ipcRenderer.invoke('collection:updateEnvironment', collectionId, environmentId, updates),
-    deleteEnvironment: (collectionId: number, environmentId: number) => 
-      ipcRenderer.invoke('collection:deleteEnvironment', collectionId, environmentId),
-    setActiveEnvironment: (collectionId: number, environmentId: number | null) => 
-      ipcRenderer.invoke('collection:setActiveEnvironment', collectionId, environmentId),
-    run: (collectionId: number) => ipcRenderer.invoke('collection:run', collectionId),
+    toggleFavorite: (id: number) =>
+      ipcRenderer.invoke('collection:toggleFavorite', id),
+    addEnvironment: (
+      collectionId: number,
+      environment: { name: string; variables: Record<string, string> }
+    ) =>
+      ipcRenderer.invoke(
+        'collection:addEnvironment',
+        collectionId,
+        environment
+      ),
+    updateEnvironment: (
+      collectionId: number,
+      environmentId: number,
+      updates: Partial<CollectionEnvironment>
+    ) =>
+      ipcRenderer.invoke(
+        'collection:updateEnvironment',
+        collectionId,
+        environmentId,
+        updates
+      ),
+    deleteEnvironment: (collectionId: number, environmentId: number) =>
+      ipcRenderer.invoke(
+        'collection:deleteEnvironment',
+        collectionId,
+        environmentId
+      ),
+    setActiveEnvironment: (
+      collectionId: number,
+      environmentId: number | null
+    ) =>
+      ipcRenderer.invoke(
+        'collection:setActiveEnvironment',
+        collectionId,
+        environmentId
+      ),
+    run: (collectionId: number) =>
+      ipcRenderer.invoke('collection:run', collectionId),
     onUpdated: onCollectionsUpdated,
   },
 
   // Folder operations
   folder: {
-    list: (collectionId?: number) => ipcRenderer.invoke('folder:list', collectionId),
+    list: (collectionId?: number) =>
+      ipcRenderer.invoke('folder:list', collectionId),
     save: (folder: Folder) => ipcRenderer.invoke('folder:save', folder),
-    saveAfter: (folder: Folder, afterFolderId: number) => ipcRenderer.invoke('folder:saveAfter', folder, afterFolderId),
-    reorder: (folderId: number, newOrder: number) => ipcRenderer.invoke('folder:reorder', folderId, newOrder),
+    saveAfter: (folder: Folder, afterFolderId: number) =>
+      ipcRenderer.invoke('folder:saveAfter', folder, afterFolderId),
+    reorder: (folderId: number, newOrder: number) =>
+      ipcRenderer.invoke('folder:reorder', folderId, newOrder),
     delete: (id: number) => ipcRenderer.invoke('folder:delete', id),
     onUpdated: onFoldersUpdated,
   },
 
   // Request operations
   request: {
-    list: (collectionId?: number, folderId?: number) => ipcRenderer.invoke('request:list', collectionId, folderId),
+    list: (collectionId?: number, folderId?: number) =>
+      ipcRenderer.invoke('request:list', collectionId, folderId),
     save: (request: Request) => ipcRenderer.invoke('request:save', request),
-    saveAfter: (request: Request, afterRequestId: number) => ipcRenderer.invoke('request:saveAfter', request, afterRequestId),
-    reorder: (requestId: number, newOrder: number) => ipcRenderer.invoke('request:reorder', requestId, newOrder),
+    saveAfter: (request: Request, afterRequestId: number) =>
+      ipcRenderer.invoke('request:saveAfter', request, afterRequestId),
+    reorder: (requestId: number, newOrder: number) =>
+      ipcRenderer.invoke('request:reorder', requestId, newOrder),
     delete: (id: number) => ipcRenderer.invoke('request:delete', id),
-    send: (options: RequestOptions) => ipcRenderer.invoke('request:send', options),
+    send: (options: RequestOptions) =>
+      ipcRenderer.invoke('request:send', options),
     history: (limit?: number) => ipcRenderer.invoke('request:history', limit),
-    deleteHistory: (id: number) => ipcRenderer.invoke('request:deleteHistory', id),
+    deleteHistory: (id: number) =>
+      ipcRenderer.invoke('request:deleteHistory', id),
     onUpdated: onRequestsUpdated,
   },
 
@@ -169,7 +208,8 @@ const api = {
     getAll: () => ipcRenderer.invoke('unsaved-request:get-all'),
     delete: (id: string) => ipcRenderer.invoke('unsaved-request:delete', id),
     clear: () => ipcRenderer.invoke('unsaved-request:clear'),
-    promote: (id: string, data: any) => ipcRenderer.invoke('unsaved-request:promote', id, data),
+    promote: (id: string, data: any) =>
+      ipcRenderer.invoke('unsaved-request:promote', id, data),
   },
 
   // Preset operations
@@ -182,14 +222,17 @@ const api = {
   // cURL operations
   curl: {
     parse: (command: string) => ipcRenderer.invoke('curl:parse', command),
-    generate: (request: Request) => ipcRenderer.invoke('curl:generate', request),
-    importBulk: (commands: string[]) => ipcRenderer.invoke('curl:import-bulk', commands),
+    generate: (request: Request) =>
+      ipcRenderer.invoke('curl:generate', request),
+    importBulk: (commands: string[]) =>
+      ipcRenderer.invoke('curl:import-bulk', commands),
   },
 
   // Settings operations
   settings: {
     get: (key: string) => ipcRenderer.invoke('settings:get', key),
-    set: (key: string, value: any) => ipcRenderer.invoke('settings:set', key, value),
+    set: (key: string, value: any) =>
+      ipcRenderer.invoke('settings:set', key, value),
     getAll: () => ipcRenderer.invoke('settings:getAll'),
     reset: () => ipcRenderer.invoke('settings:reset'),
   },
@@ -197,16 +240,19 @@ const api = {
   // Sidebar state operations
   sidebar: {
     getState: () => ipcRenderer.invoke('settings:getSidebarState'),
-    setState: (state: SidebarState) => ipcRenderer.invoke('settings:setSidebarState', state),
+    setState: (state: SidebarState) =>
+      ipcRenderer.invoke('settings:setSidebarState', state),
   },
 
   // File operations
   file: {
     selectFile: (filters?: any) => ipcRenderer.invoke('file:select', filters),
     selectDirectory: () => ipcRenderer.invoke('file:selectDirectory'),
-    saveFile: (defaultPath: string, content: string) => ipcRenderer.invoke('file:save', defaultPath, content),
+    saveFile: (defaultPath: string, content: string) =>
+      ipcRenderer.invoke('file:save', defaultPath, content),
     readFile: (filePath: string) => ipcRenderer.invoke('file:read', filePath),
-    writeFile: (filePath: string, content: string) => ipcRenderer.invoke('file:write', filePath, content),
+    writeFile: (filePath: string, content: string) =>
+      ipcRenderer.invoke('file:write', filePath, content),
   },
 
   // App operations
@@ -225,7 +271,7 @@ const api = {
 
   // Notification operations
   notification: {
-    show: (options: { title: string; body: string; filePath?: string }) => 
+    show: (options: { title: string; body: string; filePath?: string }) =>
       ipcRenderer.invoke('notification:show', options),
   },
 };

@@ -1,12 +1,12 @@
 /**
  * EntityCard - Reusable card component for collections, environments, history items
- * 
+ *
  * Provides a consistent card layout with:
  * - Header with title, subtitle, and optional icon
  * - Content area with metadata
  * - Footer with action buttons
  * - Optional status indicators
- * 
+ *
  * @example
  * ```tsx
  * <EntityCard
@@ -24,7 +24,13 @@
  */
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../ui/card';
 import { Badge } from '../ui/badge';
 import { cn } from '../../lib/utils';
 
@@ -56,7 +62,7 @@ const statusVariants = {
   warning: 'bg-yellow-500',
   error: 'bg-red-500',
   info: 'bg-blue-500',
-  default: 'bg-gray-500'
+  default: 'bg-gray-500',
 };
 
 export const EntityCard: React.FC<EntityCardProps> = ({
@@ -69,10 +75,10 @@ export const EntityCard: React.FC<EntityCardProps> = ({
   status,
   className = '',
   onClick,
-  children
+  children,
 }) => {
   return (
-    <Card 
+    <Card
       className={cn(
         'hover:shadow-md transition-shadow',
         onClick && 'cursor-pointer hover:bg-accent/5',
@@ -87,8 +93,8 @@ export const EntityCard: React.FC<EntityCardProps> = ({
               {icon}
               {title}
               {status && (
-                <Badge 
-                  variant="secondary" 
+                <Badge
+                  variant="secondary"
                   className={cn('text-xs', statusVariants[status.type])}
                 >
                   {status.text}
@@ -104,7 +110,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-3">
         {/* Metadata */}
         {metadata.length > 0 && (
@@ -121,11 +127,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
         {children}
 
         {/* Actions */}
-        {actions && (
-          <div className="flex gap-2">
-            {actions}
-          </div>
-        )}
+        {actions && <div className="flex gap-2">{actions}</div>}
       </CardContent>
     </Card>
   );

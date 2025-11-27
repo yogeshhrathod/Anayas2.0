@@ -1,12 +1,12 @@
 /**
  * PageLayout - Standard page wrapper with header, title, description, and action buttons
- * 
+ *
  * Provides a consistent layout structure for all pages with:
  * - Page header with title and description
  * - Action buttons area
  * - Main content area
  * - Optional breadcrumbs
- * 
+ *
  * @example
  * ```tsx
  * <PageLayout
@@ -39,7 +39,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   children,
   className = '',
   headerClassName = '',
-  contentClassName = ''
+  contentClassName = '',
 }) => {
   return (
     <div className={cn('space-y-6', className)}>
@@ -51,17 +51,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             <p className="mt-2 text-muted-foreground">{description}</p>
           )}
         </div>
-        {actions && (
-          <div className="flex gap-2">
-            {actions}
-          </div>
-        )}
+        {actions && <div className="flex gap-2">{actions}</div>}
       </div>
 
       {/* Page Content */}
-      <div className={cn('', contentClassName)}>
-        {children}
-      </div>
+      <div className={cn('', contentClassName)}>{children}</div>
     </div>
   );
 };

@@ -11,41 +11,50 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 ## Existing Code Analysis
 
 ### Similar Features to Reference
+
 - ✅ No similar collapsible section feature exists - this is new
 - ✅ Reference: VS Code sidebar sections (EXPLORER, OUTLINE, TIMELINE)
 
 ### Components to Reuse
+
 - ✅ Component: `src/components/CollectionHierarchy.tsx` - Will be wrapped in CollapsibleSection
 - ✅ Component: `src/components/UnsavedRequestsSection.tsx` - Will be wrapped in CollapsibleSection
 - ✅ Component: `src/components/ui/collapsible.tsx` - shadcn/ui Collapsible component (if exists)
 
 ### Hooks to Reuse
+
 - ✅ Hook: `src/hooks/useClickOutside.ts` - May be useful for section interactions
 - ✅ Hook: `src/store/useStore.ts` - Will be extended with sidebar state
 
 ### Utilities to Reuse
+
 - ✅ Utility: `src/lib/cn.ts` - For className merging
 - ✅ Utility: `src/lib/utils.ts` - For general utilities
 
 ### Types to Extend
+
 - ✅ Type: `src/store/useStore.ts` - Add sidebar section state types
 
 ### Services to Reuse
+
 - ✅ Service: `electron/services/logger.ts` - For logging section state changes
 
 ### Integration Points
+
 - **Page**: `src/App.tsx` (lines 446-558) - Current sidebar layout will be refactored
 - **Existing Component**: `CollectionHierarchy` - Will be wrapped
 - **Existing Component**: `UnsavedRequestsSection` - Will be wrapped
 - **Existing Store**: `useStore` - Will add section state management
 
 ### New Components Needed
+
 - ✅ New Component: `src/components/sidebar/CollapsibleSection.tsx` - No existing collapsible section component
 - ✅ New Component: `src/components/sidebar/SidebarSection.tsx` - Wrapper for sidebar sections
 
 ## Goal Alignment Check
 
 **Does this plan support the long-term project goal? (Performance-first, low memory)**
+
 - ✅ Yes - This plan improves performance by:
   - **Reducing DOM nodes**: Collapsed sections don't render children (saves memory)
   - **Better UX**: Familiar VS Code interface improves developer experience
@@ -54,11 +63,13 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
   - **Improved space management**: Users can collapse sections they don't need
 
 **Are there more reusable or cleaner ways to achieve the same?**
+
 - ✅ Using shadcn/ui Collapsible as base maintains consistency with existing UI library
 - ✅ Storing state in database ensures persistence without complexity
 - ✅ Multi-expand mode provides flexibility without sacrificing performance
 
 **Architecture Compliance:**
+
 - ✅ Follows architecture.md patterns: Lightweight UI component, proper state management
 - ✅ Uses common-utils.md utilities: `cn()` for classNames
 - ✅ Matches example-quality.md standards: Clean component structure, proper cleanup
@@ -67,20 +78,24 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 ## Performance Implementation Plan
 
 ### Lazy Loading Strategy (REQUIRED)
+
 - **How feature loads on-demand**: Collapsible sections render children only when expanded
 - **Trigger**: User clicks section header to expand
 - **Loading State**: No spinner needed (synchronous render)
 - **Code**: `{isExpanded && <SectionContent />}` - Conditional rendering
 
 ### Code Splitting Plan (Supports Lazy Loading)
+
 - **Separate Bundle**: No - Lightweight component (<10KB)
 - **Bundle Type**: Part of main bundle
 - **Vite Configuration**: No special config needed
 
 ### Bundle Size (INFORMATIONAL - Not Primary)
+
 - **Estimated Bundle Size**: <10KB (simple collapsible component)
 
 ### Memory Management Plan
+
 - **Memory Budget**: <5MB (minimal DOM changes)
 - **Cleanup Strategy**: Collapsed sections unmount children completely
   - ✅ Event listeners removed: Section header click handler removed on unmount
@@ -92,6 +107,7 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 - **Cleanup Code Location**: `useEffect` cleanup in CollapsibleSection component
 
 ### Performance Tracking Implementation (MANDATORY)
+
 - **Memory Tracking** (PRIMARY): Track DOM node count before/after collapse
   ```typescript
   // In CollapsibleSection component
@@ -100,7 +116,10 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
       const nodesBefore = document.querySelectorAll('*').length;
       // Section expands...
       const nodesAfter = document.querySelectorAll('*').length;
-      logger.info('Section expanded', { section: id, nodesDelta: nodesAfter - nodesBefore });
+      logger.info('Section expanded', {
+        section: id,
+        nodesDelta: nodesAfter - nodesBefore,
+      });
     }
   }, [isExpanded]);
   ```
@@ -114,18 +133,22 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 - **Performance Metrics Logging**: Log to console and Winston logger
 
 **Optional/Informational:**
+
 - **Bundle Size Tracking**: Tracked in build output (for awareness)
 
 ### Performance Budget Verification (PRIMARY GOALS)
+
 - **Memory** (PRIMARY): [Estimated: 2-5MB] [Target: <5MB] [Status: ✅] - MANDATORY
 - **Load Time** (PRIMARY): [Estimated: 20-50ms] [Target: <50ms] [Status: ✅] - MANDATORY
 
 **Informational:**
+
 - **Bundle Size**: [Estimated: 8-10KB] [Tracked for awareness, not a blocker]
 
 ## Files to Modify/Create (with WHY)
 
 ### New Files
+
 1. `src/components/sidebar/CollapsibleSection.tsx` - **WHY**: Core collapsible section component. No existing component provides VS Code-style collapsible sections with header, content, and animations. Performance: <1KB, minimal memory impact.
 
 2. `src/components/sidebar/SidebarSection.tsx` - **WHY**: Wrapper component for consistent section styling. Provides common layout, spacing, and styling for all sidebar sections. Performance: <500B, minimal memory impact.
@@ -133,6 +156,7 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 3. `src/types/sidebar.ts` - **WHY**: TypeScript types for sidebar state and section configuration. Keeps types organized and reusable. Performance: 0 runtime impact (compile-time only).
 
 ### Modified Files
+
 1. `src/App.tsx` (lines 446-558) - **WHY**: Refactor sidebar layout to use CollapsibleSection components. Current layout uses manual vertical resize; new layout uses collapsible sections. Performance impact: <1ms (simplified layout logic).
 
 2. `src/store/useStore.ts` - **WHY**: Add sidebar section state management (`expandedSidebarSections: Set<string>`). Needed to track which sections are expanded. Also add functions to load/save state from database. Performance impact: <1KB memory for Set.
@@ -146,8 +170,10 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 ## Architecture Decisions
 
 ### Decision 1: Multi-Expand vs Single-Expand (Accordion)
+
 **Context**: Need to decide if multiple sections can be expanded simultaneously  
 **Options Considered**:
+
 - **Option A**: Single-expand (accordion mode) - Only one section open at a time
   - Pros: Cleaner space management, simpler logic
   - Cons: Less flexible, forces users to close one section to open another
@@ -160,8 +186,10 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 **Trade-offs**: Slightly more complex state management (using `Set<string>` instead of single string).
 
 ### Decision 2: State Persistence Strategy
+
 **Context**: Should section expand/collapse state persist across app restarts?  
 **Options Considered**:
+
 - **Option A**: Store in Zustand only (no persistence)
   - Pros: Simpler implementation, no database calls
   - Cons: State lost on app restart, poor UX
@@ -174,8 +202,10 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 **Trade-offs**: Requires IPC handlers and database calls (minimal performance impact <1ms).
 
 ### Decision 3: Component Library - shadcn/ui vs Custom
+
 **Context**: Should we use shadcn/ui Collapsible or build custom?  
 **Options Considered**:
+
 - **Option A**: Use shadcn/ui Collapsible component
   - Pros: Consistent with existing UI, accessible, battle-tested
   - Cons: Less control over implementation details
@@ -190,10 +220,12 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 ## Implementation Phases
 
 ### Phase 1: Setup and Types
+
 **Goal**: Create types, IPC handlers, and database schema  
 **Duration**: 30 minutes
 
 **Tasks**:
+
 - [ ] Create `src/types/sidebar.ts` with sidebar state types
 - [ ] Add IPC handlers to `electron/ipc/handlers.ts`
 - [ ] Add IPC types to `electron/preload.ts`
@@ -203,10 +235,12 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 **Deliverables**: Types defined, IPC handlers implemented, database ready
 
 ### Phase 2: Zustand Store Update
+
 **Goal**: Add sidebar state management to Zustand store  
 **Duration**: 30 minutes
 
 **Tasks**:
+
 - [ ] Add `expandedSidebarSections: Set<string>` to store
 - [ ] Add `toggleSidebarSection(section: string)` function
 - [ ] Add `loadSidebarState()` function (loads from database on startup)
@@ -217,10 +251,12 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 **Deliverables**: Store manages sidebar section state with persistence
 
 ### Phase 3: Create CollapsibleSection Component
+
 **Goal**: Build reusable collapsible section component  
 **Duration**: 1 hour
 
 **Tasks**:
+
 - [ ] Create `src/components/sidebar/CollapsibleSection.tsx`
 - [ ] Use shadcn/ui Collapsible as base
 - [ ] Add section header with title and chevron icon
@@ -233,10 +269,12 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 **Deliverables**: Working CollapsibleSection component
 
 ### Phase 4: Refactor App.tsx Sidebar Layout
+
 **Goal**: Replace current sidebar layout with collapsible sections  
 **Duration**: 1 hour
 
 **Tasks**:
+
 - [ ] Remove vertical resize handle logic (no longer needed)
 - [ ] Wrap `UnsavedRequestsSection` in `CollapsibleSection`
 - [ ] Wrap `CollectionHierarchy` in `CollapsibleSection`
@@ -249,10 +287,12 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 **Deliverables**: Sidebar uses collapsible sections
 
 ### Phase 5: Testing and Polish
+
 **Goal**: Test thoroughly and add polish  
 **Duration**: 1 hour
 
 **Tasks**:
+
 - [ ] Test expand/collapse animations
 - [ ] Test state persistence (close/reopen app)
 - [ ] Test drag-drop within sections
@@ -269,6 +309,7 @@ Implement VS Code-style collapsible sections in the sidebar with persistent stat
 ## File Structure
 
 ### New Files
+
 ```
 src/
 ├── components/
@@ -280,6 +321,7 @@ src/
 ```
 
 ### Modified Files
+
 ```
 src/
 ├── App.tsx
@@ -300,51 +342,59 @@ electron/
 ```
 
 ### Deleted Files
+
 None
 
 ## Implementation Details
 
 ### Component 1: CollapsibleSection
+
 **Location**: `src/components/sidebar/CollapsibleSection.tsx`  
 **Purpose**: Reusable collapsible section with VS Code-style appearance  
 **Key Functions**:
+
 - `onToggle()`: Toggles section expand/collapse state
 - Renders section header with title and chevron icon
 - Conditionally renders children only when expanded
 - Smooth animations using CSS transitions
 
 **Props**:
+
 ```typescript
 interface CollapsibleSectionProps {
-  id: string;                    // Unique section ID
-  title: string;                  // Section title
-  isExpanded: boolean;           // Is section expanded?
-  onToggle: () => void;          // Toggle handler
-  children: React.ReactNode;     // Section content
-  className?: string;            // Additional classes
-  defaultHeight?: string;        // Default height when expanded
+  id: string; // Unique section ID
+  title: string; // Section title
+  isExpanded: boolean; // Is section expanded?
+  onToggle: () => void; // Toggle handler
+  children: React.ReactNode; // Section content
+  className?: string; // Additional classes
+  defaultHeight?: string; // Default height when expanded
 }
 ```
 
 **Dependencies**:
+
 - Internal: shadcn/ui Collapsible, lucide-react icons
 - External: React
 
 ### Component 2: Zustand Store Extension
+
 **Location**: `src/store/useStore.ts`  
 **Purpose**: Manage sidebar section state with persistence  
 **Key Functions**:
+
 - `toggleSidebarSection(section: string)`: Toggle section in Set
 - `loadSidebarState()`: Load state from database on startup
 - `saveSidebarState()`: Save state to database on change
 
 **State**:
+
 ```typescript
 interface AppState {
   // ... existing state
-  
+
   // NEW: Sidebar section state
-  expandedSidebarSections: Set<string>;     // e.g., Set(['collections'])
+  expandedSidebarSections: Set<string>; // e.g., Set(['collections'])
   toggleSidebarSection: (section: string) => void;
   loadSidebarState: () => Promise<void>;
   saveSidebarState: () => Promise<void>;
@@ -374,6 +424,7 @@ Children mount/unmount based on isExpanded
 ```
 
 **On App Startup:**
+
 ```
 App.tsx useEffect
        ↓
@@ -391,6 +442,7 @@ CollapsibleSections render with correct state
 ## Testing Strategy
 
 ### Unit Tests
+
 - [ ] Test file: `tests/components/sidebar/CollapsibleSection.spec.tsx`
   - Test expand/collapse functionality
   - Test keyboard navigation
@@ -403,17 +455,20 @@ CollapsibleSections render with correct state
   - Test saveSidebarState()
 
 ### Integration Tests
+
 - [ ] Test sidebar section expand/collapse
 - [ ] Test state persistence (save and load from database)
 - [ ] Test drag-drop within expanded sections
 - [ ] Test context menus within expanded sections
 
 ### E2E Tests
+
 - [ ] E2E: Expand/collapse sections and verify state persists on app restart
 - [ ] E2E: Drag-drop requests within sections
 - [ ] E2E: Context menus work within sections
 
 ### Manual Testing Checklist
+
 - [ ] Expand "Unsaved Requests" section - should expand smoothly
 - [ ] Collapse "Unsaved Requests" section - should collapse smoothly
 - [ ] Expand "Collections" section - should expand smoothly
@@ -428,21 +483,25 @@ CollapsibleSections render with correct state
 ## Migration & Rollout
 
 ### Database Migrations
+
 Add default sidebar state to settings table:
+
 ```typescript
 // electron/database/json-db.ts
 const defaultSettings = {
   // ... existing settings
   sidebar: {
     expandedSections: ['collections'], // Default: Collections expanded
-  }
+  },
 };
 ```
 
 ### Feature Flags
+
 None needed - straightforward UI change with no risk
 
 ### Rollout Plan
+
 1. **Deploy to development**: Test locally first
 2. **Deploy to staging**: Test with team
 3. **Deploy to production**: Release to users
@@ -451,27 +510,32 @@ None needed - straightforward UI change with no risk
 ## Performance Considerations
 
 ### Performance Targets (PRIMARY GOALS)
+
 - ✅ **Memory** (PRIMARY): <5MB when sections expanded (minimal DOM changes) - MANDATORY
 - ✅ **Load Time** (PRIMARY): <50ms for expand/collapse (CSS transitions only) - MANDATORY
 - ✅ **Lazy Loading** (REQUIRED): Collapsed sections don't render children - MANDATORY
 - ✅ **Cleanup** (REQUIRED): Children unmounted when section collapses - MANDATORY
 
 **Informational:**
+
 - ✅ **Bundle Size**: ~10KB additional (tracked for awareness, not a blocker)
 
 ### Optimization Strategy (Focus: Memory & Speed)
+
 - **Memory**: Collapsed sections don't render children (reduces DOM nodes by 50-70%)
 - **Speed**: CSS transitions (hardware accelerated, 60fps)
 - **Lazy Rendering**: Conditional rendering `{isExpanded && <Children />}`
 - **Cleanup**: Children unmount on collapse (frees memory)
 
 ### Performance Monitoring (MANDATORY)
+
 - ✅ Memory usage tracked: DOM node count before/after collapse - MANDATORY
 - ✅ Render time tracked: Expand/collapse timing logged - MANDATORY
 - ✅ Performance metrics logged to console and Winston logger - MANDATORY
 - ✅ No alerts needed: Performance impact is minimal - MANDATORY
 
 **Optional/Informational:**
+
 - ✅ Bundle size tracked in build output (for awareness)
 
 ## Security Considerations
@@ -489,6 +553,7 @@ None needed - straightforward UI change with no risk
 ## Rollback Plan
 
 If issues arise:
+
 1. **Quick rollback**: Revert App.tsx changes, restore old sidebar layout
 2. **Database**: Sidebar state in settings won't break anything if unused
 3. **Components**: New components can be safely removed (not used elsewhere)
@@ -508,4 +573,3 @@ If issues arise:
 - [shadcn/ui Collapsible](https://ui.shadcn.com/docs/components/collapsible)
 - [Radix UI Collapsible](https://www.radix-ui.com/primitives/docs/components/collapsible)
 - VS Code Sidebar - Reference implementation
-

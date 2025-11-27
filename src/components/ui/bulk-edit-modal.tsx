@@ -9,10 +9,16 @@ import { useToast } from './use-toast';
 interface BulkEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: Record<string, string> | Array<{ key: string; value: string; enabled: boolean }>) => void;
+  onSave: (
+    data:
+      | Record<string, string>
+      | Array<{ key: string; value: string; enabled: boolean }>
+  ) => void;
   title: string;
   description: string;
-  initialData: Record<string, string> | Array<{ key: string; value: string; enabled: boolean }>;
+  initialData:
+    | Record<string, string>
+    | Array<{ key: string; value: string; enabled: boolean }>;
   dataType: 'queryParams' | 'envVars';
   placeholder?: string;
 }
@@ -25,7 +31,7 @@ export function BulkEditModal({
   description,
   initialData,
   dataType,
-  placeholder
+  placeholder,
 }: BulkEditModalProps) {
   const [jsonValue, setJsonValue] = useState('');
   const [isValid, setIsValid] = useState(true);
@@ -36,10 +42,12 @@ export function BulkEditModal({
     if (isOpen) {
       // Convert initial data to JSON format
       let jsonString = '';
-      
+
       if (dataType === 'queryParams') {
         // Convert query params array to JSON
-        const paramsObj = (initialData as Array<{ key: string; value: string; enabled: boolean }>).reduce((acc: Record<string, string>, param) => {
+        const paramsObj = (
+          initialData as Array<{ key: string; value: string; enabled: boolean }>
+        ).reduce((acc: Record<string, string>, param) => {
           if (param.key && param.value) {
             acc[param.key] = param.value;
           }
@@ -50,7 +58,7 @@ export function BulkEditModal({
         // Environment variables are already an object
         jsonString = JSON.stringify(initialData, null, 2);
       }
-      
+
       setJsonValue(jsonString);
     }
   }, [isOpen, initialData, dataType]);
@@ -86,7 +94,7 @@ export function BulkEditModal({
         convertedData = Object.entries(parsed).map(([key, value]) => ({
           key,
           value: String(value),
-          enabled: true
+          enabled: true,
         }));
       } else if (dataType === 'envVars') {
         // Environment variables stay as object
@@ -97,7 +105,10 @@ export function BulkEditModal({
       success('Saved', 'Bulk edit completed successfully');
       onClose();
     } catch (e: unknown) {
-      showError('Save Error', e instanceof Error ? e.message : 'Failed to save changes');
+      showError(
+        'Save Error',
+        e instanceof Error ? e.message : 'Failed to save changes'
+      );
     }
   };
 
@@ -111,46 +122,46 @@ export function BulkEditModal({
   return (
     <Dialog
       open={isOpen}
-      onOpenChange={(open) => !open && handleCancel()}
+      onOpenChange={open => !open && handleCancel()}
       title={title}
       description={description}
       maxWidth="4xl"
     >
       <div className="space-y-4">
-          <JsonEditor
-            value={jsonValue}
-            onChange={setJsonValue}
-            placeholder={placeholder}
-            title=""
-            description=""
-            rows={20}
-            showActions={true}
-            validateJson={true}
-            className="border-0 shadow-none"
-          />
-          
-          {!isValid && error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          {isValid && jsonValue.trim() && (
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>Valid JSON - Ready to save</AlertDescription>
-            </Alert>
-          )}
+        <JsonEditor
+          value={jsonValue}
+          onChange={setJsonValue}
+          placeholder={placeholder}
+          title=""
+          description=""
+          rows={20}
+          showActions={true}
+          validateJson={true}
+          className="border-0 shadow-none"
+        />
 
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={!isValid || !jsonValue.trim()}>
-              Save Changes
-            </Button>
-          </div>
+        {!isValid && error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {isValid && jsonValue.trim() && (
+          <Alert>
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>Valid JSON - Ready to save</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={!isValid || !jsonValue.trim()}>
+            Save Changes
+          </Button>
+        </div>
       </div>
     </Dialog>
   );

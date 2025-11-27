@@ -1,18 +1,18 @@
 /**
  * ResponseTab - Main Response tab container with sub-tab navigation
- * 
+ *
  * Manages:
  * - Sub-tab navigation (Headers, Body, Both)
  * - Rendering appropriate sub-view based on active sub-tab
  * - Empty state handling
  * - Performance tracking (memory + load time)
- * 
+ *
  * Performance:
  * - Memory: <20MB for Response rendering
  * - Load Time: <100ms
  * - Lazy rendering: Components only mount when Response tab active
  * - Cleanup: Full cleanup when switching away
- * 
+ *
  * @example
  * ```tsx
  * <ResponseTab
@@ -57,15 +57,23 @@ export function ResponseTab({
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const memoryBefore = (performance as any).memory?.usedJSHeapSize || 0;
-    
+
     return () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const memoryAfter = (performance as any).memory?.usedJSHeapSize || 0;
       const memoryDelta = (memoryAfter - memoryBefore) / 1024 / 1024;
-      console.log('[Performance] Response tab memory:', memoryDelta.toFixed(2), 'MB');
-      
+      console.log(
+        '[Performance] Response tab memory:',
+        memoryDelta.toFixed(2),
+        'MB'
+      );
+
       if (memoryDelta > 20) {
-        console.warn('[Performance] Response tab exceeded memory budget:', memoryDelta, 'MB');
+        console.warn(
+          '[Performance] Response tab exceeded memory budget:',
+          memoryDelta,
+          'MB'
+        );
       }
     };
   }, []);
@@ -73,14 +81,22 @@ export function ResponseTab({
   // Performance tracking: Load time
   useEffect(() => {
     const startTime = performance.now();
-    
+
     // After first render
     requestAnimationFrame(() => {
       const loadTime = performance.now() - startTime;
-      console.log('[Performance] Response tab load time:', loadTime.toFixed(2), 'ms');
-      
+      console.log(
+        '[Performance] Response tab load time:',
+        loadTime.toFixed(2),
+        'ms'
+      );
+
       if (loadTime > 100) {
-        console.warn('[Performance] Response tab load time exceeded budget:', loadTime, 'ms');
+        console.warn(
+          '[Performance] Response tab load time exceeded budget:',
+          loadTime,
+          'ms'
+        );
       }
     });
   }, []);
@@ -167,4 +183,3 @@ export function ResponseTab({
     </div>
   );
 }
-

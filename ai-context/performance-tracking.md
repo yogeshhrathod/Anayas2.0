@@ -7,17 +7,20 @@ Performance tracking is **mandatory** for every feature in Anayas. This ensures 
 ## Performance Budgets
 
 ### Memory Budgets (PRIMARY GOAL)
+
 - **Core App**: <50MB (base app, no features)
 - **Per Feature**: <50MB when active
 - **Total Under Load**: <500MB
 
 ### Load Time Budgets (PRIMARY GOAL)
+
 - **Cold Start**: <1s (app launch)
 - **Warm Start**: <500ms (app restart)
 - **Feature Load**: <200ms (on-demand feature)
 - **Page Navigation**: <100ms (route change)
 
 ### Bundle Size Budgets (INFORMATIONAL - Not Primary)
+
 - **Note**: Bundle size is tracked for awareness but is NOT a primary constraint
 - **Main Bundle**: <2MB (core app) - tracked for reference
 - **Per Feature Bundle**: <500KB average - tracked for reference
@@ -48,6 +51,7 @@ const metrics = tracker.end();
 ```
 
 **When to use:**
+
 - Lazy-loaded components
 - Heavy features (Monaco Editor, Theme Editor, etc.)
 - Features that load on-demand
@@ -64,6 +68,7 @@ trackBundleSize('feature-bundle', bundleSizeInBytes);
 ```
 
 **When to use:**
+
 - After build completes (for awareness)
 - In CI/CD pipeline (for monitoring)
 - When analyzing bundle sizes (informational)
@@ -89,6 +94,7 @@ const result = await measureAsyncExecution(async () => {
 ```
 
 **When to use:**
+
 - Expensive operations
 - API calls
 - Data processing
@@ -106,6 +112,7 @@ const snapshot = getPerformanceSnapshot();
 ```
 
 **When to use:**
+
 - Before/after operations
 - Memory leak detection
 - Performance monitoring
@@ -123,15 +130,15 @@ const HeavyFeature = lazy(() => import('./HeavyFeature'));
 export function MyComponent() {
   useEffect(() => {
     const tracker = trackFeatureLoad('HeavyFeature');
-    
+
     // Feature loads when component mounts
     // Tracker automatically measures when lazy import resolves
-    
+
     return () => {
       tracker.cancel(); // Cancel if component unmounts before load
     };
   }, []);
-  
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <HeavyFeature />
@@ -147,7 +154,7 @@ import { trackFeatureLoad } from '@/lib/performance';
 
 class MyService {
   private static instance: MyService | null = null;
-  
+
   static async getInstance(): Promise<MyService> {
     if (!MyService.instance) {
       const tracker = trackFeatureLoad('MyService');
@@ -169,12 +176,12 @@ import { trackFeatureLoad } from '@/lib/performance';
 export function useHeavyFeature() {
   useEffect(() => {
     const tracker = trackFeatureLoad('HeavyFeature');
-    
+
     // Load feature
     loadFeature().then(() => {
       tracker.end();
     });
-    
+
     return () => {
       tracker.cancel();
     };
@@ -185,11 +192,13 @@ export function useHeavyFeature() {
 ## Performance Budget Violations
 
 When a feature exceeds its budget, the tracker will:
+
 1. Log a warning to console (development)
 2. Include violation details in metrics
 3. Alert developers to investigate
 
 **Example warning:**
+
 ```
 [Performance Warning] MonacoEditor:
 Load time 250ms exceeds budget of 200ms
@@ -199,19 +208,23 @@ Memory delta 60MB exceeds budget of 50MB
 ## Best Practices
 
 ### 1. Track Early
+
 - Add tracking when implementing the feature
 - Don't add it as an afterthought
 
 ### 2. Track Consistently
+
 - Use the same tracking approach across features
 - Follow the patterns in this guide
 
 ### 3. Review Metrics
+
 - Check metrics in development
 - Investigate violations immediately
 - Optimize before merging
 
 ### 4. Document Performance
+
 - Include performance metrics in feature spec
 - Update plan.md with actual metrics
 - Track improvements over time
@@ -219,6 +232,7 @@ Memory delta 60MB exceeds budget of 50MB
 ## Performance Monitoring Dashboard (Future)
 
 In the future, we can add:
+
 - IPC handlers to log metrics to Winston logger
 - Performance dashboard in Settings page
 - Historical performance data
@@ -235,21 +249,21 @@ const MonacoEditor = lazy(() => import('./MonacoEditor'));
 
 export function RequestBuilder() {
   const [showEditor, setShowEditor] = useState(false);
-  
+
   useEffect(() => {
     if (showEditor) {
       // Track when editor loads
       const tracker = trackFeatureLoad('MonacoEditor');
-      
+
       // Editor loads via lazy import
       // Tracker measures when import resolves
-      
+
       return () => {
         tracker.cancel();
       };
     }
   }, [showEditor]);
-  
+
   return (
     <div>
       <button onClick={() => setShowEditor(true)}>Edit JSON</button>
@@ -266,15 +280,18 @@ export function RequestBuilder() {
 ## Troubleshooting
 
 ### Memory not tracked
+
 - Check if `performance.memory` is available (Chrome/Electron only)
 - Use `getPerformanceSnapshot()` as fallback
 
 ### Load time inaccurate
+
 - Ensure tracker starts before async operation
 - Call `tracker.end()` after operation completes
 - Don't forget to await async operations
 
 ### Bundle size not tracked
+
 - Add tracking in build script
 - Use vite plugin to hook into build process
 - Check bundle analyzer output
@@ -284,4 +301,3 @@ export function RequestBuilder() {
 - `/ai-context/project-goal.md` - Performance targets and budgets
 - `/ai-context/architecture.md` - Performance architecture patterns
 - `/src/lib/performance.ts` - Performance tracking utility
-

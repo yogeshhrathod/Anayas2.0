@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Search, Trash2, Download, RefreshCw } from 'lucide-react';
@@ -27,21 +33,25 @@ export function Logs() {
       const logsPath = await window.electronAPI.app.getPath('userData');
       const combinedLogPath = `${logsPath}/logs/combined.log`;
       const result = await window.electronAPI.file.readFile(combinedLogPath);
-      
+
       if (result.success) {
-        const lines = result.content.split('\n').filter((line: string) => line.trim());
-        
+        const lines = result.content
+          .split('\n')
+          .filter((line: string) => line.trim());
+
         // OPTIMIZATION: Only load last 1000 lines to prevent memory issues
         const recentLines = lines.slice(-1000);
-        
-        const parsedLogs = recentLines.map((line: string) => {
-          try {
-            return JSON.parse(line);
-          } catch {
-            return null;
-          }
-        }).filter(Boolean) as LogEntry[];
-        
+
+        const parsedLogs = recentLines
+          .map((line: string) => {
+            try {
+              return JSON.parse(line);
+            } catch {
+              return null;
+            }
+          })
+          .filter(Boolean) as LogEntry[];
+
         setLogs(parsedLogs.reverse()); // Most recent first
       }
     } catch (error) {
@@ -51,7 +61,7 @@ export function Logs() {
 
   useEffect(() => {
     loadLogs();
-    
+
     if (autoRefresh) {
       // OPTIMIZATION: Increased interval from 2s to 5s to reduce I/O
       const interval = setInterval(loadLogs, 5000);
@@ -64,7 +74,7 @@ export function Logs() {
 
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(log => 
+      filtered = filtered.filter(log =>
         JSON.stringify(log).toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -84,7 +94,7 @@ export function Logs() {
 
   const clearLogs = async () => {
     if (!confirm('Are you sure you want to clear all logs?')) return;
-    
+
     try {
       const logsPath = await window.electronAPI.app.getPath('userData');
       const combinedLogPath = `${logsPath}/logs/combined.log`;
@@ -122,7 +132,9 @@ export function Logs() {
     }
   };
 
-  const uniqueModules = Array.from(new Set(logs.map(log => log.module).filter(Boolean)));
+  const uniqueModules = Array.from(
+    new Set(logs.map(log => log.module).filter(Boolean))
+  );
 
   return (
     <div className="space-y-6">
@@ -142,7 +154,7 @@ export function Logs() {
               <Input
                 placeholder="Search logs..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="pl-9"
               />
             </div>
@@ -150,7 +162,7 @@ export function Logs() {
             <select
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={levelFilter}
-              onChange={(e) => setLevelFilter(e.target.value)}
+              onChange={e => setLevelFilter(e.target.value)}
             >
               <option value="all">All Levels</option>
               <option value="info">Info</option>
@@ -161,11 +173,13 @@ export function Logs() {
             <select
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={moduleFilter}
-              onChange={(e) => setModuleFilter(e.target.value)}
+              onChange={e => setModuleFilter(e.target.value)}
             >
               <option value="all">All Modules</option>
               {uniqueModules.map(module => (
-                <option key={module} value={module}>{module}</option>
+                <option key={module} value={module}>
+                  {module}
+                </option>
               ))}
             </select>
 
@@ -174,9 +188,13 @@ export function Logs() {
                 variant="outline"
                 size="sm"
                 onClick={() => setAutoRefresh(!autoRefresh)}
-                className={autoRefresh ? 'bg-primary text-primary-foreground' : ''}
+                className={
+                  autoRefresh ? 'bg-primary text-primary-foreground' : ''
+                }
               >
-                <RefreshCw className={`h-4 w-4 ${autoRefresh ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${autoRefresh ? 'animate-spin' : ''}`}
+                />
               </Button>
               <Button variant="outline" size="sm" onClick={loadLogs}>
                 Refresh
@@ -231,7 +249,10 @@ export function Logs() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {filteredLogs.filter(l => l.message?.includes('API Request')).length}
+              {
+                filteredLogs.filter(l => l.message?.includes('API Request'))
+                  .length
+              }
             </div>
           </CardContent>
         </Card>
@@ -278,7 +299,10 @@ export function Logs() {
                       </div>
                       <div className="text-foreground">{log.message}</div>
                       {Object.keys(log).filter(
-                        key => !['timestamp', 'level', 'message', 'module'].includes(key)
+                        key =>
+                          !['timestamp', 'level', 'message', 'module'].includes(
+                            key
+                          )
                       ).length > 0 && (
                         <details className="mt-2">
                           <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
@@ -288,7 +312,13 @@ export function Logs() {
                             {JSON.stringify(
                               Object.fromEntries(
                                 Object.entries(log).filter(
-                                  ([key]) => !['timestamp', 'level', 'message', 'module'].includes(key)
+                                  ([key]) =>
+                                    ![
+                                      'timestamp',
+                                      'level',
+                                      'message',
+                                      'module',
+                                    ].includes(key)
                                 )
                               ),
                               null,

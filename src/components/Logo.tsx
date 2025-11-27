@@ -1,4 +1,4 @@
-import { cn } from "../lib/utils";
+import { cn } from '../lib/utils';
 
 interface LogoProps {
   className?: string;
@@ -12,16 +12,16 @@ interface LogoProps {
  */
 export function Logo({ className, size = 24, showText = false }: LogoProps) {
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn('flex items-center gap-2', className)}>
       <img
         src="/logo.png"
         alt="Anayas Logo"
         className={cn(
-          "object-contain flex-shrink-0",
+          'object-contain flex-shrink-0',
           // Apply slight adjustments for better visibility in different themes
           // The logo should work well in both themes, but we can fine-tune if needed
-          "dark:opacity-95",
-          "light:opacity-100"
+          'dark:opacity-95',
+          'light:opacity-100'
         )}
         style={{ width: `${size}px`, height: `${size}px` }}
         draggable={false}
@@ -32,4 +32,3 @@ export function Logo({ className, size = 24, showText = false }: LogoProps) {
     </div>
   );
 }
-

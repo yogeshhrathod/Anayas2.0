@@ -12,7 +12,7 @@ let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
   const isDarkMode = nativeTheme.shouldUseDarkColors;
-  
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -54,7 +54,7 @@ app.whenReady().then(async () => {
     const testDbPath = process.env.TEST_DB_PATH;
     await initDatabase(testDbPath);
     registerIpcHandlers();
-    
+
     // Register test handlers if in test mode
     if (process.env.TEST_MODE === 'true') {
       // Test utilities IPC handlers
@@ -81,7 +81,7 @@ app.whenReady().then(async () => {
         return { ready: app.isReady() && mainWindow !== null };
       });
     }
-    
+
     createWindow();
 
     app.on('activate', () => {

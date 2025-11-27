@@ -1,11 +1,11 @@
 /**
  * CollectionForm - Form component for creating and editing collections
- * 
+ *
  * Features:
  * - Form validation with error display
  * - Environment variables management
  * - Save/Cancel actions
- * 
+ *
  * @example
  * ```tsx
  * <CollectionForm
@@ -17,7 +17,12 @@
  * ```
  */
 
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+} from 'react';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
@@ -45,194 +50,214 @@ const validationSchema = {
     required: true,
     minLength: 2,
     pattern: /^[a-zA-Z0-9\s_-]+$/,
-    message: 'Name can only contain letters, numbers, spaces, hyphens, and underscores'
+    message:
+      'Name can only contain letters, numbers, spaces, hyphens, and underscores',
   },
   description: {
     maxLength: 500,
-    message: 'Description cannot exceed 500 characters'
-  }
+    message: 'Description cannot exceed 500 characters',
+  },
 };
 
-export const CollectionForm = forwardRef<CollectionFormRef, CollectionFormProps>(({
-  collection,
-  onSave,
-  onCollectionUpdate,
-  isLoading: _isLoading = false
-}, ref) => {
-  const [formData, setFormData] = useState<CollectionFormData>({
-    name: '',
-    description: '',
-    documentation: '',
-    environments: [],
-    isFavorite: false
-  });
-  const [activeTab, setActiveTab] = useState<'environments' | 'documentation'>('environments');
-  const { setCollections } = useStore();
+export const CollectionForm = forwardRef<
+  CollectionFormRef,
+  CollectionFormProps
+>(
+  (
+    { collection, onSave, onCollectionUpdate, isLoading: _isLoading = false },
+    ref
+  ) => {
+    const [formData, setFormData] = useState<CollectionFormData>({
+      name: '',
+      description: '',
+      documentation: '',
+      environments: [],
+      isFavorite: false,
+    });
+    const [activeTab, setActiveTab] = useState<
+      'environments' | 'documentation'
+    >('environments');
+    const { setCollections } = useStore();
 
-  const { errors, validateField, validateForm, clearFieldError } = useFormValidation(validationSchema);
+    const { errors, validateField, validateForm, clearFieldError } =
+      useFormValidation(validationSchema);
 
-  useEffect(() => {
-    if (collection) {
-      setFormData({
-        name: collection.name,
-        description: collection.description || '',
-        documentation: collection.documentation || '',
-        environments: collection.environments || [],
-        isFavorite: !!collection.isFavorite
-      });
-    }
-  }, [collection]);
+    useEffect(() => {
+      if (collection) {
+        setFormData({
+          name: collection.name,
+          description: collection.description || '',
+          documentation: collection.documentation || '',
+          environments: collection.environments || [],
+          isFavorite: !!collection.isFavorite,
+        });
+      }
+    }, [collection]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (validateForm(formData)) {
-      await onSave(formData);
-    }
-  };
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
 
-  const handleInputChange = (field: keyof CollectionFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    clearFieldError(field);
-  };
+      if (validateForm(formData)) {
+        await onSave(formData);
+      }
+    };
 
-  const handleEnvironmentsChange = async () => {
-    // Reload collections to get updated environments
-    if (collection?.id) {
-      const updatedCollections = await window.electronAPI.collection.list();
-      setCollections(updatedCollections);
-      // Update form data with latest collection data
-      const updatedCollection = updatedCollections.find((c: Collection) => c.id === collection.id);
-      if (updatedCollection) {
-        setFormData(prev => ({
-          ...prev,
-          environments: updatedCollection.environments || []
-        }));
-        // Notify parent component to update collection prop
-        if (onCollectionUpdate) {
-          onCollectionUpdate(updatedCollection);
+    const handleInputChange = (
+      field: keyof CollectionFormData,
+      value: string
+    ) => {
+      setFormData(prev => ({ ...prev, [field]: value }));
+      clearFieldError(field);
+    };
+
+    const handleEnvironmentsChange = async () => {
+      // Reload collections to get updated environments
+      if (collection?.id) {
+        const updatedCollections = await window.electronAPI.collection.list();
+        setCollections(updatedCollections);
+        // Update form data with latest collection data
+        const updatedCollection = updatedCollections.find(
+          (c: Collection) => c.id === collection.id
+        );
+        if (updatedCollection) {
+          setFormData(prev => ({
+            ...prev,
+            environments: updatedCollection.environments || [],
+          }));
+          // Notify parent component to update collection prop
+          if (onCollectionUpdate) {
+            onCollectionUpdate(updatedCollection);
+          }
         }
       }
-    }
-  };
+    };
 
-  // Expose submit handler for parent component
-  useImperativeHandle(ref, () => ({
-    submit: () => {
-      handleSubmit({ preventDefault: () => {} } as React.FormEvent);
-    }
-  }));
+    // Expose submit handler for parent component
+    useImperativeHandle(ref, () => ({
+      submit: () => {
+        handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+      },
+    }));
 
-  return (
-    <form onSubmit={handleSubmit} className="w-full">
-      <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
-        {/* Left Column: Basic Info */}
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="name">Name *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              onBlur={() => validateField('name', formData.name)}
-              className={errors.name ? 'border-red-500' : ''}
-              placeholder="Enter collection name"
-            />
-            {errors.name && (
-              <p className="text-sm text-red-500 mt-1">{errors.name}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              onBlur={() => validateField('description', formData.description)}
-              className={errors.description ? 'border-red-500' : ''}
-              placeholder="Enter collection description"
-              rows={3}
-            />
-            {errors.description && (
-              <p className="text-sm text-red-500 mt-1">{errors.description}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column: Tabs for Variables and Documentation */}
-        <div className="flex-1">
-          <div className="w-full">
-            <div className="flex border-b border-border/50 mb-4">
-              <button
-                type="button"
-                onClick={() => setActiveTab('environments')}
-                className={`flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'environments'
-                    ? 'border-primary text-primary bg-primary/5'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }`}
-              >
-                Environments
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('documentation')}
-                className={`flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'documentation'
-                    ? 'border-primary text-primary bg-primary/5'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }`}
-              >
-                Documentation
-              </button>
+    return (
+      <form onSubmit={handleSubmit} className="w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
+          {/* Left Column: Basic Info */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={e => handleInputChange('name', e.target.value)}
+                onBlur={() => validateField('name', formData.name)}
+                className={errors.name ? 'border-red-500' : ''}
+                placeholder="Enter collection name"
+              />
+              {errors.name && (
+                <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+              )}
             </div>
-            {activeTab === 'environments' && (
-              <div className="mt-4">
-                {collection?.id ? (
-                  <CollectionEnvironmentManager
-                    collectionId={collection.id}
-                    environments={formData.environments || []}
-                    activeEnvironmentId={collection.activeEnvironmentId}
-                    onEnvironmentsChange={handleEnvironmentsChange}
-                  />
-                ) : (
-                  <div className="text-center py-8 border border-dashed rounded-lg">
-                    <p className="text-sm text-muted-foreground">
-                      Please save the collection first before adding environments.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-            {activeTab === 'documentation' && (
-              <div className="mt-4 space-y-2">
-                <Label htmlFor="documentation">Markdown Documentation</Label>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Write documentation for this collection using Markdown syntax
+
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={e => handleInputChange('description', e.target.value)}
+                onBlur={() =>
+                  validateField('description', formData.description)
+                }
+                className={errors.description ? 'border-red-500' : ''}
+                placeholder="Enter collection description"
+                rows={3}
+              />
+              {errors.description && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.description}
                 </p>
-                <MonacoEditor
-                  value={formData.documentation || ''}
-                  onChange={(value) => handleInputChange('documentation', value)}
-                  language="markdown"
-                  placeholder="# Collection Documentation&#10;&#10;Write your documentation here..."
-                  title=""
-                  description=""
-                  height={400}
-                  showActions={true}
-                  validateJson={false}
-                  readOnly={false}
-                  minimap={true}
-                  fontSize={13}
-                  className="border rounded-md"
-                />
+              )}
+            </div>
+          </div>
+
+          {/* Right Column: Tabs for Variables and Documentation */}
+          <div className="flex-1">
+            <div className="w-full">
+              <div className="flex border-b border-border/50 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('environments')}
+                  className={`flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'environments'
+                      ? 'border-primary text-primary bg-primary/5'
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  Environments
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('documentation')}
+                  className={`flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'documentation'
+                      ? 'border-primary text-primary bg-primary/5'
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  Documentation
+                </button>
               </div>
-            )}
+              {activeTab === 'environments' && (
+                <div className="mt-4">
+                  {collection?.id ? (
+                    <CollectionEnvironmentManager
+                      collectionId={collection.id}
+                      environments={formData.environments || []}
+                      activeEnvironmentId={collection.activeEnvironmentId}
+                      onEnvironmentsChange={handleEnvironmentsChange}
+                    />
+                  ) : (
+                    <div className="text-center py-8 border border-dashed rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        Please save the collection first before adding
+                        environments.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {activeTab === 'documentation' && (
+                <div className="mt-4 space-y-2">
+                  <Label htmlFor="documentation">Markdown Documentation</Label>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Write documentation for this collection using Markdown
+                    syntax
+                  </p>
+                  <MonacoEditor
+                    value={formData.documentation || ''}
+                    onChange={value =>
+                      handleInputChange('documentation', value)
+                    }
+                    language="markdown"
+                    placeholder="# Collection Documentation&#10;&#10;Write your documentation here..."
+                    title=""
+                    description=""
+                    height={400}
+                    showActions={true}
+                    validateJson={false}
+                    readOnly={false}
+                    minimap={true}
+                    fontSize={13}
+                    className="border rounded-md"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </form>
-  );
-});
+      </form>
+    );
+  }
+);
 
 CollectionForm.displayName = 'CollectionForm';

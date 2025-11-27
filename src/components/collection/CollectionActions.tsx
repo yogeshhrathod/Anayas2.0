@@ -1,11 +1,11 @@
 /**
  * CollectionActions - Action buttons component for collection operations
- * 
+ *
  * Features:
  * - Import/Export functionality
  * - Bulk operations
  * - Search and filter controls
- * 
+ *
  * @example
  * ```tsx
  * <CollectionActions
@@ -39,7 +39,7 @@ export const CollectionActions: React.FC<CollectionActionsProps> = ({
   onSearch,
   searchValue,
   onNewCollection,
-  onNewRequest
+  onNewRequest,
 }) => {
   return (
     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
@@ -49,29 +49,45 @@ export const CollectionActions: React.FC<CollectionActionsProps> = ({
           <Input
             placeholder="Search collections..."
             value={searchValue}
-            onChange={(e) => onSearch(e.target.value)}
+            onChange={e => onSearch(e.target.value)}
             className="pl-10"
           />
         </div>
       </div>
-      
+
       <div className="flex gap-2">
-        <Button variant="outline" onClick={onImport} className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          onClick={onImport}
+          className="flex items-center gap-2"
+        >
           <Upload className="h-4 w-4" />
           Import
         </Button>
         {onCurlImport && (
-          <Button variant="outline" onClick={onCurlImport} className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={onCurlImport}
+            className="flex items-center gap-2"
+          >
             <Terminal className="h-4 w-4" />
             Import cURL
           </Button>
         )}
-        <Button variant="outline" onClick={onExport} className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          onClick={onExport}
+          className="flex items-center gap-2"
+        >
           <Download className="h-4 w-4" />
           Export
         </Button>
         {onNewRequest && (
-          <Button variant="outline" onClick={onNewRequest} className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={onNewRequest}
+            className="flex items-center gap-2"
+          >
             <span>+</span>
             New Request
           </Button>

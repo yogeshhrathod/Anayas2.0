@@ -1,13 +1,13 @@
 /**
  * RequestPresets - Preset management sidebar
- * 
+ *
  * Manages request presets with:
  * - Collapsible sidebar
  * - Preset creation dialog
  * - Preset application
  * - Preset deletion
  * - Compact view for collapsed state
- * 
+ *
  * @example
  * ```tsx
  * <RequestPresets
@@ -35,7 +35,12 @@ import { Dialog } from '../ui/dialog';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip';
 import { Bookmark, Plus, Trash2 } from 'lucide-react';
 import { RequestPreset } from '../../types/entities';
 
@@ -68,7 +73,7 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
   onDeletePreset,
   onShowCreateDialog,
   onSetNewPresetName,
-  onSetNewPresetDescription
+  onSetNewPresetDescription,
 }) => {
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -84,9 +89,11 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
 
   return (
     <>
-      <div className={`border-l border-border/50 bg-card/30 transition-all duration-300 ${
-        isExpanded ? 'w-80' : 'w-12'
-      }`}>
+      <div
+        className={`border-l border-border/50 bg-card/30 transition-all duration-300 ${
+          isExpanded ? 'w-80' : 'w-12'
+        }`}
+      >
         <div className="p-4">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -100,7 +107,10 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                       <Bookmark className="h-4 w-4" />
                       Request Presets
                       {presets.length > 0 && (
-                        <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                        <Badge
+                          variant="secondary"
+                          className="h-5 px-1.5 text-xs"
+                        >
                           {presets.length}
                         </Badge>
                       )}
@@ -112,7 +122,10 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                       <Bookmark className="h-4 w-4" />
                     </div>
                     {presets.length > 0 && (
-                      <Badge variant="secondary" className="h-4 w-4 p-0 text-xs flex items-center justify-center">
+                      <Badge
+                        variant="secondary"
+                        className="h-4 w-4 p-0 text-xs flex items-center justify-center"
+                      >
                         {presets.length}
                       </Badge>
                     )}
@@ -131,16 +144,16 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                 </Button>
               )}
             </div>
-            
+
             {isExpanded ? (
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {presets.length > 0 ? (
-                  presets.map((preset) => (
-                    <Card 
-                      key={preset.id} 
+                  presets.map(preset => (
+                    <Card
+                      key={preset.id}
                       className={`p-3 transition-colors cursor-pointer ${
-                        activePresetId === preset.id 
-                          ? 'bg-primary/10 border-primary/30 hover:bg-primary/15' 
+                        activePresetId === preset.id
+                          ? 'bg-primary/10 border-primary/30 hover:bg-primary/15'
                           : 'hover:bg-muted/50'
                       }`}
                       onClick={() => onApplyPreset(preset)}
@@ -148,9 +161,14 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h5 className="font-medium text-sm truncate">{preset.name}</h5>
+                            <h5 className="font-medium text-sm truncate">
+                              {preset.name}
+                            </h5>
                             {activePresetId === preset.id && (
-                              <Badge variant="default" className="h-4 px-1.5 text-xs">
+                              <Badge
+                                variant="default"
+                                className="h-4 px-1.5 text-xs"
+                              >
                                 Active
                               </Badge>
                             )}
@@ -161,13 +179,14 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                             </p>
                           )}
                           <p className="text-xs text-muted-foreground mt-1">
-                            {preset.requestData.method} • {preset.requestData.url || 'No URL'}
+                            {preset.requestData.method} •{' '}
+                            {preset.requestData.url || 'No URL'}
                           </p>
                         </div>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             onDeletePreset(preset.id);
                           }}
@@ -183,7 +202,9 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                   <div className="text-center py-8 text-muted-foreground text-sm">
                     <Bookmark className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p>No presets created yet</p>
-                    <p className="text-xs mt-1">Create your first preset to save request configurations</p>
+                    <p className="text-xs mt-1">
+                      Create your first preset to save request configurations
+                    </p>
                   </div>
                 )}
               </div>
@@ -198,16 +219,20 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                           size="sm"
                           onClick={() => onApplyPreset(preset)}
                           className={`w-full h-8 p-0 flex items-center justify-center transition-colors ${
-                            activePresetId === preset.id 
-                              ? 'bg-primary/20 hover:bg-primary/30' 
+                            activePresetId === preset.id
+                              ? 'bg-primary/20 hover:bg-primary/30'
                               : 'hover:bg-muted/50'
                           }`}
                         >
-                          <Badge 
-                            variant={activePresetId === preset.id ? "default" : "secondary"}
+                          <Badge
+                            variant={
+                              activePresetId === preset.id
+                                ? 'default'
+                                : 'secondary'
+                            }
                             className={`h-6 w-6 p-0 text-xs flex items-center justify-center font-bold ${
-                              activePresetId === preset.id 
-                                ? 'bg-primary text-primary-foreground border-primary' 
+                              activePresetId === preset.id
+                                ? 'bg-primary text-primary-foreground border-primary'
                                 : ''
                             }`}
                           >
@@ -224,10 +249,13 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                             </p>
                           )}
                           <p className="text-xs text-muted-foreground">
-                            {preset.requestData.method} • {preset.requestData.url || 'No URL'}
+                            {preset.requestData.method} •{' '}
+                            {preset.requestData.url || 'No URL'}
                           </p>
                           {activePresetId === preset.id && (
-                            <p className="text-xs text-primary font-medium">Currently Active</p>
+                            <p className="text-xs text-primary font-medium">
+                              Currently Active
+                            </p>
                           )}
                         </div>
                       </TooltipContent>
@@ -255,46 +283,44 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
         maxWidth="sm"
       >
         <form
-          onSubmit={(e) => {
+          onSubmit={e => {
             e.preventDefault();
             onCreatePreset();
           }}
         >
           <div className="space-y-4">
-                <div>
-                  <Label htmlFor="preset-name">Preset Name (Optional)</Label>
-                  <Input
-                    ref={nameInputRef}
-                    id="preset-name"
-                    value={newPresetName}
-                    onChange={(e) => onSetNewPresetName(e.target.value)}
-                    placeholder="e.g., Success Case, Error Case (auto-generated if empty)"
-                    autoFocus
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="preset-description">Description (Optional)</Label>
-                  <Input
-                    id="preset-description"
-                    value={newPresetDescription}
-                    onChange={(e) => onSetNewPresetDescription(e.target.value)}
-                    placeholder="Brief description of this preset"
-                  />
-                </div>
-                <div className="flex gap-2 pt-2">
-                  <Button type="submit">
-                    Create Preset
-                  </Button>
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    onClick={() => onShowCreateDialog(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </form>
+            <div>
+              <Label htmlFor="preset-name">Preset Name (Optional)</Label>
+              <Input
+                ref={nameInputRef}
+                id="preset-name"
+                value={newPresetName}
+                onChange={e => onSetNewPresetName(e.target.value)}
+                placeholder="e.g., Success Case, Error Case (auto-generated if empty)"
+                autoFocus
+              />
+            </div>
+            <div>
+              <Label htmlFor="preset-description">Description (Optional)</Label>
+              <Input
+                id="preset-description"
+                value={newPresetDescription}
+                onChange={e => onSetNewPresetDescription(e.target.value)}
+                placeholder="Brief description of this preset"
+              />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button type="submit">Create Preset</Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onShowCreateDialog(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </form>
       </Dialog>
     </>
   );

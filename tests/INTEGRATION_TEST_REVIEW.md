@@ -7,26 +7,30 @@
 ### Critical Issues (Fixed)
 
 #### 1. **Conditional Test Execution Pattern**
+
 **Problem**: Many tests use `if (await element.count() > 0)` pattern, which allows tests to pass silently when elements don't exist.
 
 **Impact**: Tests can pass even when the UI is broken or elements are missing.
 
 **Files Affected**:
+
 - `tests/integration/components/request-builder.spec.ts` ✅ FIXED
 - `tests/integration/components/environment-switcher.spec.ts` ✅ FIXED
 - `tests/integration/ui-interactions.spec.ts` (85+ instances found)
 - Multiple other test files
 
 **Example of Bad Pattern**:
+
 ```typescript
 const urlInput = electronPage.locator('input[placeholder*="URL"]');
-if (await urlInput.count() > 0) {
+if ((await urlInput.count()) > 0) {
   await urlInput.fill('https://example.com');
   // Test passes even if element doesn't exist!
 }
 ```
 
 **Fixed Pattern**:
+
 ```typescript
 const urlInput = electronPage.locator('input[placeholder*="URL"]');
 await urlInput.waitFor({ state: 'visible', timeout: 10000 });
@@ -35,9 +39,11 @@ await urlInput.fill('https://example.com');
 ```
 
 #### 2. **Missing Assertions in Component Tests**
+
 **Problem**: Tests verify elements exist but don't verify actual behavior or data.
 
 **Files Fixed**:
+
 - `tests/integration/components/request-builder.spec.ts` ✅
   - Added verification of URL input value
   - Added verification of response status and body
@@ -49,9 +55,11 @@ await urlInput.fill('https://example.com');
   - Added verification of UI display after switch
 
 #### 3. **Shallow IPC Handler Tests**
+
 **Problem**: Some IPC handler tests only check `success` flag without verifying actual data or behavior.
 
 **Files Fixed**:
+
 - `tests/integration/ipc-handlers/request-handlers.spec.ts` ✅
   - Enhanced `request:send` test to verify response data structure, headers, and response time
   - Enhanced `request:history` test to verify all properties, actual values, and database persistence
@@ -65,6 +73,7 @@ await urlInput.fill('https://example.com');
 **Problem**: Bulk edit functionality exists for query parameters, headers, and body, with environment variable support, but has **zero test coverage**.
 
 **Affected Features**:
+
 1. **Query Parameters Bulk Edit** (`ParamsTab`)
    - JSON view toggle for bulk editing
    - Environment variable support in JSON (`{{base_url}}`, `{{api_key}}`, etc.)
@@ -87,6 +96,7 @@ await urlInput.fill('https://example.com');
 **Required Test Cases**:
 
 #### Query Parameters Bulk Edit Tests
+
 - [ ] Can toggle from table view to JSON view
 - [ ] JSON view displays current parameters correctly
 - [ ] Can edit parameters in JSON format
@@ -100,6 +110,7 @@ await urlInput.fill('https://example.com');
 - [ ] JSON validation works correctly
 
 #### Headers Bulk Edit Tests
+
 - [ ] Can toggle from table view to JSON view
 - [ ] JSON view displays current headers correctly
 - [ ] Can edit headers in JSON format
@@ -112,6 +123,7 @@ await urlInput.fill('https://example.com');
 - [ ] Invalid JSON shows error and prevents save
 
 #### Body Bulk Edit Tests
+
 - [ ] Can edit raw body in JSON editor
 - [ ] Can use environment variables in JSON body
 - [ ] Environment variable autocomplete works in body editor
@@ -121,6 +133,7 @@ await urlInput.fill('https://example.com');
 - [ ] Invalid JSON shows error
 
 #### Environment Variable Integration Tests
+
 - [ ] Autocomplete appears when typing `{{` in JSON editor
 - [ ] Autocomplete lists global variables
 - [ ] Autocomplete lists collection variables
@@ -133,6 +146,7 @@ await urlInput.fill('https://example.com');
 - [ ] Missing variables show appropriate error
 
 **Test File to Create**:
+
 - `tests/integration/components/bulk-edit.spec.ts` - Comprehensive bulk edit tests
 - `tests/integration/components/environment-variables-editor.spec.ts` - Variable autocomplete and hover tests
 
@@ -172,9 +186,10 @@ await urlInput.fill('https://example.com');
 ## Best Practices Established
 
 ### 1. Always Wait for Elements
+
 ```typescript
 // ❌ BAD
-if (await element.count() > 0) {
+if ((await element.count()) > 0) {
   await element.click();
 }
 
@@ -184,6 +199,7 @@ await element.click();
 ```
 
 ### 2. Verify Actual Behavior, Not Just Existence
+
 ```typescript
 // ❌ BAD
 expect(element).toBeVisible(); // Only checks visibility
@@ -196,6 +212,7 @@ expect(value).toBe('expected-value');
 ```
 
 ### 3. Verify Data Persistence
+
 ```typescript
 // ✅ GOOD
 const result = await electronPage.evaluate(async () => {
@@ -211,6 +228,7 @@ expect(saved.name).toBe('expected-name');
 ```
 
 ### 4. Verify Complete Response Data
+
 ```typescript
 // ❌ BAD
 expect(result.success).toBe(true);
@@ -262,6 +280,7 @@ When writing or reviewing integration tests, ensure:
 ## Running Tests
 
 After fixes, run tests to verify:
+
 ```bash
 npm run test:electron -- tests/integration/components/request-builder.spec.ts
 npm run test:electron -- tests/integration/components/environment-switcher.spec.ts
@@ -274,4 +293,3 @@ npm run test:electron -- tests/integration/ipc-handlers/request-handlers.spec.ts
 - Tests should fail fast when UI is broken, not silently skip assertions
 - Proper waits with timeouts are better than conditional checks
 - All tests should verify actual behavior, not just that code executed without errors
-

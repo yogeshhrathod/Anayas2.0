@@ -1,9 +1,9 @@
-import { Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 /**
  * PageLoadingSpinner
- * 
+ *
  * Loading fallback component for Suspense boundaries when lazy-loading pages.
  * Provides accessible loading state with spinner animation.
  */
@@ -11,7 +11,7 @@ export function PageLoadingSpinner({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex items-center justify-center min-h-[400px]",
+        'flex items-center justify-center min-h-[400px]',
         className
       )}
       role="status"
@@ -25,4 +25,3 @@ export function PageLoadingSpinner({ className }: { className?: string }) {
     </div>
   );
 }
-

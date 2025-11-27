@@ -1,17 +1,17 @@
 /**
  * VariableInputUnified - Unified variable input component with multiple variants
- * 
+ *
  * Consolidates VariableInput, HighlightedVariableInput, and OverlayVariableInput
  * into a single component with variant-based rendering.
- * 
+ *
  * @example
  * ```tsx
  * // Basic variant (replaces VariableInput)
  * <VariableInputUnified value={value} onChange={setValue} variant="basic" />
- * 
+ *
  * // Highlighted variant (replaces HighlightedVariableInput)
  * <VariableInputUnified value={value} onChange={setValue} variant="highlighted" />
- * 
+ *
  * // Overlay variant (replaces OverlayVariableInput)
  * <VariableInputUnified value={value} onChange={setValue} variant="overlay" />
  * ```
@@ -64,7 +64,10 @@ const SHARED_STYLES: React.CSSProperties = {
 
 const VARIABLE_REGEX = /\{\{(\$)?[\w.]+\}\}/g;
 
-function parseTextToSegments(text: string, resolvedVariables: Array<{ name: string; value: string }>): Segment[] {
+function parseTextToSegments(
+  text: string,
+  resolvedVariables: Array<{ name: string; value: string }>
+): Segment[] {
   const segments: Segment[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -157,7 +160,10 @@ export function VariableInputUnified({
   // Context menu state (for highlighted and overlay variants)
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuVariable, setContextMenuVariable] = useState<string>('');
-  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [contextMenuPosition, setContextMenuPosition] = useState({
+    x: 0,
+    y: 0,
+  });
   const overlayRef = useRef<HTMLDivElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
@@ -193,11 +199,11 @@ export function VariableInputUnified({
     if (variant !== 'overlay') return;
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (inputRef.current) {
       inputRef.current.focus();
     }
-    
+
     setContextMenuVariable(varName);
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
     setShowContextMenu(true);
@@ -206,16 +212,15 @@ export function VariableInputUnified({
   // Handle double-click for overlay variant
   const handleDoubleClick = (varName: string) => {
     if (!inputRef.current || variant !== 'overlay') return;
-    
+
     const varText = `{{${varName}}}`;
     const index = value.indexOf(varText);
-    
+
     if (index !== -1) {
       inputRef.current.focus();
       inputRef.current.setSelectionRange(index, index + varText.length);
     }
   };
-
 
   // Basic variant: simple input with autocomplete
   if (variant === 'basic') {
@@ -279,11 +284,11 @@ export function VariableInputUnified({
 
   // Overlay variant: input with resolved value overlay
   return (
-    <div 
-      ref={wrapperRef} 
+    <div
+      ref={wrapperRef}
       className={cn(
-        "relative w-full flex h-10 rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
-        disabled && "cursor-not-allowed opacity-50",
+        'relative w-full flex h-10 rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
+        disabled && 'cursor-not-allowed opacity-50',
         className
       )}
     >
@@ -310,8 +315,10 @@ export function VariableInputUnified({
           MozOsxFontSmoothing: 'grayscale',
         }}
       >
-        <span style={{ display: 'inline-block', width: '100%', lineHeight: '20px' }}>
-          {segments.map((seg, i) => 
+        <span
+          style={{ display: 'inline-block', width: '100%', lineHeight: '20px' }}
+        >
+          {segments.map((seg, i) =>
             seg.type === 'variable' ? (
               <span
                 key={i}
@@ -321,13 +328,13 @@ export function VariableInputUnified({
                     ? 'text-green-700 dark:text-green-400'
                     : 'text-red-700 dark:text-red-400'
                 )}
-                style={{ 
+                style={{
                   pointerEvents: 'auto',
                   verticalAlign: 'baseline',
                   cursor: 'pointer',
                   display: 'inline',
                   lineHeight: 'inherit',
-                  backgroundColor: seg.resolved 
+                  backgroundColor: seg.resolved
                     ? 'rgba(34, 197, 94, 0.2)'
                     : 'rgba(239, 68, 68, 0.2)',
                   borderRadius: '3px',
@@ -336,13 +343,15 @@ export function VariableInputUnified({
                   border: 'none',
                   outline: 'none',
                 }}
-                onContextMenu={(e) => handleContextMenuOverlay(e, seg.name!)}
+                onContextMenu={e => handleContextMenuOverlay(e, seg.name!)}
                 onDoubleClick={() => handleDoubleClick(seg.name!)}
               >
                 {`{{${seg.name}}}`}
               </span>
             ) : (
-              <span key={i} style={{ display: 'inline' }}>{seg.content}</span>
+              <span key={i} style={{ display: 'inline' }}>
+                {seg.content}
+              </span>
             )
           )}
           {!value && placeholder && (
@@ -356,12 +365,12 @@ export function VariableInputUnified({
         ref={inputRef}
         value={value}
         onChange={handleChange}
-        onContextMenu={(e) => {
+        onContextMenu={e => {
           // Check if we're clicking on a capsule by examining click position
           const clickX = e.clientX;
           const rect = inputRef.current?.getBoundingClientRect();
           if (!rect) return;
-          
+
           // Find which segment is at the click position
           let charPos = 0;
           for (const seg of segments) {
@@ -372,7 +381,7 @@ export function VariableInputUnified({
               const charWidth = 8;
               const relativeX = clickX - rect.left - 12;
               const clickedChar = Math.floor(relativeX / charWidth);
-              
+
               if (clickedChar >= startPos && clickedChar <= endPos) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -440,4 +449,3 @@ export function VariableInputUnified({
     </div>
   );
 }
-

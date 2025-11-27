@@ -28,7 +28,12 @@ export class RequestService {
     this.mainWindow = window;
   }
 
-  private sendProgress(step: string, message: string, progress: number, extra?: any) {
+  private sendProgress(
+    step: string,
+    message: string,
+    progress: number,
+    extra?: any
+  ) {
     const progressData = {
       step,
       message,
@@ -51,10 +56,10 @@ export class RequestService {
     try {
       // Step 1: Prepare request
       this.sendProgress('prepare', 'Preparing request...', 10);
-      
+
       // Step 2: Send request
       this.sendProgress('sending', 'Sending request...', 30);
-      
+
       let result: any;
       let status = 200;
       let statusText = 'OK';
@@ -67,13 +72,25 @@ export class RequestService {
             result = await apiService.getJson(options.url, options.headers);
             break;
           case 'POST':
-            result = await apiService.postJson(options.url, options.body, options.headers);
+            result = await apiService.postJson(
+              options.url,
+              options.body,
+              options.headers
+            );
             break;
           case 'PUT':
-            result = await apiService.putJson(options.url, options.body, options.headers);
+            result = await apiService.putJson(
+              options.url,
+              options.body,
+              options.headers
+            );
             break;
           case 'PATCH':
-            result = await apiService.patchJson(options.url, options.body, options.headers);
+            result = await apiService.patchJson(
+              options.url,
+              options.body,
+              options.headers
+            );
             break;
           case 'DELETE':
             result = await apiService.deleteJson(options.url, options.headers);
@@ -87,11 +104,12 @@ export class RequestService {
           default:
             throw new Error(`Unsupported HTTP method: ${options.method}`);
         }
-        
+
         data = result;
       } catch (err: unknown) {
         // Handle HTTP errors
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        const errorMessage =
+          err instanceof Error ? err.message : 'Unknown error';
         if (err instanceof Error && err.message.includes('API Error:')) {
           const statusMatch = err.message.match(/API Error: (\d+)/);
           status = statusMatch ? parseInt(statusMatch[1]) : 500;
@@ -107,10 +125,10 @@ export class RequestService {
       const responseSize = JSON.stringify(data).length;
 
       // Step 3: Complete
-      this.sendProgress('complete', 'Request completed', 100, { 
-        status, 
+      this.sendProgress('complete', 'Request completed', 100, {
+        status,
         responseTime,
-        size: responseSize 
+        size: responseSize,
       });
 
       return {
@@ -122,7 +140,11 @@ export class RequestService {
         size: responseSize,
       };
     } catch (error: unknown) {
-      this.sendProgress('error', error instanceof Error ? error.message : 'Request failed', 0);
+      this.sendProgress(
+        'error',
+        error instanceof Error ? error.message : 'Request failed',
+        0
+      );
       throw error;
     }
   }

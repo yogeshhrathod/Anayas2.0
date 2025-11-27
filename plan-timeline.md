@@ -3,6 +3,7 @@
 ## Phase 1: Foundation & Core Features ✅ COMPLETED
 
 ### 1.1 Project Setup ✅
+
 - [x] Initialize Electron + React + TypeScript + Vite
 - [x] Configure Tailwind CSS and shadcn/ui
 - [x] Set up project structure
@@ -12,6 +13,7 @@
 - [x] Create development scripts
 
 ### 1.2 Database & State Management ✅
+
 - [x] Set up JSON Database (instead of Dexie.js/IndexedDB)
 - [x] Define database schema (collections, requests, history, environments, settings, folders)
 - [x] Create Zustand stores (request, collection, environment, history, settings)
@@ -19,6 +21,7 @@
 - [x] Add proper TypeScript types
 
 ### 1.3 UI Layout & Design System ✅
+
 - [x] Create Arc browser-inspired layout
 - [x] Implement collapsible sidebar
 - [x] Build top bar with environment selector
@@ -29,6 +32,7 @@
 - [x] Implement basic animations
 
 ### 1.4 Request Builder (Basic) ✅
+
 - [x] HTTP method selector (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS)
 - [x] URL input field
 - [x] Send button with loading state
@@ -41,6 +45,7 @@
 - [x] **Integrate Monaco Editor** for code editing
 
 ### 1.5 HTTP Client Service ✅
+
 - [x] Create Fetch-based HTTP client (instead of Axios)
 - [x] Request/response interceptors
 - [x] Timing metrics
@@ -49,6 +54,7 @@
 - [x] Proxy configuration support
 
 ### 1.6 Response Viewer (Basic) ✅
+
 - [x] Status code display with color coding
 - [x] Response time and size indicators
 - [x] Tabbed interface (Body, Headers)
@@ -62,6 +68,7 @@
 ## Phase 2: Essential Features 🔄 IN PROGRESS (91% Complete)
 
 ### 2.1 Collections Management ✅ COMPLETED
+
 - [x] **Create Collection** - CRUD operations
 - [x] **Create Folders** - Nested folder support
 - [x] **Add Request to Collection**
@@ -77,6 +84,7 @@
 **Timeline**: 3-4 days ✅ **COMPLETED**
 
 ### 2.2 Environment & Variables System ✅ COMPLETED
+
 - [x] **Environment CRUD** - Create, edit, delete environments
 - [x] **Environment Selector** - Quick switch in top bar
 - [x] **Variable Editor** - Inline variable editing
@@ -96,6 +104,7 @@
 **Timeline**: 3-4 days ✅ **COMPLETED**
 
 ### 2.3 Request History ✅ COMPLETED
+
 - [x] **Auto-Save Requests** - Save all executed requests
 - [x] **History Panel** - Chronological list with timestamps
 - [x] **Search History** - Search by method, URL, status
@@ -114,6 +123,7 @@
 ## Phase 3: Import/Export & Interoperability 🔄 IN PROGRESS (25% Complete)
 
 ### 3.1 cURL Support ✅ COMPLETED
+
 - [x] **cURL Parser** - Parse cURL commands
   - [x] Parse method
   - [x] Parse URL
@@ -129,6 +139,7 @@
 **Timeline**: 2 days ✅ **COMPLETED**
 
 ### 3.2 Postman Collection Import/Export 📦 PLANNED
+
 - [ ] **Postman v2.0 Importer**
 - [ ] **Postman v2.1 Importer**
 - [ ] **Parse Postman Variables**
@@ -140,6 +151,7 @@
 **Timeline**: 2-3 days
 
 ### 3.3 Additional Import Formats 📥 PLANNED
+
 - [ ] **OpenAPI/Swagger Importer** - Generate requests from specs
   - [ ] OpenAPI 3.0
   - [ ] Swagger 2.0
@@ -151,6 +163,7 @@
 **Timeline**: 3-4 days
 
 ### 3.4 Code Generation 💻 PLANNED
+
 - [ ] **Generate JavaScript** (fetch, axios)
 - [ ] **Generate Python** (requests)
 - [ ] **Generate Go**
@@ -169,6 +182,7 @@
 ## Phase 4: Advanced Features 🔄 IN PROGRESS (40% Complete)
 
 ### 4.1 Sandbox Mode 📋 PLANNED
+
 - [ ] **Toggle Sandbox Mode** - Per tab
 - [ ] **Temporary Changes** - Don't save modifications
 - [ ] **Visual Indicator** - Border or badge
@@ -179,6 +193,7 @@
 **Timeline**: 1-2 days
 
 ### 4.7 Bulk Operations (Deferred from Phase 2) 📋 PLANNED
+
 - [ ] **Multi-Select UI** - Checkboxes for selecting multiple requests
 - [ ] **Select All/Deselect All** - Quick selection controls
 - [ ] **Bulk Delete** - Delete multiple requests at once
@@ -191,6 +206,7 @@
 **Priority**: Low (deferred from Phase 2 - not critical for MVP)
 
 ### 4.2 Keyboard Shortcuts 🔄 PARTIALLY COMPLETED
+
 - [x] **Command Palette** (Cmd+K) - Quick actions
 - [x] **New Request** (Cmd+N)
 - [x] **Send Request** (Cmd+Enter)
@@ -220,6 +236,7 @@
 **Timeline**: 2 days
 
 ### 4.3 Settings Panel 🔄 PARTIALLY COMPLETED
+
 - [x] **General Settings**
   - [x] Language selection
   - [x] Auto-update toggle
@@ -264,6 +281,7 @@
 **Timeline**: 3-4 days
 
 ### 4.4 VS Code-Style Theming ✅ COMPLETED
+
 - [x] **Theme Engine** - JSON-based configuration
 - [x] **Built-in Themes**:
   - [x] Light
@@ -286,6 +304,7 @@
 **Timeline**: 2-3 days ✅ **COMPLETED**
 
 ### 4.5 Performance Optimizations 🔄 PARTIALLY COMPLETED
+
 - [x] **Lazy Loading** - Load components on demand ✅ **COMPLETED** (specs/003-performance-optimization-lazy-loading/)
 - [ ] **Virtual Scrolling** - For large collections and responses
 - [x] **Code Splitting** - Separate bundles for features
@@ -300,6 +319,7 @@
 **Timeline**: 2-3 days
 
 ### 4.6 UI Design System Alignment 🎨 📋 PLANNED
+
 - [ ] **Shell Layout Alignment** - Align app shell with editor-style three/four-pane model (activity/navigation, sidebar, main stage, response stage)
 - [ ] **Layout Modes** - Implement normal/write/debug modes with smooth transitions
 - [ ] **Request Builder Alignment** - Match design system patterns (URL strip, compact tabs, table-like sections)
@@ -319,6 +339,7 @@
 ## Phase 5: Premium Features 📋 PLANNED (0% Complete)
 
 ### 5.1 Request Chaining & Scripting 🔗 PLANNED
+
 - [ ] **Pre-request Scripts** - JavaScript execution before send
 - [ ] **Post-request Scripts** - Process response
 - [ ] **Test Scripts** - Assertions (chai-like syntax)
@@ -330,6 +351,7 @@
 **Timeline**: 3-4 days
 
 ### 5.2 Additional Protocols 🌐 PLANNED
+
 - [ ] **WebSocket Support**
   - [ ] Connect to WebSocket
   - [ ] Send messages
@@ -351,6 +373,7 @@
 **Timeline**: 5-7 days
 
 ### 5.3 Mock Server 🎭 PLANNED
+
 - [ ] **Create Mock Endpoint** - From saved response
 - [ ] **Mock Server Runner** - Local server
 - [ ] **Route Management** - Add/edit/delete routes
@@ -361,6 +384,7 @@
 **Timeline**: 3-4 days
 
 ### 5.4 API Testing & Monitoring 🧪 PLANNED
+
 - [ ] **Test Suite Runner** - Execute test scripts
 - [ ] **Assertions Library** - Built-in assertions
 - [ ] **Test Reports** - Pass/fail results
@@ -377,6 +401,7 @@
 ## Phase 6: Collaboration & Productivity 📋 PLANNED (0% Complete)
 
 ### 6.1 Documentation Generator 📚 PLANNED
+
 - [ ] **Auto-generate API Docs** - From collections
 - [ ] **Markdown Export** - Documentation as markdown
 - [ ] **HTML Export** - Static documentation site
@@ -387,6 +412,7 @@
 **Timeline**: 2-3 days
 
 ### 6.2 Workspace Management 🗂️ PLANNED
+
 - [ ] **Multiple Workspaces** - For different projects
 - [ ] **Workspace Switcher** - Quick switch
 - [ ] **Workspace Settings** - Per-workspace configuration
@@ -396,6 +422,7 @@
 **Timeline**: 2 days
 
 ### 6.3 Collaboration (Future) 👥 PLANNED
+
 - [ ] **Cloud Sync** - Sync collections across devices
 - [ ] **Team Workspaces** - Shared collections
 - [ ] **Real-time Collaboration** - Live editing
@@ -410,6 +437,7 @@
 ## Phase 7: Visual API Flow (Phase 2 Feature) 🎯 PLANNED
 
 ### 7.1 Canvas Foundation 📋 PLANNED
+
 - [ ] **Flow View Tab** - Add to collections
 - [ ] **React Flow Integration** - Visual node editor
 - [ ] **Drag-Drop API Nodes** - From collection to canvas
@@ -433,6 +461,7 @@
 ## Additional Tasks & Polish
 
 ### UI/UX Improvements 🎨 🔄 PARTIALLY COMPLETED
+
 - [x] **Resizable Panels** - Implement proper panel resizing
 - [x] **Keyboard Navigation** - Full keyboard support
 - [ ] **Accessibility** - ARIA labels, screen reader support (see Phase 4.6 UI Design System Alignment)
@@ -446,6 +475,7 @@
 - [ ] **UI Design System Alignment** - Comprehensive alignment with design system (see Phase 4.6)
 
 ### Developer Experience 🛠️ 📋 PLANNED
+
 - [ ] **Plugin System** - Allow community extensions
 - [ ] **CLI Tool** - Command-line interface for CI/CD
 - [ ] **Request Templates** - Boilerplates for common APIs
@@ -454,6 +484,7 @@
 - [ ] **API Analytics** - Usage statistics and insights
 
 ### Quality Assurance 🔍 ✅ COMPLETED
+
 - [x] **IPC Handler Tests** - 100% coverage (68 tests, 53 handlers)
 - [x] **Component Integration Tests** - CollectionHierarchy, RequestBuilder, EnvironmentSwitcher, Sidebar (21 tests)
 - [x] **E2E Tests** - Playwright tests (223+ tests across 35 files)
@@ -470,39 +501,47 @@
 ## Timeline Summary
 
 ### **Phase 1** (Foundation) - ✅ COMPLETED
+
 - Duration: ~2 weeks
 - Status: **100% Complete**
 
 ### **Phase 2** (Essential Features) - 🔄 IN PROGRESS
+
 - Duration: ~2-3 weeks
 - Status: **91% Complete**
 - Priority: HIGH
 
 ### **Phase 3** (Import/Export) - 🔄 IN PROGRESS
+
 - Duration: ~1-2 weeks
 - Status: **25% Complete** (cURL Support completed)
 - Priority: HIGH
 
 ### **Phase 4** (Advanced Features) - 🔄 IN PROGRESS
+
 - Duration: ~2-3 weeks
 - Status: **45% Complete** (UI Design System Alignment added)
 - Priority: MEDIUM
 
 ### **Phase 5** (Premium Features) - 📋 PLANNED
+
 - Duration: ~3-4 weeks
 - Priority: MEDIUM
 
 ### **Phase 6** (Collaboration) - 📋 PLANNED
+
 - Duration: ~1-2 weeks
 - Priority: LOW (Future)
 
 ### **Phase 7** (Visual Flow Canvas) - 📋 PLANNED
+
 - Duration: ~2-3 weeks
 - Priority: LOW (Phase 2 Feature)
 
 ---
 
 ## **Total Estimated Timeline**: 12-16 weeks for MVP
+
 ## **Current Progress**: ~75% Complete
 
 ---
@@ -510,6 +549,7 @@
 ## Priority Matrix
 
 ### **Must Have (MVP)** 🔴
+
 - ✅ Collections Management
 - ✅ Environment & Variables
 - ✅ Request History
@@ -518,6 +558,7 @@
 - 🔄 Settings Panel (Partial)
 
 ### **Should Have** 🟡
+
 - 📋 Postman Import
 - 📋 Code Generation
 - 📋 Sandbox Mode
@@ -526,6 +567,7 @@
 - 📋 Request Chaining
 
 ### **Nice to Have** 🟢
+
 - 📋 WebSocket Support
 - 📋 GraphQL Explorer
 - 📋 Mock Server
@@ -538,6 +580,7 @@
 ## Current Status Summary
 
 ### ✅ **COMPLETED FEATURES**
+
 - **Core Foundation**: Electron + React + TypeScript setup
 - **Database**: JSON-based storage with full CRUD operations
 - **UI/UX**: Modern Arc-inspired interface with theming
@@ -552,19 +595,21 @@
 - **Theming**: Advanced VS Code-style theme system
 - **Basic Settings**: Core application settings
 - **Keyboard Shortcuts**: Comprehensive shortcut system including:
-    - Global shortcuts (Cmd+K, Cmd+N, Cmd+B, etc.)
-    - Item operations (Cmd+E edit, Cmd+D duplicate, Cmd+Backspace delete)
-    - Export/Import (Cmd+Shift+E, Cmd+Shift+I)
-    - Collection operations (Cmd+R add request, Cmd+Shift+N new folder/collection)
+  - Global shortcuts (Cmd+K, Cmd+N, Cmd+B, etc.)
+  - Item operations (Cmd+E edit, Cmd+D duplicate, Cmd+Backspace delete)
+  - Export/Import (Cmd+Shift+E, Cmd+Shift+I)
+  - Collection operations (Cmd+R add request, Cmd+Shift+N new folder/collection)
 - **cURL Import/Export**: Full cURL command parsing and generation with bulk import support
 
 ### 🔄 **IN PROGRESS**
+
 - **Keyboard Shortcuts**: Core shortcuts implemented (duplicate, edit, export/import), tab navigation and advanced shortcuts pending
 - **Settings Panel**: Core settings done, editor/network/privacy/advanced settings pending
 - **Performance**: Basic optimizations done, virtual scrolling and worker threads pending
 - **Collections**: Complete (bulk operations deferred to Phase 4 as low priority)
 
 ### 📋 **NEXT PRIORITIES**
+
 1. **Postman Collection Import** - Essential for user migration
 2. **Code Generation** - High user value
 3. **Sandbox Mode** - Important for experimentation

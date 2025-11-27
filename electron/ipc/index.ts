@@ -1,1 +1,1 @@
-export { registerIpcHandlers } from "./handlers";
+export { registerIpcHandlers } from './handlers';

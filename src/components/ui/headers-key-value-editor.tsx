@@ -22,7 +22,7 @@ export const HeadersKeyValueEditor: React.FC<HeadersKeyValueEditorProps> = ({
   placeholder = { key: 'Header Name', value: 'Header Value' },
   className = '',
   addButtonText = 'Add Header',
-  emptyStateText = 'No headers added yet'
+  emptyStateText = 'No headers added yet',
 }) => {
   const updateHeader = (oldKey: string, newKey: string, value: string) => {
     const newHeaders = { ...headers };
@@ -70,14 +70,14 @@ export const HeadersKeyValueEditor: React.FC<HeadersKeyValueEditorProps> = ({
               <Input
                 placeholder={placeholder.key}
                 value={key}
-                onChange={(e) => updateHeader(key, e.target.value, value)}
+                onChange={e => updateHeader(key, e.target.value, value)}
                 className="flex-1"
               />
               <VariableInputUnified
                 variant="overlay"
                 placeholder={placeholder.value}
                 value={value}
-                onChange={(newValue) => updateHeader(key, key, newValue)}
+                onChange={newValue => updateHeader(key, key, newValue)}
                 className="flex-1"
               />
               <Button

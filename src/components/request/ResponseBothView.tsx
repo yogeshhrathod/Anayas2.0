@@ -1,13 +1,13 @@
 /**
  * ResponseBothView - Side-by-side split view with headers (left) and body (right)
- * 
+ *
  * Shows:
  * - Left panel: Response headers
  * - Right panel: Response body in Monaco editor
  * - Resizable divider (50/50 default, adjustable)
  * - Status badge and response time at top
  * - Single Copy/Download action buttons at top
- * 
+ *
  * @example
  * ```tsx
  * <ResponseBothView
@@ -46,13 +46,15 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
   if (!response) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
-        <p>No response data available. Send a request to see response details.</p>
+        <p>
+          No response data available. Send a request to see response details.
+        </p>
       </div>
     );
   }
 
   // Format response body for display
-  const formattedBody = response.data 
+  const formattedBody = response.data
     ? JSON.stringify(response.data, null, 2)
     : '';
 
@@ -63,8 +65,13 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
       <div className="bg-muted/50 rounded-md p-3 font-mono text-xs overflow-x-auto">
         {Object.entries(response.headers).length > 0 ? (
           Object.entries(response.headers).map(([key, value]) => (
-            <div key={key} className="flex py-1 border-b border-border/50 last:border-0">
-              <span className="text-muted-foreground w-40 flex-shrink-0 font-semibold">{key}:</span>
+            <div
+              key={key}
+              className="flex py-1 border-b border-border/50 last:border-0"
+            >
+              <span className="text-muted-foreground w-40 flex-shrink-0 font-semibold">
+                {key}:
+              </span>
               <span className="ml-2 break-all text-xs">{value}</span>
             </div>
           ))
@@ -108,8 +115,12 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
         <div className="flex items-center gap-4">
           <h3 className="text-lg font-semibold">Response</h3>
           <div className="flex items-center gap-2">
-            <Badge 
-              variant={response.status >= 200 && response.status < 300 ? 'default' : 'destructive'}
+            <Badge
+              variant={
+                response.status >= 200 && response.status < 300
+                  ? 'default'
+                  : 'destructive'
+              }
             >
               {response.status} {response.statusText}
             </Badge>
@@ -119,7 +130,7 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
             </div>
           </div>
         </div>
-        
+
         {(onCopy || onDownload) && (
           <div className="flex gap-2">
             {onCopy && (
@@ -137,7 +148,7 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Split View: Headers (left) | Body (right) */}
       <div className="flex-1 overflow-hidden">
         <ResizableSplitView
@@ -152,4 +163,3 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
     </div>
   );
 };
-

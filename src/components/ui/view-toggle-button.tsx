@@ -11,7 +11,7 @@ interface ViewToggleButtonProps {
 export const ViewToggleButton: React.FC<ViewToggleButtonProps> = ({
   currentView,
   onToggle,
-  className = ''
+  className = '',
 }) => {
   return (
     <Button

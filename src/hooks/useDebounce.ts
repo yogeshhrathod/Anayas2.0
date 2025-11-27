@@ -1,16 +1,16 @@
 /**
  * useDebounce - Debounced values for search/auto-save
- * 
+ *
  * Provides debounced values with:
  * - Configurable delay
  * - Immediate value option
  * - Cleanup on unmount
- * 
+ *
  * @example
  * ```tsx
  * const [searchTerm, setSearchTerm] = useState('');
  * const debouncedSearchTerm = useDebounce(searchTerm, 300);
- * 
+ *
  * useEffect(() => {
  *   if (debouncedSearchTerm) {
  *     performSearch(debouncedSearchTerm);

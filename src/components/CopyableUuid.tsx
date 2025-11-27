@@ -10,12 +10,12 @@ interface CopyableUuidProps {
   variant?: 'default' | 'compact' | 'inline';
 }
 
-export function CopyableUuid({ 
-  uuid, 
-  label = 'UUID', 
+export function CopyableUuid({
+  uuid,
+  label = 'UUID',
   className,
   showLabel = true,
-  variant = 'default'
+  variant = 'default',
 }: CopyableUuidProps) {
   const [copied, setCopied] = useState(false);
 
@@ -41,13 +41,15 @@ export function CopyableUuid({
       <span
         onClick={handleCopy}
         className={cn(
-          "inline-flex items-center gap-1 font-mono text-xs cursor-pointer hover:text-primary transition-colors group",
+          'inline-flex items-center gap-1 font-mono text-xs cursor-pointer hover:text-primary transition-colors group',
           className
         )}
         title={`Click to copy: ${uuid}`}
       >
         {showLabel && <span className="font-semibold">{label}:</span>}
-        <span className="underline decoration-dotted">{formatUuidWithEllipsis(uuid, 30)}</span>
+        <span className="underline decoration-dotted">
+          {formatUuidWithEllipsis(uuid, 30)}
+        </span>
         {copied ? (
           <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
         ) : (
@@ -62,13 +64,19 @@ export function CopyableUuid({
       <button
         onClick={handleCopy}
         className={cn(
-          "inline-flex items-center gap-2 px-2 py-1 rounded border bg-muted/50 hover:bg-muted transition-colors text-xs font-mono group",
+          'inline-flex items-center gap-2 px-2 py-1 rounded border bg-muted/50 hover:bg-muted transition-colors text-xs font-mono group',
           className
         )}
         title={`Click to copy: ${uuid}`}
       >
-        {showLabel && <span className="text-muted-foreground font-semibold shrink-0">{label}:</span>}
-        <span className="text-muted-foreground">{formatUuidWithEllipsis(uuid)}</span>
+        {showLabel && (
+          <span className="text-muted-foreground font-semibold shrink-0">
+            {label}:
+          </span>
+        )}
+        <span className="text-muted-foreground">
+          {formatUuidWithEllipsis(uuid)}
+        </span>
         {copied ? (
           <Check className="h-3 w-3 text-green-600 dark:text-green-400 shrink-0" />
         ) : (
@@ -83,7 +91,7 @@ export function CopyableUuid({
     <button
       onClick={handleCopy}
       className={cn(
-        "flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg border-2 bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-all group",
+        'flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg border-2 bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-all group',
         className
       )}
       title={`Click to copy: ${uuid}`}

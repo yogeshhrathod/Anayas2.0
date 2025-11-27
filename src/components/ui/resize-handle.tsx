@@ -9,7 +9,13 @@ interface ResizeHandleProps {
   disabled?: boolean;
 }
 
-export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, disabled = false }: ResizeHandleProps) {
+export function ResizeHandle({
+  onResize,
+  onResizeStart,
+  onResizeEnd,
+  className,
+  disabled = false,
+}: ResizeHandleProps) {
   const isDragging = useRef(false);
   const startX = useRef(0);
   const onResizeRef = useRef(onResize);
@@ -23,23 +29,22 @@ export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, 
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging.current) return;
-    
+
     e.preventDefault();
     const deltaX = e.clientX - startX.current;
     // Use deltaX directly - dragging left (negative) shrinks, dragging right (positive) expands
     onResizeRef.current(deltaX);
     startX.current = e.clientX;
-     
   }, []);
 
   const handleMouseUp = useCallback(() => {
     if (!isDragging.current) return;
-    
+
     isDragging.current = false;
-    
+
     // Call resize end callback
     onResizeEndRef.current?.();
-    
+
     // Remove global event listeners
     if (handleMouseMoveRef.current) {
       document.removeEventListener('mousemove', handleMouseMoveRef.current);
@@ -47,37 +52,38 @@ export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, 
     if (handleMouseUpRef.current) {
       document.removeEventListener('mouseup', handleMouseUpRef.current);
     }
-    
+
     // Reset cursor
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
-     
   }, []);
 
   // Keep refs updated
   handleMouseMoveRef.current = handleMouseMove;
   handleMouseUpRef.current = handleMouseUp;
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (disabled) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    isDragging.current = true;
-    startX.current = e.clientX;
-    
-    // Call resize start callback
-    onResizeStart?.();
-    
-    // Add global event listeners
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    
-    // Change cursor globally
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-     
-  }, [disabled, onResizeStart, handleMouseMove, handleMouseUp]);
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (disabled) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      isDragging.current = true;
+      startX.current = e.clientX;
+
+      // Call resize start callback
+      onResizeStart?.();
+
+      // Add global event listeners
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+
+      // Change cursor globally
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    },
+    [disabled, onResizeStart, handleMouseMove, handleMouseUp]
+  );
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -87,9 +93,9 @@ export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, 
   return (
     <div
       className={cn(
-        "w-1 bg-transparent hover:bg-primary/20 transition-colors cursor-col-resize group z-50",
-        "relative",
-        disabled && "cursor-default hover:bg-transparent",
+        'w-1 bg-transparent hover:bg-primary/20 transition-colors cursor-col-resize group z-50',
+        'relative',
+        disabled && 'cursor-default hover:bg-transparent',
         className
       )}
       onMouseDown={handleMouseDown}

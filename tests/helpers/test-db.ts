@@ -20,10 +20,10 @@ export function getTestDatabasePath(config?: TestDatabaseConfig): string {
   const basePath = config?.basePath || path.join(os.tmpdir(), 'anayas-test-db');
   const testName = config?.testName || `test-${Date.now()}-${++testDbCounter}`;
   const testDir = path.join(basePath, testName);
-  
+
   // Ensure directory exists
   fs.mkdirSync(testDir, { recursive: true });
-  
+
   return path.join(testDir, 'database.json');
 }
 
@@ -32,7 +32,7 @@ export function getTestDatabasePath(config?: TestDatabaseConfig): string {
  */
 export function createTestDatabase(config?: TestDatabaseConfig): string {
   const dbPath = getTestDatabasePath(config);
-  
+
   // Initialize with empty database structure
   const emptyDb = {
     environments: [],
@@ -53,7 +53,7 @@ export function createTestDatabase(config?: TestDatabaseConfig): string {
       debugMode: false,
     },
   };
-  
+
   fs.writeFileSync(dbPath, JSON.stringify(emptyDb, null, 2), 'utf-8');
   return dbPath;
 }
@@ -89,7 +89,7 @@ export function loadTestData(dbPath: string, fixturePath: string): void {
   if (!fs.existsSync(fixturePath)) {
     throw new Error(`Test fixture not found: ${fixturePath}`);
   }
-  
+
   const fixtureData = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'));
   fs.writeFileSync(dbPath, JSON.stringify(fixtureData, null, 2), 'utf-8');
 }
@@ -101,7 +101,7 @@ export function getDatabaseContents(dbPath: string): any {
   if (!fs.existsSync(dbPath)) {
     return null;
   }
-  
+
   return JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
 }
 
@@ -128,7 +128,6 @@ export function resetDatabase(dbPath: string): void {
       debugMode: false,
     },
   };
-  
+
   fs.writeFileSync(dbPath, JSON.stringify(emptyDb, null, 2), 'utf-8');
 }
-

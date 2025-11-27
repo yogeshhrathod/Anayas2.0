@@ -26,9 +26,13 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
   onChange,
   placeholder = { key: 'Key', value: 'Value' },
   showEnabled = true,
-  className = ''
+  className = '',
 }) => {
-  const updateItem = (index: number, field: keyof KeyValueItem, value: string | boolean) => {
+  const updateItem = (
+    index: number,
+    field: keyof KeyValueItem,
+    value: string | boolean
+  ) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
     onChange(newItems);
@@ -65,21 +69,21 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
                 <input
                   type="checkbox"
                   checked={item.enabled}
-                  onChange={(e) => updateItem(index, 'enabled', e.target.checked)}
+                  onChange={e => updateItem(index, 'enabled', e.target.checked)}
                   className="rounded border-gray-300"
                 />
               )}
               <Input
                 placeholder={placeholder.key}
                 value={item.key}
-                onChange={(e) => updateItem(index, 'key', e.target.value)}
+                onChange={e => updateItem(index, 'key', e.target.value)}
                 className="flex-1"
               />
               <VariableInputUnified
                 variant="overlay"
                 placeholder={placeholder.value}
                 value={item.value}
-                onChange={(value) => updateItem(index, 'value', value)}
+                onChange={value => updateItem(index, 'value', value)}
                 className="flex-1"
               />
               <Button

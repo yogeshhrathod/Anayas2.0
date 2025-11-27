@@ -364,13 +364,13 @@ export const builtInThemes: Theme[] = [
 // Apply theme to document
 export function applyTheme(theme: Theme) {
   const root = document.documentElement;
-  
+
   // Remove existing theme classes
   root.classList.remove('dark', 'light');
-  
+
   // Add theme type class
   root.classList.add(theme.type);
-  
+
   // Apply CSS variables
   Object.entries(theme.colors).forEach(([key, value]) => {
     const cssVarName = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
@@ -379,7 +379,10 @@ export function applyTheme(theme: Theme) {
 }
 
 // Get theme by ID
-export function getThemeById(id: string, customThemes: Theme[] = []): Theme | undefined {
+export function getThemeById(
+  id: string,
+  customThemes: Theme[] = []
+): Theme | undefined {
   const allThemes = [...builtInThemes, ...customThemes];
   return allThemes.find(theme => theme.id === id);
 }
@@ -391,7 +394,7 @@ export function createCustomTheme(
   baseTheme?: Theme
 ): Theme {
   const base = baseTheme || (type === 'dark' ? darkTheme : lightTheme);
-  
+
   return {
     id: `custom-${Date.now()}`,
     name,
@@ -410,7 +413,7 @@ export function validateThemeColors(colors: Partial<ThemeColors>): boolean {
     'primary',
     'primaryForeground',
   ];
-  
+
   return requiredKeys.every(key => {
     const value = colors[key];
     return value && typeof value === 'string' && value.trim().length > 0;
@@ -425,12 +428,12 @@ export function exportTheme(theme: Theme): string {
 // Import theme from JSON
 export function importTheme(json: string): Theme {
   const theme = JSON.parse(json) as Theme;
-  
+
   // Validate required fields
   if (!theme.name || !theme.type || !theme.colors) {
     throw new Error('Invalid theme format');
   }
-  
+
   // Ensure it's marked as custom and has a unique ID
   return {
     ...theme,

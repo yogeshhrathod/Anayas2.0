@@ -14,6 +14,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 ### Phase 1: Setup Validation Schema
 
 #### Task 1.1: Create Validation Schema for SaveRequestDialog
+
 - **File**: `src/components/ui/save-request-dialog.tsx`
 - **Description**: Define validation schema with name (required, minLength: 2, maxLength: 100) and collection (required) rules
 - **Dependencies**: None
@@ -21,6 +22,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 - **Status**: `pending`
 
 #### Task 1.2: Import useFormValidation Hook
+
 - **File**: `src/components/ui/save-request-dialog.tsx`
 - **Description**: Add import for `useFormValidation` hook from `../../hooks/useFormValidation`
 - **Dependencies**: None
@@ -30,6 +32,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 ### Phase 2: Replace Manual Validation
 
 #### Task 1.3: Replace Manual Validation State
+
 - **File**: `src/components/ui/save-request-dialog.tsx`
 - **Description**: Remove `ValidationErrors` interface and `validationErrors` state, use hook's `errors` instead
 - **Dependencies**: Task 1.1, Task 1.2
@@ -37,6 +40,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 - **Status**: `pending`
 
 #### Task 1.4: Replace Manual validateForm Function
+
 - **File**: `src/components/ui/save-request-dialog.tsx`
 - **Description**: Remove manual `validateForm` function, use hook's `validateForm` instead
 - **Dependencies**: Task 1.1, Task 1.2
@@ -44,6 +48,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 - **Status**: `pending`
 
 #### Task 1.5: Replace Manual Error Clearing
+
 - **File**: `src/components/ui/save-request-dialog.tsx`
 - **Description**: Replace manual error clearing logic with hook's `clearFieldError` function
 - **Dependencies**: Task 1.3
@@ -51,6 +56,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 - **Status**: `pending`
 
 #### Task 1.6: Update Error Display
+
 - **File**: `src/components/ui/save-request-dialog.tsx`
 - **Description**: Update error display to use hook's `errors` instead of `validationErrors`
 - **Dependencies**: Task 1.3
@@ -66,6 +72,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 ### Phase 1: Setup Validation Schema
 
 #### Task 2.1: Create Validation Schema for PromoteRequestDialog `[P]`
+
 - **File**: `src/components/ui/promote-request-dialog.tsx`
 - **Description**: Define validation schema with name (required, minLength: 2, maxLength: 100) and collection (required) rules
 - **Dependencies**: None
@@ -73,6 +80,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 - **Status**: `pending`
 
 #### Task 2.2: Import useFormValidation Hook `[P]`
+
 - **File**: `src/components/ui/promote-request-dialog.tsx`
 - **Description**: Add import for `useFormValidation` hook from `../../hooks/useFormValidation`
 - **Dependencies**: None
@@ -82,6 +90,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 ### Phase 2: Replace Manual Validation
 
 #### Task 2.3: Replace Manual Validation State `[P]`
+
 - **File**: `src/components/ui/promote-request-dialog.tsx`
 - **Description**: Remove `ValidationErrors` interface and `validationErrors` state, use hook's `errors` instead
 - **Dependencies**: Task 2.1, Task 2.2
@@ -89,6 +98,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 - **Status**: `pending`
 
 #### Task 2.4: Replace Manual validateForm Function `[P]`
+
 - **File**: `src/components/ui/promote-request-dialog.tsx`
 - **Description**: Remove manual `validateForm` function, use hook's `validateForm` instead
 - **Dependencies**: Task 2.1, Task 2.2
@@ -96,6 +106,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 - **Status**: `pending`
 
 #### Task 2.5: Replace Manual Error Clearing `[P]`
+
 - **File**: `src/components/ui/promote-request-dialog.tsx`
 - **Description**: Replace manual error clearing logic with hook's `clearFieldError` function
 - **Dependencies**: Task 2.3
@@ -103,6 +114,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 - **Status**: `pending`
 
 #### Task 2.6: Update Error Display `[P]`
+
 - **File**: `src/components/ui/promote-request-dialog.tsx`
 - **Description**: Update error display to use hook's `errors` instead of `validationErrors`
 - **Dependencies**: Task 2.3
@@ -118,6 +130,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 ### Phase 1: Setup Validation Schema
 
 #### Task 3.1: Create Validation Schema for Settings `[P]`
+
 - **File**: `src/pages/Settings.tsx`
 - **Description**: Define validation schema with requestTimeout and maxHistory using custom validation functions
 - **Dependencies**: None
@@ -125,6 +138,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 - **Status**: `pending`
 
 #### Task 3.2: Import useFormValidation Hook `[P]`
+
 - **File**: `src/pages/Settings.tsx`
 - **Description**: Add import for `useFormValidation` hook from `../hooks/useFormValidation`
 - **Dependencies**: None
@@ -134,6 +148,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 ### Phase 2: Replace Manual Validation
 
 #### Task 3.3: Replace Manual Validation State `[P]`
+
 - **File**: `src/pages/Settings.tsx`
 - **Description**: Remove `ValidationErrors` interface and `validationErrors` state, remove `validateRequestTimeout` and `validateMaxHistory` functions, use hook's `errors` instead
 - **Dependencies**: Task 3.1, Task 3.2
@@ -141,6 +156,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 - **Status**: `pending`
 
 #### Task 3.4: Replace Manual validateAllSettings Function `[P]`
+
 - **File**: `src/pages/Settings.tsx`
 - **Description**: Remove manual `validateAllSettings` function, use hook's `validateForm` instead
 - **Dependencies**: Task 3.1, Task 3.2
@@ -148,6 +164,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 - **Status**: `pending`
 
 #### Task 3.5: Replace Manual Error Clearing `[P]`
+
 - **File**: `src/pages/Settings.tsx`
 - **Description**: Replace manual error clearing logic with hook's `clearFieldError` function
 - **Dependencies**: Task 3.3
@@ -155,6 +172,7 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 - **Status**: `pending`
 
 #### Task 3.6: Update Error Display `[P]`
+
 - **File**: `src/pages/Settings.tsx`
 - **Description**: Update error display to use hook's `errors` instead of `validationErrors`
 - **Dependencies**: Task 3.3
@@ -170,18 +188,21 @@ Tasks are organized by component migration. Tasks marked with `[P]` can be execu
 ### Manual Testing
 
 #### Test Task 1: Test SaveRequestDialog Validation
+
 - **File**: Manual testing
 - **Description**: Test SaveRequestDialog validation: name (required, minLength, maxLength), collection (required)
 - **Dependencies**: All Task 1.x tasks
 - **Status**: `pending`
 
 #### Test Task 2: Test PromoteRequestDialog Validation
+
 - **File**: Manual testing
 - **Description**: Test PromoteRequestDialog validation: name (required, minLength, maxLength), collection (required)
 - **Dependencies**: All Task 2.x tasks
 - **Status**: `pending`
 
 #### Test Task 3: Test Settings Page Validation
+
 - **File**: Manual testing
 - **Description**: Test Settings page validation: requestTimeout (min: 1000, max: 300000), maxHistory (min: 1, max: 10000)
 - **Dependencies**: All Task 3.x tasks

@@ -15,9 +15,11 @@ export function ThemeManager() {
 
       if (themeMode === 'system') {
         // Use system preference
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const prefersDark = window.matchMedia(
+          '(prefers-color-scheme: dark)'
+        ).matches;
         const systemTheme = getThemeById(currentThemeId, customThemes);
-        
+
         if (systemTheme) {
           themeToApply = systemTheme;
         } else {
@@ -27,7 +29,7 @@ export function ThemeManager() {
       } else if (themeMode === 'light' || themeMode === 'dark') {
         // Use selected theme or fallback to default light/dark
         const selectedTheme = getThemeById(currentThemeId, customThemes);
-        
+
         if (selectedTheme && selectedTheme.type === themeMode) {
           themeToApply = selectedTheme;
         } else {

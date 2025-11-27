@@ -1,19 +1,19 @@
 /**
  * useClickOutside - Close dropdown/modal on click outside or Escape key
- * 
+ *
  * Provides click-outside and escape key handling with:
  * - Ref-based click detection
  * - Escape key support
  * - Conditional activation
  * - Automatic cleanup
- * 
+ *
  * @example
  * ```tsx
  * const [isOpen, setIsOpen] = useState(false);
  * const dropdownRef = useRef<HTMLDivElement>(null);
- * 
+ *
  * useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
- * 
+ *
  * return (
  *   <div ref={dropdownRef}>
  *     {isOpen && <Dropdown />}
@@ -44,7 +44,7 @@ export interface UseClickOutsideOptions {
 
 /**
  * Hook to close a dropdown/modal when clicking outside or pressing Escape
- * 
+ *
  * @param ref - Ref to the element that should not trigger close
  * @param onClose - Callback to execute when close is triggered
  * @param isActive - Whether the hook should be active (e.g., dropdown is open)
@@ -74,7 +74,11 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
     };
 
     const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node) && shouldClose(e)) {
+      if (
+        ref.current &&
+        !ref.current.contains(e.target as Node) &&
+        shouldClose(e)
+      ) {
         onClose();
       }
     };
@@ -98,4 +102,3 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
     };
   }, [isActive, handleEscape, handleClickOutside, onClose, ref, shouldClose]);
 }
-

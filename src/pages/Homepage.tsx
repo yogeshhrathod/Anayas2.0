@@ -1,7 +1,6 @@
 import { ApiRequestBuilder } from '../components/ApiRequestBuilder';
 
 export function Homepage() {
-
   return (
     <div className="h-full flex flex-col relative">
       {/* Main Content - Maximized Space */}

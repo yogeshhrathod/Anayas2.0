@@ -1,13 +1,13 @@
 /**
  * CollectionEnvironmentManager - Component for managing collection environments
- * 
+ *
  * Features:
  * - List collection environments
  * - Add new environments (via Dialog)
  * - Edit existing environments (via Dialog)
  * - Delete environments
  * - Switch active environment
- * 
+ *
  * @example
  * ```tsx
  * <CollectionEnvironmentManager
@@ -21,13 +21,19 @@
 
 import React, { useState, useCallback } from 'react';
 import { Collection, CollectionEnvironment } from '../../types/entities';
-import { CollectionEnvironmentForm, CollectionEnvironmentFormRef } from './CollectionEnvironmentForm';
+import {
+  CollectionEnvironmentForm,
+  CollectionEnvironmentFormRef,
+} from './CollectionEnvironmentForm';
 import { Dialog } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Plus, Edit, Trash2, Check, Building2, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useConfirmation } from '../../hooks/useConfirmation';
-import { useCollectionEnvironmentOperations, CollectionEnvironmentFormData } from '../../hooks/useCollectionEnvironmentOperations';
+import {
+  useCollectionEnvironmentOperations,
+  CollectionEnvironmentFormData,
+} from '../../hooks/useCollectionEnvironmentOperations';
 
 export interface CollectionEnvironmentManagerProps {
   collectionId: number;
@@ -40,17 +46,21 @@ export function CollectionEnvironmentManager({
   collectionId,
   environments,
   activeEnvironmentId,
-  onEnvironmentsChange
+  onEnvironmentsChange,
 }: CollectionEnvironmentManagerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingEnvironment, setEditingEnvironment] = useState<CollectionEnvironment | null>(null);
+  const [editingEnvironment, setEditingEnvironment] =
+    useState<CollectionEnvironment | null>(null);
   const formRef = React.useRef<CollectionEnvironmentFormRef>(null);
   const { confirm } = useConfirmation();
 
-  const handleCollectionUpdate = useCallback((_updatedCollection: Collection) => {
-    // Refresh parent component
-    onEnvironmentsChange();
-  }, [onEnvironmentsChange]);
+  const handleCollectionUpdate = useCallback(
+    (_updatedCollection: Collection) => {
+      // Refresh parent component
+      onEnvironmentsChange();
+    },
+    [onEnvironmentsChange]
+  );
 
   const {
     createEnvironment,
@@ -71,41 +81,50 @@ export function CollectionEnvironmentManager({
     setIsDialogOpen(true);
   }, []);
 
-  const handleSaveEnvironment = useCallback(async (data: CollectionEnvironmentFormData) => {
-    try {
-      if (editingEnvironment?.id) {
-        await updateEnvironment(editingEnvironment.id, data);
-      } else {
-        await createEnvironment(data);
+  const handleSaveEnvironment = useCallback(
+    async (data: CollectionEnvironmentFormData) => {
+      try {
+        if (editingEnvironment?.id) {
+          await updateEnvironment(editingEnvironment.id, data);
+        } else {
+          await createEnvironment(data);
+        }
+        setIsDialogOpen(false);
+        setEditingEnvironment(null);
+      } catch {
+        // Error handling is done in the hook
       }
-      setIsDialogOpen(false);
-      setEditingEnvironment(null);
-    } catch {
-      // Error handling is done in the hook
-    }
-  }, [editingEnvironment, updateEnvironment, createEnvironment]);
+    },
+    [editingEnvironment, updateEnvironment, createEnvironment]
+  );
 
   const handleCancelEdit = useCallback(() => {
     setIsDialogOpen(false);
     setEditingEnvironment(null);
   }, []);
 
-  const handleDeleteClick = useCallback(async (environment: CollectionEnvironment) => {
-    if (!environment.id) return;
-    
-    const confirmed = await confirm({
-      title: 'Delete Environment',
-      message: `Are you sure you want to delete "${environment.name}"? This action cannot be undone.`
-    });
+  const handleDeleteClick = useCallback(
+    async (environment: CollectionEnvironment) => {
+      if (!environment.id) return;
 
-    if (confirmed) {
-      await deleteEnvironment(environment.id);
-    }
-  }, [confirm, deleteEnvironment]);
+      const confirmed = await confirm({
+        title: 'Delete Environment',
+        message: `Are you sure you want to delete "${environment.name}"? This action cannot be undone.`,
+      });
 
-  const handleSetActiveClick = useCallback((environmentId: number) => {
-    setActiveEnvironment(environmentId);
-  }, [setActiveEnvironment]);
+      if (confirmed) {
+        await deleteEnvironment(environment.id);
+      }
+    },
+    [confirm, deleteEnvironment]
+  );
+
+  const handleSetActiveClick = useCallback(
+    (environmentId: number) => {
+      setActiveEnvironment(environmentId);
+    },
+    [setActiveEnvironment]
+  );
 
   return (
     <>
@@ -117,11 +136,7 @@ export function CollectionEnvironmentManager({
               Manage environments specific to this collection
             </p>
           </div>
-          <Button 
-            onClick={handleNewEnvironment} 
-            size="sm"
-            type="button"
-          >
+          <Button onClick={handleNewEnvironment} size="sm" type="button">
             <Plus className="h-4 w-4 mr-2" />
             Add Environment
           </Button>
@@ -130,10 +145,12 @@ export function CollectionEnvironmentManager({
         {environments.length === 0 ? (
           <div className="text-center py-12 border border-dashed rounded-lg">
             <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-sm text-muted-foreground mb-4">No environments configured</p>
-            <Button 
-              onClick={handleNewEnvironment} 
-              variant="outline" 
+            <p className="text-sm text-muted-foreground mb-4">
+              No environments configured
+            </p>
+            <Button
+              onClick={handleNewEnvironment}
+              variant="outline"
               size="sm"
               type="button"
             >
@@ -143,12 +160,13 @@ export function CollectionEnvironmentManager({
           </div>
         ) : (
           <div className="space-y-2">
-            {environments.map((env) => (
+            {environments.map(env => (
               <div
                 key={env.id}
                 className={cn(
                   'flex items-center justify-between p-4 border rounded-lg',
-                  activeEnvironmentId === env.id && 'border-primary bg-primary/5'
+                  activeEnvironmentId === env.id &&
+                    'border-primary bg-primary/5'
                 )}
               >
                 <div className="flex items-center gap-3 flex-1">
@@ -163,7 +181,8 @@ export function CollectionEnvironmentManager({
                       )}
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      {Object.keys(env.variables || {}).length} variable{Object.keys(env.variables || {}).length !== 1 ? 's' : ''}
+                      {Object.keys(env.variables || {}).length} variable
+                      {Object.keys(env.variables || {}).length !== 1 ? 's' : ''}
                     </div>
                   </div>
                 </div>
@@ -216,7 +235,11 @@ export function CollectionEnvironmentManager({
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         title={editingEnvironment ? 'Edit Environment' : 'New Environment'}
-        description={editingEnvironment ? 'Update environment details and variables' : 'Create a new collection environment'}
+        description={
+          editingEnvironment
+            ? 'Update environment details and variables'
+            : 'Create a new collection environment'
+        }
         maxWidth="lg"
       >
         <CollectionEnvironmentForm

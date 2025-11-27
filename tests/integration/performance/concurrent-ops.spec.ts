@@ -2,7 +2,10 @@ import { test, expect } from '../../helpers/electron-fixtures';
 import { logger } from '../../helpers/logger';
 
 test.describe('Performance: Concurrent Operations', () => {
-  test('should handle concurrent collection saves', async ({ electronPage, _testDbPath }) => {
+  test('should handle concurrent collection saves', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     const startTime = Date.now();
     logger.info('Running 100 concurrent collection saves...');
 
@@ -31,7 +34,10 @@ test.describe('Performance: Concurrent Operations', () => {
     expect(duration).toBeLessThan(10000); // Should complete in <10s
   });
 
-  test('should handle concurrent request saves', async ({ electronPage, _testDbPath }) => {
+  test('should handle concurrent request saves', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     // Create collection first
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -47,7 +53,7 @@ test.describe('Performance: Concurrent Operations', () => {
     const startTime = Date.now();
     logger.info('Running 100 concurrent request saves...');
 
-    const results = await electronPage.evaluate(async (collectionId) => {
+    const results = await electronPage.evaluate(async collectionId => {
       const promises = [];
       for (let i = 0; i < 100; i++) {
         promises.push(
@@ -77,7 +83,10 @@ test.describe('Performance: Concurrent Operations', () => {
     expect(duration).toBeLessThan(10000);
   });
 
-  test('should handle concurrent environment operations', async ({ electronPage, _testDbPath }) => {
+  test('should handle concurrent environment operations', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     const startTime = Date.now();
     logger.info('Running 50 concurrent environment operations...');
 
@@ -96,7 +105,7 @@ test.describe('Performance: Concurrent Operations', () => {
       const created = await Promise.all(createPromises);
 
       // Concurrent reads
-      const readPromises = created.map(env => 
+      const readPromises = created.map(env =>
         window.electronAPI.env.getCurrent()
       );
       await Promise.all(readPromises);
@@ -111,7 +120,10 @@ test.describe('Performance: Concurrent Operations', () => {
     expect(duration).toBeLessThan(10000);
   });
 
-  test('should handle concurrent IPC calls without race conditions', async ({ electronPage, _testDbPath }) => {
+  test('should handle concurrent IPC calls without race conditions', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     // Create collection
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -125,7 +137,7 @@ test.describe('Performance: Concurrent Operations', () => {
     });
 
     // Concurrent update operations
-    const results = await electronPage.evaluate(async (collectionId) => {
+    const results = await electronPage.evaluate(async collectionId => {
       const promises = [];
       for (let i = 0; i < 20; i++) {
         promises.push(
@@ -148,7 +160,7 @@ test.describe('Performance: Concurrent Operations', () => {
     expect(results.every(r => r.success)).toBe(true);
 
     // Verify final state is consistent
-    const finalCollection = await electronPage.evaluate(async (collectionId) => {
+    const finalCollection = await electronPage.evaluate(async collectionId => {
       const collections = await window.electronAPI.collection.list();
       return collections.find((c: any) => c.id === collectionId);
     }, collection.id);
@@ -157,7 +169,10 @@ test.describe('Performance: Concurrent Operations', () => {
     expect(finalCollection.name).toBeDefined();
   });
 
-  test('should handle mixed read/write operations concurrently', async ({ electronPage, _testDbPath }) => {
+  test('should handle mixed read/write operations concurrently', async ({
+    electronPage,
+    _testDbPath,
+  }) => {
     // Create initial data
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -173,9 +188,9 @@ test.describe('Performance: Concurrent Operations', () => {
     const startTime = Date.now();
     logger.info('Running mixed read/write operations...');
 
-    await electronPage.evaluate(async (collectionId) => {
+    await electronPage.evaluate(async collectionId => {
       const operations = [];
-      
+
       // Mix of reads and writes
       for (let i = 0; i < 50; i++) {
         if (i % 2 === 0) {
@@ -197,12 +212,10 @@ test.describe('Performance: Concurrent Operations', () => {
           );
         } else {
           // Read operation
-          operations.push(
-            window.electronAPI.request.list(collectionId)
-          );
+          operations.push(window.electronAPI.request.list(collectionId));
         }
       }
-      
+
       await Promise.all(operations);
     }, collection.id);
 
@@ -212,4 +225,3 @@ test.describe('Performance: Concurrent Operations', () => {
     expect(duration).toBeLessThan(15000);
   });
 });
-

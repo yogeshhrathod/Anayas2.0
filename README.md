@@ -5,6 +5,7 @@ A lightweight REST API Client built with Electron, React, TypeScript, and Tailwi
 ## Features
 
 ### Core Features
+
 - ✅ **Modern UI** - React + TailwindCSS + shadcn/ui components
 - ✅ **Request Builder** - HTTP method selector, URL input, headers, body
 - ✅ **Collections Management** - Organize API requests in collections
@@ -14,6 +15,7 @@ A lightweight REST API Client built with Electron, React, TypeScript, and Tailwi
 - ✅ **Real-time Response** - Live response viewing with syntax highlighting
 
 ### Key Capabilities
+
 - Send HTTP requests (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS)
 - Manage multiple environments with variables
 - Store and organize requests in collections
@@ -25,6 +27,7 @@ A lightweight REST API Client built with Electron, React, TypeScript, and Tailwi
 ## Technology Stack
 
 ### Frontend
+
 - **React 18** - UI framework
 - **TypeScript** - Type safety
 - **TailwindCSS** - Styling
@@ -34,6 +37,7 @@ A lightweight REST API Client built with Electron, React, TypeScript, and Tailwi
 - **Lucide React** - Icons
 
 ### Backend
+
 - **Electron 28** - Desktop framework
 - **Node.js 20+** - Runtime
 - **JSON Database** - Local data storage
@@ -41,6 +45,7 @@ A lightweight REST API Client built with Electron, React, TypeScript, and Tailwi
 - **UUID** - Unique identifiers
 
 ### Build Tools
+
 - **Vite** - Build tool
 - **electron-builder** - Packaging
 - **TypeScript** - Compilation
@@ -48,6 +53,7 @@ A lightweight REST API Client built with Electron, React, TypeScript, and Tailwi
 ## Installation
 
 ### Prerequisites
+
 - Node.js 20+ or Bun
 - npm, yarn, or bun
 
@@ -71,6 +77,7 @@ bun run electron:dev
 ```
 
 This will:
+
 1. Start the Vite dev server
 2. Launch Electron with hot reload
 3. Open DevTools automatically
@@ -112,12 +119,14 @@ anayas/
 ## Usage
 
 ### Creating Collections
+
 1. Navigate to Collections page
 2. Click "Create Collection"
 3. Enter name, description, and variables
 4. Save your collection
 
 ### Building Requests
+
 1. Go to Request Builder
 2. Select HTTP method (GET, POST, etc.)
 3. Enter URL
@@ -125,12 +134,14 @@ anayas/
 5. Click Send to execute
 
 ### Managing Environments
+
 1. Go to Environments page
 2. Create environments for different stages
 3. Set variables like `base_url`, `api_key`
 4. Switch between environments
 
 ### Viewing History
+
 1. Navigate to History page
 2. See all executed requests
 3. Filter by method, status, or date
@@ -139,7 +150,9 @@ anayas/
 ## Configuration
 
 ### Environment Variables
+
 Use `{{variableName}}` syntax in URLs and headers:
+
 ```json
 {
   "base_url": "https://api.example.com",
@@ -148,6 +161,7 @@ Use `{{variableName}}` syntax in URLs and headers:
 ```
 
 ### Settings
+
 - Theme preferences (Light/Dark/System)
 - Request timeout
 - Follow redirects
@@ -157,13 +171,16 @@ Use `{{variableName}}` syntax in URLs and headers:
 ## Development Guidelines
 
 ### Adding New Features
+
 1. Define IPC handlers in `electron/ipc/handlers.ts`
 2. Expose APIs in `electron/preload.ts`
 3. Update Zustand store in `src/store/useStore.ts`
 4. Create React components in `src/pages/` or `src/components/`
 
 ### Database Schema
+
 The app uses a JSON-based database with the following collections:
+
 - `environments` - Environment configurations
 - `collections` - Request collections
 - `requests` - Individual API requests
@@ -171,6 +188,7 @@ The app uses a JSON-based database with the following collections:
 - `settings` - Application settings
 
 ### TypeScript
+
 - Strict mode enabled
 - All APIs are typed
 - Use proper interfaces for data structures
@@ -190,6 +208,7 @@ MIT License - see LICENSE file for details
 ## Support
 
 For issues and questions:
+
 - Create an issue on GitHub
 - Check the documentation
 - Review the logs in the application

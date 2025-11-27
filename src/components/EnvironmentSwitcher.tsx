@@ -8,7 +8,8 @@ import { Environment } from '../types/entities';
 export function EnvironmentSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { environments, currentEnvironment, setCurrentEnvironment } = useStore();
+  const { environments, currentEnvironment, setCurrentEnvironment } =
+    useStore();
 
   const handleSelectEnvironment = async (env: Environment) => {
     try {
@@ -44,43 +45,50 @@ export function EnvironmentSwitcher() {
 
       {isOpen && (
         <div className="absolute right-0 top-full z-popover mt-2 w-80 rounded-md border bg-popover p-2 shadow-lg">
-            <div className="mb-2 border-b pb-2">
-              <div className="flex items-center gap-2 px-2 py-1 text-sm font-semibold">
-                <Globe className="h-4 w-4" />
-                <span>Select Environment</span>
-              </div>
-            </div>
-
-            <div className="max-h-96 space-y-1 overflow-auto">
-              {environments.length === 0 ? (
-                <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                  No environments configured
-                </div>
-              ) : (
-                environments.map((env: Environment) => (
-                  <button
-                    key={env.id}
-                    onClick={() => handleSelectEnvironment(env)}
-                    className={cn(
-                      'flex w-full items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-accent',
-                      currentEnvironment?.id === env.id && 'bg-accent'
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={cn('h-2 w-2 rounded-full', getStatusColor(env))} />
-                      <div className="text-left">
-                        <div className="font-medium">{env.displayName}</div>
-                        <div className="text-xs text-muted-foreground">{env.name}</div>
-                      </div>
-                    </div>
-                    {currentEnvironment?.id === env.id && (
-                      <Check className="h-4 w-4 text-primary" />
-                    )}
-                  </button>
-                ))
-              )}
+          <div className="mb-2 border-b pb-2">
+            <div className="flex items-center gap-2 px-2 py-1 text-sm font-semibold">
+              <Globe className="h-4 w-4" />
+              <span>Select Environment</span>
             </div>
           </div>
+
+          <div className="max-h-96 space-y-1 overflow-auto">
+            {environments.length === 0 ? (
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                No environments configured
+              </div>
+            ) : (
+              environments.map((env: Environment) => (
+                <button
+                  key={env.id}
+                  onClick={() => handleSelectEnvironment(env)}
+                  className={cn(
+                    'flex w-full items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-accent',
+                    currentEnvironment?.id === env.id && 'bg-accent'
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        'h-2 w-2 rounded-full',
+                        getStatusColor(env)
+                      )}
+                    />
+                    <div className="text-left">
+                      <div className="font-medium">{env.displayName}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {env.name}
+                      </div>
+                    </div>
+                  </div>
+                  {currentEnvironment?.id === env.id && (
+                    <Check className="h-4 w-4 text-primary" />
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
