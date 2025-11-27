@@ -11,15 +11,15 @@
  * This refactored version is much smaller and more maintainable than the original.
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { useStore } from '../store/useStore';
+import { useEffect, useRef, useState } from 'react';
 import { useCollectionDragDrop } from '../hooks/useCollectionDragDrop';
 import { useToastNotifications } from '../hooks/useToastNotifications';
+import { calculateOrderForPosition } from '../lib/drag-drop-utils';
+import { useStore } from '../store/useStore';
+import { Folder, Request } from '../types/entities';
 import { CollectionItem } from './collection/CollectionItem';
 import { FolderItem } from './collection/FolderItem';
 import { RequestItem } from './collection/RequestItem';
-import { Request, Folder } from '../types/entities';
-import { calculateOrderForPosition } from '../lib/drag-drop-utils';
 
 export interface CollectionHierarchyProps {
   onRequestSelect: (request: Request) => void;
@@ -407,9 +407,10 @@ export function CollectionHierarchy({
         await window.electronAPI.request.save({
           id: requestId,
           name: requests.find(r => r.id === requestId)?.name || '',
-           
+
           method:
-            (requests.find(r => r.id === requestId)?.method as any) || 'GET',
+            (requests.find(r => r.id === requestId)
+              ?.method as Request['method']) || 'GET',
           url: requests.find(r => r.id === requestId)?.url || '',
           headers: requests.find(r => r.id === requestId)?.headers || {},
           body: requests.find(r => r.id === requestId)?.body || '',

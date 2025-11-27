@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Minus, Square, X, Maximize2 } from 'lucide-react';
+import { Maximize2, Minus, Square, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { cn } from '../lib/utils';
 import { GlobalSearch } from './GlobalSearch';
 import { Logo } from './Logo';
@@ -40,10 +40,10 @@ export function TitleBar() {
       style={{ WebkitAppRegion: 'drag' } as any}
     >
       {/* Left Side - App Branding (macOS) or Window Controls (Windows/Linux) */}
-      { }
+      {}
       <div
         className="flex items-center gap-3"
-        style={{ WebkitAppRegion: 'no-drag' } as any}
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
         <Logo size={20} showText={true} className="text-sm" />
       </div>
@@ -52,20 +52,19 @@ export function TitleBar() {
       <div className="flex-1" />
 
       {/* Right Side - Search */}
-      { }
+      {}
       <div
         className="flex items-center gap-2"
-        style={{ WebkitAppRegion: 'no-drag' } as any}
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
         <GlobalSearch />
       </div>
 
       {/* Window Controls - Only show on Windows/Linux */}
       {!isMac && (
-         
         <div
           className="flex items-center"
-          style={{ WebkitAppRegion: 'no-drag' } as any}
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
           <button
             onClick={handleMinimize}

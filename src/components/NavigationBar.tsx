@@ -1,35 +1,35 @@
-import { useState, useEffect } from 'react';
 import {
-  Home,
+  ChevronDown,
   FolderPlus,
   Globe,
   History as HistoryIcon,
-  Settings as SettingsIcon,
-  ScrollText,
+  Home,
   Plus,
-  Upload,
+  ScrollText,
+  Settings as SettingsIcon,
   Terminal,
-  ChevronDown,
+  Upload,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useToastNotifications } from '../hooks/useToastNotifications';
+import { KEYMAP, getShortcutDisplay } from '../lib/keymap';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
-import { EnvironmentSelector } from './EnvironmentSelector';
 import { Request } from '../types/entities';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from './ui/tooltip';
+import { EnvironmentSelector } from './EnvironmentSelector';
+import { CurlImportDialog } from './curl/CurlImportDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { getShortcutDisplay, KEYMAP } from '../lib/keymap';
-import { useToastNotifications } from '../hooks/useToastNotifications';
-import { CurlImportDialog } from './curl/CurlImportDialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './ui/tooltip';
 
 export function NavigationBar() {
   const {
@@ -216,10 +216,10 @@ export function NavigationBar() {
       data-testid="primary-navigation"
     >
       {/* Primary Navigation (Left) */}
-      { }
+      {}
       <div
         className="flex items-center gap-2"
-        style={{ WebkitAppRegion: 'no-drag' } as any}
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
         {primaryNavItems.map(item => {
           const Icon = item.icon;
@@ -252,10 +252,10 @@ export function NavigationBar() {
       <div className="flex-1" />
 
       {/* Secondary Navigation (Right) */}
-      { }
+      {}
       <div
         className="flex items-center gap-2"
-        style={{ WebkitAppRegion: 'no-drag' } as any}
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
         {/* Action Buttons - Only visible on home page */}
         {currentPage === 'home' && (
