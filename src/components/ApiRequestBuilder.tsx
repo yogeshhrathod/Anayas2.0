@@ -1,34 +1,39 @@
 /**
  * ApiRequestBuilder - Main request builder component (refactored)
- * 
+ *
  * Orchestrates the request building interface using smaller, focused components:
  * - RequestHeader for name, method, URL, and send button
  * - RequestTabs for navigation between configuration sections
  * - Individual tab components for params, headers, body, and auth
  * - ResponsePanel for displaying responses
  * - RequestPresets for preset management
- * 
+ *
  * This refactored version is much smaller and more maintainable than the original.
  */
 
 import { useEffect } from 'react';
-import { useStore } from '../store/useStore';
-import { SaveRequestDialog } from './ui/save-request-dialog';
-import { KEYMAP, createKeymapHandler } from '../lib/keymap';
-import { useRequestState } from '../hooks/useRequestState';
 import { useRequestActions } from '../hooks/useRequestActions';
-import { RequestHeader } from './request/RequestHeader';
-import { RequestTabs } from './request/RequestTabs';
-import { ParamsTab } from './request/ParamsTab';
-import { HeadersTab } from './request/HeadersTab';
-import { BodyTab } from './request/BodyTab';
+import { useRequestState } from '../hooks/useRequestState';
+import { KEYMAP, createKeymapHandler } from '../lib/keymap';
+import { useStore } from '../store/useStore';
 import { AuthTab } from './request/AuthTab';
-import { ResponseTab } from './request/ResponseTab';
+import { BodyTab } from './request/BodyTab';
+import { HeadersTab } from './request/HeadersTab';
+import { ParamsTab } from './request/ParamsTab';
+import { RequestHeader } from './request/RequestHeader';
 import { RequestPresets } from './request/RequestPresets';
+import { RequestTabs } from './request/RequestTabs';
+import { ResponseTab } from './request/ResponseTab';
+import { SaveRequestDialog } from './ui/save-request-dialog';
 
 export function ApiRequestBuilder() {
-  const { selectedRequest, triggerSidebarRefresh, setSelectedRequest, setFocusedContext } = useStore();
-  
+  const {
+    selectedRequest,
+    triggerSidebarRefresh,
+    setSelectedRequest,
+    setFocusedContext,
+  } = useStore();
+
   // Use custom hooks for state and actions
   const requestState = useRequestState(selectedRequest);
   const requestActions = useRequestActions(requestState.requestData);
@@ -44,7 +49,11 @@ export function ApiRequestBuilder() {
     if (requestActions.response && requestState.activeTab !== 'response') {
       requestState.setActiveTab('response');
     }
-  }, [requestActions.response, requestState.activeTab, requestState.setActiveTab]);
+  }, [
+    requestActions.response,
+    requestState.activeTab,
+    requestState.setActiveTab,
+  ]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -57,7 +66,9 @@ export function ApiRequestBuilder() {
     });
 
     const handleFocusUrl = createKeymapHandler(KEYMAP.FOCUS_URL, () => {
-      const urlInput = document.querySelector('input[placeholder*="URL"]') as HTMLInputElement;
+      const urlInput = document.querySelector(
+        'input[placeholder*="URL"]'
+      ) as HTMLInputElement;
       if (urlInput) {
         urlInput.focus();
         urlInput.select();
@@ -70,7 +81,7 @@ export function ApiRequestBuilder() {
 
     // Handlers for selecting presets 1-9
     const applyPresetToForm = (preset: any) => {
-      requestActions.applyPreset(preset, (data) => {
+      requestActions.applyPreset(preset, data => {
         requestState.setRequestData({
           ...requestState.requestData,
           method: data.method,
@@ -83,51 +94,78 @@ export function ApiRequestBuilder() {
       });
     };
 
-    const handleSelectPreset1 = createKeymapHandler(KEYMAP.SELECT_PRESET_1, () => {
-      if (requestActions.presets[0]) {
-        applyPresetToForm(requestActions.presets[0]);
+    const handleSelectPreset1 = createKeymapHandler(
+      KEYMAP.SELECT_PRESET_1,
+      () => {
+        if (requestActions.presets[0]) {
+          applyPresetToForm(requestActions.presets[0]);
+        }
       }
-    });
-    const handleSelectPreset2 = createKeymapHandler(KEYMAP.SELECT_PRESET_2, () => {
-      if (requestActions.presets[1]) {
-        applyPresetToForm(requestActions.presets[1]);
+    );
+    const handleSelectPreset2 = createKeymapHandler(
+      KEYMAP.SELECT_PRESET_2,
+      () => {
+        if (requestActions.presets[1]) {
+          applyPresetToForm(requestActions.presets[1]);
+        }
       }
-    });
-    const handleSelectPreset3 = createKeymapHandler(KEYMAP.SELECT_PRESET_3, () => {
-      if (requestActions.presets[2]) {
-        applyPresetToForm(requestActions.presets[2]);
+    );
+    const handleSelectPreset3 = createKeymapHandler(
+      KEYMAP.SELECT_PRESET_3,
+      () => {
+        if (requestActions.presets[2]) {
+          applyPresetToForm(requestActions.presets[2]);
+        }
       }
-    });
-    const handleSelectPreset4 = createKeymapHandler(KEYMAP.SELECT_PRESET_4, () => {
-      if (requestActions.presets[3]) {
-        applyPresetToForm(requestActions.presets[3]);
+    );
+    const handleSelectPreset4 = createKeymapHandler(
+      KEYMAP.SELECT_PRESET_4,
+      () => {
+        if (requestActions.presets[3]) {
+          applyPresetToForm(requestActions.presets[3]);
+        }
       }
-    });
-    const handleSelectPreset5 = createKeymapHandler(KEYMAP.SELECT_PRESET_5, () => {
-      if (requestActions.presets[4]) {
-        applyPresetToForm(requestActions.presets[4]);
+    );
+    const handleSelectPreset5 = createKeymapHandler(
+      KEYMAP.SELECT_PRESET_5,
+      () => {
+        if (requestActions.presets[4]) {
+          applyPresetToForm(requestActions.presets[4]);
+        }
       }
-    });
-    const handleSelectPreset6 = createKeymapHandler(KEYMAP.SELECT_PRESET_6, () => {
-      if (requestActions.presets[5]) {
-        applyPresetToForm(requestActions.presets[5]);
+    );
+    const handleSelectPreset6 = createKeymapHandler(
+      KEYMAP.SELECT_PRESET_6,
+      () => {
+        if (requestActions.presets[5]) {
+          applyPresetToForm(requestActions.presets[5]);
+        }
       }
-    });
-    const handleSelectPreset7 = createKeymapHandler(KEYMAP.SELECT_PRESET_7, () => {
-      if (requestActions.presets[6]) {
-        applyPresetToForm(requestActions.presets[6]);
+    );
+    const handleSelectPreset7 = createKeymapHandler(
+      KEYMAP.SELECT_PRESET_7,
+      () => {
+        if (requestActions.presets[6]) {
+          applyPresetToForm(requestActions.presets[6]);
+        }
       }
-    });
-    const handleSelectPreset8 = createKeymapHandler(KEYMAP.SELECT_PRESET_8, () => {
-      if (requestActions.presets[7]) {
-        applyPresetToForm(requestActions.presets[7]);
+    );
+    const handleSelectPreset8 = createKeymapHandler(
+      KEYMAP.SELECT_PRESET_8,
+      () => {
+        if (requestActions.presets[7]) {
+          applyPresetToForm(requestActions.presets[7]);
+        }
       }
-    });
-    const handleSelectPreset9 = createKeymapHandler(KEYMAP.SELECT_PRESET_9, () => {
-      if (requestActions.presets[8]) {
-        applyPresetToForm(requestActions.presets[8]);
+    );
+    const handleSelectPreset9 = createKeymapHandler(
+      KEYMAP.SELECT_PRESET_9,
+      () => {
+        if (requestActions.presets[8]) {
+          applyPresetToForm(requestActions.presets[8]);
+        }
       }
-    });
+    );
 
     document.addEventListener('keydown', handleSaveRequest);
     document.addEventListener('keydown', handleSendRequest);
@@ -170,7 +208,11 @@ export function ApiRequestBuilder() {
     }
   };
 
-  const handleSaveDialogSave = async (data: { name: string; collectionId: number; folderId?: number }) => {
+  const handleSaveDialogSave = async (data: {
+    name: string;
+    collectionId: number;
+    folderId?: number;
+  }) => {
     try {
       const result = await window.electronAPI.request.save({
         name: data.name,
@@ -184,7 +226,7 @@ export function ApiRequestBuilder() {
         folderId: data.folderId,
         isFavorite: requestState.requestData.isFavorite,
       });
-      
+
       // Update the request data with the new ID and collection info
       requestState.setRequestData({
         ...requestState.requestData,
@@ -193,13 +235,13 @@ export function ApiRequestBuilder() {
         collectionId: data.collectionId,
         folderId: data.folderId,
       });
-      
+
       requestState.setIsSaved(true);
       requestState.setLastSavedAt(new Date());
-      
+
       // Trigger sidebar refresh
       triggerSidebarRefresh();
-      
+
       // Update the selected request in store
       if (selectedRequest) {
         setSelectedRequest({
@@ -286,8 +328,8 @@ export function ApiRequestBuilder() {
   };
 
   return (
-    <div 
-      className="flex flex-col h-full bg-background"
+    <div
+      className="flex flex-col flex-1 min-h-0 overflow-hidden bg-background"
       onFocus={() => setFocusedContext('editor')}
       onBlur={() => setFocusedContext(null)}
     >
@@ -310,9 +352,9 @@ export function ApiRequestBuilder() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Left Panel - Request Configuration */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {/* Tab Navigation */}
           <RequestTabs
             activeTab={requestState.activeTab}
@@ -322,8 +364,8 @@ export function ApiRequestBuilder() {
             response={requestActions.response}
           />
 
-          {/* Tab Content */}
-          <div className="flex-1 p-3 bg-background/50 overflow-hidden">
+          {/* Tab Content - Fills remaining space */}
+          <div className="flex-1 min-h-0 p-3 bg-background/50 overflow-hidden flex flex-col">
             {renderTabContent()}
           </div>
         </div>
@@ -338,8 +380,8 @@ export function ApiRequestBuilder() {
           newPresetDescription={requestActions.newPresetDescription}
           onToggleExpanded={requestActions.setIsPresetsExpanded}
           onCreatePreset={requestActions.createPreset}
-          onApplyPreset={(preset) => {
-            requestActions.applyPreset(preset, (data) => {
+          onApplyPreset={preset => {
+            requestActions.applyPreset(preset, data => {
               requestState.setRequestData({
                 ...requestState.requestData,
                 method: data.method,
@@ -357,7 +399,7 @@ export function ApiRequestBuilder() {
           onSetNewPresetDescription={requestActions.setNewPresetDescription}
         />
       </div>
-      
+
       {/* Save Request Dialog */}
       <SaveRequestDialog
         open={requestActions.showSaveRequestDialog}

@@ -1,12 +1,12 @@
 /**
  * ResponseHeadersView - Display response headers, status, and time
- * 
+ *
  * Shows:
  * - Status code and status text (with color-coded badge)
  * - Response time
  * - Response headers as key-value list
  * - Optional Copy/Download action buttons
- * 
+ *
  * @example
  * ```tsx
  * <ResponseHeadersView
@@ -18,11 +18,11 @@
  * ```
  */
 
-import React from 'react';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
 import { Clock, Copy, Download } from 'lucide-react';
+import React from 'react';
 import { ResponseData } from '../../types/entities';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 
 export interface ResponseHeadersViewProps {
   response: ResponseData | null;
@@ -39,64 +39,88 @@ export const ResponseHeadersView: React.FC<ResponseHeadersViewProps> = ({
 }) => {
   if (!response) {
     return (
-      <div className="flex items-center justify-center h-full text-muted-foreground">
-        <p>No response data available. Send a request to see response headers.</p>
+      <div className="flex items-center justify-center flex-1 min-h-0 text-muted-foreground">
+        <p>
+          No response data available. Send a request to see response headers.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 h-full overflow-auto">
-      {/* Header with Status and Actions */}
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      {/* Header with Status and Actions - Fixed height */}
+      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
         <div className="flex items-center gap-4">
-          <h3 className="text-lg font-semibold">Response Headers</h3>
+          <h3 className="text-sm font-semibold">Response Headers</h3>
           <div className="flex items-center gap-2">
-            <Badge 
-              variant={response.status >= 200 && response.status < 300 ? 'default' : 'destructive'}
+            <Badge
+              variant={
+                response.status >= 200 && response.status < 300
+                  ? 'default'
+                  : 'destructive'
+              }
+              className="text-xs"
             >
               {response.status} {response.statusText}
             </Badge>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
               {response.time}ms
             </div>
           </div>
         </div>
-        
+
         {showActions && (onCopy || onDownload) && (
           <div className="flex gap-2">
             {onCopy && (
-              <Button variant="outline" size="sm" onClick={onCopy}>
-                <Copy className="h-4 w-4 mr-2" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onCopy}
+                className="h-7 text-xs"
+              >
+                <Copy className="h-3 w-3 mr-1.5" />
                 Copy
               </Button>
             )}
             {onDownload && (
-              <Button variant="outline" size="sm" onClick={onDownload}>
-                <Download className="h-4 w-4 mr-2" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onDownload}
+                className="h-7 text-xs"
+              >
+                <Download className="h-3 w-3 mr-1.5" />
                 Download
               </Button>
             )}
           </div>
         )}
       </div>
-      
-      {/* Headers List */}
-      <div className="bg-muted/50 rounded-md p-3 font-mono text-xs overflow-x-auto">
-        {Object.entries(response.headers).length > 0 ? (
-          Object.entries(response.headers).map(([key, value]) => (
-            <div key={key} className="flex py-1 border-b border-border/50 last:border-0">
-              <span className="text-muted-foreground w-48 flex-shrink-0 font-semibold">{key}:</span>
-              <span className="ml-2 break-all">{value}</span>
+
+      {/* Headers List - Fills remaining space and scrolls */}
+      <div className="flex-1 min-h-0 overflow-auto p-4">
+        <div className="bg-muted/50 rounded-md p-3 font-mono text-xs">
+          {Object.entries(response.headers).length > 0 ? (
+            Object.entries(response.headers).map(([key, value]) => (
+              <div
+                key={key}
+                className="flex py-1.5 border-b border-border/50 last:border-0"
+              >
+                <span className="text-muted-foreground w-44 flex-shrink-0 font-semibold truncate">
+                  {key}:
+                </span>
+                <span className="ml-2 break-all flex-1">{value}</span>
+              </div>
+            ))
+          ) : (
+            <div className="text-muted-foreground italic">
+              No headers received
             </div>
-          ))
-        ) : (
-          <div className="text-muted-foreground italic">No headers received</div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
 };
-
-

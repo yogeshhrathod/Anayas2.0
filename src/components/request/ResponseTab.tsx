@@ -1,18 +1,18 @@
 /**
  * ResponseTab - Main Response tab container with sub-tab navigation
- * 
+ *
  * Manages:
  * - Sub-tab navigation (Headers, Body, Both)
  * - Rendering appropriate sub-view based on active sub-tab
  * - Empty state handling
  * - Performance tracking (memory + load time)
- * 
+ *
  * Performance:
  * - Memory: <20MB for Response rendering
  * - Load Time: <100ms
  * - Lazy rendering: Components only mount when Response tab active
  * - Cleanup: Full cleanup when switching away
- * 
+ *
  * @example
  * ```tsx
  * <ResponseTab
@@ -28,11 +28,11 @@
  */
 
 import { useEffect } from 'react';
-import { ResponseHeadersView } from './ResponseHeadersView';
+import { cn } from '../../lib/utils';
+import { ResponseData } from '../../types/entities';
 import { ResponseBodyView } from './ResponseBodyView';
 import { ResponseBothView } from './ResponseBothView';
-import { ResponseData } from '../../types/entities';
-import { cn } from '../../lib/utils';
+import { ResponseHeadersView } from './ResponseHeadersView';
 
 export interface ResponseTabProps {
   response: ResponseData | null;
@@ -56,14 +56,22 @@ export function ResponseTab({
   // Performance tracking: Memory usage
   useEffect(() => {
     const memoryBefore = (performance as any).memory?.usedJSHeapSize || 0;
-    
+
     return () => {
       const memoryAfter = (performance as any).memory?.usedJSHeapSize || 0;
       const memoryDelta = (memoryAfter - memoryBefore) / 1024 / 1024;
-      console.log('[Performance] Response tab memory:', memoryDelta.toFixed(2), 'MB');
-      
+      console.log(
+        '[Performance] Response tab memory:',
+        memoryDelta.toFixed(2),
+        'MB'
+      );
+
       if (memoryDelta > 20) {
-        console.warn('[Performance] Response tab exceeded memory budget:', memoryDelta, 'MB');
+        console.warn(
+          '[Performance] Response tab exceeded memory budget:',
+          memoryDelta,
+          'MB'
+        );
       }
     };
   }, []);
@@ -71,14 +79,22 @@ export function ResponseTab({
   // Performance tracking: Load time
   useEffect(() => {
     const startTime = performance.now();
-    
+
     // After first render
     requestAnimationFrame(() => {
       const loadTime = performance.now() - startTime;
-      console.log('[Performance] Response tab load time:', loadTime.toFixed(2), 'ms');
-      
+      console.log(
+        '[Performance] Response tab load time:',
+        loadTime.toFixed(2),
+        'ms'
+      );
+
       if (loadTime > 100) {
-        console.warn('[Performance] Response tab load time exceeded budget:', loadTime, 'ms');
+        console.warn(
+          '[Performance] Response tab load time exceeded budget:',
+          loadTime,
+          'ms'
+        );
       }
     });
   }, []);
@@ -120,9 +136,9 @@ export function ResponseTab({
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Sub-tab Navigation */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      {/* Sub-tab Navigation - Fixed height */}
+      <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border/50 bg-muted/20">
         <button
           onClick={() => setResponseSubTab('headers')}
           className={cn(
@@ -158,11 +174,10 @@ export function ResponseTab({
         </button>
       </div>
 
-      {/* Sub-tab Content */}
-      <div className="flex-1 overflow-hidden min-h-0">
+      {/* Sub-tab Content - Fills remaining space */}
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
         {renderSubTabContent()}
       </div>
     </div>
   );
 }
-
