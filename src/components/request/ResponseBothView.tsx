@@ -27,6 +27,14 @@
 
 import { Clock, Copy, Download } from 'lucide-react';
 import React from 'react';
+import {
+  formatResponseTime,
+  getHeaderEntries,
+  getStatusDisplay,
+  getStatusVariant,
+  hasHeaders,
+  safeStringifyBody,
+} from '../../lib/response-utils';
 import { ResponseData } from '../../types/entities';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -58,10 +66,11 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
     );
   }
 
-  // Format response body for display
-  const formattedBody = response.data
-    ? JSON.stringify(response.data, null, 2)
-    : '';
+  // Format response body for display (safe for undefined/null)
+  const formattedBody = safeStringifyBody(response.data);
+
+  // Get header entries safely
+  const headerEntries = getHeaderEntries(response.headers);
 
   // Left Panel: Headers - Full height scrollable
   const headersPanel = (
@@ -71,8 +80,8 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
       </div>
       <div className="flex-1 min-h-0 overflow-auto p-4">
         <div className="bg-muted/50 rounded-md p-3 font-mono text-xs">
-          {Object.entries(response.headers).length > 0 ? (
-            Object.entries(response.headers).map(([key, value]) => (
+          {hasHeaders(response.headers) ? (
+            headerEntries.map(([key, value]) => (
               <div
                 key={key}
                 className="flex py-1.5 border-b border-border/50 last:border-0"
@@ -80,7 +89,9 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
                 <span className="text-muted-foreground w-36 flex-shrink-0 font-semibold truncate">
                   {key}:
                 </span>
-                <span className="ml-2 break-all text-xs flex-1">{value}</span>
+                <span className="ml-2 break-all text-xs flex-1">
+                  {value ?? ''}
+                </span>
               </div>
             ))
           ) : (
@@ -126,18 +137,15 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
           <h3 className="text-sm font-semibold">Response</h3>
           <div className="flex items-center gap-2">
             <Badge
-              variant={
-                response.status >= 200 && response.status < 300
-                  ? 'default'
-                  : 'destructive'
-              }
+              variant={getStatusVariant(response.status)}
               className="text-xs"
             >
-              {response.status} {response.statusText}
+              {getStatusDisplay(response.status)}{' '}
+              {response.statusText ?? 'Unknown'}
             </Badge>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
-              {response.time}ms
+              {formatResponseTime(response.time)}
             </div>
           </div>
         </div>

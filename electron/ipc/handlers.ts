@@ -466,6 +466,7 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('request:send', async (_, options) => {
+    const startTime = Date.now();
     try {
       const db = getDatabase();
 
@@ -605,7 +606,20 @@ export function registerIpcHandlers() {
         headers: result.headers,
       };
     } catch (error: any) {
-      return { success: false, error: error.message };
+      const responseTime = Date.now() - startTime;
+
+      // Return a proper ResponseData object even for errors
+      // Use status 0 to indicate network/request errors (not HTTP errors)
+      return {
+        success: false,
+        error: error.message,
+        // Return ResponseData structure for error cases
+        data: { error: error.message },
+        responseTime: responseTime,
+        status: 0, // 0 indicates network/request error (not an HTTP status)
+        statusText: error.message || 'Request Failed',
+        headers: {},
+      };
     }
   });
 

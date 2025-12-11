@@ -25,6 +25,12 @@
 
 import { Clock, Copy, Download } from 'lucide-react';
 import React from 'react';
+import {
+  formatResponseTime,
+  getStatusDisplay,
+  getStatusVariant,
+  safeStringifyBody,
+} from '../../lib/response-utils';
 import { ResponseData } from '../../types/entities';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -51,10 +57,8 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
     );
   }
 
-  // Format response body for display
-  const formattedBody = response.data
-    ? JSON.stringify(response.data, null, 2)
-    : '';
+  // Format response body for display (safe for undefined/null)
+  const formattedBody = safeStringifyBody(response.data);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -64,18 +68,15 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
           <h3 className="text-sm font-semibold">Response Body</h3>
           <div className="flex items-center gap-2">
             <Badge
-              variant={
-                response.status >= 200 && response.status < 300
-                  ? 'default'
-                  : 'destructive'
-              }
+              variant={getStatusVariant(response.status)}
               className="text-xs"
             >
-              {response.status} {response.statusText}
+              {getStatusDisplay(response.status)}{' '}
+              {response.statusText ?? 'Unknown'}
             </Badge>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
-              {response.time}ms
+              {formatResponseTime(response.time)}
             </div>
           </div>
         </div>
