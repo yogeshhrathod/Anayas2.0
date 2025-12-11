@@ -1,0 +1,191 @@
+{
+  "feature": "014-postman-collection-import",
+  "version": "1.0.0",
+  "description": "IPC API specification for Postman Collection Import feature",
+
+  "ipc_handlers": {
+    "import:detect-format": {
+      "description": "Detect the format of an import file content",
+      "input": {
+        "content": {
+          "type": "string",
+          "required": true,
+          "description": "Raw file content to analyze"
+        }
+      },
+      "output": {
+        "format": {
+          "type": "string",
+          "nullable": true,
+          "description": "Detected format name (e.g., 'postman-v2', 'postman-v1') or null if unknown"
+        },
+        "version": {
+          "type": "string",
+          "nullable": true,
+          "description": "Format version if applicable (e.g., '2.1.0')"
+        },
+        "isValid": {
+          "type": "boolean",
+          "description": "Whether the content is valid for the detected format"
+        },
+        "confidence": {
+          "type": "number",
+          "description": "Confidence score 0-1 for format detection"
+        }
+      },
+      "errors": [
+        {
+          "code": "INVALID_JSON",
+          "message": "File content is not valid JSON"
+        },
+        {
+          "code": "UNKNOWN_FORMAT",
+          "message": "Unable to detect import format"
+        }
+      ]
+    },
+
+    "import:parse": {
+      "description": "Parse file content into normalized ImportResult",
+      "input": {
+        "content": {
+          "type": "string",
+          "required": true,
+          "description": "Raw file content to parse"
+        },
+        "format": {
+          "type": "string",
+          "required": false,
+          "description": "Force specific format parser (auto-detect if not provided)"
+        }
+      },
+      "output": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether parsing succeeded"
+        },
+        "result": {
+          "type": "ImportResult",
+          "nullable": true,
+          "description": "Parsed collection data (see data-model.md)"
+        },
+        "error": {
+          "type": "string",
+          "nullable": true,
+          "description": "Error message if parsing failed"
+        }
+      },
+      "errors": [
+        {
+          "code": "PARSE_ERROR",
+          "message": "Failed to parse collection"
+        },
+        {
+          "code": "UNSUPPORTED_FORMAT",
+          "message": "Format is not supported"
+        },
+        {
+          "code": "INVALID_STRUCTURE",
+          "message": "Collection structure is invalid"
+        }
+      ]
+    },
+
+    "import:execute": {
+      "description": "Execute import by saving parsed result to database",
+      "input": {
+        "result": {
+          "type": "ImportResult",
+          "required": true,
+          "description": "Parsed collection data to import"
+        },
+        "options": {
+          "type": "ImportOptions",
+          "required": true,
+          "description": "Import options (see data-model.md)"
+        }
+      },
+      "output": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether import succeeded"
+        },
+        "collectionId": {
+          "type": "number",
+          "description": "ID of created collection"
+        },
+        "folderCount": {
+          "type": "number",
+          "description": "Number of folders created"
+        },
+        "requestCount": {
+          "type": "number",
+          "description": "Number of requests created"
+        },
+        "environmentCount": {
+          "type": "number",
+          "description": "Number of environments created"
+        },
+        "warnings": {
+          "type": "string[]",
+          "description": "Warnings during import"
+        },
+        "error": {
+          "type": "string",
+          "nullable": true,
+          "description": "Error message if import failed"
+        }
+      },
+      "errors": [
+        {
+          "code": "DATABASE_ERROR",
+          "message": "Failed to save to database"
+        },
+        {
+          "code": "DUPLICATE_COLLECTION",
+          "message": "Collection with same name already exists"
+        }
+      ]
+    },
+
+    "import:supported-formats": {
+      "description": "Get list of supported import formats",
+      "input": {},
+      "output": {
+        "formats": {
+          "type": "FormatInfo[]",
+          "description": "Array of supported format information"
+        }
+      }
+    }
+  },
+
+  "preload_api": {
+    "namespace": "import",
+    "methods": {
+      "detectFormat": {
+        "signature": "(content: string) => Promise<FormatDetectionResult>",
+        "ipc_handler": "import:detect-format"
+      },
+      "parse": {
+        "signature": "(content: string, format?: string) => Promise<ParseResult>",
+        "ipc_handler": "import:parse"
+      },
+      "execute": {
+        "signature": "(result: ImportResult, options: ImportOptions) => Promise<ImportExecutionResult>",
+        "ipc_handler": "import:execute"
+      },
+      "getSupportedFormats": {
+        "signature": "() => Promise<FormatInfo[]>",
+        "ipc_handler": "import:supported-formats"
+      }
+    }
+  },
+
+  "events": {
+    "collections:updated": {
+      "description": "Broadcast after successful import to refresh UI",
+      "payload": null
+    }
+  }
+}
