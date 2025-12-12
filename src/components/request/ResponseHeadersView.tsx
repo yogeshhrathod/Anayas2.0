@@ -18,10 +18,11 @@
  * ```
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Clock, Copy, Download } from 'lucide-react';
+import { Clock, Copy, Download, Check } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { ResponseData } from '../../types/entities';
 
 export interface ResponseHeadersViewProps {
@@ -37,6 +38,18 @@ export const ResponseHeadersView: React.FC<ResponseHeadersViewProps> = ({
   onDownload,
   showActions = true,
 }) => {
+  const [copiedHeaderKey, setCopiedHeaderKey] = useState<string | null>(null);
+
+  const handleCopyHeader = async (key: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(`${key}: ${value}`);
+      setCopiedHeaderKey(key);
+      setTimeout(() => setCopiedHeaderKey(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy header:', err);
+    }
+  };
+
   if (!response) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -46,56 +59,82 @@ export const ResponseHeadersView: React.FC<ResponseHeadersViewProps> = ({
   }
 
   return (
-    <div className="p-4 h-full overflow-auto">
-      {/* Header with Status and Actions */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
-          <h3 className="text-lg font-semibold">Response Headers</h3>
-          <div className="flex items-center gap-2">
-            <Badge 
-              variant={response.status >= 200 && response.status < 300 ? 'default' : 'destructive'}
-            >
-              {response.status} {response.statusText}
-            </Badge>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              {response.time}ms
+    <TooltipProvider>
+      <div className="p-4 h-full overflow-auto">
+        {/* Header with Status and Actions */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <h3 className="text-lg font-semibold">Response Headers</h3>
+            <div className="flex items-center gap-2">
+              <Badge 
+                variant={response.status >= 200 && response.status < 300 ? 'default' : 'destructive'}
+              >
+                {response.status} {response.statusText}
+              </Badge>
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                {response.time}ms
+              </div>
             </div>
           </div>
+          
+          {showActions && (onCopy || onDownload) && (
+            <div className="flex gap-2">
+              {onCopy && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" onClick={onCopy} className="px-2">
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Copy all headers</TooltipContent>
+                </Tooltip>
+              )}
+              {onDownload && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" onClick={onDownload} className="px-2">
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Download response</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          )}
         </div>
         
-        {showActions && (onCopy || onDownload) && (
-          <div className="flex gap-2">
-            {onCopy && (
-              <Button variant="outline" size="sm" onClick={onCopy}>
-                <Copy className="h-4 w-4 mr-2" />
-                Copy
-              </Button>
-            )}
-            {onDownload && (
-              <Button variant="outline" size="sm" onClick={onDownload}>
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
-            )}
-          </div>
-        )}
+        {/* Headers List */}
+        <div className="bg-muted/50 rounded-md p-3 font-mono text-xs overflow-x-auto">
+          {Object.entries(response.headers).length > 0 ? (
+            Object.entries(response.headers).map(([key, value]) => (
+              <div key={key} className="flex items-center gap-2 py-1 border-b border-border/50 last:border-0 group">
+                <span className="text-muted-foreground w-48 flex-shrink-0 font-semibold">{key}:</span>
+                <span className="ml-2 break-all flex-1">{value}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => handleCopyHeader(key, value)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-muted rounded"
+                      aria-label={`Copy ${key} header`}
+                    >
+                      {copiedHeaderKey === key ? (
+                        <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Copy header</TooltipContent>
+                </Tooltip>
+              </div>
+            ))
+          ) : (
+            <div className="text-muted-foreground italic">No headers received</div>
+          )}
+        </div>
       </div>
-      
-      {/* Headers List */}
-      <div className="bg-muted/50 rounded-md p-3 font-mono text-xs overflow-x-auto">
-        {Object.entries(response.headers).length > 0 ? (
-          Object.entries(response.headers).map(([key, value]) => (
-            <div key={key} className="flex py-1 border-b border-border/50 last:border-0">
-              <span className="text-muted-foreground w-48 flex-shrink-0 font-semibold">{key}:</span>
-              <span className="ml-2 break-all">{value}</span>
-            </div>
-          ))
-        ) : (
-          <div className="text-muted-foreground italic">No headers received</div>
-        )}
-      </div>
-    </div>
+    </TooltipProvider>
   );
 };
 
