@@ -51,6 +51,7 @@ Successfully converted the ResponsePanel from a bottom-fixed panel to a dedicate
 ### Technical Implementation
 
 #### New Files Created
+
 ```
 src/components/request/ResponseTab.tsx              # Main Response tab container
 src/components/request/ResponseHeadersView.tsx      # Headers-only view
@@ -60,6 +61,7 @@ src/components/ui/resizable-split-view.tsx          # Reusable split view compon
 ```
 
 #### Modified Files
+
 ```
 src/components/ApiRequestBuilder.tsx                # Integrated Response tab
 src/components/request/RequestTabs.tsx              # Added Response tab button
@@ -76,6 +78,7 @@ src/components/collection/UnsavedRequestsSection.tsx # Include lastResponse
 ```
 
 #### Deleted Files
+
 ```
 src/components/request/ResponsePanel.tsx            # Replaced by ResponseTab
 ```
@@ -83,15 +86,18 @@ src/components/request/ResponsePanel.tsx            # Replaced by ResponseTab
 ## 🎯 Key Achievements
 
 ### 1. Monaco Editor Resize Issue - FIXED ✅
+
 **Problem**: Monaco editor wasn't resizing when window width changed.
 
-**Solution**: 
+**Solution**:
+
 - Implemented `ResizeObserver` in `monaco-editor.tsx`
 - Observes editor container and calls `editor.layout()` on size changes
 - Proper cleanup with `observer.disconnect()` in useEffect
 - Works in all scenarios: window resize, split view drag, container changes
 
 **Code**:
+
 ```typescript
 // src/components/ui/monaco-editor.tsx
 useEffect(() => {
@@ -114,9 +120,11 @@ useEffect(() => {
 ```
 
 ### 2. Response Persistence Across Requests ✅
+
 **Problem**: Responses were lost when switching between requests.
 
 **Solution**:
+
 - Added `lastResponse?: ResponseData` to `Request` interface
 - Modified `request:save` IPC handler to save `lastResponse`
 - Added `useEffect` in `useRequestActions` to load saved response
@@ -125,22 +133,27 @@ useEffect(() => {
 **Result**: Each request remembers its last response, displayed when selected.
 
 ### 3. User Preference Persistence ✅
+
 **Problem**: Users had to re-select their preferred sub-tab every time.
 
 **Solution**:
+
 - Added `defaultResponseSubTab` setting to database
 - Load preference on mount in `useRequestState`
 - Save preference when user changes sub-tab
 - Global preference applies to all responses
 
 ### 4. Custom Split View Component ✅
+
 **Benefits**:
+
 - **48KB bundle savings** (2KB custom vs 50KB library)
 - **Full control** over behavior and styling
 - **No dependencies** - pure React + CSS Grid
 - **Reusable** for future features
 
 ### 5. Validation Messages Fix ✅
+
 **Problem**: "Valid JSON" alerts appeared in read-only response views.
 
 **Solution**: Made alerts conditional on `validateJson` prop - response views pass `validateJson={false}`.
@@ -148,24 +161,51 @@ useEffect(() => {
 ## 🐛 Bug Fixes Applied
 
 ### 1. Monaco Editor 0-Height Issue
+
 **Problem**: Monaco editor rendered with 0 height, making it invisible.
 
-**Fix**: 
+**Fix**:
+
 - Used explicit pixel heights: 500px (BodyView), 400px (BothView)
 - Added `min-h-0` to flex containers
 - Added `overflow-hidden` to tab content wrapper
 - Proper flexbox layout with `h-full` on parent containers
 
+### 1a. Monaco Editor Height Propagation Fix (2025-12-11)
+
+**Problem**: Monaco editor in Response "Both" view was not filling available space despite having height.
+
+**Root Cause**: Missing `flex flex-col` on Monaco editor wrapper containers, breaking the flex chain. `flex-1` only works when the direct parent is a flex container.
+
+**Fix**:
+
+- Added `flex flex-col` to Monaco wrapper in `ResponseBothView.tsx`
+- Added `flex flex-col` to Monaco wrapper in `ResponseBodyView.tsx`
+- Added `flex flex-col` to sub-tab content container in `ResponseTab.tsx`
+- Ensured complete flex chain: parent → wrapper → Monaco editor
+
+**Pattern Applied**:
+
+```tsx
+// Monaco wrapper must be flex container
+<div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+  <MonacoEditor height="100%" />
+</div>
+```
+
 ### 2. Response Not Changing on Request Switch
+
 **Problem**: Selecting a different request didn't update the response.
 
 **Fix**: Included `lastResponse` field in all places where `setSelectedRequest` is called:
+
 - `src/App.tsx` - History request selection
 - `src/components/GlobalSearch.tsx` - Search results
 - `src/components/CollectionHierarchy.tsx` - New requests
 - `src/components/collection/UnsavedRequestsSection.tsx` - Unsaved requests
 
 ### 3. Validation Messages in Response Body
+
 **Problem**: Read-only response body showed "Valid JSON" messages.
 
 **Fix**: Made validation alerts conditional on `validateJson` prop.
@@ -173,28 +213,32 @@ useEffect(() => {
 ## 📊 Performance Metrics
 
 ### Memory (PRIMARY) ✅
+
 - **Target**: <20MB for Response rendering
 - **Achieved**: ✅ Within budget
-- **Strategy**: 
+- **Strategy**:
   - Lazy rendering (components only mount when tab active)
   - Component unmounting (cleanup when switching tabs)
   - Monaco editor disposal
   - ResizeObserver cleanup
 
 ### Load Time (PRIMARY) ✅
+
 - **Target**: <100ms to render Response tab
 - **Achieved**: ✅ <100ms
-- **Strategy**: 
+- **Strategy**:
   - No async loading (components in main bundle)
   - Lightweight components (~10KB total)
   - Conditional rendering
 
 ### Bundle Size (INFORMATIONAL) ✅
+
 - **Addition**: ~10KB (5 new components)
 - **Savings**: 48KB (custom split view vs library)
 - **Net**: Minimal impact on bundle size
 
 ### Performance Optimizations
+
 1. **Lazy Rendering**: Response components only render when Response tab is active
 2. **Conditional Mounting**: Sub-views mount only when their sub-tab is selected
 3. **Memory Cleanup**: All observers and editors properly disposed
@@ -204,6 +248,7 @@ useEffect(() => {
 ## 🧪 Testing Status
 
 ### Functional Testing ✅
+
 - [x] Response tab appears as 5th tab
 - [x] Sub-tabs (Headers/Body/Both) all work
 - [x] Headers view shows correct data
@@ -218,12 +263,14 @@ useEffect(() => {
 - [x] Sub-tab preference is remembered
 
 ### Regression Testing ✅
+
 - [x] Other tabs still work (Params, Auth, Headers, Body)
 - [x] Sending requests still works
 - [x] Response data populates correctly
 - [x] Copy/Download still work
 
 ### Performance Testing ✅
+
 - [x] Memory usage acceptable (<20MB)
 - [x] Load time <100ms
 - [x] No memory leaks observed
@@ -231,6 +278,7 @@ useEffect(() => {
 - [x] ResizeObserver cleanup works
 
 ### Accessibility Testing ✅
+
 - [x] Keyboard navigation works
 - [x] Focus management works
 - [x] Screen reader support
@@ -260,28 +308,36 @@ useEffect(() => {
 ## 🏗️ Architecture Decisions
 
 ### 1. No Code Splitting for Response Components
-**Rationale**: 
+
+**Rationale**:
+
 - Components are lightweight (~10KB)
 - Response viewing is core functionality
 - Instant render better than async import delay
 - Lazy rendering provides memory benefits without code splitting
 
 ### 2. Custom Split View vs Library
+
 **Rationale**:
+
 - Simple use case doesn't justify 50KB library
 - Custom CSS Grid implementation is 2KB
 - Full control over performance and styling
 - 48KB bundle savings
 
 ### 3. ResizeObserver vs Window Resize Listener
+
 **Rationale**:
+
 - ResizeObserver is browser-native, efficient
 - Only fires when editor container actually resizes
 - Easy cleanup with `observer.disconnect()`
 - Modern web API best practice
 
 ### 4. Session-Only Split Ratio Persistence
+
 **Rationale**:
+
 - Split ratio is minor UI preference
 - Reduces unnecessary DB writes
 - Ratio persists during session (good enough UX)
@@ -321,13 +377,29 @@ All documentation has been updated and marked as completed:
 
 1. **Monaco Editor Sizing**: Monaco requires explicit `layout()` calls - CSS alone won't trigger resize. ResizeObserver is the modern, efficient solution.
 
-2. **Flexbox Layout**: When using Monaco in flex containers, parent containers need `min-h-0` to allow items to shrink below their content size.
+2. **Flexbox Layout Chain**: When using Monaco in flex containers, **every parent in the chain must be a flex container**:
+   - Parent container: `flex flex-col flex-1 min-h-0 overflow-hidden`
+   - Monaco wrapper: `flex-1 min-h-0 overflow-hidden flex flex-col` (critical: must include `flex flex-col`)
+   - Monaco editor: `height="100%"` with `automaticLayout={true}`
+   - **Key insight**: `flex-1` only works when the direct parent is `display: flex`. Missing `flex flex-col` on any parent breaks the chain.
 
-3. **Fixed Heights**: For Monaco editor in complex layouts, explicit pixel heights (500px, 400px) work better than percentage heights.
+3. **Avoid `h-full` in Flex Containers**: Use `flex-1 min-h-0` instead of `h-full` when the parent is a flex container. `h-full` requires an explicit height on the parent, while `flex-1` distributes available space.
 
-4. **Response Persistence**: When implementing data persistence, ensure all code paths that set data include the new fields.
+4. **Complete Flex Chain Pattern**:
 
-5. **Custom Components**: Building lightweight custom components (like ResizableSplitView) is often better than importing heavy libraries for simple use cases.
+   ```tsx
+   // ✅ GOOD: Complete flex chain
+   <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+     <div className="flex-shrink-0">Header</div>
+     <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+       <MonacoEditor height="100%" />
+     </div>
+   </div>
+   ```
+
+5. **Response Persistence**: When implementing data persistence, ensure all code paths that set data include the new fields.
+
+6. **Custom Components**: Building lightweight custom components (like ResizableSplitView) is often better than importing heavy libraries for simple use cases.
 
 ### Development Process
 
@@ -396,7 +468,7 @@ The Response Tab Redesign feature is fully implemented, tested, and documented. 
 ✅ Response persistence across requests  
 ✅ User preferences saved  
 ✅ Performance targets met  
-✅ No regressions introduced  
+✅ No regressions introduced
 
 ---
 
@@ -404,4 +476,3 @@ The Response Tab Redesign feature is fully implemented, tested, and documented. 
 **Implementation Time**: ~8 hours  
 **Lines of Code**: ~1500 LOC (5 new components + modifications)  
 **Bundle Impact**: +10KB (minimal)
-

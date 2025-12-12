@@ -1,12 +1,12 @@
 /**
  * ResponseHeadersView - Display response headers, status, and time
- * 
+ *
  * Shows:
  * - Status code and status text (with color-coded badge)
  * - Response time
  * - Response headers as key-value list
  * - Optional Copy/Download action buttons
- * 
+ *
  * @example
  * ```tsx
  * <ResponseHeadersView
@@ -19,11 +19,18 @@
  */
 
 import React, { useState } from 'react';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
 import { Clock, Copy, Download, Check } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import {
+  formatResponseTime,
+  getHeaderEntries,
+  getStatusDisplay,
+  getStatusVariant,
+  hasHeaders,
+} from '../../lib/response-utils';
 import { ResponseData } from '../../types/entities';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 export interface ResponseHeadersViewProps {
   response: ResponseData | null;
@@ -52,28 +59,32 @@ export const ResponseHeadersView: React.FC<ResponseHeadersViewProps> = ({
 
   if (!response) {
     return (
-      <div className="flex items-center justify-center h-full text-muted-foreground">
-        <p>No response data available. Send a request to see response headers.</p>
+      <div className="flex items-center justify-center flex-1 min-h-0 text-muted-foreground">
+        <p>
+          No response data available. Send a request to see response headers.
+        </p>
       </div>
     );
   }
 
   return (
     <TooltipProvider>
-      <div className="p-4 h-full overflow-auto">
-        {/* Header with Status and Actions */}
-        <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        {/* Header with Status and Actions - Fixed height */}
+        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
           <div className="flex items-center gap-4">
-            <h3 className="text-lg font-semibold">Response Headers</h3>
+            <h3 className="text-sm font-semibold">Response Headers</h3>
             <div className="flex items-center gap-2">
-              <Badge 
-                variant={response.status >= 200 && response.status < 300 ? 'default' : 'destructive'}
+              <Badge
+                variant={getStatusVariant(response.status)}
+                className="text-xs"
               >
-                {response.status} {response.statusText}
+                {getStatusDisplay(response.status)}{' '}
+                {response.statusText ?? 'Unknown'}
               </Badge>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                {response.time}ms
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                {formatResponseTime(response.time)}
               </div>
             </div>
           </div>
@@ -103,39 +114,46 @@ export const ResponseHeadersView: React.FC<ResponseHeadersViewProps> = ({
             </div>
           )}
         </div>
-        
-        {/* Headers List */}
-        <div className="bg-muted/50 rounded-md p-3 font-mono text-xs overflow-x-auto">
-          {Object.entries(response.headers).length > 0 ? (
-            Object.entries(response.headers).map(([key, value]) => (
-              <div key={key} className="flex items-center gap-2 py-1 border-b border-border/50 last:border-0 group">
-                <span className="text-muted-foreground w-48 flex-shrink-0 font-semibold">{key}:</span>
-                <span className="ml-2 break-all flex-1">{value}</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => handleCopyHeader(key, value)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-muted rounded"
-                      aria-label={`Copy ${key} header`}
-                    >
-                      {copiedHeaderKey === key ? (
-                        <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
-                      ) : (
-                        <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                      )}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copy header</TooltipContent>
-                </Tooltip>
+
+        {/* Headers List - Fills remaining space and scrolls */}
+        <div className="flex-1 min-h-0 overflow-auto p-4">
+          <div className="bg-muted/50 rounded-md p-3 font-mono text-xs">
+            {hasHeaders(response.headers) ? (
+              getHeaderEntries(response.headers).map(([key, value]) => (
+                <div
+                  key={key}
+                  className="flex items-center gap-2 py-1.5 border-b border-border/50 last:border-0 group"
+                >
+                  <span className="text-muted-foreground w-44 flex-shrink-0 font-semibold truncate">
+                    {key}:
+                  </span>
+                  <span className="ml-2 break-all flex-1">{value ?? ''}</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => handleCopyHeader(key, value ?? '')}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-muted rounded"
+                        aria-label={`Copy ${key} header`}
+                      >
+                        {copiedHeaderKey === key ? (
+                          <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
+                        ) : (
+                          <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Copy header</TooltipContent>
+                  </Tooltip>
+                </div>
+              ))
+            ) : (
+              <div className="text-muted-foreground italic">
+                No headers received
               </div>
-            ))
-          ) : (
-            <div className="text-muted-foreground italic">No headers received</div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </TooltipProvider>
   );
 };
-
-

@@ -38,6 +38,7 @@ Renderer → window.electronAPI → Preload → IPC → Main Process → Databas
 ```
 
 **Rules:**
+
 - Renderer NEVER accesses Node.js directly
 - All communication through typed `window.electronAPI`
 - IPC handlers validate all inputs
@@ -46,12 +47,14 @@ Renderer → window.electronAPI → Preload → IPC → Main Process → Databas
 ## State Management
 
 ### UI State (Zustand)
+
 - Location: `src/store/useStore.ts`
 - Purpose: Temporary UI state (selected items, UI preferences)
 - **NOT persisted** to database
 - Cleared on app close
 
 ### Persistent Data (JSON Database)
+
 - Location: `electron/database/json-db.ts`
 - Purpose: Collections, requests, environments, history, settings
 - Accessed via IPC handlers
@@ -64,6 +67,7 @@ Renderer → window.electronAPI → Preload → IPC → Main Process → Databas
 ### 1. Lazy Loading Strategy
 
 #### Pages (Route-based)
+
 ```typescript
 // ✅ GOOD: Lazy load pages
 const Homepage = lazy(() => import('./pages/Homepage'));
@@ -77,6 +81,7 @@ const History = lazy(() => import('./pages/History'));
 ```
 
 #### Heavy Components
+
 ```typescript
 // ✅ GOOD: Lazy load heavy components
 const MonacoEditor = lazy(() => import('./components/MonacoEditor'));
@@ -84,6 +89,7 @@ const ResponseViewer = lazy(() => import('./components/ResponseViewer'));
 ```
 
 #### Services
+
 ```typescript
 // ✅ GOOD: Initialize services only when feature is used
 let requestService: RequestService | null = null;
@@ -99,16 +105,19 @@ function getRequestService() {
 ### 2. Code Splitting
 
 #### Route-based Splitting
+
 - Each page is a separate chunk
 - Loaded only when route is accessed
 - Reduces initial bundle size
 
 #### Feature-based Splitting
+
 - Major features are separate chunks
 - Example: Monaco Editor, Theme Editor, Collection Runner
 - Loaded on-demand
 
 #### Vendor Splitting
+
 - Separate vendor chunks for better caching
 - Shared dependencies in vendor bundle
 - Updated less frequently
@@ -116,6 +125,7 @@ function getRequestService() {
 ### 3. Memory Management
 
 #### Cleanup on Unmount
+
 ```typescript
 // ✅ GOOD: Clean up everything
 useEffect(() => {
@@ -129,21 +139,25 @@ useEffect(() => {
 ```
 
 #### Virtual Scrolling
+
 - For large lists (collections, history)
 - Only render visible items
 - Reduces DOM nodes and memory
 
 #### Response Streaming
+
 - For large responses (>1MB)
 - Stream instead of loading all at once
 - Reduces memory spike
 
 #### Worker Threads
+
 - Heavy parsing in background threads
 - JSON parsing, cURL parsing, etc.
 - Doesn't block main thread
 
 #### Debounced Operations
+
 - Auto-save: 500ms debounce
 - Search: 300ms debounce
 - Reduces unnecessary operations
@@ -151,6 +165,7 @@ useEffect(() => {
 ### 4. Performance Monitoring
 
 #### Memory Tracking
+
 ```typescript
 // Track memory usage per feature
 const memoryBefore = performance.memory?.usedJSHeapSize || 0;
@@ -161,6 +176,7 @@ logger.info('Feature memory usage', { feature, memoryDelta });
 ```
 
 #### Load Time Tracking
+
 ```typescript
 // Track feature load time
 const startTime = performance.now();
@@ -170,6 +186,7 @@ logger.info('Feature load time', { feature, loadTime });
 ```
 
 #### Bundle Size Tracking
+
 - Track bundle sizes in build
 - Alert on size increases
 - Set budgets per feature
@@ -177,6 +194,7 @@ logger.info('Feature load time', { feature, loadTime });
 ## Code Patterns
 
 ### IPC Pattern
+
 ```typescript
 // ✅ GOOD: Typed, validated, logged
 export async function handleCreateCollection(
@@ -184,21 +202,22 @@ export async function handleCreateCollection(
   data: CreateCollectionInput
 ): Promise<Collection> {
   logger.info('Creating collection', { name: data.name });
-  
+
   // Validate input
   if (!data.name?.trim()) {
     throw new Error('Collection name is required');
   }
-  
+
   // Database operation
   const collection = await db.createCollection(data);
-  
+
   // Return typed result
   return collection;
 }
 ```
 
 ### Component Pattern
+
 ```typescript
 // ✅ GOOD: Lazy-loaded, memoized, typed
 import { lazy, Suspense, memo } from 'react';
@@ -208,7 +227,7 @@ const HeavyComponent = lazy(() => import('./HeavyComponent'));
 
 export const MyComponent = memo(() => {
   const { data } = useStore();
-  
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <HeavyComponent data={data} />
@@ -218,18 +237,19 @@ export const MyComponent = memo(() => {
 ```
 
 ### Service Pattern
+
 ```typescript
 // ✅ GOOD: Singleton, lazy initialization
 class MyService {
   private static instance: MyService | null = null;
-  
+
   static getInstance(): MyService {
     if (!MyService.instance) {
       MyService.instance = new MyService();
     }
     return MyService.instance;
   }
-  
+
   cleanup() {
     // Clean up resources
     MyService.instance = null;
@@ -240,12 +260,14 @@ class MyService {
 ## Database Pattern
 
 ### JSON Database
+
 - Location: `electron/database/json-db.ts`
 - Lightweight, no heavy dependencies
 - Fast reads/writes
 - Schema migrations in `initDatabase`
 
 ### Data Access
+
 - Always through IPC handlers
 - Never direct database access from renderer
 - Typed interfaces for all data
@@ -253,20 +275,86 @@ class MyService {
 ## UI Patterns
 
 ### shadcn/ui + TailwindCSS
+
 - Use shadcn/ui components
 - TailwindCSS for styling
 - Follow existing component patterns
 - Keep components small and focused
 
 ### Theme System
+
 - VS Code-style theme engine
 - JSON-based configuration
 - Lazy load theme assets
 - Support custom themes
 
+### Flexbox Layout Patterns for Monaco Editor
+
+When using Monaco Editor in flex containers, ensure proper height propagation:
+
+#### ✅ GOOD: Complete Flex Chain
+
+```tsx
+// Parent container must be flex
+<div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+  {/* Header - fixed height */}
+  <div className="flex-shrink-0">Header</div>
+
+  {/* Monaco wrapper - must be flex container */}
+  <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+    <MonacoEditor
+      height="100%"
+      // ... other props
+    />
+  </div>
+</div>
+```
+
+**Key Rules:**
+
+1. **Parent must be flex**: Use `flex flex-col` on parent container
+2. **Use `flex-1 min-h-0`**: Allows Monaco to fill space and shrink below content size
+3. **Monaco wrapper must be flex**: Add `flex flex-col` to Monaco's direct parent
+4. **Avoid `h-full`**: Use `flex-1` instead when parent is flex container
+5. **Use `overflow-hidden`**: Prevents unwanted scrolling
+
+#### ❌ BAD: Missing Flex Chain
+
+```tsx
+// ❌ BAD: Parent is block, flex-1 won't work
+<div className="h-full">
+  <div className="flex-1"> {/* flex-1 doesn't work here */}
+    <MonacoEditor height="100%" />
+  </div>
+</div>
+
+// ❌ BAD: Missing flex on Monaco wrapper
+<div className="flex flex-col">
+  <div className="flex-1"> {/* Missing flex flex-col */}
+    <MonacoEditor height="100%" />
+  </div>
+</div>
+```
+
+#### Common Pattern for Response Views
+
+```tsx
+// ResponseBothView, ResponseBodyView pattern
+<div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+  {/* Fixed header */}
+  <div className="flex-shrink-0">Header</div>
+
+  {/* Content area - flex container */}
+  <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+    <MonacoEditor height="100%" />
+  </div>
+</div>
+```
+
 ## Performance Anti-Patterns
 
 ### ❌ DON'T: Load everything upfront
+
 ```typescript
 // ❌ BAD: All imports at top
 import { HeavyComponent1 } from './HeavyComponent1';
@@ -275,6 +363,7 @@ import { HeavyComponent3 } from './HeavyComponent3';
 ```
 
 ### ❌ DON'T: Forget cleanup
+
 ```typescript
 // ❌ BAD: No cleanup
 useEffect(() => {
@@ -284,6 +373,7 @@ useEffect(() => {
 ```
 
 ### ❌ DON'T: Large bundles
+
 ```typescript
 // ❌ BAD: Importing entire library
 import * as _ from 'lodash';
@@ -292,6 +382,7 @@ import { debounce } from 'lodash';
 ```
 
 ### ❌ DON'T: Block main thread
+
 ```typescript
 // ❌ BAD: Heavy operation on main thread
 const result = parseLargeJSON(data); // Blocks UI
@@ -302,18 +393,20 @@ const result = await parseLargeJSONInWorker(data);
 ## Testing Patterns
 
 ### Performance Tests
+
 - Measure memory usage
 - Measure load times
 - Measure bundle sizes
 - Alert on regressions
 
 ### Unit Tests
+
 - Test utilities and hooks
 - Mock IPC calls
 - Test cleanup functions
 
 ### E2E Tests
+
 - Test user workflows
 - Test performance metrics
 - Test memory cleanup
-

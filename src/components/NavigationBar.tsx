@@ -1,19 +1,50 @@
-import { useState, useEffect } from "react";
-import { Home, FolderPlus, Globe, History as HistoryIcon, Settings as SettingsIcon, ScrollText, Plus, Upload, Terminal, ChevronDown } from "lucide-react";
-import { cn } from "../lib/utils";
-import { useStore } from "../store/useStore";
-import { EnvironmentSelector } from "./EnvironmentSelector";
-import { Request } from "../types/entities";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { getShortcutDisplay, KEYMAP } from "../lib/keymap";
-import { useToastNotifications } from "../hooks/useToastNotifications";
-import { CurlImportDialog } from "./curl/CurlImportDialog";
+import {
+  ChevronDown,
+  FileJson,
+  FolderPlus,
+  Globe,
+  History as HistoryIcon,
+  Home,
+  Plus,
+  ScrollText,
+  Settings as SettingsIcon,
+  Terminal,
+  Upload,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useToastNotifications } from '../hooks/useToastNotifications';
+import { getShortcutDisplay, KEYMAP } from '../lib/keymap';
+import { cn } from '../lib/utils';
+import { useStore } from '../store/useStore';
+import { Request } from '../types/entities';
+import { CurlImportDialog } from './curl/CurlImportDialog';
+import { EnvironmentSelector } from './EnvironmentSelector';
+import { ImportCollectionDialog } from './import';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './ui/tooltip';
 
 export function NavigationBar() {
-  const { currentPage, setCurrentPage, setSelectedRequest, setActiveUnsavedRequestId } = useStore();
+  const {
+    currentPage,
+    setCurrentPage,
+    setSelectedRequest,
+    setActiveUnsavedRequestId,
+    setCollections,
+  } = useStore();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [showCurlImport, setShowCurlImport] = useState(false);
+  const [showPostmanImport, setShowPostmanImport] = useState(false);
   const { showSuccess, showError } = useToastNotifications();
 
   useEffect(() => {
@@ -25,31 +56,31 @@ export function NavigationBar() {
   const isCompact = windowWidth < 960; // Show compact mode on smaller screens
 
   // Primary navigation items (icon + label)
-  const primaryNavItems: Array<{ 
-    id: "home" | "collections" | "environments"; 
-    label: string; 
-    icon: React.ComponentType<{ className?: string }> 
+  const primaryNavItems: Array<{
+    id: 'home' | 'collections' | 'environments';
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
   }> = [
-    { id: "home", label: "Home", icon: Home },
-    { id: "collections", label: "Collections", icon: FolderPlus },
-    { id: "environments", label: "Environments", icon: Globe },
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'collections', label: 'Collections', icon: FolderPlus },
+    { id: 'environments', label: 'Environments', icon: Globe },
   ];
 
   // Secondary navigation items (icon only)
-  const secondaryNavItems: Array<{ 
-    id: "history" | "logs" | "settings"; 
-    label: string; 
-    icon: React.ComponentType<{ className?: string }> 
+  const secondaryNavItems: Array<{
+    id: 'history' | 'logs' | 'settings';
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
   }> = [
-    { id: "history", label: "History", icon: HistoryIcon },
-    { id: "logs", label: "Logs", icon: ScrollText },
-    { id: "settings", label: "Settings", icon: SettingsIcon },
+    { id: 'history', label: 'History', icon: HistoryIcon },
+    { id: 'logs', label: 'Logs', icon: ScrollText },
+    { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ];
 
   const handleNewRequest = () => {
     // Clear active unsaved request ID to create a new one
     setActiveUnsavedRequestId(null);
-    
+
     // Create a new empty request and set it as selected
     const newRequest: Request = {
       name: '',
@@ -63,7 +94,7 @@ export function NavigationBar() {
       folderId: undefined,
       isFavorite: 0,
     };
-    
+
     setSelectedRequest(newRequest);
   };
 
@@ -72,27 +103,29 @@ export function NavigationBar() {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.json';
-      
-      input.onchange = async (e) => {
+
+      input.onchange = async e => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (!file) return;
 
         try {
           const text = await file.text();
           const importedData = JSON.parse(text);
-          
+
           // Handle single request import
           const requestData = importedData.request || importedData;
-          
+
           if (requestData.method && requestData.url) {
             // Clear active unsaved request ID to create a new one
             setActiveUnsavedRequestId(null);
-            
+
             const newRequest: Request = {
               name: requestData.name || 'Imported Request',
               method: requestData.method,
               url: requestData.url || '',
-              headers: requestData.headers || { 'Content-Type': 'application/json' },
+              headers: requestData.headers || {
+                'Content-Type': 'application/json',
+              },
               body: requestData.body || '',
               queryParams: requestData.queryParams || [],
               auth: requestData.auth || { type: 'none' },
@@ -100,17 +133,25 @@ export function NavigationBar() {
               folderId: undefined,
               isFavorite: 0,
             };
-            
+
             setSelectedRequest(newRequest);
-            showSuccess('Request imported', { description: 'Request imported successfully' });
+            showSuccess('Request imported', {
+              description: 'Request imported successfully',
+            });
           } else {
-            showError('Invalid file format', 'Please select a valid request JSON file');
+            showError(
+              'Invalid file format',
+              'Please select a valid request JSON file'
+            );
           }
         } catch (error: any) {
-          showError('Failed to parse file', error.message || 'Invalid JSON format');
+          showError(
+            'Failed to parse file',
+            error.message || 'Invalid JSON format'
+          );
         }
       };
-      
+
       input.click();
     } catch (error: any) {
       showError('Failed to import request', error.message);
@@ -135,13 +176,15 @@ export function NavigationBar() {
       // For home page, load the first request into the request builder
       // Clear active unsaved request ID to create a new one
       setActiveUnsavedRequestId(null);
-      
+
       const importedRequest = requests[0];
       const newRequest: Request = {
         name: importedRequest.name || 'Imported Request',
         method: importedRequest.method,
         url: importedRequest.url || '',
-        headers: importedRequest.headers || { 'Content-Type': 'application/json' },
+        headers: importedRequest.headers || {
+          'Content-Type': 'application/json',
+        },
         body: importedRequest.body || '',
         queryParams: importedRequest.queryParams || [],
         auth: importedRequest.auth || { type: 'none' },
@@ -149,12 +192,13 @@ export function NavigationBar() {
         folderId: undefined,
         isFavorite: 0,
       };
-      
+
       setSelectedRequest(newRequest);
       showSuccess('Request imported', {
-        description: requests.length > 1 
-          ? `Loaded first request (${requests.length} total parsed)`
-          : 'Request loaded into builder',
+        description:
+          requests.length > 1
+            ? `Loaded first request (${requests.length} total parsed)`
+            : 'Request loaded into builder',
       });
     } catch (error: any) {
       console.error('Failed to import cURL request:', error);
@@ -171,8 +215,11 @@ export function NavigationBar() {
       data-testid="primary-navigation"
     >
       {/* Primary Navigation (Left) */}
-      <div className="flex items-center gap-2" style={{ WebkitAppRegion: "no-drag" } as any}>
-        {primaryNavItems.map((item) => {
+      <div
+        className="flex items-center gap-2"
+        style={{ WebkitAppRegion: 'no-drag' } as any}
+      >
+        {primaryNavItems.map(item => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
           return (
@@ -180,12 +227,14 @@ export function NavigationBar() {
               key={item.id}
               onClick={() => setCurrentPage(item.id)}
               className={cn(
-                "h-8 rounded-full transition-all duration-200 text-sm font-medium",
-                "hover:bg-accent/50 hover:scale-[1.02]",
+                'h-8 rounded-full transition-all duration-200 text-sm font-medium',
+                'hover:bg-accent/50 hover:scale-[1.02]',
                 isActive
-                  ? "bg-primary/10 border border-primary/50 text-primary shadow-sm"
-                  : "hover:text-accent-foreground",
-                isCompact ? "w-8 px-0 flex items-center justify-center" : "px-3 flex items-center gap-2"
+                  ? 'bg-primary/10 border border-primary/50 text-primary shadow-sm'
+                  : 'hover:text-accent-foreground',
+                isCompact
+                  ? 'w-8 px-0 flex items-center justify-center'
+                  : 'px-3 flex items-center gap-2'
               )}
               aria-current={isActive ? 'page' : undefined}
               data-testid={`nav-${item.id}`}
@@ -201,7 +250,10 @@ export function NavigationBar() {
       <div className="flex-1" />
 
       {/* Secondary Navigation (Right) */}
-      <div className="flex items-center gap-2" style={{ WebkitAppRegion: "no-drag" } as any}>
+      <div
+        className="flex items-center gap-2"
+        style={{ WebkitAppRegion: 'no-drag' } as any}
+      >
         {/* Action Buttons - Only visible on home page */}
         {currentPage === 'home' && (
           <>
@@ -213,9 +265,9 @@ export function NavigationBar() {
                     <DropdownMenuTrigger asChild>
                       <button
                         className={cn(
-                          "h-8 px-3 flex items-center gap-2 rounded-full transition-all duration-200",
-                          "hover:bg-accent/50 hover:scale-[1.02] bg-blue-500/10 border border-blue-500/50 text-blue-600 dark:text-blue-400 shadow-sm",
-                          isCompact ? "w-8 px-0 justify-center" : ""
+                          'h-8 px-3 flex items-center gap-2 rounded-full transition-all duration-200',
+                          'hover:bg-accent/50 hover:scale-[1.02] bg-blue-500/10 border border-blue-500/50 text-blue-600 dark:text-blue-400 shadow-sm',
+                          isCompact ? 'w-8 px-0 justify-center' : ''
                         )}
                       >
                         <Upload className="h-4 w-4" />
@@ -229,18 +281,25 @@ export function NavigationBar() {
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Import Request ({getShortcutDisplay(KEYMAP.IMPORT_ITEM)})</p>
+                    <p>
+                      Import Request ({getShortcutDisplay(KEYMAP.IMPORT_ITEM)})
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleImportRequest}>
                   <Upload className="h-4 w-4 mr-2" />
-                  Import JSON
+                  Import JSON Request
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleCurlImport}>
                   <Terminal className="h-4 w-4 mr-2" />
                   Import cURL
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setShowPostmanImport(true)}>
+                  <FileJson className="h-4 w-4 mr-2" />
+                  Import Postman Collection
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -252,13 +311,15 @@ export function NavigationBar() {
                   <button
                     onClick={handleNewRequest}
                     className={cn(
-                      "h-8 px-3 flex items-center gap-2 rounded-full transition-all duration-200",
-                      "hover:bg-accent/50 hover:scale-[1.02] bg-primary/10 border border-primary/50 text-primary shadow-sm",
-                      isCompact ? "w-8 px-0 justify-center" : ""
+                      'h-8 px-3 flex items-center gap-2 rounded-full transition-all duration-200',
+                      'hover:bg-accent/50 hover:scale-[1.02] bg-primary/10 border border-primary/50 text-primary shadow-sm',
+                      isCompact ? 'w-8 px-0 justify-center' : ''
                     )}
                   >
                     <Plus className="h-4 w-4" />
-                    {!isCompact && <span className="text-sm font-medium">New Request</span>}
+                    {!isCompact && (
+                      <span className="text-sm font-medium">New Request</span>
+                    )}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -269,7 +330,7 @@ export function NavigationBar() {
           </>
         )}
 
-        {secondaryNavItems.map((item) => {
+        {secondaryNavItems.map(item => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
           return (
@@ -277,11 +338,11 @@ export function NavigationBar() {
               key={item.id}
               onClick={() => setCurrentPage(item.id)}
               className={cn(
-                "h-8 w-8 flex items-center justify-center rounded-full transition-all duration-200",
-                "hover:bg-accent/50 hover:scale-[1.02]",
+                'h-8 w-8 flex items-center justify-center rounded-full transition-all duration-200',
+                'hover:bg-accent/50 hover:scale-[1.02]',
                 isActive
-                  ? "bg-primary/10 border border-primary/50 text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? 'bg-primary/10 border border-primary/50 text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
               title={item.label}
               aria-label={item.label}
@@ -291,7 +352,7 @@ export function NavigationBar() {
             </button>
           );
         })}
-        
+
         {/* Environment Selector */}
         <div className="ml-2">
           <EnvironmentSelector />
@@ -305,7 +366,20 @@ export function NavigationBar() {
         onImport={handleCurlImportComplete}
         requireCollection={false}
       />
+
+      {/* Postman Collection Import Dialog */}
+      <ImportCollectionDialog
+        open={showPostmanImport}
+        onOpenChange={setShowPostmanImport}
+        onSuccess={async () => {
+          // Refresh collections after import
+          const updated = await window.electronAPI.collection.list();
+          setCollections(updated);
+          showSuccess('Collection imported', {
+            description: 'Postman collection imported successfully',
+          });
+        }}
+      />
     </div>
   );
 }
-

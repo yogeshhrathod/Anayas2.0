@@ -1,54 +1,55 @@
-import { ipcMain, dialog, app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import fs from 'fs';
 import {
-  getDatabase,
-  saveDatabase,
-  addEnvironment,
-  updateEnvironment,
-  deleteEnvironment,
   addCollection,
-  updateCollection,
-  deleteCollection,
+  addEnvironment,
   addFolder,
   addFolderAfter,
-  updateFolder,
-  deleteFolder,
-  reorderFolder,
-  reorderRequest,
+  addPreset,
   addRequest,
   addRequestAfter,
-  updateRequest,
-  deleteRequest,
   addRequestHistory,
-  deleteRequestHistory,
-  setSetting,
-  getSetting,
-  getAllSettings,
-  resetSettings,
   addUnsavedRequest,
-  updateUnsavedRequest,
-  deleteUnsavedRequest,
-  getAllUnsavedRequests,
   clearUnsavedRequests,
-  promoteUnsavedRequest,
-  addPreset,
-  getAllPresets,
+  deleteCollection,
+  deleteEnvironment,
+  deleteFolder,
   deletePreset,
+  deleteRequest,
+  deleteRequestHistory,
+  deleteUnsavedRequest,
   generateUniqueId,
+  getAllPresets,
+  getAllSettings,
+  getAllUnsavedRequests,
+  getDatabase,
+  getSetting,
+  promoteUnsavedRequest,
+  reorderFolder,
+  reorderRequest,
+  resetSettings,
+  saveDatabase,
+  setSetting,
+  updateCollection,
+  updateEnvironment,
+  updateFolder,
+  updateRequest,
+  updateUnsavedRequest,
 } from '../database';
+import { generateCurlCommand } from '../lib/curl-generator';
+import { parseCurlCommand, parseCurlCommands } from '../lib/curl-parser';
+import type { ImportOptions, ImportResult } from '../lib/import';
+import { getImportFactory } from '../lib/import';
 import { apiService } from '../services/api';
 import { variableResolver } from '../services/variable-resolver';
-import { parseCurlCommand, parseCurlCommands } from '../lib/curl-parser';
-import { generateCurlCommand } from '../lib/curl-generator';
-import fs from 'fs';
 
 const broadcast = (channel: string, payload?: any) => {
-  BrowserWindow.getAllWindows().forEach((window) => {
+  BrowserWindow.getAllWindows().forEach(window => {
     window.webContents.send(channel, payload);
   });
 };
 
 export function registerIpcHandlers() {
-
   // Environment operations
   ipcMain.handle('env:list', async () => {
     const db = getDatabase();
@@ -90,7 +91,10 @@ export function registerIpcHandlers() {
       const baseUrl = env.variables?.base_url || env.baseUrl;
       if (baseUrl) {
         const isReachable = await apiService.testConnection(baseUrl);
-        return { success: isReachable, message: isReachable ? 'Connection successful' : 'Connection failed' };
+        return {
+          success: isReachable,
+          message: isReachable ? 'Connection successful' : 'Connection failed',
+        };
       }
       return { success: true, message: 'No base URL to test' };
     } catch (error: any) {
@@ -127,7 +131,7 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('env:getCurrent', async () => {
     const db = getDatabase();
-    const defaultEnv = db.environments.find((e) => e.isDefault === 1);
+    const defaultEnv = db.environments.find(e => e.isDefault === 1);
     if (!defaultEnv && db.environments.length > 0) {
       return db.environments[0];
     }
@@ -136,7 +140,7 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('env:setCurrent', async (_, id) => {
     const db = getDatabase();
-    db.environments.forEach((env) => {
+    db.environments.forEach(env => {
       env.isDefault = env.id === id ? 1 : 0;
       if (env.id === id) {
         env.lastUsed = new Date().toISOString();
@@ -191,7 +195,7 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('collection:toggleFavorite', async (_, id) => {
     const db = getDatabase();
-    const collection = db.collections.find((c) => c.id === id);
+    const collection = db.collections.find(c => c.id === id);
     if (collection) {
       collection.isFavorite = collection.isFavorite ? 0 : 1;
       saveDatabase();
@@ -201,101 +205,121 @@ export function registerIpcHandlers() {
   });
 
   // Collection Environment operations
-  ipcMain.handle('collection:addEnvironment', async (_, collectionId, environment) => {
-    const db = getDatabase();
-    const collection = db.collections.find(c => c.id === collectionId);
-    if (!collection) {
-      throw new Error('Collection not found');
-    }
-    
-    if (!collection.environments) {
-      collection.environments = [];
-    }
-    
-    const envId = generateUniqueId();
-    collection.environments.push({
-      id: envId,
-      name: environment.name,
-      variables: environment.variables || {}
-    });
-    
-    // If this is the first environment, set it as active
-    if (collection.environments.length === 1) {
-      collection.activeEnvironmentId = envId;
-    }
-    
-    saveDatabase();
-    const updatedCollection = db.collections.find(c => c.id === collectionId);
-    broadcast('collections:updated');
-    return { success: true, id: envId, collection: updatedCollection };
-  });
+  ipcMain.handle(
+    'collection:addEnvironment',
+    async (_, collectionId, environment) => {
+      const db = getDatabase();
+      const collection = db.collections.find(c => c.id === collectionId);
+      if (!collection) {
+        throw new Error('Collection not found');
+      }
 
-  ipcMain.handle('collection:updateEnvironment', async (_, collectionId, environmentId, updates) => {
-    const db = getDatabase();
-    const collection = db.collections.find(c => c.id === collectionId);
-    if (!collection || !collection.environments) {
-      throw new Error('Collection or environment not found');
-    }
-    
-    const env = collection.environments.find(e => e.id === environmentId);
-    if (!env) {
-      throw new Error('Environment not found');
-    }
-    
-    Object.assign(env, updates);
-    saveDatabase();
-    const updatedCollection = db.collections.find(c => c.id === collectionId);
-    broadcast('collections:updated');
-    return { success: true, collection: updatedCollection };
-  });
+      if (!collection.environments) {
+        collection.environments = [];
+      }
 
-  ipcMain.handle('collection:deleteEnvironment', async (_, collectionId, environmentId) => {
-    const db = getDatabase();
-    const collection = db.collections.find(c => c.id === collectionId);
-    if (!collection || !collection.environments) {
-      throw new Error('Collection or environment not found');
-    }
-    
-    collection.environments = collection.environments.filter(e => e.id !== environmentId);
-    
-    // If we deleted the active environment, set first available as active
-    if (collection.activeEnvironmentId === environmentId) {
-      collection.activeEnvironmentId = collection.environments.length > 0 
-        ? collection.environments[0].id 
-        : undefined;
-    }
-    
-    saveDatabase();
-    const updatedCollection = db.collections.find(c => c.id === collectionId);
-    broadcast('collections:updated');
-    return { success: true, collection: updatedCollection };
-  });
+      const envId = generateUniqueId();
+      collection.environments.push({
+        id: envId,
+        name: environment.name,
+        variables: environment.variables || {},
+      });
 
-  ipcMain.handle('collection:setActiveEnvironment', async (_, collectionId, environmentId) => {
-    const db = getDatabase();
-    const collection = db.collections.find(c => c.id === collectionId);
-    if (!collection) {
-      throw new Error('Collection not found');
+      // If this is the first environment, set it as active
+      if (collection.environments.length === 1) {
+        collection.activeEnvironmentId = envId;
+      }
+
+      saveDatabase();
+      const updatedCollection = db.collections.find(c => c.id === collectionId);
+      broadcast('collections:updated');
+      return { success: true, id: envId, collection: updatedCollection };
     }
-    
-    if (environmentId !== null && environmentId !== undefined) {
-      if (!collection.environments || !collection.environments.find(e => e.id === environmentId)) {
+  );
+
+  ipcMain.handle(
+    'collection:updateEnvironment',
+    async (_, collectionId, environmentId, updates) => {
+      const db = getDatabase();
+      const collection = db.collections.find(c => c.id === collectionId);
+      if (!collection || !collection.environments) {
+        throw new Error('Collection or environment not found');
+      }
+
+      const env = collection.environments.find(e => e.id === environmentId);
+      if (!env) {
         throw new Error('Environment not found');
       }
+
+      Object.assign(env, updates);
+      saveDatabase();
+      const updatedCollection = db.collections.find(c => c.id === collectionId);
+      broadcast('collections:updated');
+      return { success: true, collection: updatedCollection };
     }
-    
-    collection.activeEnvironmentId = environmentId;
-    saveDatabase();
-    const updatedCollection = db.collections.find(c => c.id === collectionId);
-    broadcast('collections:updated');
-    return { success: true, collection: updatedCollection };
-  });
+  );
+
+  ipcMain.handle(
+    'collection:deleteEnvironment',
+    async (_, collectionId, environmentId) => {
+      const db = getDatabase();
+      const collection = db.collections.find(c => c.id === collectionId);
+      if (!collection || !collection.environments) {
+        throw new Error('Collection or environment not found');
+      }
+
+      collection.environments = collection.environments.filter(
+        e => e.id !== environmentId
+      );
+
+      // If we deleted the active environment, set first available as active
+      if (collection.activeEnvironmentId === environmentId) {
+        collection.activeEnvironmentId =
+          collection.environments.length > 0
+            ? collection.environments[0].id
+            : undefined;
+      }
+
+      saveDatabase();
+      const updatedCollection = db.collections.find(c => c.id === collectionId);
+      broadcast('collections:updated');
+      return { success: true, collection: updatedCollection };
+    }
+  );
+
+  ipcMain.handle(
+    'collection:setActiveEnvironment',
+    async (_, collectionId, environmentId) => {
+      const db = getDatabase();
+      const collection = db.collections.find(c => c.id === collectionId);
+      if (!collection) {
+        throw new Error('Collection not found');
+      }
+
+      if (environmentId !== null && environmentId !== undefined) {
+        if (
+          !collection.environments ||
+          !collection.environments.find(e => e.id === environmentId)
+        ) {
+          throw new Error('Environment not found');
+        }
+      }
+
+      collection.activeEnvironmentId = environmentId;
+      saveDatabase();
+      const updatedCollection = db.collections.find(c => c.id === collectionId);
+      broadcast('collections:updated');
+      return { success: true, collection: updatedCollection };
+    }
+  );
 
   // Folder operations
   ipcMain.handle('folder:list', async (_, collectionId) => {
     const db = getDatabase();
-    const filteredFolders = db.folders.filter(f => !collectionId || f.collectionId === collectionId);
-    
+    const filteredFolders = db.folders.filter(
+      f => !collectionId || f.collectionId === collectionId
+    );
+
     // Sort by order field, then by id as fallback
     return filteredFolders.sort((a, b) => {
       const orderA = a.order || 0;
@@ -359,7 +383,7 @@ export function registerIpcHandlers() {
       }
       return true;
     });
-    
+
     // Sort by order field, then by id as fallback
     return filteredRequests.sort((a, b) => {
       const orderA = a.order || 0;
@@ -410,18 +434,21 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('request:saveAfter', async (_, request, afterRequestId) => {
-    const id = addRequestAfter({
-      name: request.name,
-      method: request.method,
-      url: request.url,
-      headers: request.headers || {},
-      body: request.body || null,
-      queryParams: request.queryParams || [],
-      auth: request.auth || null,
-      collectionId: request.collectionId,
-      folderId: request.folderId || null,
-      isFavorite: request.isFavorite ? 1 : 0,
-    }, afterRequestId);
+    const id = addRequestAfter(
+      {
+        name: request.name,
+        method: request.method,
+        url: request.url,
+        headers: request.headers || {},
+        body: request.body || null,
+        queryParams: request.queryParams || [],
+        auth: request.auth || null,
+        collectionId: request.collectionId,
+        folderId: request.folderId || null,
+        isFavorite: request.isFavorite ? 1 : 0,
+      },
+      afterRequestId
+    );
     broadcast('requests:updated');
     return { success: true, id };
   });
@@ -439,17 +466,19 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('request:send', async (_, options) => {
+    const startTime = Date.now();
     try {
       const db = getDatabase();
-      
+
       // Get global environment - use provided environmentId if available, otherwise use default
       let globalEnv;
       if (options.environmentId) {
-        globalEnv = db.environments.find((e) => e.id === options.environmentId);
+        globalEnv = db.environments.find(e => e.id === options.environmentId);
       }
       // Fallback to default or first environment
       if (!globalEnv) {
-        globalEnv = db.environments.find((e) => e.isDefault === 1) || db.environments[0];
+        globalEnv =
+          db.environments.find(e => e.isDefault === 1) || db.environments[0];
       }
       if (!globalEnv) {
         throw new Error('No environment selected');
@@ -459,20 +488,28 @@ export function registerIpcHandlers() {
       // CRITICAL: Match frontend fallback logic - use first env if no activeEnvironmentId
       let collectionVariables: Record<string, string> = {};
       if (options.collectionId) {
-        const collection = db.collections.find(c => c.id === options.collectionId);
-        if (collection && collection.environments && collection.environments.length > 0) {
+        const collection = db.collections.find(
+          c => c.id === options.collectionId
+        );
+        if (
+          collection &&
+          collection.environments &&
+          collection.environments.length > 0
+        ) {
           let activeEnv;
-          
+
           // If activeEnvironmentId is set, try to find that environment
           if (collection.activeEnvironmentId) {
-            activeEnv = collection.environments.find(e => e.id === collection.activeEnvironmentId);
+            activeEnv = collection.environments.find(
+              e => e.id === collection.activeEnvironmentId
+            );
           }
-          
+
           // If activeEnvironmentId not set or points to deleted environment, use first as fallback
           if (!activeEnv) {
             activeEnv = collection.environments[0];
           }
-          
+
           if (activeEnv) {
             collectionVariables = activeEnv.variables || {};
           }
@@ -482,37 +519,56 @@ export function registerIpcHandlers() {
       // Create variable context
       const variableContext = {
         globalVariables: globalEnv.variables || {},
-        collectionVariables
+        collectionVariables,
       };
 
       // Resolve variables in all request parts
-      const resolvedUrl = variableResolver.resolve(options.url, variableContext);
-      const resolvedHeaders = variableResolver.resolveObject(options.headers || {}, variableContext);
-      const resolvedBody = typeof options.body === 'string' 
-        ? variableResolver.resolve(options.body, variableContext)
-        : options.body;
-      
+      const resolvedUrl = variableResolver.resolve(
+        options.url,
+        variableContext
+      );
+      const resolvedHeaders = variableResolver.resolveObject(
+        options.headers || {},
+        variableContext
+      );
+      const resolvedBody =
+        typeof options.body === 'string'
+          ? variableResolver.resolve(options.body, variableContext)
+          : options.body;
+
       const resolvedQueryParams = (options.queryParams || []).map(param => ({
         ...param,
-        value: variableResolver.resolve(param.value, variableContext)
+        value: variableResolver.resolve(param.value, variableContext),
       }));
 
       // Execute HTTP request using apiService with resolved values
       let result: any;
       const method = options.method || 'GET';
-      
+
       switch (method) {
         case 'GET':
           result = await apiService.getJson(resolvedUrl, resolvedHeaders);
           break;
         case 'POST':
-          result = await apiService.postJson(resolvedUrl, resolvedBody, resolvedHeaders);
+          result = await apiService.postJson(
+            resolvedUrl,
+            resolvedBody,
+            resolvedHeaders
+          );
           break;
         case 'PUT':
-          result = await apiService.putJson(resolvedUrl, resolvedBody, resolvedHeaders);
+          result = await apiService.putJson(
+            resolvedUrl,
+            resolvedBody,
+            resolvedHeaders
+          );
           break;
         case 'PATCH':
-          result = await apiService.patchJson(resolvedUrl, resolvedBody, resolvedHeaders);
+          result = await apiService.patchJson(
+            resolvedUrl,
+            resolvedBody,
+            resolvedHeaders
+          );
           break;
         case 'DELETE':
           result = await apiService.deleteJson(resolvedUrl, resolvedHeaders);
@@ -533,21 +589,37 @@ export function registerIpcHandlers() {
         url: resolvedUrl,
         status: result.status,
         response_time: result.responseTime,
-        response_body: typeof result.body === 'string' ? result.body : JSON.stringify(result.body),
+        response_body:
+          typeof result.body === 'string'
+            ? result.body
+            : JSON.stringify(result.body),
         headers: JSON.stringify(resolvedHeaders),
         createdAt: new Date().toISOString(),
       });
 
-      return { 
-        success: true, 
-        data: result.body, 
+      return {
+        success: true,
+        data: result.body,
         responseTime: result.responseTime,
         status: result.status,
         statusText: result.statusText,
-        headers: result.headers
+        headers: result.headers,
       };
     } catch (error: any) {
-      return { success: false, error: error.message };
+      const responseTime = Date.now() - startTime;
+
+      // Return a proper ResponseData object even for errors
+      // Use status 0 to indicate network/request errors (not HTTP errors)
+      return {
+        success: false,
+        error: error.message,
+        // Return ResponseData structure for error cases
+        data: { error: error.message },
+        responseTime: responseTime,
+        status: 0, // 0 indicates network/request error (not an HTTP status)
+        statusText: error.message || 'Request Failed',
+        headers: {},
+      };
     }
   });
 
@@ -555,7 +627,7 @@ export function registerIpcHandlers() {
   ipcMain.handle('collection:run', async (_, collectionId, onProgress) => {
     try {
       const db = getDatabase();
-      
+
       // Get collection
       const collection = db.collections.find(c => c.id === collectionId);
       if (!collection) {
@@ -563,7 +635,8 @@ export function registerIpcHandlers() {
       }
 
       // Get global environment
-      const globalEnv = db.environments.find((e) => e.isDefault === 1) || db.environments[0];
+      const globalEnv =
+        db.environments.find(e => e.isDefault === 1) || db.environments[0];
       if (!globalEnv) {
         throw new Error('No environment selected');
       }
@@ -571,7 +644,9 @@ export function registerIpcHandlers() {
       // Get collection variables
       let collectionVariables: Record<string, string> = {};
       if (collection.environments && collection.activeEnvironmentId) {
-        const activeEnv = collection.environments.find(e => e.id === collection.activeEnvironmentId);
+        const activeEnv = collection.environments.find(
+          e => e.id === collection.activeEnvironmentId
+        );
         if (activeEnv) {
           collectionVariables = activeEnv.variables || {};
         }
@@ -580,12 +655,14 @@ export function registerIpcHandlers() {
       // Create variable context
       const variableContext = {
         globalVariables: globalEnv.variables || {},
-        collectionVariables
+        collectionVariables,
       };
 
       // Get all requests in this collection (including folders)
-      const allRequests = db.requests.filter(r => r.collectionId === collectionId);
-      
+      const allRequests = db.requests.filter(
+        r => r.collectionId === collectionId
+      );
+
       // Sort by order or id
       const sortedRequests = allRequests.sort((a, b) => {
         const orderA = a.order || 0;
@@ -597,7 +674,11 @@ export function registerIpcHandlers() {
       });
 
       if (sortedRequests.length === 0) {
-        return { success: true, results: [], message: 'No requests found in collection' };
+        return {
+          success: true,
+          results: [],
+          message: 'No requests found in collection',
+        };
       }
 
       const results: Array<{
@@ -612,19 +693,28 @@ export function registerIpcHandlers() {
       // Execute requests sequentially
       for (let i = 0; i < sortedRequests.length; i++) {
         const request = sortedRequests[i];
-        
+
         try {
           // Resolve variables in request
-          const resolvedUrl = variableResolver.resolve(request.url, variableContext);
-          const resolvedHeaders = variableResolver.resolveObject(request.headers || {}, variableContext);
-          const resolvedBody = typeof request.body === 'string' 
-            ? variableResolver.resolve(request.body, variableContext)
-            : request.body;
-          
-          const resolvedQueryParams = (request.queryParams || []).map(param => ({
-            ...param,
-            value: variableResolver.resolve(param.value, variableContext)
-          }));
+          const resolvedUrl = variableResolver.resolve(
+            request.url,
+            variableContext
+          );
+          const resolvedHeaders = variableResolver.resolveObject(
+            request.headers || {},
+            variableContext
+          );
+          const resolvedBody =
+            typeof request.body === 'string'
+              ? variableResolver.resolve(request.body, variableContext)
+              : request.body;
+
+          const resolvedQueryParams = (request.queryParams || []).map(
+            param => ({
+              ...param,
+              value: variableResolver.resolve(param.value, variableContext),
+            })
+          );
 
           // Execute request
           let result: any;
@@ -633,22 +723,40 @@ export function registerIpcHandlers() {
               result = await apiService.getJson(resolvedUrl, resolvedHeaders);
               break;
             case 'POST':
-              result = await apiService.postJson(resolvedUrl, resolvedBody, resolvedHeaders);
+              result = await apiService.postJson(
+                resolvedUrl,
+                resolvedBody,
+                resolvedHeaders
+              );
               break;
             case 'PUT':
-              result = await apiService.putJson(resolvedUrl, resolvedBody, resolvedHeaders);
+              result = await apiService.putJson(
+                resolvedUrl,
+                resolvedBody,
+                resolvedHeaders
+              );
               break;
             case 'PATCH':
-              result = await apiService.patchJson(resolvedUrl, resolvedBody, resolvedHeaders);
+              result = await apiService.patchJson(
+                resolvedUrl,
+                resolvedBody,
+                resolvedHeaders
+              );
               break;
             case 'DELETE':
-              result = await apiService.deleteJson(resolvedUrl, resolvedHeaders);
+              result = await apiService.deleteJson(
+                resolvedUrl,
+                resolvedHeaders
+              );
               break;
             case 'HEAD':
               result = await apiService.headJson(resolvedUrl, resolvedHeaders);
               break;
             case 'OPTIONS':
-              result = await apiService.optionsJson(resolvedUrl, resolvedHeaders);
+              result = await apiService.optionsJson(
+                resolvedUrl,
+                resolvedHeaders
+              );
               break;
             default:
               throw new Error(`Unsupported HTTP method: ${request.method}`);
@@ -660,7 +768,10 @@ export function registerIpcHandlers() {
             url: resolvedUrl,
             status: result.status,
             response_time: result.responseTime,
-            response_body: typeof result.body === 'string' ? result.body : JSON.stringify(result.body),
+            response_body:
+              typeof result.body === 'string'
+                ? result.body
+                : JSON.stringify(result.body),
             headers: JSON.stringify(resolvedHeaders),
             createdAt: new Date().toISOString(),
           });
@@ -670,7 +781,7 @@ export function registerIpcHandlers() {
             requestName: request.name,
             success: true,
             status: result.status,
-            responseTime: result.responseTime
+            responseTime: result.responseTime,
           });
 
           // Send progress update
@@ -680,7 +791,7 @@ export function registerIpcHandlers() {
               total: sortedRequests.length,
               requestName: request.name,
               requestId: request.id,
-              status: 'completed'
+              status: 'completed',
             });
           }
         } catch (error: any) {
@@ -688,7 +799,7 @@ export function registerIpcHandlers() {
             requestId: request.id!,
             requestName: request.name,
             success: false,
-            error: error.message
+            error: error.message,
           });
 
           // Send progress update for error
@@ -699,7 +810,7 @@ export function registerIpcHandlers() {
               requestName: request.name,
               requestId: request.id,
               status: 'error',
-              error: error.message
+              error: error.message,
             });
           }
         }
@@ -710,9 +821,12 @@ export function registerIpcHandlers() {
         results,
         summary: {
           total: sortedRequests.length,
-          passed: results.filter(r => r.success && r.status && r.status < 400).length,
-          failed: results.filter(r => !r.success || (r.status && r.status >= 400)).length
-        }
+          passed: results.filter(r => r.success && r.status && r.status < 400)
+            .length,
+          failed: results.filter(
+            r => !r.success || (r.status && r.status >= 400)
+          ).length,
+        },
       };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -853,29 +967,32 @@ export function registerIpcHandlers() {
   });
 
   // Notification operations
-  ipcMain.handle('notification:show', async (_, options: { title: string; body: string; filePath?: string }) => {
-    try {
-      const { Notification } = require('electron');
-      const notification = new Notification({
-        title: options.title,
-        body: options.body,
-        silent: false,
-      });
-
-      // Store file path for click handler
-      if (options.filePath) {
-        notification.on('click', async () => {
-          const { shell } = require('electron');
-          await shell.openPath(options.filePath!);
+  ipcMain.handle(
+    'notification:show',
+    async (_, options: { title: string; body: string; filePath?: string }) => {
+      try {
+        const { Notification } = require('electron');
+        const notification = new Notification({
+          title: options.title,
+          body: options.body,
+          silent: false,
         });
-      }
 
-      notification.show();
-      return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+        // Store file path for click handler
+        if (options.filePath) {
+          notification.on('click', async () => {
+            const { shell } = require('electron');
+            await shell.openPath(options.filePath!);
+          });
+        }
+
+        notification.show();
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      }
     }
-  });
+  );
 
   // Unsaved Request operations
   ipcMain.handle('unsaved-request:save', async (_, request) => {
@@ -1002,6 +1119,203 @@ export function registerIpcHandlers() {
     } catch (error: any) {
       console.error('Failed to parse bulk cURL commands:', error);
       return { success: false, error: error.message };
+    }
+  });
+
+  // ============================================================================
+  // Collection Import operations
+  // ============================================================================
+
+  ipcMain.handle('import:detect-format', async (_, content: string) => {
+    try {
+      console.log(
+        '[Import] Detecting format, content length:',
+        content?.length || 0
+      );
+      const factory = getImportFactory();
+      const result = await factory.detectFormat(content);
+      console.log('[Import] Format detection result:', result);
+      return result;
+    } catch (error: any) {
+      console.error('[Import] Failed to detect import format:', error);
+      return {
+        format: null,
+        isValid: false,
+        confidence: 0,
+        error: error.message,
+      };
+    }
+  });
+
+  ipcMain.handle(
+    'import:parse',
+    async (_, content: string, format?: string) => {
+      try {
+        console.log('[Import] Parsing content, format:', format);
+        const factory = getImportFactory();
+        const result = await factory.parse(content, format);
+        console.log(
+          '[Import] Parse result:',
+          result.success,
+          result.error || ''
+        );
+        if (result.success && result.result) {
+          console.log('[Import] Parsed:', {
+            collection: result.result.collection.name,
+            folders: result.result.folders.length,
+            requests: result.result.requests.length,
+            warnings: result.result.warnings.length,
+            errors: result.result.errors.length,
+          });
+        }
+        return result;
+      } catch (error: any) {
+        console.error('[Import] Failed to parse import:', error);
+        return { success: false, error: error.message };
+      }
+    }
+  );
+
+  ipcMain.handle(
+    'import:execute',
+    async (_, importResult: ImportResult, options: ImportOptions) => {
+      try {
+        const db = getDatabase();
+        const warnings: string[] = [];
+
+        // Create the collection first
+        const collectionId = addCollection({
+          name: importResult.collection.name,
+          description: importResult.collection.description || '',
+          documentation: importResult.collection.documentation || '',
+          environments: [],
+          isFavorite: 0,
+        });
+
+        // Create folder ID mapping (tempId -> actual ID)
+        const folderIdMap = new Map<string, number>();
+
+        // Sort folders by path depth to ensure parents are created first
+        const sortedFolders = [...importResult.folders].sort((a, b) => {
+          const depthA = a.path.split('/').length;
+          const depthB = b.path.split('/').length;
+          return depthA - depthB;
+        });
+
+        // Create folders
+        for (const folder of sortedFolders) {
+          const folderId = addFolder({
+            name: folder.name,
+            description: folder.description || '',
+            collectionId: collectionId,
+            order: folder.order,
+          });
+          folderIdMap.set(folder.tempId, folderId);
+        }
+
+        // Create requests
+        let requestCount = 0;
+        for (const request of importResult.requests) {
+          try {
+            // Resolve folder ID
+            const folderId = request.folderTempId
+              ? folderIdMap.get(request.folderTempId) || null
+              : null;
+
+            addRequest({
+              name: request.name,
+              method: request.method,
+              url: request.url,
+              headers: request.headers || {},
+              body: request.body || '',
+              queryParams: request.queryParams || [],
+              auth: request.auth || { type: 'none' },
+              collectionId: collectionId,
+              folderId: folderId,
+              isFavorite: 0,
+              order: request.order,
+            });
+            requestCount++;
+          } catch (err: any) {
+            warnings.push(
+              `Failed to import request "${request.name}": ${err.message}`
+            );
+          }
+        }
+
+        // Handle environments based on options
+        let environmentCount = 0;
+        if (
+          options.environmentMode !== 'skip' &&
+          importResult.environments &&
+          importResult.environments.length > 0
+        ) {
+          if (options.environmentMode === 'collection') {
+            // Add as collection environments
+            const collection = db.collections.find(c => c.id === collectionId);
+            if (collection) {
+              collection.environments = importResult.environments.map(
+                (env, index) => ({
+                  id: generateUniqueId(),
+                  name: env.name,
+                  variables: env.variables,
+                })
+              );
+              if (collection.environments.length > 0) {
+                collection.activeEnvironmentId = collection.environments[0].id;
+              }
+              saveDatabase();
+              environmentCount = importResult.environments.length;
+            }
+          } else if (options.environmentMode === 'global') {
+            // Add as global environments
+            for (const env of importResult.environments) {
+              addEnvironment({
+                name: env.name,
+                displayName: env.name,
+                variables: env.variables,
+                isDefault: 0,
+              });
+              environmentCount++;
+            }
+          }
+        }
+
+        // Broadcast updates
+        broadcast('collections:updated');
+        broadcast('folders:updated');
+        broadcast('requests:updated');
+
+        return {
+          success: true,
+          collectionId,
+          folderCount: sortedFolders.length,
+          requestCount,
+          environmentCount,
+          warnings,
+        };
+      } catch (error: any) {
+        console.error('Failed to execute import:', error);
+        return {
+          success: false,
+          error: error.message,
+          folderCount: 0,
+          requestCount: 0,
+          environmentCount: 0,
+          warnings: [],
+        };
+      }
+    }
+  );
+
+  ipcMain.handle('import:supported-formats', async () => {
+    try {
+      const factory = getImportFactory();
+      const formats = await factory.getSupportedFormats();
+      return formats;
+    } catch (error: any) {
+      console.error('Failed to get supported formats:', error);
+      return [];
     }
   });
 }

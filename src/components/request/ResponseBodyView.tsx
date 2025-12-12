@@ -1,12 +1,17 @@
 /**
  * ResponseBodyView - Display response body in full-width Monaco editor
- * 
+ *
  * Shows:
  * - Response body in Monaco editor (read-only)
  * - Formatted JSON with syntax highlighting
  * - Status badge and response time
  * - Optional Copy/Download action buttons
- * 
+ *
+ * Features:
+ * - Dynamic height: Monaco editor fills available container space
+ * - Responsive: Resizes with window/container changes
+ * - Postman-like behavior: Editor takes all available vertical space
+ *
  * @example
  * ```tsx
  * <ResponseBodyView
@@ -19,12 +24,18 @@
  */
 
 import React from 'react';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
 import { Clock, Copy, Download } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { MonacoEditor } from '../ui/monaco-editor';
+import {
+  formatResponseTime,
+  getStatusDisplay,
+  getStatusVariant,
+  safeStringifyBody,
+} from '../../lib/response-utils';
 import { ResponseData } from '../../types/entities';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
+import { MonacoEditor } from '../ui/monaco-editor';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 export interface ResponseBodyViewProps {
   response: ResponseData | null;
@@ -41,33 +52,33 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
 }) => {
   if (!response) {
     return (
-      <div className="flex items-center justify-center h-full text-muted-foreground">
+      <div className="flex items-center justify-center flex-1 min-h-0 text-muted-foreground">
         <p>No response data available. Send a request to see response body.</p>
       </div>
     );
   }
 
-  // Format response body for display
-  const formattedBody = response.data 
-    ? JSON.stringify(response.data, null, 2)
-    : '';
+  // Format response body for display (safe for undefined/null)
+  const formattedBody = safeStringifyBody(response.data);
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col h-full">
-        {/* Header with Status and Actions */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        {/* Header with Status and Actions - Fixed height */}
+        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
           <div className="flex items-center gap-4">
-            <h3 className="text-lg font-semibold">Response Body</h3>
+            <h3 className="text-sm font-semibold">Response Body</h3>
             <div className="flex items-center gap-2">
-              <Badge 
-                variant={response.status >= 200 && response.status < 300 ? 'default' : 'destructive'}
+              <Badge
+                variant={getStatusVariant(response.status)}
+                className="text-xs"
               >
-                {response.status} {response.statusText}
+                {getStatusDisplay(response.status)}{' '}
+                {response.statusText ?? 'Unknown'}
               </Badge>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                {response.time}ms
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                {formatResponseTime(response.time)}
               </div>
             </div>
           </div>
@@ -97,27 +108,27 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
             </div>
           )}
         </div>
-      
-      {/* Monaco Editor - Full Width */}
-      <div className="flex-1 px-4 pb-4">
-        <MonacoEditor
-          value={formattedBody}
-          onChange={() => {}} // Read-only, no changes
-          language="json"
-          placeholder="No response body"
-          title=""
-          description=""
-          height={500}
-          showActions={false} // No editor actions (we have top-level actions)
-          validateJson={false}
-          readOnly={true}
-          minimap={false}
-          fontSize={13}
-          className="border-0"
-        />
+
+        {/* Monaco Editor - Dynamic height, fills remaining space */}
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          <MonacoEditor
+            value={formattedBody}
+            onChange={() => {}} // Read-only, no changes
+            language="json"
+            placeholder="No response body"
+            title=""
+            description=""
+            height="100%"
+            showActions={false} // No editor actions (we have top-level actions)
+            validateJson={false}
+            readOnly={true}
+            minimap={false}
+            fontSize={13}
+            className="border-0"
+            automaticLayout={true}
+          />
+        </div>
       </div>
-    </div>
     </TooltipProvider>
   );
 };
-
