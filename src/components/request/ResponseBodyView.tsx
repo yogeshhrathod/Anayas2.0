@@ -23,8 +23,8 @@
  * ```
  */
 
-import React from 'react';
 import { Clock, Copy, Download } from 'lucide-react';
+import React from 'react';
 import {
   formatResponseTime,
   getStatusDisplay,

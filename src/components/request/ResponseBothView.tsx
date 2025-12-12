@@ -25,8 +25,8 @@
  * ```
  */
 
+import { Check, Clock, Copy, Download } from 'lucide-react';
 import React, { useState } from 'react';
-import { Clock, Copy, Download, Check } from 'lucide-react';
 import {
   formatResponseTime,
   getHeaderEntries,
