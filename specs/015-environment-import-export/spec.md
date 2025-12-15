@@ -1,6 +1,6 @@
 # Feature Specification: Environment Import/Export
 
-**Status**: `planned`  
+**Status**: `completed`  
 **Feature ID**: `015-environment-import-export`  
 **Created**: 2025-12-15  
 **Last Updated**: 2025-12-15  

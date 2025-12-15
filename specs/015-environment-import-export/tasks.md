@@ -1,7 +1,7 @@
 # Task Breakdown: Environment Import/Export
 
 **Feature ID**: `015-environment-import-export`  
-**Status**: `planned`  
+**Status**: `completed`  
 **Related Spec**: [spec.md](./spec.md)  
 **Related Plan**: [plan.md](./plan.md)
 

@@ -1,7 +1,7 @@
 # Implementation Plan: Environment Import/Export
 
 **Feature ID**: `015-environment-import-export`  
-**Status**: `planned`  
+**Status**: `completed`  
 **Related Spec**: [spec.md](./spec.md)
 
 ## Overview

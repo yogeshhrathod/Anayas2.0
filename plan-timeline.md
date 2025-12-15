@@ -128,6 +128,19 @@
 
 **Timeline**: 2 days ✅ **COMPLETED**
 
+### 3.1.5 Environment Import/Export ✅ COMPLETED
+- [x] **JSON Format Parser** - Anayas native format
+- [x] **.env File Parser** - Key-value pair format
+- [x] **Postman Environment Parser** - Postman v1.0 format
+- [x] **Format Detection** - Auto-detect format from content
+- [x] **Export Generator** - Export to JSON, .env, Postman formats
+- [x] **Import Dialog** - File selection, preview, conflict resolution
+- [x] **Export Dialog** - Environment selection, format selection
+- [x] **Conflict Resolution** - Skip, overwrite, rename options
+- [x] **Selective Export** - Choose which environments to export
+
+**Timeline**: 2-3 days ✅ **COMPLETED**
+
 ### 3.2 Postman Collection Import/Export 📦 PLANNED
 - [ ] **Postman v2.0 Importer**
 - [ ] **Postman v2.1 Importer**
