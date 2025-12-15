@@ -81,7 +81,7 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
       <div className="flex-1 min-h-0 overflow-auto p-4">
         <div className="bg-muted/50 rounded-md p-3 font-mono text-xs">
           {hasHeaders(response.headers) ? (
-            headerEntries.map(([key, value]) => (
+            headerEntries.map(([key, value]: [string, string]) => (
               <div
                 key={key}
                 className="flex py-1.5 border-b border-border/50 last:border-0"
