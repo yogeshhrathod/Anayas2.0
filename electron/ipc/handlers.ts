@@ -40,8 +40,15 @@ import { generateCurlCommand } from '../lib/curl-generator';
 import { parseCurlCommand, parseCurlCommands } from '../lib/curl-parser';
 import type { ImportOptions, ImportResult } from '../lib/import';
 import { getImportFactory } from '../lib/import';
+import {
+  getEnvironmentImportFactory,
+  EnvironmentExportGenerator,
+} from '../lib/environment';
 import { apiService } from '../services/api';
 import { variableResolver } from '../services/variable-resolver';
+import { createLogger } from '../services/logger';
+
+const logger = createLogger('ipc-handlers');
 
 const broadcast = (channel: string, payload?: any) => {
   BrowserWindow.getAllWindows().forEach(window => {
@@ -102,30 +109,171 @@ export function registerIpcHandlers() {
     }
   });
 
-  ipcMain.handle('env:import', async (_, filePath) => {
-    try {
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const lines = content.split('\n');
-      const envData: any = {};
+  // Enhanced environment import handler
+  ipcMain.handle(
+    'env:import',
+    async (
+      _,
+      content: string,
+      format?: 'json' | 'env' | 'postman' | 'auto'
+    ) => {
+      const memBefore = process.memoryUsage().heapUsed;
+      const startTime = Date.now();
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed && !trimmed.startsWith('#')) {
-          const [key, ...valueParts] = trimmed.split('=');
-          envData[key.trim()] = valueParts.join('=').trim();
-        }
+      try {
+        const factory = getEnvironmentImportFactory();
+        const parsedEnvironments = await factory.parse(
+          content,
+          format || 'auto'
+        );
+
+        // Validate parsed environments
+        const validationResults = parsedEnvironments.map((env) => {
+          const strategy = factory.getStrategy(env.name || 'json');
+          return strategy?.validate([env]) || {
+            isValid: true,
+            errors: [],
+            warnings: [],
+          };
+        });
+
+        const allErrors: string[] = [];
+        const allWarnings: string[] = [];
+
+        validationResults.forEach((result) => {
+          allErrors.push(...result.errors);
+          allWarnings.push(...result.warnings);
+        });
+
+        // Detect conflicts with existing environments
+        const db = getDatabase();
+        const conflicts = parsedEnvironments
+          .map((env) => {
+            const existing = db.environments.find(
+              (e) => e.name === env.name
+            );
+            if (existing) {
+              return {
+                environmentName: env.name,
+                existingId: existing.id!,
+                importedEnvironment: env,
+              };
+            }
+            return null;
+          })
+          .filter((c): c is NonNullable<typeof c> => c !== null);
+
+        const memAfter = process.memoryUsage().heapUsed;
+        const loadTime = Date.now() - startTime;
+
+        logger.info('Environment import', {
+          delta: (memAfter - memBefore) / 1024 / 1024,
+          format: format || 'auto',
+          count: parsedEnvironments.length,
+          loadTime,
+        });
+
+        return {
+          success: true,
+          environments: parsedEnvironments,
+          warnings: allWarnings,
+          errors: allErrors,
+          conflicts,
+        };
+      } catch (error: any) {
+        logger.error('Environment import failed', { error: error.message });
+        return {
+          success: false,
+          environments: [],
+          warnings: [],
+          errors: [error.message || 'Failed to import environments'],
+          conflicts: [],
+        };
       }
+    }
+  );
 
-      return {
-        success: true,
-        data: {
-          name: envData.ENV || 'imported',
-          displayName: envData.ENV || 'Imported Environment',
-          variables: envData,
-        },
-      };
+  // Environment export handler
+  ipcMain.handle(
+    'env:export',
+    async (
+      _,
+      environmentIds: number[],
+      format: 'json' | 'env' | 'postman'
+    ) => {
+      try {
+        const db = getDatabase();
+        let environmentsToExport;
+
+        if (environmentIds.length === 0) {
+          // Export all environments
+          environmentsToExport = db.environments;
+        } else {
+          // Export selected environments
+          environmentsToExport = db.environments.filter((env) =>
+            environmentIds.includes(env.id!)
+          );
+        }
+
+        if (environmentsToExport.length === 0) {
+          return {
+            success: false,
+            content: '',
+            filename: '',
+            error: 'No environments to export',
+          };
+        }
+
+        const generator = new EnvironmentExportGenerator();
+        const content = generator.generate({
+          format,
+          environments: environmentsToExport,
+        });
+        const filename = generator.generateFilename(
+          format,
+          environmentsToExport.length
+        );
+
+        return {
+          success: true,
+          content,
+          filename,
+        };
+      } catch (error: any) {
+        logger.error('Environment export failed', { error: error.message });
+        return {
+          success: false,
+          content: '',
+          filename: '',
+          error: error.message || 'Failed to export environments',
+        };
+      }
+    }
+  );
+
+  // Format detection handler
+  ipcMain.handle('env:detect-format', async (_, content: string) => {
+    try {
+      const factory = getEnvironmentImportFactory();
+      const detection = factory.detectFormat(content);
+      return detection;
     } catch (error: any) {
-      return { success: false, message: error.message };
+      return {
+        format: 'unknown' as const,
+        isValid: false,
+        confidence: 0,
+      };
+    }
+  });
+
+  // Supported formats handler
+  ipcMain.handle('env:supported-formats', async () => {
+    try {
+      const factory = getEnvironmentImportFactory();
+      const formats = factory.getSupportedFormats();
+      return { formats };
+    } catch (error: any) {
+      return { formats: [] };
     }
   });
 
