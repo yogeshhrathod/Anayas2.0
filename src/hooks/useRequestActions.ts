@@ -133,6 +133,8 @@ export function useRequestActions(requestData: RequestFormData) {
         body: requestData.body,
         auth: requestData.auth,
         collectionId: selectedRequest?.collectionId,
+        queryParams: requestData.queryParams,
+        requestId: requestData.id, // Link to saved request for history
         environmentId: currentEnvironment?.id,
       });
 

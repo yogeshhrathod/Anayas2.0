@@ -17,6 +17,7 @@ import {
   deletePreset,
   deleteRequest,
   deleteRequestHistory,
+  clearAllRequestHistory,
   deleteUnsavedRequest,
   generateUniqueId,
   getAllPresets,
@@ -543,6 +544,11 @@ export function registerIpcHandlers() {
     });
   });
 
+  ipcMain.handle('request:get', async (_, id) => {
+    const db = getDatabase();
+    return db.requests.find(r => r.id === id) || null;
+  });
+
   ipcMain.handle('request:save', async (_, request) => {
     if (request.id) {
       updateRequest(request.id, {
@@ -731,7 +737,16 @@ export function registerIpcHandlers() {
           throw new Error(`Unsupported HTTP method: ${method}`);
       }
 
-      // Save to history with original URL for reference
+      // Get request name if requestId exists
+      let requestName: string | undefined;
+      if (options.requestId) {
+        const savedRequest = db.requests.find(r => r.id === options.requestId);
+        if (savedRequest) {
+          requestName = savedRequest.name;
+        }
+      }
+
+      // Save to history with original URL and request metadata for reference
       addRequestHistory({
         method: method,
         url: resolvedUrl,
@@ -742,8 +757,15 @@ export function registerIpcHandlers() {
             ? result.body
             : JSON.stringify(result.body),
         headers: JSON.stringify(resolvedHeaders),
+        requestId: options.requestId, // Link to saved request if available
+        collectionId: options.collectionId, // Link to collection if available
+        requestBody: typeof options.body === 'string' ? options.body : JSON.stringify(options.body || ''),
+        queryParams: options.queryParams || [],
+        auth: options.auth || null,
+        requestName: requestName, // Store request name for display
         createdAt: new Date().toISOString(),
       });
+      broadcast('history:updated');
 
       return {
         success: true,
@@ -910,7 +932,7 @@ export function registerIpcHandlers() {
               throw new Error(`Unsupported HTTP method: ${request.method}`);
           }
 
-          // Save to history
+          // Save to history with request metadata
           addRequestHistory({
             method: request.method,
             url: resolvedUrl,
@@ -921,8 +943,15 @@ export function registerIpcHandlers() {
                 ? result.body
                 : JSON.stringify(result.body),
             headers: JSON.stringify(resolvedHeaders),
+            requestId: request.id, // Link to saved request
+            collectionId: request.collectionId, // Link to collection
+            requestBody: typeof request.body === 'string' ? request.body : JSON.stringify(request.body || ''),
+            queryParams: request.queryParams || [],
+            auth: request.auth || null,
+            requestName: request.name, // Store request name for display
             createdAt: new Date().toISOString(),
           });
+          broadcast('history:updated');
 
           results.push({
             requestId: request.id!,
@@ -986,15 +1015,28 @@ export function registerIpcHandlers() {
     const db = getDatabase();
     return db.request_history
       .sort((a, b) => {
-        const aTime = new Date(a.createdAt).getTime();
-        const bTime = new Date(b.createdAt).getTime();
+        const aTime = new Date(a.createdAt || a.created_at).getTime();
+        const bTime = new Date(b.createdAt || b.created_at).getTime();
         return bTime - aTime;
       })
-      .slice(0, limit);
+      .slice(0, limit)
+      .map((entry: any) => ({
+        ...entry,
+        responseTime: entry.responseTime || entry.response_time || 0,
+        response_body: entry.response_body || entry.responseBody,
+        createdAt: entry.createdAt || entry.created_at,
+      }));
   });
 
   ipcMain.handle('request:deleteHistory', async (_, id) => {
     deleteRequestHistory(id);
+    broadcast('history:updated');
+    return { success: true };
+  });
+
+  ipcMain.handle('request:clearAllHistory', async () => {
+    clearAllRequestHistory();
+    broadcast('history:updated');
     return { success: true };
   });
 

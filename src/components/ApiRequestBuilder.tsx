@@ -334,6 +334,9 @@ export function ApiRequestBuilder() {
             setResponseSubTab={requestState.setResponseSubTab}
             splitRatio={requestState.splitViewRatio}
             setSplitRatio={requestState.setSplitViewRatio}
+            requestMethod={requestState.requestData.method}
+            requestUrl={requestState.requestData.url}
+            requestId={requestState.requestData.id}
           />
         );
       default:

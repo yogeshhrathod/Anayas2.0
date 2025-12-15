@@ -67,6 +67,8 @@ interface AppState {
   // Request History
   requestHistory: RequestHistory[];
   setRequestHistory: (history: RequestHistory[]) => void;
+  historyFilter: { requestId?: number; method?: string; url?: string } | null;
+  setHistoryFilter: (filter: { requestId?: number; method?: string; url?: string } | null) => void;
 
   // Request Progress
   requestProgress: RequestProgress | null;
@@ -171,6 +173,8 @@ export const useStore = create<AppState>()(
       // Request History
       requestHistory: [],
       setRequestHistory: (requestHistory) => set({ requestHistory }),
+      historyFilter: null,
+      setHistoryFilter: (historyFilter) => set({ historyFilter }),
 
       // Request Progress
       requestProgress: null,
