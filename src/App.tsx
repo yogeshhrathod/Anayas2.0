@@ -47,9 +47,6 @@ const History = lazy(() =>
 const Settings = lazy(() =>
   import('./pages/Settings').then(module => ({ default: module.Settings }))
 );
-const Logs = lazy(() =>
-  import('./pages/Logs').then(module => ({ default: module.Logs }))
-);
 
 import { FontProvider } from './components/providers/FontProvider';
 
@@ -484,8 +481,6 @@ function App() {
           return <Environments />;
         case 'history':
           return <History />;
-        case 'logs':
-          return <Logs />;
         case 'settings':
           return <Settings />;
         default:

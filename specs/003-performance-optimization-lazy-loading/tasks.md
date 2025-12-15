@@ -90,7 +90,6 @@ Tasks are organized by implementation phase. Tasks marked with `[P]` can be exec
   - Environments page loads correctly
   - History page loads correctly
   - Settings page loads correctly
-  - Logs page loads correctly
   - No errors in console
 - **Status**: `completed`
 

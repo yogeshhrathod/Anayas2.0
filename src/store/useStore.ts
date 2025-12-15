@@ -94,8 +94,8 @@ interface AppState {
   updateCustomTheme: (themeId: string, theme: Theme) => void;
   
   // Navigation
-  currentPage: 'home' | 'collections' | 'environments' | 'history' | 'logs' | 'settings';
-  setCurrentPage: (page: 'home' | 'collections' | 'environments' | 'history' | 'logs' | 'settings') => void;
+  currentPage: 'home' | 'collections' | 'environments' | 'history' | 'settings';
+  setCurrentPage: (page: 'home' | 'collections' | 'environments' | 'history' | 'settings') => void;
   
   // Sidebar refresh trigger
   sidebarRefreshTrigger: number;
