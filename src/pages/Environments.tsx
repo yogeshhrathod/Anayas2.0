@@ -14,7 +14,7 @@
  * ```
  */
 
-import { useState, useRef } from 'react';
+import { lazy, Suspense, useState, useRef } from 'react';
 import { PageLayout } from '../components/shared/PageLayout';
 import { Dialog } from '../components/ui/dialog';
 import { EnvironmentForm } from '../components/environment/EnvironmentForm';
@@ -28,16 +28,27 @@ import { EnvironmentFormData } from '../types/forms';
 import { Button } from '../components/ui/button';
 import { Loader2 } from 'lucide-react';
 
+// Lazy load import/export dialogs
+const EnvironmentImportDialog = lazy(
+  () => import('../components/environment/EnvironmentImportDialog').then(m => ({ default: m.EnvironmentImportDialog }))
+);
+const EnvironmentExportDialog = lazy(
+  () => import('../components/environment/EnvironmentExportDialog').then(m => ({ default: m.EnvironmentExportDialog }))
+);
+
 export function Environments() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingEnvironment, setEditingEnvironment] = useState<Environment | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const formRef = useRef<React.ElementRef<typeof EnvironmentForm>>(null);
 
   const { currentEnvironment, setCurrentEnvironment } = useStore();
 
   const {
     environments,
+    allEnvironments,
     isLoading,
     searchTerm,
     setSearchTerm,
@@ -48,8 +59,7 @@ export function Environments() {
     duplicateEnvironment,
     setDefaultEnvironment,
     testEnvironment,
-    exportEnvironments,
-    importEnvironments
+    refreshEnvironments
   } = useEnvironmentOperations();
 
   const { confirm } = useConfirmation();
@@ -122,11 +132,15 @@ export function Environments() {
   };
 
   const handleExport = () => {
-    exportEnvironments();
+    setIsExportDialogOpen(true);
   };
 
   const handleImport = () => {
-    importEnvironments();
+    setIsImportDialogOpen(true);
+  };
+
+  const handleImportSuccess = () => {
+    refreshEnvironments();
   };
 
   return (
@@ -193,6 +207,24 @@ export function Environments() {
           </Button>
         </div>
       </Dialog>
+
+      {/* Import Dialog */}
+      <Suspense fallback={null}>
+        <EnvironmentImportDialog
+          open={isImportDialogOpen}
+          onOpenChange={setIsImportDialogOpen}
+          onSuccess={handleImportSuccess}
+        />
+      </Suspense>
+
+      {/* Export Dialog */}
+      <Suspense fallback={null}>
+        <EnvironmentExportDialog
+          open={isExportDialogOpen}
+          onOpenChange={setIsExportDialogOpen}
+          environments={allEnvironments}
+        />
+      </Suspense>
     </PageLayout>
   );
 }

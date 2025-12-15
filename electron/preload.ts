@@ -117,7 +117,17 @@ const api = {
     save: (env: Environment) => ipcRenderer.invoke('env:save', env),
     delete: (id: number) => ipcRenderer.invoke('env:delete', id),
     test: (env: Environment) => ipcRenderer.invoke('env:test', env),
-    import: (filePath: string) => ipcRenderer.invoke('env:import', filePath),
+    import: (
+      content: string,
+      format?: 'json' | 'env' | 'postman' | 'auto'
+    ) => ipcRenderer.invoke('env:import', content, format),
+    export: (
+      environmentIds: number[],
+      format: 'json' | 'env' | 'postman'
+    ) => ipcRenderer.invoke('env:export', environmentIds, format),
+    detectFormat: (content: string) =>
+      ipcRenderer.invoke('env:detect-format', content),
+    getSupportedFormats: () => ipcRenderer.invoke('env:supported-formats'),
     getCurrent: () => ipcRenderer.invoke('env:getCurrent'),
     setCurrent: (id: number) => ipcRenderer.invoke('env:setCurrent', id),
   },
