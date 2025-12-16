@@ -45,6 +45,7 @@ export interface FolderItemProps {
     onDragOver: (e: React.DragEvent) => void;
     onDrop: (e: React.DragEvent) => void;
     onDragEnd: () => void;
+    onDragLeave?: (e: React.DragEvent<HTMLElement>) => void;
   };
   isDragging?: boolean;
   isDragOver?: boolean;

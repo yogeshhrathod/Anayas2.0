@@ -88,32 +88,32 @@ export const ResponseHeadersView: React.FC<ResponseHeadersViewProps> = ({
               </div>
             </div>
           </div>
-          
-          {showActions && (onCopy || onDownload) && (
-            <div className="flex gap-2">
-              {onCopy && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" onClick={onCopy} className="px-2">
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copy all headers</TooltipContent>
-                </Tooltip>
-              )}
-              {onDownload && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" onClick={onDownload} className="px-2">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Download response</TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-          )}
         </div>
+
+        {showActions && (onCopy || onDownload) && (
+          <div className="flex gap-2 px-4 py-2 border-b border-border/50">
+            {onCopy && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" onClick={onCopy} className="px-2">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Copy all headers</TooltipContent>
+              </Tooltip>
+            )}
+            {onDownload && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" onClick={onDownload} className="px-2">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Download response</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        )}
 
         {/* Headers List - Fills remaining space and scrolls */}
         <div className="flex-1 min-h-0 overflow-auto p-4">
