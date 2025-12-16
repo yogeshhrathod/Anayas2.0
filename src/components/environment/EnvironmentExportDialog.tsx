@@ -147,10 +147,9 @@ export function EnvironmentExportDialog({
                   environments.map((env) => {
                     const isSelected = selectedIds.has(env.id!);
                     const variableCount = Object.keys(env.variables || {}).length;
-
                     return (
                       <div
-                        key={env.id}
+                        key={env.id || `env-${env.name}`}
                         className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
                         onClick={() => handleToggleEnvironment(env.id!)}
                       >

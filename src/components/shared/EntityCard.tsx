@@ -110,7 +110,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
         {metadata.length > 0 && (
           <div className="space-y-1 text-xs text-muted-foreground">
             {metadata.map((item, index) => (
-              <div key={index}>
+              <div key={`${item.label}-${item.value}-${index}`}>
                 {item.label}: {item.value}
               </div>
             ))}

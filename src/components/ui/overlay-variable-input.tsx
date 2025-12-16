@@ -247,7 +247,7 @@ export function OverlayVariableInput({
           {segments.map((seg, i) => 
             seg.type === 'variable' ? (
               <span
-                key={i}
+                key={`var-${seg.name}-${i}`}
                 className={cn(
                   'font-medium transition-colors',
                   seg.resolved
@@ -276,7 +276,7 @@ export function OverlayVariableInput({
                 {`{{${seg.name}}}`}
               </span>
             ) : (
-              <span key={i} style={{ display: 'inline' }}>{seg.content}</span>
+              <span key={`text-${seg.content?.substring(0, 20)}-${i}`} style={{ display: 'inline' }}>{seg.content}</span>
             )
           )}
           {!value && placeholder && (
