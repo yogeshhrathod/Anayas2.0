@@ -225,7 +225,7 @@ export const EntityList = <T extends Record<string, any>>({
       <div className="space-y-2">
         {sortedItems.map((item, index) => (
           <div
-            key={index}
+            key={item.id !== undefined ? item.id : `item-${index}-${JSON.stringify(item).substring(0, 50)}`}
             className={cn(
               'p-4 rounded-lg border bg-card hover:shadow-md transition-shadow',
               onItemClick && 'cursor-pointer hover:bg-accent/5',

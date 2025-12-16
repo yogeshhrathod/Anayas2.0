@@ -66,7 +66,7 @@ export function ImportPreview({
 
             return (
               <div
-                key={index}
+                key={env.id || `env-${env.name}-${index}`}
                 className={`p-3 rounded-lg border ${
                   conflict && !resolution
                     ? 'border-destructive bg-destructive/5'

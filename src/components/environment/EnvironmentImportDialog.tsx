@@ -323,7 +323,7 @@ export function EnvironmentImportDialog({
                   <p className="font-medium">Warnings</p>
                   <ul className="list-disc list-inside mt-1 text-xs">
                     {importResult.warnings.map((warning, i) => (
-                      <li key={i}>{warning}</li>
+                      <li key={`warning-${i}-${warning.substring(0, 20)}`}>{warning}</li>
                     ))}
                   </ul>
                 </div>

@@ -267,6 +267,7 @@ export function History() {
         body,
         queryParams: request.queryParams || [],
         auth: request.auth || { type: 'none' },
+        collectionId: request.collectionId,
       });
 
       if (result.success && result.command) {

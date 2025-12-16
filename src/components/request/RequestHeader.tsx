@@ -84,6 +84,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
       }
 
       // Convert RequestFormData to Request format for IPC
+      // Include collectionId so variables can be resolved
       const request = {
         method: requestData.method,
         url: requestData.url,
@@ -91,6 +92,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
         body: requestData.body || '',
         queryParams: requestData.queryParams || [],
         auth: requestData.auth || { type: 'none' },
+        collectionId: requestData.collectionId,
       };
 
       const result = await window.electronAPI.curl.generate(request);

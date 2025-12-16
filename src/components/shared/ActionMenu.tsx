@@ -88,13 +88,13 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
       <DropdownMenuContent align={align}>
         {actions.map((action, index) => {
           if ('type' in action && action.type === 'separator') {
-            return <DropdownMenuSeparator key={index} />;
+            return <DropdownMenuSeparator key={`separator-${index}`} />;
           }
 
           const menuAction = action as ActionMenuItem;
           return (
             <DropdownMenuItem
-              key={index}
+              key={menuAction.label || `action-${index}`}
               onClick={menuAction.onClick}
               disabled={menuAction.disabled}
               className={cn(

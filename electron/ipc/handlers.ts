@@ -1294,7 +1294,119 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('curl:generate', async (_, request: any) => {
     try {
-      const curlCommand = generateCurlCommand(request);
+      const db = getDatabase();
+
+      // Get global environment
+      const globalEnv =
+        db.environments.find(e => e.isDefault === 1) || db.environments[0];
+      if (!globalEnv) {
+        throw new Error('No environment selected');
+      }
+
+      // Get collection variables if collectionId is provided
+      let collectionVariables: Record<string, string> = {};
+      if (request.collectionId) {
+        const collection = db.collections.find(
+          c => c.id === request.collectionId
+        );
+        if (
+          collection &&
+          collection.environments &&
+          collection.environments.length > 0
+        ) {
+          let activeEnv;
+
+          // If activeEnvironmentId is set, try to find that environment
+          if (collection.activeEnvironmentId) {
+            activeEnv = collection.environments.find(
+              e => e.id === collection.activeEnvironmentId
+            );
+          }
+
+          // If activeEnvironmentId not set or points to deleted environment, use first as fallback
+          if (!activeEnv) {
+            activeEnv = collection.environments[0];
+          }
+
+          if (activeEnv) {
+            collectionVariables = activeEnv.variables || {};
+          }
+        }
+      }
+
+      // Create variable context
+      const variableContext = {
+        globalVariables: globalEnv.variables || {},
+        collectionVariables,
+      };
+
+      // Resolve variables in all request parts
+      const resolvedUrl = variableResolver.resolve(
+        request.url || '',
+        variableContext
+      );
+      const resolvedHeaders = variableResolver.resolveObject(
+        request.headers || {},
+        variableContext
+      );
+      const resolvedBody =
+        typeof request.body === 'string'
+          ? variableResolver.resolve(request.body, variableContext)
+          : request.body || '';
+
+      const resolvedQueryParams = (request.queryParams || []).map(param => ({
+        ...param,
+        value: variableResolver.resolve(param.value || '', variableContext),
+      }));
+
+      // Resolve auth variables
+      const resolvedAuth = { ...request.auth };
+      if (resolvedAuth.type === 'bearer' && resolvedAuth.token) {
+        resolvedAuth.token = variableResolver.resolve(
+          resolvedAuth.token,
+          variableContext
+        );
+      }
+      if (resolvedAuth.type === 'basic') {
+        if (resolvedAuth.username) {
+          resolvedAuth.username = variableResolver.resolve(
+            resolvedAuth.username,
+            variableContext
+          );
+        }
+        if (resolvedAuth.password) {
+          resolvedAuth.password = variableResolver.resolve(
+            resolvedAuth.password,
+            variableContext
+          );
+        }
+      }
+      if (resolvedAuth.type === 'apikey') {
+        if (resolvedAuth.apiKey) {
+          resolvedAuth.apiKey = variableResolver.resolve(
+            resolvedAuth.apiKey,
+            variableContext
+          );
+        }
+        if (resolvedAuth.apiKeyHeader) {
+          resolvedAuth.apiKeyHeader = variableResolver.resolve(
+            resolvedAuth.apiKeyHeader,
+            variableContext
+          );
+        }
+      }
+
+      // Generate cURL command with resolved values
+      const resolvedRequest = {
+        method: request.method,
+        url: resolvedUrl,
+        headers: resolvedHeaders,
+        body: resolvedBody,
+        queryParams: resolvedQueryParams,
+        auth: resolvedAuth,
+      };
+
+      const curlCommand = generateCurlCommand(resolvedRequest);
       return { success: true, command: curlCommand };
     } catch (error: any) {
       console.error('Failed to generate cURL command:', error);
