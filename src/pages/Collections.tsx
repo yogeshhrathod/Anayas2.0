@@ -13,7 +13,7 @@
  * ```
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { PageLayout } from '../components/shared/PageLayout';
 import { CollectionForm } from '../components/collection/CollectionForm';
 import { CollectionGrid } from '../components/collection/CollectionGrid';
@@ -38,7 +38,7 @@ export function Collections() {
   const [showPostmanImport, setShowPostmanImport] = useState(false);
   const formRef = useRef<React.ElementRef<typeof CollectionForm>>(null);
 
-  const { setCurrentPage, setSelectedRequest, triggerSidebarRefresh } = useStore();
+  const { setCurrentPage, setSelectedRequest, triggerSidebarRefresh, collectionToEditId, setCollectionToEditId } = useStore();
   const { showSuccess, showError } = useToastNotifications();
 
   const {
@@ -56,6 +56,19 @@ export function Collections() {
   } = useCollectionOperations();
 
   const { confirm } = useConfirmation();
+
+  // Watch for collectionToEditId from variable context menu
+  useEffect(() => {
+    if (collectionToEditId && collections.length > 0) {
+      const collection = collections.find(c => c.id === collectionToEditId);
+      if (collection && !isEditing) {
+        setEditingCollection(collection);
+        setIsEditing(true);
+        setCollectionToEditId(null); // Clear after opening
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collectionToEditId, collections, isEditing]);
 
   const handleNewCollection = () => {
     setEditingCollection(null);

@@ -40,6 +40,15 @@ interface AppState {
   collections: Collection[];
   setCollections: (collections: Collection[]) => void;
   
+  // Collection to edit (triggered from variable context menu)
+  collectionToEditId: number | null;
+  setCollectionToEditId: (id: number | null) => void;
+  
+  // Environment to edit (triggered from variable context menu)
+  environmentToEditId: number | null;
+  variableToFocus: string | null;
+  setEnvironmentToEdit: (environmentId: number | null, variableName?: string | null) => void;
+  
   // Collection Hierarchy State
   expandedCollections: Set<number>;
   setExpandedCollections: (expanded: Set<number>) => void;
@@ -147,6 +156,22 @@ export const useStore = create<AppState>()(
       // Collections
       collections: [],
       setCollections: (collections) => set({ collections }),
+      
+      // Collection to edit (triggered from variable context menu)
+      collectionToEditId: null,
+      setCollectionToEditId: (collectionToEditId) => set({ collectionToEditId }),
+      
+      // Environment to edit (triggered from variable context menu)
+      environmentToEditId: null,
+      variableToFocus: null,
+      setEnvironmentToEdit: (environmentId, variableName) => {
+        console.log('[Store] setEnvironmentToEdit called with:', { environmentId, variableName });
+        set({ 
+          environmentToEditId: environmentId, 
+          variableToFocus: variableName || null 
+        });
+        console.log('[Store] environmentToEditId set to:', environmentId);
+      },
       
       // Collection Hierarchy State
       expandedCollections: new Set<number>(),
