@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Input } from './input';
 import { VariableAutocomplete } from './variable-autocomplete';
 import { VariableContextMenu } from './variable-context-menu';
+import { VariableDefinitionDialog } from './variable-definition-dialog';
 import { useAvailableVariables } from '../../hooks/useVariableResolution';
 import { cn } from '../../lib/utils';
 import { useClickOutside } from '../../hooks/useClickOutside';
@@ -34,6 +35,8 @@ export function HighlightedVariableInput({
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuVariable, setContextMenuVariable] = useState<string>('');
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [showDefinitionDialog, setShowDefinitionDialog] = useState(false);
+  const [definitionDialogVariable, setDefinitionDialogVariable] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const variables = useAvailableVariables();
@@ -183,8 +186,17 @@ export function HighlightedVariableInput({
           variableName={contextMenuVariable}
           position={contextMenuPosition}
           onClose={() => setShowContextMenu(false)}
+          onViewDefinition={(varName) => {
+            setDefinitionDialogVariable(varName);
+            setShowDefinitionDialog(true);
+          }}
         />
       )}
+      <VariableDefinitionDialog
+        open={showDefinitionDialog}
+        onOpenChange={setShowDefinitionDialog}
+        variableName={definitionDialogVariable}
+      />
     </div>
   );
 }
