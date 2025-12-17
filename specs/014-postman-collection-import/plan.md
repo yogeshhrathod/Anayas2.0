@@ -1,7 +1,7 @@
 # Implementation Plan: Postman Collection Import
 
 **Feature ID**: `014-postman-collection-import`  
-**Status**: `in-progress`  
+**Status**: `completed`  
 **Related Spec**: [spec.md](./spec.md)
 
 ## Overview

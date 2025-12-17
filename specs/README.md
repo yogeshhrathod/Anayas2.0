@@ -47,7 +47,9 @@ This directory contains feature specifications and bug reports following the spe
 | `011-response-tab-redesign` | [response-tab-redesign](specs/011-response-tab-redesign/spec.md) | `completed` | Phase 2 - Core Features Enhancement | Development Team |
 | `012-ui-design-system-alignment` | [ui-design-system-alignment](specs/012-ui-design-system-alignment/spec.md) | `planned` | [UI & DX polish phase in `plan-timeline.md` – to be finalized] | [TBD] |
 | `013-font-settings` | [font-settings](specs/013-font-settings/spec.md) | `completed` |  | @yrathod |
-| `014-postman-collection-import` | [postman-collection-import](specs/014-postman-collection-import/spec.md) | `in-progress` | Phase 3: Import/Export & Interoperability (plan-timeline.md) | Development Team |
+| `005-variable-input-consolidation` | [variable-input-consolidation](specs/005-variable-input-consolidation/spec.md) | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact) | Development Team |
+| `014-postman-collection-import` | [postman-collection-import](specs/014-postman-collection-import/spec.md) | `completed` | Phase 3: Import/Export & Interoperability (plan-timeline.md) | Development Team |
+| `016-ci-cd-multi-platform` | [ci-cd-multi-platform](specs/016-ci-cd-multi-platform/spec.md) | `completed` | Infrastructure & DevOps | Development Team |
 | `015-environment-import-export` | [environment-import-export](specs/015-environment-import-export/spec.md) | `completed` | Phase 3: Import/Export & Interoperability (plan-timeline.md) | Development Team |
 
 ## Bug List
@@ -57,6 +59,7 @@ This directory contains feature specifications and bug reports following the spe
 | `bug-001-z-index-fixes` | [z-index-fixes](specs/bug-001-z-index-fixes/spec.md) | `resolved` | `high` | `P1` | N/A (Infrastructure/UI Fix) | Development Team |
 | `bug-002-variable-context-menu-fixes` | [variable-context-menu-fixes](specs/bug-002-variable-context-menu-fixes/spec.md) | `resolved` | `medium` | `P1` | `specs/005-variable-input-consolidation/` (Variable Input Components Consolidation) | Development Team |
 | `bug-003-sidebar-collection-collapse` | [sidebar-collection-collapse](specs/bug-003-sidebar-collection-collapse/spec.md) | `resolved` | `medium` | `P2` | Collections Management (Phase 2) | Development Team |
+| `bug-004-font-settings-not-applied` | [font-settings-not-applied](specs/bug-004-font-settings-not-applied/spec.md) | `resolved` | `medium` | `P1` | `specs/013-font-settings/` (Font Settings) | Development Team |
 
 ## Creating Items
 
