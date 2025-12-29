@@ -18,11 +18,11 @@
  * ```
  */
 
+import { Eye, FileText, Key, Settings, Shield } from 'lucide-react';
 import React from 'react';
-import { Badge } from '../ui/badge';
-import { Settings, Shield, Key, FileText, Eye } from 'lucide-react';
-import { RequestFormData } from '../../types/forms';
 import { ResponseData } from '../../types/entities';
+import { RequestFormData } from '../../types/forms';
+import { Badge } from '../ui/badge';
 
 export interface RequestTabsProps {
   activeTab: 'params' | 'auth' | 'headers' | 'body' | 'response';
@@ -74,7 +74,7 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
 
   return (
     <div className="border-b border-border/50 bg-card/30">
-      <div className="px-4 py-2">
+      <div>
         <div className="flex items-center gap-1 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;

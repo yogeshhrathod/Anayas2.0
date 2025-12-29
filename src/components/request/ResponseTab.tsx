@@ -27,16 +27,16 @@
  * ```
  */
 
+import { History } from 'lucide-react';
 import { useEffect } from 'react';
 import { cn } from '../../lib/utils';
+import { useStore } from '../../store/useStore';
 import { ResponseData } from '../../types/entities';
+import { Button } from '../ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { ResponseBodyView } from './ResponseBodyView';
 import { ResponseBothView } from './ResponseBothView';
 import { ResponseHeadersView } from './ResponseHeadersView';
-import { useStore } from '../../store/useStore';
-import { History } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 export interface ResponseTabProps {
   response: ResponseData | null;
@@ -158,7 +158,7 @@ export function ResponseTab({
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Sub-tab Navigation - Fixed height */}
-      <div className="flex-shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-b border-border/50 bg-muted/20">
+      <div className="flex-shrink-0 flex items-center justify-between gap-2 border-b border-border/50 bg-muted/20">
         <div className="flex items-center gap-2">
         <button
           onClick={() => setResponseSubTab('headers')}
