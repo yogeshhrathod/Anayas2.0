@@ -23,6 +23,7 @@ export {
   deleteRequest,
   addRequestHistory,
   deleteRequestHistory,
+  clearAllRequestHistory,
   setSetting,
   getSetting,
   getAllSettings,

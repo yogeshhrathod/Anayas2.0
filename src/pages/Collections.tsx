@@ -13,13 +13,14 @@
  * ```
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { PageLayout } from '../components/shared/PageLayout';
 import { CollectionForm } from '../components/collection/CollectionForm';
 import { CollectionGrid } from '../components/collection/CollectionGrid';
 import { CollectionActions } from '../components/collection/CollectionActions';
 import { CollectionRunner } from '../components/collection/CollectionRunner';
 import { CurlImportDialog } from '../components/curl/CurlImportDialog';
+import { ImportCollectionDialog } from '../components/import';
 import { useCollectionOperations } from '../hooks/useCollectionOperations';
 import { useConfirmation } from '../hooks/useConfirmation';
 import { useStore } from '../store/useStore';
@@ -34,9 +35,10 @@ export function Collections() {
   const [isSaving, setIsSaving] = useState(false);
   const [runningCollection, setRunningCollection] = useState<Collection | null>(null);
   const [showCurlImport, setShowCurlImport] = useState(false);
+  const [showPostmanImport, setShowPostmanImport] = useState(false);
   const formRef = useRef<React.ElementRef<typeof CollectionForm>>(null);
 
-  const { setCurrentPage, setSelectedRequest, triggerSidebarRefresh } = useStore();
+  const { setCurrentPage, setSelectedRequest, triggerSidebarRefresh, collectionToEditId, setCollectionToEditId } = useStore();
   const { showSuccess, showError } = useToastNotifications();
 
   const {
@@ -50,11 +52,23 @@ export function Collections() {
     deleteCollection,
     duplicateCollection,
     toggleFavorite,
-    exportCollections,
-    importCollections
+    exportCollections
   } = useCollectionOperations();
 
   const { confirm } = useConfirmation();
+
+  // Watch for collectionToEditId from variable context menu
+  useEffect(() => {
+    if (collectionToEditId && collections.length > 0) {
+      const collection = collections.find(c => c.id === collectionToEditId);
+      if (collection && !isEditing) {
+        setEditingCollection(collection);
+        setIsEditing(true);
+        setCollectionToEditId(null); // Clear after opening
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collectionToEditId, collections, isEditing]);
 
   const handleNewCollection = () => {
     setEditingCollection(null);
@@ -141,7 +155,7 @@ export function Collections() {
   };
 
   const handleImport = () => {
-    importCollections();
+    setShowPostmanImport(true);
   };
 
   const handleCurlImport = () => {
@@ -235,7 +249,6 @@ export function Collections() {
           onDuplicate={handleDuplicateCollection}
           onToggleFavorite={handleToggleFavorite}
           onExport={handleExport}
-          onImport={handleImport}
           onRun={handleRunCollection}
         />
       </div>
@@ -253,6 +266,18 @@ export function Collections() {
         open={showCurlImport}
         onOpenChange={setShowCurlImport}
         onImport={handleCurlImportComplete}
+      />
+
+      <ImportCollectionDialog
+        open={showPostmanImport}
+        onOpenChange={setShowPostmanImport}
+        onSuccess={async () => {
+          // Refresh collections after import
+          triggerSidebarRefresh();
+          showSuccess('Collection imported', {
+            description: 'Postman collection imported successfully',
+          });
+        }}
       />
     </PageLayout>
   );

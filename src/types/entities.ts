@@ -73,6 +73,12 @@ export interface RequestHistory {
   response_body?: string;
   headers?: string;
   createdAt?: string;
+  requestId?: number; // Link to original saved request
+  collectionId?: number; // Link to collection if request was saved
+  requestBody?: string; // Store request body for reconstruction
+  queryParams?: Array<{ key: string; value: string; enabled: boolean }>; // Store query params
+  auth?: any; // Store auth info
+  requestName?: string; // Name of the request (for saved requests)
 }
 
 export interface RequestPreset {

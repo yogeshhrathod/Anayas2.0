@@ -103,9 +103,10 @@ export function ImportPreview({ importResult }: ImportPreviewProps) {
     }
 
     // Add requests
-    for (const request of importResult.requests) {
+    for (let index = 0; index < importResult.requests.length; index++) {
+      const request = importResult.requests[index];
       const node: TreeNode = {
-        id: `req-${request.name}-${request.method}-${request.url}`,
+        id: `req-${request.folderTempId || 'root'}-${request.name}-${request.method}-${request.url}-${index}`,
         type: 'request',
         name: request.name,
         method: request.method,

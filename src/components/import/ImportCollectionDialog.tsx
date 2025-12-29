@@ -423,7 +423,7 @@ export function ImportCollectionDialog({
                 </p>
                 <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
                   {importResult.warnings.slice(0, 5).map((w, i) => (
-                    <li key={i}>• {w.message}</li>
+                    <li key={`warning-${i}-${w.message?.substring(0, 20) || i}`}>• {w.message}</li>
                   ))}
                   {importResult.warnings.length > 5 && (
                     <li>• ...and {importResult.warnings.length - 5} more</li>
@@ -519,3 +519,6 @@ export function ImportCollectionDialog({
     </Dialog>
   );
 }
+
+
+

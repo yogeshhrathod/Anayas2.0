@@ -727,7 +727,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                   dragDrop.handleDragEnd();
                   setUnsavedDragOver(null);
                 },
-                onDragLeave: (e) => {
+                onDragLeave: (e: React.DragEvent<HTMLElement>) => {
                   // Only clear if we're actually leaving the collection group entirely
                   const relatedTarget = e.relatedTarget as HTMLElement;
                   if (relatedTarget) {
@@ -789,7 +789,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                     handleUnsavedDragOver(e, 'collection', collection.id!);
                   }
                 }}
-                onDragLeave={(e) => {
+                onDragLeave={(e: React.DragEvent<HTMLElement>) => {
                   // Only clear if we're actually leaving the collection group entirely
                   const relatedTarget = e.relatedTarget as HTMLElement;
                   if (relatedTarget) {
@@ -872,7 +872,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                             dragDrop.handleDragEnd();
                             setUnsavedDragOver(null);
                           },
-                          onDragLeave: (e) => {
+                          onDragLeave: (e: React.DragEvent<HTMLElement>) => {
                             // Only clear if we're actually leaving the folder group entirely
                             const relatedTarget = e.relatedTarget as HTMLElement;
                             if (relatedTarget) {
@@ -941,7 +941,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
                               handleUnsavedDragOver(e, 'folder', folder.id!);
                             }
                           }}
-                          onDragLeave={(e) => {
+                          onDragLeave={(e: React.DragEvent<HTMLElement>) => {
                             // Only clear if we're actually leaving the folder group entirely
                             const relatedTarget = e.relatedTarget as HTMLElement;
                             if (relatedTarget) {

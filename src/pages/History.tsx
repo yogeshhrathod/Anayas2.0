@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Dialog } from '../components/ui/dialog';
@@ -6,21 +6,89 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Trash2, Search, Filter, Clock, CheckCircle2, XCircle, Play, Eye } from 'lucide-react';
+import { Trash2, Search, Filter, Clock, CheckCircle2, XCircle, Play, Eye, Copy, ArrowRight, Group, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { useToast } from '../components/ui/use-toast';
+import { Request } from '../types/entities';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
 
 export function History() {
-  const { requestHistory, setRequestHistory, currentEnvironment } = useStore();
+  const { requestHistory, setRequestHistory, currentEnvironment, setSelectedRequest, setCurrentPage, historyFilter, setHistoryFilter } = useStore();
   const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterMethod, setFilterMethod] = useState<string>('all');
   const [filterDate, setFilterDate] = useState<string>('all');
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [groupByRequest, setGroupByRequest] = useState(false);
+  const [selectedRequest, setSelectedRequestDetail] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [activeDetailTab, setActiveDetailTab] = useState<'request' | 'response' | 'headers'>('request');
   const [rerunningRequest, setRerunningRequest] = useState<number | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  // Load history on mount and when navigating to this page
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const history = await window.electronAPI.request.history(100);
+        setRequestHistory(history);
+      } catch (error) {
+        console.error('Failed to load history:', error);
+      }
+    };
+
+    loadHistory();
+  }, [setRequestHistory]);
+
+  // Listen for history updates
+  useEffect(() => {
+    const api: any = window.electronAPI;
+    if (!api || !api.request || typeof api.request.onHistoryUpdated !== 'function') {
+      return;
+    }
+
+    const handleHistoryUpdated = async () => {
+      try {
+        const history = await window.electronAPI.request.history(100);
+        setRequestHistory(history);
+      } catch (error) {
+        console.error('Failed to refresh history:', error);
+      }
+    };
+
+    const unsubscribe = api.request.onHistoryUpdated(handleHistoryUpdated);
+    return () => {
+      unsubscribe?.();
+    };
+  }, [setRequestHistory]);
+
+  // Apply history filter if set (from "Show History" button)
+  useEffect(() => {
+    if (historyFilter) {
+      if (historyFilter.requestId) {
+        // For saved requests, filter by requestId
+        setSearchTerm('');
+        setFilterMethod('all');
+      } else if (historyFilter.method && historyFilter.url) {
+        // For unsaved requests, filter by method and URL
+        setSearchTerm(historyFilter.url);
+        setFilterMethod(historyFilter.method);
+      }
+    }
+  }, [historyFilter]);
 
   const filteredHistory = requestHistory.filter((request: any) => {
+    // Apply history filter first (if set)
+    let matchesHistoryFilter = true;
+    if (historyFilter) {
+      if (historyFilter.requestId) {
+        matchesHistoryFilter = request.requestId === historyFilter.requestId;
+      } else if (historyFilter.method && historyFilter.url) {
+        matchesHistoryFilter = 
+          request.method.toLowerCase() === historyFilter.method.toLowerCase() &&
+          request.url === historyFilter.url;
+      }
+    }
+
     const matchesSearch = request.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          request.method.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || 
@@ -49,8 +117,41 @@ export function History() {
       }
     }
     
-    return matchesSearch && matchesStatus && matchesMethod && matchesDate;
+    return matchesHistoryFilter && matchesSearch && matchesStatus && matchesMethod && matchesDate;
   });
+
+  // Group history by request (saved or unsaved)
+  const groupedHistory = useMemo(() => {
+    if (!groupByRequest) {
+      return { ungrouped: filteredHistory };
+    }
+
+    const groups: Record<string, any[]> = {};
+    
+    filteredHistory.forEach((item: any) => {
+      // Group by requestId if available (saved request)
+      // Otherwise group by URL + method (unsaved requests)
+      const key = item.requestId 
+        ? `saved-${item.requestId}` 
+        : `unsaved-${item.method}-${item.url}`;
+      
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(item);
+    });
+
+    // Sort groups by most recent
+    Object.keys(groups).forEach(key => {
+      groups[key].sort((a, b) => {
+        const aTime = new Date(a.createdAt).getTime();
+        const bTime = new Date(b.createdAt).getTime();
+        return bTime - aTime;
+      });
+    });
+
+    return groups;
+  }, [filteredHistory, groupByRequest]);
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this request from history?')) return;
@@ -69,15 +170,23 @@ export function History() {
   const handleRerun = async (request: any) => {
     setRerunningRequest(request.id);
     try {
+      const headers = typeof request.headers === 'string' 
+        ? JSON.parse(request.headers) 
+        : (request.headers || {});
+      
+      const body = request.requestBody 
+        ? (typeof request.requestBody === 'string' ? request.requestBody : JSON.stringify(request.requestBody))
+        : '';
+
       const result = await window.electronAPI.request.send({
         method: request.method,
         url: request.url,
-        headers: typeof request.headers === 'string' 
-          ? JSON.parse(request.headers) 
-          : (request.headers || {}),
-        body: typeof request.response_body === 'string' 
-          ? JSON.parse(request.response_body) 
-          : request.response_body,
+        headers,
+        body,
+        queryParams: request.queryParams || [],
+        auth: request.auth || { type: 'none' },
+        requestId: request.requestId,
+        collectionId: request.collectionId,
         environmentId: currentEnvironment?.id
       });
 
@@ -97,8 +206,127 @@ export function History() {
   };
 
   const handleViewDetails = (request: any) => {
-    setSelectedRequest(request);
+    setSelectedRequestDetail(request);
     setShowDetails(true);
+    setActiveDetailTab('request');
+  };
+
+  const handleRedirectToRequest = async (request: any) => {
+    try {
+      // If requestId exists, try to load the saved request
+      if (request.requestId) {
+        const savedRequest = await window.electronAPI.request.get(request.requestId);
+        if (savedRequest) {
+          setSelectedRequest(savedRequest as Request);
+          setCurrentPage('home');
+          success('Request loaded', 'Redirected to original request');
+          return;
+        }
+      }
+
+      // Otherwise, reconstruct from history data
+      const reconstructedRequest: Request = {
+        id: undefined,
+        name: request.requestId ? 'Request from History' : 'Unsaved Request',
+        method: request.method as Request['method'],
+        url: request.url,
+        headers: typeof request.headers === 'string' 
+          ? JSON.parse(request.headers) 
+          : (request.headers || {}),
+        body: request.requestBody || '',
+        queryParams: request.queryParams || [],
+        auth: request.auth || { type: 'none' },
+        collectionId: request.collectionId,
+        folderId: undefined,
+        isFavorite: 0,
+      };
+
+      setSelectedRequest(reconstructedRequest);
+      setCurrentPage('home');
+      success('Request loaded', 'Request reconstructed from history');
+    } catch (e: any) {
+      console.error('Failed to redirect to request:', e);
+      error('Redirect failed', e?.message || 'Could not load request');
+    }
+  };
+
+  const handleCopyCurl = async (request: any) => {
+    try {
+      const headers = typeof request.headers === 'string' 
+        ? JSON.parse(request.headers) 
+        : (request.headers || {});
+      
+      const body = request.requestBody 
+        ? (typeof request.requestBody === 'string' ? request.requestBody : JSON.stringify(request.requestBody))
+        : '';
+
+      const result = await window.electronAPI.curl.generate({
+        method: request.method,
+        url: request.url,
+        headers,
+        body,
+        queryParams: request.queryParams || [],
+        auth: request.auth || { type: 'none' },
+        collectionId: request.collectionId,
+      });
+
+      if (result.success && result.command) {
+        await navigator.clipboard.writeText(result.command);
+        success('Copied', 'cURL command copied to clipboard');
+      } else {
+        error('Failed to generate cURL', result.error || 'Unknown error');
+      }
+    } catch (e: any) {
+      console.error('Failed to copy cURL:', e);
+      error('Copy failed', e?.message || 'Could not copy cURL command');
+    }
+  };
+
+  const handleCopyRequestData = async (request: any) => {
+    try {
+      const headers = typeof request.headers === 'string' 
+        ? JSON.parse(request.headers) 
+        : (request.headers || {});
+      
+      const requestData = {
+        method: request.method,
+        url: request.url,
+        headers,
+        body: request.requestBody || '',
+        queryParams: request.queryParams || [],
+        auth: request.auth || { type: 'none' },
+      };
+
+      await navigator.clipboard.writeText(JSON.stringify(requestData, null, 2));
+      success('Copied', 'Request data copied to clipboard');
+    } catch (e: any) {
+      console.error('Failed to copy request data:', e);
+      error('Copy failed', e?.message || 'Could not copy request data');
+    }
+  };
+
+  const handleCopyResponse = async (request: any) => {
+    try {
+      const responseBody = request.response_body || '';
+      await navigator.clipboard.writeText(responseBody);
+      success('Copied', 'Response body copied to clipboard');
+    } catch (e: any) {
+      console.error('Failed to copy response:', e);
+      error('Copy failed', e?.message || 'Could not copy response');
+    }
+  };
+
+  const handleClearAllHistory = async () => {
+    try {
+      await window.electronAPI.request.clearAllHistory();
+      const updatedHistory = await window.electronAPI.request.history(100);
+      setRequestHistory(updatedHistory);
+      setShowClearConfirm(false);
+      success('History cleared', 'All request history has been deleted');
+    } catch (e: any) {
+      console.error('Failed to clear history:', e);
+      error('Clear failed', e?.message || 'Could not clear history');
+    }
   };
 
   const getUniqueMethods = () => {
@@ -124,6 +352,92 @@ export function History() {
     }
   };
 
+  const renderHistoryItem = (request: any) => (
+    <div key={request.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between">
+        <div className="flex-1 min-w-0">
+          {request.requestName && (
+            <h3 className="font-semibold text-base mb-2 text-foreground">
+              {request.requestName}
+            </h3>
+          )}
+          <div className="flex items-center gap-3 mb-2">
+            <Badge variant="outline" className="text-xs font-mono">
+              {request.method}
+            </Badge>
+            {getStatusBadge(request.status)}
+            <span className="text-sm text-muted-foreground">
+              {request.responseTime}ms
+            </span>
+            {request.requestId && (
+              <Badge variant="secondary" className="text-xs">
+                Saved
+              </Badge>
+            )}
+          </div>
+          <p className={`text-sm mb-1 break-all ${request.requestName ? 'text-muted-foreground' : 'font-medium'}`}>
+            {request.url}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {new Date(request.createdAt).toLocaleString()}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleRedirectToRequest(request)}
+            className="hover:bg-blue-50 dark:hover:bg-blue-950"
+            title="Go to original request"
+          >
+            <ArrowRight className="h-4 w-4 text-blue-500" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleCopyCurl(request)}
+            className="hover:bg-purple-50 dark:hover:bg-purple-950"
+            title="Copy as cURL"
+          >
+            <Copy className="h-4 w-4 text-purple-500" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleViewDetails(request)}
+            className="hover:bg-blue-50 dark:hover:bg-blue-950"
+            title="View details"
+          >
+            <Eye className="h-4 w-4 text-blue-500" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleRerun(request)}
+            disabled={rerunningRequest === request.id}
+            className="hover:bg-green-50 dark:hover:bg-green-950"
+            title="Rerun request"
+          >
+            {rerunningRequest === request.id ? (
+              <Clock className="h-4 w-4 animate-spin text-green-500" />
+            ) : (
+              <Play className="h-4 w-4 text-green-500" />
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDelete(request.id)}
+            className="hover:bg-red-50 dark:hover:bg-red-950"
+            title="Delete"
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -135,6 +449,29 @@ export function History() {
             View and manage your API request history
           </p>
         </div>
+        {historyFilter && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setHistoryFilter(null);
+                    setCurrentPage('home');
+                  }}
+                  className="p-2"
+                  title="Back to Request"
+                >
+                  <ArrowLeft className="h-4 w-4 text-primary" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Back to Request
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
 
       {/* Filters */}
@@ -151,7 +488,7 @@ export function History() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-5">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -195,6 +532,14 @@ export function History() {
                 <SelectItem value="month">This Month</SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              variant={groupByRequest ? "default" : "outline"}
+              onClick={() => setGroupByRequest(!groupByRequest)}
+              className="flex items-center gap-2"
+            >
+              <Group className="h-4 w-4" />
+              {groupByRequest ? 'Ungroup' : 'Group by Request'}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -210,10 +555,35 @@ export function History() {
               <div>
                 <CardTitle>Request History</CardTitle>
                 <CardDescription>
-                  {filteredHistory.length} of {requestHistory.length} requests
+                  {historyFilter ? (
+                    <>
+                      Showing history for this request ({filteredHistory.length} of {requestHistory.length} total)
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setHistoryFilter(null)}
+                        className="ml-2 h-6 text-xs"
+                      >
+                        Clear Filter
+                      </Button>
+                    </>
+                  ) : (
+                    `${filteredHistory.length} of ${requestHistory.length} requests`
+                  )}
                 </CardDescription>
               </div>
             </div>
+            {requestHistory.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowClearConfirm(true)}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Clear All History
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -228,60 +598,27 @@ export function History() {
                 }
               </p>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredHistory.map((request: any) => (
-                <div key={request.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Badge variant="outline" className="text-xs font-mono">
-                          {request.method}
-                        </Badge>
-                        {getStatusBadge(request.status)}
-                        <span className="text-sm text-muted-foreground">
-                          {request.responseTime}ms
-                        </span>
-                      </div>
-                      <p className="font-medium text-sm mb-1 break-all">{request.url}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(request.createdAt).toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewDetails(request)}
-                        className="hover:bg-blue-50 dark:hover:bg-blue-950"
-                      >
-                        <Eye className="h-4 w-4 text-blue-500" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRerun(request)}
-                        disabled={rerunningRequest === request.id}
-                        className="hover:bg-green-50 dark:hover:bg-green-950"
-                      >
-                        {rerunningRequest === request.id ? (
-                          <Clock className="h-4 w-4 animate-spin text-green-500" />
-                        ) : (
-                          <Play className="h-4 w-4 text-green-500" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(request.id)}
-                        className="hover:bg-red-50 dark:hover:bg-red-950"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
+          ) : groupByRequest ? (
+            <div className="space-y-6">
+              {Object.entries(groupedHistory).map(([key, items]) => (
+                <div key={key} className="space-y-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-semibold text-sm text-muted-foreground">
+                      {key.startsWith('saved-') 
+                        ? items[0].requestName 
+                          ? `${items[0].requestName} (${items.length} execution${items.length > 1 ? 's' : ''})`
+                          : `Saved Request (${items.length} execution${items.length > 1 ? 's' : ''})`
+                        : `Unsaved Request: ${items[0].method} ${items[0].url.substring(0, 50)}${items[0].url.length > 50 ? '...' : ''} (${items.length} execution${items.length > 1 ? 's' : ''})`
+                      }
+                    </h3>
                   </div>
+                  {items.map((item: any) => renderHistoryItem(item))}
                 </div>
               ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredHistory.map((request: any) => renderHistoryItem(request))}
             </div>
           )}
         </CardContent>
@@ -304,13 +641,132 @@ export function History() {
             </div>
           }
           description={selectedRequest.url}
-          maxWidth="4xl"
-          className="w-4/5 max-h-[80vh]"
+          maxWidth="6xl"
+          className="w-[90vw] max-h-[85vh]"
         >
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold mb-2">Request Headers</h4>
-                  <pre className="bg-muted p-3 rounded text-xs overflow-auto">
+          <div className="space-y-4">
+            {/* Tab Navigation */}
+            <div className="flex items-center gap-2 border-b">
+              <button
+                onClick={() => setActiveDetailTab('request')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  activeDetailTab === 'request'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Request
+              </button>
+              <button
+                onClick={() => setActiveDetailTab('headers')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  activeDetailTab === 'headers'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Headers
+              </button>
+              <button
+                onClick={() => setActiveDetailTab('response')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  activeDetailTab === 'response'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Response
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div className="max-h-[60vh] overflow-auto">
+              {activeDetailTab === 'request' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">Request Data</h4>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopyCurl(selectedRequest)}
+                      >
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy cURL
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopyRequestData(selectedRequest)}
+                      >
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy Request Data
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm font-medium">Method:</span>
+                      <Badge variant="outline" className="ml-2 font-mono">
+                        {selectedRequest.method}
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium">URL:</span>
+                      <pre className="mt-1 bg-muted p-3 rounded text-xs break-all overflow-auto">
+                        {selectedRequest.url}
+                      </pre>
+                    </div>
+                    {selectedRequest.requestBody && (
+                      <div>
+                        <span className="text-sm font-medium">Body:</span>
+                        <pre className="mt-1 bg-muted p-3 rounded text-xs overflow-auto max-h-96">
+                          {typeof selectedRequest.requestBody === 'string' 
+                            ? selectedRequest.requestBody 
+                            : JSON.stringify(selectedRequest.requestBody, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                    {selectedRequest.queryParams && selectedRequest.queryParams.length > 0 && (
+                      <div>
+                        <span className="text-sm font-medium">Query Parameters:</span>
+                        <pre className="mt-1 bg-muted p-3 rounded text-xs overflow-auto">
+                          {JSON.stringify(selectedRequest.queryParams, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                    {selectedRequest.auth && selectedRequest.auth.type !== 'none' && (
+                      <div>
+                        <span className="text-sm font-medium">Authentication:</span>
+                        <pre className="mt-1 bg-muted p-3 rounded text-xs overflow-auto">
+                          {JSON.stringify(selectedRequest.auth, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeDetailTab === 'headers' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">Request Headers</h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const headers = typeof selectedRequest.headers === 'string' 
+                          ? JSON.parse(selectedRequest.headers) 
+                          : (selectedRequest.headers || {});
+                        navigator.clipboard.writeText(JSON.stringify(headers, null, 2));
+                        success('Copied', 'Headers copied to clipboard');
+                      }}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy Headers
+                    </Button>
+                  </div>
+                  <pre className="bg-muted p-3 rounded text-xs overflow-auto max-h-[50vh]">
                     {selectedRequest.headers 
                       ? JSON.stringify(
                           typeof selectedRequest.headers === 'string' 
@@ -322,34 +778,93 @@ export function History() {
                       : 'No headers'}
                   </pre>
                 </div>
-                
-                <div>
-                  <h4 className="font-semibold mb-2">Response Body</h4>
-                  <pre className="bg-muted p-3 rounded text-xs overflow-auto max-h-96">
-                    {selectedRequest.response_body || 'No response body'}
-                  </pre>
-                </div>
-                
-                <div>
-                  <h4 className="font-semibold mb-2">Request Details</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Status:</span> {selectedRequest.status}
+              )}
+
+              {activeDetailTab === 'response' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">Response Body</h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCopyResponse(selectedRequest)}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy Response
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium">Status:</span> {selectedRequest.status}
+                      </div>
+                      <div>
+                        <span className="font-medium">Response Time:</span> {selectedRequest.responseTime}ms
+                      </div>
+                      <div>
+                        <span className="font-medium">Method:</span> {selectedRequest.method}
+                      </div>
+                      <div>
+                        <span className="font-medium">Date:</span> {new Date(selectedRequest.createdAt).toLocaleString()}
+                      </div>
                     </div>
-                    <div>
-                      <span className="font-medium">Response Time:</span> {selectedRequest.responseTime}ms
-                    </div>
-                    <div>
-                      <span className="font-medium">Method:</span> {selectedRequest.method}
-                    </div>
-                    <div>
-                      <span className="font-medium">Date:</span> {new Date(selectedRequest.created_at).toLocaleString()}
-                    </div>
+                    <pre className="bg-muted p-3 rounded text-xs overflow-auto max-h-[50vh] whitespace-pre-wrap break-words">
+                      {selectedRequest.response_body || 'No response body'}
+                    </pre>
                   </div>
                 </div>
-              </div>
+              )}
+            </div>
+          </div>
         </Dialog>
       )}
+
+      {/* Clear All History Confirmation Dialog */}
+      <Dialog
+        open={showClearConfirm}
+        onOpenChange={setShowClearConfirm}
+        title="Clear All History"
+        description="This action cannot be undone"
+        maxWidth="md"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h4 className="font-semibold text-destructive mb-1">Warning: Destructive Action</h4>
+              <p className="text-sm text-muted-foreground">
+                You are about to delete all {requestHistory.length} request history entries. This action cannot be undone.
+              </p>
+            </div>
+          </div>
+          
+          <div className="bg-muted/50 p-3 rounded text-sm">
+            <p className="font-medium mb-1">This will permanently delete:</p>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+              <li>All request execution history</li>
+              <li>All response data</li>
+              <li>All request metadata</li>
+            </ul>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowClearConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleClearAllHistory}
+              className="flex items-center gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Clear All History
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }

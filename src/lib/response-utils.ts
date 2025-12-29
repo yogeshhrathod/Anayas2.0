@@ -67,11 +67,20 @@ export function getStatusDisplay(status: number | undefined | null): string {
  */
 export function getStatusVariant(
   status: number | undefined | null
-): 'default' | 'destructive' {
+): 'default' | 'destructive' | 'success' | 'warning' | 'error' {
   if (status === undefined || status === null) {
     return 'destructive';
   }
-  return status >= 200 && status < 300 ? 'default' : 'destructive';
+  if (status >= 200 && status < 300) {
+    return 'success';
+  }
+  if (status >= 400 && status < 500) {
+    return 'error';
+  }
+  if (status >= 500) {
+    return 'destructive';
+  }
+  return 'default';
 }
 
 /**

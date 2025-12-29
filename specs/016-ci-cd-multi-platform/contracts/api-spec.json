@@ -1,0 +1,157 @@
+{
+  "feature": "ci-cd-multi-platform",
+  "version": "1.0.0",
+  "contracts": {
+    "build": {
+      "configuration": {
+        "location": "package.json",
+        "section": "build",
+        "appId": "com.anayas.app",
+        "productName": "Anayas",
+        "outputDirectory": "release",
+        "buildResources": "build"
+      },
+      "platforms": {
+        "mac": {
+          "targets": ["dmg", "zip"],
+          "category": "public.app-category.developer-tools",
+          "icon": "build/icons/icon.png",
+          "outputs": [
+            "Anayas-{version}.dmg",
+            "Anayas-{version}-mac.zip"
+          ]
+        },
+        "win": {
+          "targets": ["nsis", "zip"],
+          "icon": "build/icons/icon.png",
+          "outputs": [
+            "Anayas Setup {version}.exe",
+            "Anayas-{version}-win.zip"
+          ]
+        },
+        "linux": {
+          "targets": ["AppImage", "deb"],
+          "icon": "build/icons/icon.png",
+          "outputs": [
+            "Anayas-{version}.AppImage",
+            "anayas_{version}_amd64.deb"
+          ]
+        }
+      }
+    },
+    "scripts": {
+      "build": {
+        "command": "npm run build",
+        "description": "Build for all platforms",
+        "steps": [
+          "npm run type-check",
+          "vite build",
+          "electron-builder --mac --win --linux"
+        ]
+      },
+      "buildMac": {
+        "command": "npm run build:mac",
+        "description": "Build for macOS only",
+        "steps": [
+          "npm run type-check",
+          "vite build",
+          "electron-builder --mac"
+        ]
+      },
+      "buildWin": {
+        "command": "npm run build:win",
+        "description": "Build for Windows only",
+        "steps": [
+          "npm run type-check",
+          "vite build",
+          "electron-builder --win"
+        ]
+      },
+      "buildLinux": {
+        "command": "npm run build:linux",
+        "description": "Build for Linux only",
+        "steps": [
+          "npm run type-check",
+          "vite build",
+          "electron-builder --linux"
+        ]
+      }
+    },
+    "outputs": {
+      "directory": "release/",
+      "artifacts": {
+        "mac": {
+          "dmg": {
+            "name": "Anayas-{version}.dmg",
+            "type": "installer",
+            "description": "macOS disk image installer"
+          },
+          "zip": {
+            "name": "Anayas-{version}-mac.zip",
+            "type": "archive",
+            "description": "macOS app bundle archive"
+          }
+        },
+        "windows": {
+          "nsis": {
+            "name": "Anayas Setup {version}.exe",
+            "type": "installer",
+            "description": "Windows NSIS installer"
+          },
+          "zip": {
+            "name": "Anayas-{version}-win.zip",
+            "type": "archive",
+            "description": "Windows portable archive"
+          }
+        },
+        "linux": {
+          "appimage": {
+            "name": "Anayas-{version}.AppImage",
+            "type": "executable",
+            "description": "Universal Linux executable"
+          },
+          "deb": {
+            "name": "anayas_{version}_amd64.deb",
+            "type": "package",
+            "description": "Debian/Ubuntu package"
+          }
+        }
+      }
+    },
+    "crossPlatformBuilding": {
+      "fromMac": {
+        "mac": "native (best)",
+        "win": "supported (via wine)",
+        "linux": "supported"
+      },
+      "fromWindows": {
+        "mac": "limited",
+        "win": "native (best)",
+        "linux": "supported"
+      },
+      "fromLinux": {
+        "mac": "limited",
+        "win": "supported",
+        "linux": "native (best)"
+      },
+      "recommendation": "Build on native platform when possible"
+    }
+  },
+  "dependencies": {
+    "electron-builder": "^24.0.0",
+    "electron": "^28.0.0",
+    "vite": "^5.0.0"
+  },
+  "futureEnhancements": [
+    "GitHub Actions CI/CD automation",
+    "Code signing for macOS and Windows",
+    "macOS notarization",
+    "Auto-update mechanism (electron-updater)",
+    "Universal macOS binary (ARM64 + x64)",
+    "Windows Store distribution",
+    "Mac App Store distribution",
+    "Snap package for Linux",
+    "Flatpak for Linux"
+  ]
+}
+

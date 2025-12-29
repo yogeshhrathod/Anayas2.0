@@ -477,6 +477,11 @@ export function deleteRequestHistory(id: number): void {
   saveDatabase();
 }
 
+export function clearAllRequestHistory(): void {
+  db.request_history = [];
+  saveDatabase();
+}
+
 export function setSetting(key: string, value: any): void {
   if (value === undefined || value === null) {
     // Delete the key if value is undefined or null

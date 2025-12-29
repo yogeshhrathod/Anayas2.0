@@ -1,0 +1,181 @@
+{
+  "feature": "variable-input-consolidation",
+  "version": "1.0.0",
+  "contracts": {
+    "hook": {
+      "name": "useVariableInput",
+      "type": "React Hook",
+      "location": "src/hooks/useVariableInput.ts",
+      "interface": {
+        "parameters": {
+          "value": {
+            "type": "string",
+            "required": true,
+            "description": "Current input value"
+          },
+          "onChange": {
+            "type": "(value: string) => void",
+            "required": true,
+            "description": "Callback when value changes"
+          }
+        },
+        "returns": {
+          "showAutocomplete": {
+            "type": "boolean",
+            "description": "Whether autocomplete dropdown is visible"
+          },
+          "searchTerm": {
+            "type": "string",
+            "description": "Current autocomplete search term"
+          },
+          "showOnlyDynamic": {
+            "type": "boolean",
+            "description": "Whether to show only dynamic variables"
+          },
+          "dropdownPosition": {
+            "type": "{ top: number; left: number }",
+            "description": "Position of autocomplete dropdown"
+          },
+          "inputRef": {
+            "type": "RefObject<HTMLInputElement>",
+            "description": "Ref to input element"
+          },
+          "wrapperRef": {
+            "type": "RefObject<HTMLDivElement>",
+            "description": "Ref to wrapper element"
+          },
+          "handleChange": {
+            "type": "(e: ChangeEvent<HTMLInputElement>) => void",
+            "description": "Handle input change event"
+          },
+          "handleAutocompleteSelect": {
+            "type": "(variableName: string) => void",
+            "description": "Handle variable selection from autocomplete"
+          },
+          "handleClose": {
+            "type": "() => void",
+            "description": "Close autocomplete dropdown"
+          },
+          "variables": {
+            "type": "Array<{ name: string; value: string }>",
+            "description": "Available variables for autocomplete"
+          }
+        }
+      }
+    },
+    "component": {
+      "name": "VariableInputUnified",
+      "type": "React Component",
+      "location": "src/components/ui/variable-input-unified.tsx",
+      "interface": {
+        "props": {
+          "value": {
+            "type": "string",
+            "required": true,
+            "description": "Input value"
+          },
+          "onChange": {
+            "type": "(value: string) => void",
+            "required": true,
+            "description": "Callback when value changes"
+          },
+          "placeholder": {
+            "type": "string",
+            "required": false,
+            "description": "Input placeholder text"
+          },
+          "className": {
+            "type": "string",
+            "required": false,
+            "description": "Additional CSS classes"
+          },
+          "disabled": {
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "description": "Whether input is disabled"
+          },
+          "variant": {
+            "type": "'basic' | 'highlighted' | 'overlay'",
+            "required": false,
+            "default": "basic",
+            "description": "Component variant",
+            "options": [
+              {
+                "value": "basic",
+                "description": "Simple input with autocomplete"
+              },
+              {
+                "value": "highlighted",
+                "description": "Input with variable highlighting and context menu"
+              },
+              {
+                "value": "overlay",
+                "description": "Input with resolved value overlay, context menu, and double-click selection"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "migration": {
+    "from": {
+      "components": [
+        "VariableInput",
+        "HighlightedVariableInput",
+        "OverlayVariableInput"
+      ]
+    },
+    "to": {
+      "component": "VariableInputUnified",
+      "mapping": [
+        {
+          "old": "VariableInput",
+          "new": "VariableInputUnified",
+          "variant": "basic"
+        },
+        {
+          "old": "HighlightedVariableInput",
+          "new": "VariableInputUnified",
+          "variant": "highlighted"
+        },
+        {
+          "old": "OverlayVariableInput",
+          "new": "VariableInputUnified",
+          "variant": "overlay"
+        }
+      ]
+    }
+  },
+  "features": {
+    "autocomplete": {
+      "trigger": "{{",
+      "regex": "/\\{\\{(\\$)?[\\w.]+\\}\\}/g",
+      "dynamicVariables": {
+        "prefix": "{{$",
+        "examples": ["{{$timestamp}}", "{{$randomInt}}", "{{$guid}}"]
+      }
+    },
+    "highlighting": {
+      "variant": "highlighted",
+      "features": ["Visual highlighting of variables", "Context menu on right-click"]
+    },
+    "overlay": {
+      "variant": "overlay",
+      "features": [
+        "Resolved value display",
+        "Double-click variable selection",
+        "Context menu",
+        "Visual highlighting"
+      ]
+    }
+  },
+  "performance": {
+    "bundleSizeReduction": "~5-10KB",
+    "codeReduction": "~400 lines",
+    "memoryImpact": "Negligible (<1MB)",
+    "loadTime": "No change"
+  }
+}
+

@@ -33,6 +33,10 @@ import { ResponseData } from '../../types/entities';
 import { ResponseBodyView } from './ResponseBodyView';
 import { ResponseBothView } from './ResponseBothView';
 import { ResponseHeadersView } from './ResponseHeadersView';
+import { useStore } from '../../store/useStore';
+import { History } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 export interface ResponseTabProps {
   response: ResponseData | null;
@@ -42,6 +46,9 @@ export interface ResponseTabProps {
   setResponseSubTab: (tab: 'headers' | 'body' | 'both') => void;
   splitRatio: number;
   setSplitRatio: (ratio: number) => void;
+  requestMethod?: string;
+  requestUrl?: string;
+  requestId?: number;
 }
 
 export function ResponseTab({
@@ -52,7 +59,20 @@ export function ResponseTab({
   setResponseSubTab,
   splitRatio,
   setSplitRatio,
+  requestMethod,
+  requestUrl,
+  requestId,
 }: ResponseTabProps) {
+  const { setCurrentPage, setHistoryFilter } = useStore();
+
+  const handleShowHistory = () => {
+    if (requestId) {
+      setHistoryFilter({ requestId });
+    } else if (requestMethod && requestUrl) {
+      setHistoryFilter({ method: requestMethod, url: requestUrl });
+    }
+    setCurrentPage('history');
+  };
   // Performance tracking: Memory usage
   useEffect(() => {
     const memoryBefore = (performance as any).memory?.usedJSHeapSize || 0;
@@ -138,7 +158,8 @@ export function ResponseTab({
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Sub-tab Navigation - Fixed height */}
-      <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border/50 bg-muted/20">
+      <div className="flex-shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-b border-border/50 bg-muted/20">
+        <div className="flex items-center gap-2">
         <button
           onClick={() => setResponseSubTab('headers')}
           className={cn(
@@ -172,6 +193,27 @@ export function ResponseTab({
         >
           Both
         </button>
+        </div>
+        {(requestId || (requestMethod && requestUrl)) && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleShowHistory}
+                  className="p-2"
+                  title="Show History"
+                >
+                  <History className="h-4 w-4 text-primary" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                View history for this request
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
 
       {/* Sub-tab Content - Fills remaining space */}

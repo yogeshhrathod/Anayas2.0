@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { VariableAutocomplete } from './variable-autocomplete';
 import { VariableContextMenu } from './variable-context-menu';
+import { VariableDefinitionDialog } from './variable-definition-dialog';
 import { useAvailableVariables, useVariableResolution } from '../../hooks/useVariableResolution';
 import { cn } from '../../lib/utils';
 import { useClickOutside } from '../../hooks/useClickOutside';
@@ -89,6 +90,8 @@ export function OverlayVariableInput({
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuVariable, setContextMenuVariable] = useState<string>('');
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [showDefinitionDialog, setShowDefinitionDialog] = useState(false);
+  const [definitionDialogVariable, setDefinitionDialogVariable] = useState<string>('');
   const [autocompletePosition, setAutocompletePosition] = useState({ top: 0, left: 0 });
   
   const inputRef = useRef<HTMLInputElement>(null);
@@ -247,7 +250,7 @@ export function OverlayVariableInput({
           {segments.map((seg, i) => 
             seg.type === 'variable' ? (
               <span
-                key={i}
+                key={`var-${seg.name}-${i}`}
                 className={cn(
                   'font-medium transition-colors',
                   seg.resolved
@@ -276,7 +279,7 @@ export function OverlayVariableInput({
                 {`{{${seg.name}}}`}
               </span>
             ) : (
-              <span key={i} style={{ display: 'inline' }}>{seg.content}</span>
+              <span key={`text-${seg.content?.substring(0, 20)}-${i}`} style={{ display: 'inline' }}>{seg.content}</span>
             )
           )}
           {!value && placeholder && (
@@ -368,8 +371,17 @@ export function OverlayVariableInput({
           variableName={contextMenuVariable}
           position={contextMenuPosition}
           onClose={() => setShowContextMenu(false)}
+          onViewDefinition={(varName) => {
+            setDefinitionDialogVariable(varName);
+            setShowDefinitionDialog(true);
+          }}
         />
       )}
+      <VariableDefinitionDialog
+        open={showDefinitionDialog}
+        onOpenChange={setShowDefinitionDialog}
+        variableName={definitionDialogVariable}
+      />
     </div>
   );
 }

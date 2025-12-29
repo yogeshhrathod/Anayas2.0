@@ -63,6 +63,12 @@ export interface RequestHistory {
   responseBody?: string;
   headers?: string;
   createdAt?: string;
+  requestId?: number; // Link to original saved request
+  collectionId?: number; // Link to collection if request was saved
+  requestBody?: string; // Store request body for reconstruction
+  queryParams?: Array<{ key: string; value: string; enabled: boolean }>; // Store query params
+  auth?: any; // Store auth info
+  requestName?: string; // Name of the request (for saved requests)
 }
 
 export interface RequestOptions {
@@ -73,6 +79,8 @@ export interface RequestOptions {
   auth?: any;
   collectionId?: number;
   queryParams?: Array<{ key: string; value: string; enabled: boolean }>;
+  requestId?: number; // Link to saved request for history tracking
+  environmentId?: number; // Environment ID for variable resolution
 }
 
 export interface SidebarState {
@@ -109,6 +117,7 @@ const createIpcSubscription = (channel: string) => {
 const onCollectionsUpdated = createIpcSubscription('collections:updated');
 const onRequestsUpdated = createIpcSubscription('requests:updated');
 const onFoldersUpdated = createIpcSubscription('folders:updated');
+const onHistoryUpdated = createIpcSubscription('history:updated');
 
 const api = {
   // Environment operations
@@ -117,7 +126,17 @@ const api = {
     save: (env: Environment) => ipcRenderer.invoke('env:save', env),
     delete: (id: number) => ipcRenderer.invoke('env:delete', id),
     test: (env: Environment) => ipcRenderer.invoke('env:test', env),
-    import: (filePath: string) => ipcRenderer.invoke('env:import', filePath),
+    import: (
+      content: string,
+      format?: 'json' | 'env' | 'postman' | 'auto'
+    ) => ipcRenderer.invoke('env:import', content, format),
+    export: (
+      environmentIds: number[],
+      format: 'json' | 'env' | 'postman'
+    ) => ipcRenderer.invoke('env:export', environmentIds, format),
+    detectFormat: (content: string) =>
+      ipcRenderer.invoke('env:detect-format', content),
+    getSupportedFormats: () => ipcRenderer.invoke('env:supported-formats'),
     getCurrent: () => ipcRenderer.invoke('env:getCurrent'),
     setCurrent: (id: number) => ipcRenderer.invoke('env:setCurrent', id),
   },
@@ -187,6 +206,7 @@ const api = {
   request: {
     list: (collectionId?: number, folderId?: number) =>
       ipcRenderer.invoke('request:list', collectionId, folderId),
+    get: (id: number) => ipcRenderer.invoke('request:get', id),
     save: (request: Request) => ipcRenderer.invoke('request:save', request),
     saveAfter: (request: Request, afterRequestId: number) =>
       ipcRenderer.invoke('request:saveAfter', request, afterRequestId),
@@ -198,7 +218,9 @@ const api = {
     history: (limit?: number) => ipcRenderer.invoke('request:history', limit),
     deleteHistory: (id: number) =>
       ipcRenderer.invoke('request:deleteHistory', id),
+    clearAllHistory: () => ipcRenderer.invoke('request:clearAllHistory'),
     onUpdated: onRequestsUpdated,
+    onHistoryUpdated: onHistoryUpdated,
   },
 
   // Unsaved Request operations

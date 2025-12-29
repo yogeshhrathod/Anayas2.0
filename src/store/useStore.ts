@@ -40,6 +40,15 @@ interface AppState {
   collections: Collection[];
   setCollections: (collections: Collection[]) => void;
   
+  // Collection to edit (triggered from variable context menu)
+  collectionToEditId: number | null;
+  setCollectionToEditId: (id: number | null) => void;
+  
+  // Environment to edit (triggered from variable context menu)
+  environmentToEditId: number | null;
+  variableToFocus: string | null;
+  setEnvironmentToEdit: (environmentId: number | null, variableName?: string | null) => void;
+  
   // Collection Hierarchy State
   expandedCollections: Set<number>;
   setExpandedCollections: (expanded: Set<number>) => void;
@@ -67,6 +76,8 @@ interface AppState {
   // Request History
   requestHistory: RequestHistory[];
   setRequestHistory: (history: RequestHistory[]) => void;
+  historyFilter: { requestId?: number; method?: string; url?: string } | null;
+  setHistoryFilter: (filter: { requestId?: number; method?: string; url?: string } | null) => void;
 
   // Request Progress
   requestProgress: RequestProgress | null;
@@ -94,8 +105,8 @@ interface AppState {
   updateCustomTheme: (themeId: string, theme: Theme) => void;
   
   // Navigation
-  currentPage: 'home' | 'collections' | 'environments' | 'history' | 'logs' | 'settings';
-  setCurrentPage: (page: 'home' | 'collections' | 'environments' | 'history' | 'logs' | 'settings') => void;
+  currentPage: 'home' | 'collections' | 'environments' | 'history' | 'settings';
+  setCurrentPage: (page: 'home' | 'collections' | 'environments' | 'history' | 'settings') => void;
   
   // Sidebar refresh trigger
   sidebarRefreshTrigger: number;
@@ -146,6 +157,22 @@ export const useStore = create<AppState>()(
       collections: [],
       setCollections: (collections) => set({ collections }),
       
+      // Collection to edit (triggered from variable context menu)
+      collectionToEditId: null,
+      setCollectionToEditId: (collectionToEditId) => set({ collectionToEditId }),
+      
+      // Environment to edit (triggered from variable context menu)
+      environmentToEditId: null,
+      variableToFocus: null,
+      setEnvironmentToEdit: (environmentId, variableName) => {
+        console.log('[Store] setEnvironmentToEdit called with:', { environmentId, variableName });
+        set({ 
+          environmentToEditId: environmentId, 
+          variableToFocus: variableName || null 
+        });
+        console.log('[Store] environmentToEditId set to:', environmentId);
+      },
+      
       // Collection Hierarchy State
       expandedCollections: new Set<number>(),
       setExpandedCollections: (expandedCollections) => set({ expandedCollections }),
@@ -171,6 +198,8 @@ export const useStore = create<AppState>()(
       // Request History
       requestHistory: [],
       setRequestHistory: (requestHistory) => set({ requestHistory }),
+      historyFilter: null,
+      setHistoryFilter: (historyFilter) => set({ historyFilter }),
 
       // Request Progress
       requestProgress: null,

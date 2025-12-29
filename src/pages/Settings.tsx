@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { ThemeCustomizer } from '../components/ThemeCustomizer';
-import { Save, RotateCcw, AlertCircle } from 'lucide-react';
+import { RotateCcw, AlertCircle, Check } from 'lucide-react';
 import { useToast } from '../components/ui/use-toast';
 import { DEFAULT_CODE_FONT_STACK, DEFAULT_UI_FONT_STACK } from '../constants/fonts';
 
@@ -33,12 +33,39 @@ export function Settings() {
   } = useStore();
   const [localSettings, setLocalSettings] = useState<Record<string, any>>(() => createLocalSettings(settings));
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const { success, error } = useToast();
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialMountRef = useRef(true);
 
   useEffect(() => {
     setLocalSettings(createLocalSettings(settings));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings]);
+
+  // Track if settings have actually changed from the saved state
+  const hasUnsavedChanges = useCallback(() => {
+    // Check local settings changes
+    const savedSettings = createLocalSettings(settings);
+    const localSettingsChanged = JSON.stringify(localSettings) !== JSON.stringify(savedSettings);
+    
+    // Check theme settings changes
+    const savedThemeMode = settings.themeMode || 'system';
+    const savedCurrentThemeId = settings.currentThemeId || 'light';
+    let savedCustomThemes: any[] = [];
+    try {
+      savedCustomThemes = settings.customThemes ? (typeof settings.customThemes === 'string' ? JSON.parse(settings.customThemes) : settings.customThemes) : [];
+    } catch (e) {
+      savedCustomThemes = [];
+    }
+    
+    const themeModeChanged = themeMode !== savedThemeMode;
+    const currentThemeIdChanged = currentThemeId !== savedCurrentThemeId;
+    const customThemesChanged = JSON.stringify(customThemes) !== JSON.stringify(savedCustomThemes);
+    
+    return localSettingsChanged || themeModeChanged || currentThemeIdChanged || customThemesChanged;
+  }, [localSettings, settings, themeMode, currentThemeId, customThemes]);
 
   // Number validation helpers
   const validateRequestTimeout = (value: number): string | undefined => {
@@ -82,14 +109,31 @@ export function Settings() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSave = async () => {
+  const performSave = useCallback(async (showToast = false) => {
     // Validate all settings before saving
-    if (!validateAllSettings()) {
-      error('Validation failed', 'Please fix all validation errors before saving');
-      return;
+    const errors: ValidationErrors = {};
+    const requestTimeout = localSettings.requestTimeout || 30000;
+    const requestTimeoutError = validateRequestTimeout(requestTimeout);
+    if (requestTimeoutError) {
+      errors.requestTimeout = requestTimeoutError;
+    }
+    const maxHistory = localSettings.maxHistory || 100;
+    const maxHistoryError = validateMaxHistory(maxHistory);
+    if (maxHistoryError) {
+      errors.maxHistory = maxHistoryError;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      if (showToast) {
+        error('Validation failed', 'Please fix all validation errors before saving');
+      }
+      return false;
     }
 
     try {
+      setIsSaving(true);
+      
       // Save theme settings
       await window.electronAPI.settings.set('themeMode', themeMode);
       await window.electronAPI.settings.set('currentThemeId', currentThemeId);
@@ -119,12 +163,23 @@ export function Settings() {
       // Force update local settings to reflect saved values
       setLocalSettings(createLocalSettings(updatedSettings));
       
-      success('Settings saved', 'Your changes have been saved');
+      setLastSaved(new Date());
+      
+      if (showToast) {
+        success('Settings saved', 'Your changes have been saved');
+      }
+      
+      return true;
     } catch (e: any) {
       console.error('Failed to save settings:', e);
-      error('Save failed', 'Failed to save settings');
+      if (showToast) {
+        error('Save failed', 'Failed to save settings');
+      }
+      return false;
+    } finally {
+      setIsSaving(false);
     }
-  };
+  }, [localSettings, themeMode, currentThemeId, customThemes, setSettings, error, success]);
 
   const handleReset = async () => {
     if (!confirm('Are you sure you want to reset all settings to defaults?')) return;
@@ -164,6 +219,37 @@ export function Settings() {
     }
   };
 
+  // Auto-save effect: debounced save after 500ms of inactivity
+  useEffect(() => {
+    // Skip auto-save on initial mount
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      return;
+    }
+
+    // Clear existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    // Only auto-save if there are actual changes
+    if (!hasUnsavedChanges()) {
+      return;
+    }
+
+    // Set up debounced auto-save
+    autoSaveTimerRef.current = setTimeout(async () => {
+      await performSave(false);
+    }, 500);
+
+    // Cleanup on unmount or when dependencies change
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [localSettings, themeMode, currentThemeId, customThemes, hasUnsavedChanges, performSave]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -171,16 +257,21 @@ export function Settings() {
           <h1 className="text-3xl font-bold">Settings</h1>
           <p className="mt-2 text-muted-foreground">
             Configure application preferences
+            {lastSaved && (
+              <span className="ml-2 inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                <Check className="h-3 w-3" />
+                Saved {lastSaved.toLocaleTimeString()}
+              </span>
+            )}
+            {isSaving && (
+              <span className="ml-2 text-xs text-muted-foreground">Saving...</span>
+            )}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleReset}>
             <RotateCcw className="mr-2 h-4 w-4" />
             Reset
-          </Button>
-          <Button onClick={handleSave}>
-            <Save className="mr-2 h-4 w-4" />
-            Save Changes
           </Button>
         </div>
       </div>

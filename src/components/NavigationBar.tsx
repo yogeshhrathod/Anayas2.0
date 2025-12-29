@@ -6,7 +6,6 @@ import {
   History as HistoryIcon,
   Home,
   Plus,
-  ScrollText,
   Settings as SettingsIcon,
   Terminal,
   Upload,
@@ -68,12 +67,11 @@ export function NavigationBar() {
 
   // Secondary navigation items (icon only)
   const secondaryNavItems: Array<{
-    id: 'history' | 'logs' | 'settings';
+    id: 'history' | 'settings';
     label: string;
     icon: React.ComponentType<{ className?: string }>;
   }> = [
     { id: 'history', label: 'History', icon: HistoryIcon },
-    { id: 'logs', label: 'Logs', icon: ScrollText },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ];
 

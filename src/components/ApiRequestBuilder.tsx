@@ -11,7 +11,7 @@
  * This refactored version is much smaller and more maintainable than the original.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRequestActions } from '../hooks/useRequestActions';
 import { useRequestState } from '../hooks/useRequestState';
 import { KEYMAP, createKeymapHandler } from '../lib/keymap';
@@ -38,22 +38,36 @@ export function ApiRequestBuilder() {
   const requestState = useRequestState(selectedRequest);
   const requestActions = useRequestActions(requestState.requestData);
 
+  // Track previous response to detect new responses
+  const previousResponseRef = useRef<typeof requestActions.response>(null);
+
   // Reload presets when request ID changes (when switching between requests)
   useEffect(() => {
     // This is handled inside useRequestActions, but we trigger a refresh here if needed
     // The effect in useRequestActions will handle loading presets for the new request
   }, [requestState.requestData.id]);
 
-  // Auto-switch to Response tab when response is received
+  // Auto-switch to Response tab when a NEW response is received
+  // Only switches when response changes from null to a value (new response)
   useEffect(() => {
-    if (requestActions.response && requestState.activeTab !== 'response') {
+    const currentResponse = requestActions.response;
+    const previousResponse = previousResponseRef.current;
+
+    // Only auto-switch if:
+    // 1. We have a response now
+    // 2. We didn't have a response before (new response received)
+    // 3. We're not already on the response tab
+    if (
+      currentResponse &&
+      !previousResponse &&
+      requestState.activeTab !== 'response'
+    ) {
       requestState.setActiveTab('response');
     }
-  }, [
-    requestActions.response,
-    requestState.activeTab,
-    requestState.setActiveTab,
-  ]);
+
+    // Update the ref to track the current response
+    previousResponseRef.current = currentResponse;
+  }, [requestActions.response, requestState.setActiveTab]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -320,6 +334,9 @@ export function ApiRequestBuilder() {
             setResponseSubTab={requestState.setResponseSubTab}
             splitRatio={requestState.splitViewRatio}
             setSplitRatio={requestState.setSplitViewRatio}
+            requestMethod={requestState.requestData.method}
+            requestUrl={requestState.requestData.url}
+            requestId={requestState.requestData.id}
           />
         );
       default:

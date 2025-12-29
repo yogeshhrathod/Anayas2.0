@@ -17,6 +17,7 @@ import {
   deletePreset,
   deleteRequest,
   deleteRequestHistory,
+  clearAllRequestHistory,
   deleteUnsavedRequest,
   generateUniqueId,
   getAllPresets,
@@ -40,8 +41,15 @@ import { generateCurlCommand } from '../lib/curl-generator';
 import { parseCurlCommand, parseCurlCommands } from '../lib/curl-parser';
 import type { ImportOptions, ImportResult } from '../lib/import';
 import { getImportFactory } from '../lib/import';
+import {
+  getEnvironmentImportFactory,
+  EnvironmentExportGenerator,
+} from '../lib/environment';
 import { apiService } from '../services/api';
 import { variableResolver } from '../services/variable-resolver';
+import { createLogger } from '../services/logger';
+
+const logger = createLogger('ipc-handlers');
 
 const broadcast = (channel: string, payload?: any) => {
   BrowserWindow.getAllWindows().forEach(window => {
@@ -102,30 +110,171 @@ export function registerIpcHandlers() {
     }
   });
 
-  ipcMain.handle('env:import', async (_, filePath) => {
-    try {
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const lines = content.split('\n');
-      const envData: any = {};
+  // Enhanced environment import handler
+  ipcMain.handle(
+    'env:import',
+    async (
+      _,
+      content: string,
+      format?: 'json' | 'env' | 'postman' | 'auto'
+    ) => {
+      const memBefore = process.memoryUsage().heapUsed;
+      const startTime = Date.now();
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed && !trimmed.startsWith('#')) {
-          const [key, ...valueParts] = trimmed.split('=');
-          envData[key.trim()] = valueParts.join('=').trim();
-        }
+      try {
+        const factory = getEnvironmentImportFactory();
+        const parsedEnvironments = await factory.parse(
+          content,
+          format || 'auto'
+        );
+
+        // Validate parsed environments
+        const validationResults = parsedEnvironments.map((env) => {
+          const strategy = factory.getStrategy(env.name || 'json');
+          return strategy?.validate([env]) || {
+            isValid: true,
+            errors: [],
+            warnings: [],
+          };
+        });
+
+        const allErrors: string[] = [];
+        const allWarnings: string[] = [];
+
+        validationResults.forEach((result) => {
+          allErrors.push(...result.errors);
+          allWarnings.push(...result.warnings);
+        });
+
+        // Detect conflicts with existing environments
+        const db = getDatabase();
+        const conflicts = parsedEnvironments
+          .map((env) => {
+            const existing = db.environments.find(
+              (e) => e.name === env.name
+            );
+            if (existing) {
+              return {
+                environmentName: env.name,
+                existingId: existing.id!,
+                importedEnvironment: env,
+              };
+            }
+            return null;
+          })
+          .filter((c): c is NonNullable<typeof c> => c !== null);
+
+        const memAfter = process.memoryUsage().heapUsed;
+        const loadTime = Date.now() - startTime;
+
+        logger.info('Environment import', {
+          delta: (memAfter - memBefore) / 1024 / 1024,
+          format: format || 'auto',
+          count: parsedEnvironments.length,
+          loadTime,
+        });
+
+        return {
+          success: true,
+          environments: parsedEnvironments,
+          warnings: allWarnings,
+          errors: allErrors,
+          conflicts,
+        };
+      } catch (error: any) {
+        logger.error('Environment import failed', { error: error.message });
+        return {
+          success: false,
+          environments: [],
+          warnings: [],
+          errors: [error.message || 'Failed to import environments'],
+          conflicts: [],
+        };
       }
+    }
+  );
 
-      return {
-        success: true,
-        data: {
-          name: envData.ENV || 'imported',
-          displayName: envData.ENV || 'Imported Environment',
-          variables: envData,
-        },
-      };
+  // Environment export handler
+  ipcMain.handle(
+    'env:export',
+    async (
+      _,
+      environmentIds: number[],
+      format: 'json' | 'env' | 'postman'
+    ) => {
+      try {
+        const db = getDatabase();
+        let environmentsToExport;
+
+        if (environmentIds.length === 0) {
+          // Export all environments
+          environmentsToExport = db.environments;
+        } else {
+          // Export selected environments
+          environmentsToExport = db.environments.filter((env) =>
+            environmentIds.includes(env.id!)
+          );
+        }
+
+        if (environmentsToExport.length === 0) {
+          return {
+            success: false,
+            content: '',
+            filename: '',
+            error: 'No environments to export',
+          };
+        }
+
+        const generator = new EnvironmentExportGenerator();
+        const content = generator.generate({
+          format,
+          environments: environmentsToExport,
+        });
+        const filename = generator.generateFilename(
+          format,
+          environmentsToExport.length
+        );
+
+        return {
+          success: true,
+          content,
+          filename,
+        };
+      } catch (error: any) {
+        logger.error('Environment export failed', { error: error.message });
+        return {
+          success: false,
+          content: '',
+          filename: '',
+          error: error.message || 'Failed to export environments',
+        };
+      }
+    }
+  );
+
+  // Format detection handler
+  ipcMain.handle('env:detect-format', async (_, content: string) => {
+    try {
+      const factory = getEnvironmentImportFactory();
+      const detection = factory.detectFormat(content);
+      return detection;
     } catch (error: any) {
-      return { success: false, message: error.message };
+      return {
+        format: 'unknown' as const,
+        isValid: false,
+        confidence: 0,
+      };
+    }
+  });
+
+  // Supported formats handler
+  ipcMain.handle('env:supported-formats', async () => {
+    try {
+      const factory = getEnvironmentImportFactory();
+      const formats = factory.getSupportedFormats();
+      return { formats };
+    } catch (error: any) {
+      return { formats: [] };
     }
   });
 
@@ -395,6 +544,11 @@ export function registerIpcHandlers() {
     });
   });
 
+  ipcMain.handle('request:get', async (_, id) => {
+    const db = getDatabase();
+    return db.requests.find(r => r.id === id) || null;
+  });
+
   ipcMain.handle('request:save', async (_, request) => {
     if (request.id) {
       updateRequest(request.id, {
@@ -583,7 +737,16 @@ export function registerIpcHandlers() {
           throw new Error(`Unsupported HTTP method: ${method}`);
       }
 
-      // Save to history with original URL for reference
+      // Get request name if requestId exists
+      let requestName: string | undefined;
+      if (options.requestId) {
+        const savedRequest = db.requests.find(r => r.id === options.requestId);
+        if (savedRequest) {
+          requestName = savedRequest.name;
+        }
+      }
+
+      // Save to history with original URL and request metadata for reference
       addRequestHistory({
         method: method,
         url: resolvedUrl,
@@ -594,8 +757,15 @@ export function registerIpcHandlers() {
             ? result.body
             : JSON.stringify(result.body),
         headers: JSON.stringify(resolvedHeaders),
+        requestId: options.requestId, // Link to saved request if available
+        collectionId: options.collectionId, // Link to collection if available
+        requestBody: typeof options.body === 'string' ? options.body : JSON.stringify(options.body || ''),
+        queryParams: options.queryParams || [],
+        auth: options.auth || null,
+        requestName: requestName, // Store request name for display
         createdAt: new Date().toISOString(),
       });
+      broadcast('history:updated');
 
       return {
         success: true,
@@ -762,7 +932,7 @@ export function registerIpcHandlers() {
               throw new Error(`Unsupported HTTP method: ${request.method}`);
           }
 
-          // Save to history
+          // Save to history with request metadata
           addRequestHistory({
             method: request.method,
             url: resolvedUrl,
@@ -773,8 +943,15 @@ export function registerIpcHandlers() {
                 ? result.body
                 : JSON.stringify(result.body),
             headers: JSON.stringify(resolvedHeaders),
+            requestId: request.id, // Link to saved request
+            collectionId: request.collectionId, // Link to collection
+            requestBody: typeof request.body === 'string' ? request.body : JSON.stringify(request.body || ''),
+            queryParams: request.queryParams || [],
+            auth: request.auth || null,
+            requestName: request.name, // Store request name for display
             createdAt: new Date().toISOString(),
           });
+          broadcast('history:updated');
 
           results.push({
             requestId: request.id!,
@@ -838,15 +1015,28 @@ export function registerIpcHandlers() {
     const db = getDatabase();
     return db.request_history
       .sort((a, b) => {
-        const aTime = new Date(a.createdAt).getTime();
-        const bTime = new Date(b.createdAt).getTime();
+        const aTime = new Date(a.createdAt || a.created_at).getTime();
+        const bTime = new Date(b.createdAt || b.created_at).getTime();
         return bTime - aTime;
       })
-      .slice(0, limit);
+      .slice(0, limit)
+      .map((entry: any) => ({
+        ...entry,
+        responseTime: entry.responseTime || entry.response_time || 0,
+        response_body: entry.response_body || entry.responseBody,
+        createdAt: entry.createdAt || entry.created_at,
+      }));
   });
 
   ipcMain.handle('request:deleteHistory', async (_, id) => {
     deleteRequestHistory(id);
+    broadcast('history:updated');
+    return { success: true };
+  });
+
+  ipcMain.handle('request:clearAllHistory', async () => {
+    clearAllRequestHistory();
+    broadcast('history:updated');
     return { success: true };
   });
 
@@ -1104,7 +1294,119 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('curl:generate', async (_, request: any) => {
     try {
-      const curlCommand = generateCurlCommand(request);
+      const db = getDatabase();
+
+      // Get global environment
+      const globalEnv =
+        db.environments.find(e => e.isDefault === 1) || db.environments[0];
+      if (!globalEnv) {
+        throw new Error('No environment selected');
+      }
+
+      // Get collection variables if collectionId is provided
+      let collectionVariables: Record<string, string> = {};
+      if (request.collectionId) {
+        const collection = db.collections.find(
+          c => c.id === request.collectionId
+        );
+        if (
+          collection &&
+          collection.environments &&
+          collection.environments.length > 0
+        ) {
+          let activeEnv;
+
+          // If activeEnvironmentId is set, try to find that environment
+          if (collection.activeEnvironmentId) {
+            activeEnv = collection.environments.find(
+              e => e.id === collection.activeEnvironmentId
+            );
+          }
+
+          // If activeEnvironmentId not set or points to deleted environment, use first as fallback
+          if (!activeEnv) {
+            activeEnv = collection.environments[0];
+          }
+
+          if (activeEnv) {
+            collectionVariables = activeEnv.variables || {};
+          }
+        }
+      }
+
+      // Create variable context
+      const variableContext = {
+        globalVariables: globalEnv.variables || {},
+        collectionVariables,
+      };
+
+      // Resolve variables in all request parts
+      const resolvedUrl = variableResolver.resolve(
+        request.url || '',
+        variableContext
+      );
+      const resolvedHeaders = variableResolver.resolveObject(
+        request.headers || {},
+        variableContext
+      );
+      const resolvedBody =
+        typeof request.body === 'string'
+          ? variableResolver.resolve(request.body, variableContext)
+          : request.body || '';
+
+      const resolvedQueryParams = (request.queryParams || []).map(param => ({
+        ...param,
+        value: variableResolver.resolve(param.value || '', variableContext),
+      }));
+
+      // Resolve auth variables
+      const resolvedAuth = { ...request.auth };
+      if (resolvedAuth.type === 'bearer' && resolvedAuth.token) {
+        resolvedAuth.token = variableResolver.resolve(
+          resolvedAuth.token,
+          variableContext
+        );
+      }
+      if (resolvedAuth.type === 'basic') {
+        if (resolvedAuth.username) {
+          resolvedAuth.username = variableResolver.resolve(
+            resolvedAuth.username,
+            variableContext
+          );
+        }
+        if (resolvedAuth.password) {
+          resolvedAuth.password = variableResolver.resolve(
+            resolvedAuth.password,
+            variableContext
+          );
+        }
+      }
+      if (resolvedAuth.type === 'apikey') {
+        if (resolvedAuth.apiKey) {
+          resolvedAuth.apiKey = variableResolver.resolve(
+            resolvedAuth.apiKey,
+            variableContext
+          );
+        }
+        if (resolvedAuth.apiKeyHeader) {
+          resolvedAuth.apiKeyHeader = variableResolver.resolve(
+            resolvedAuth.apiKeyHeader,
+            variableContext
+          );
+        }
+      }
+
+      // Generate cURL command with resolved values
+      const resolvedRequest = {
+        method: request.method,
+        url: resolvedUrl,
+        headers: resolvedHeaders,
+        body: resolvedBody,
+        queryParams: resolvedQueryParams,
+        auth: resolvedAuth,
+      };
+
+      const curlCommand = generateCurlCommand(resolvedRequest);
       return { success: true, command: curlCommand };
     } catch (error: any) {
       console.error('Failed to generate cURL command:', error);

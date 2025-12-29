@@ -1,0 +1,401 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "API Contract: Environment Import/Export",
+  "description": "API contract specification for environment import/export feature",
+  "version": "1.0.0",
+  "featureId": "015-environment-import-export",
+  "lastUpdated": "2025-12-15",
+  "ipcHandlers": [
+    {
+      "name": "env:import",
+      "channel": "env:import",
+      "description": "Import environments from file content in various formats (JSON, .env, Postman)",
+      "request": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "File content as string"
+          },
+          "format": {
+            "type": "string",
+            "enum": ["json", "env", "postman", "auto"],
+            "description": "Format to use for parsing. 'auto' for automatic detection"
+          }
+        },
+        "required": ["content"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether import was successful"
+          },
+          "environments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Environment"
+            },
+            "description": "Parsed environments"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Warning messages"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Error messages"
+          },
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Conflict"
+            },
+            "description": "Conflicts with existing environments"
+          }
+        },
+        "required": ["success"]
+      }
+    },
+    {
+      "name": "env:export",
+      "channel": "env:export",
+      "description": "Export environments to specified format (JSON, .env, Postman)",
+      "request": {
+        "type": "object",
+        "properties": {
+          "environmentIds": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "IDs of environments to export. Empty array exports all"
+          },
+          "format": {
+            "type": "string",
+            "enum": ["json", "env", "postman"],
+            "description": "Export format"
+          }
+        },
+        "required": ["format"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether export was successful"
+          },
+          "content": {
+            "type": "string",
+            "description": "Exported content as string"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Suggested filename for download"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if export failed"
+          }
+        },
+        "required": ["success"]
+      }
+    },
+    {
+      "name": "env:detect-format",
+      "channel": "env:detect-format",
+      "description": "Auto-detect format of environment file content",
+      "request": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "File content as string"
+          }
+        },
+        "required": ["content"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": ["json", "env", "postman", "unknown"],
+            "description": "Detected format"
+          },
+          "isValid": {
+            "type": "boolean",
+            "description": "Whether content is valid for detected format"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Confidence score of detection (0-1)"
+          }
+        },
+        "required": ["format", "isValid"]
+      }
+    },
+    {
+      "name": "env:supported-formats",
+      "channel": "env:supported-formats",
+      "description": "Get list of supported import/export formats",
+      "request": {
+        "type": "object",
+        "properties": {}
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "formats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/FormatInfo"
+            },
+            "description": "List of supported formats"
+          }
+        },
+        "required": ["formats"]
+      }
+    }
+  ],
+  "preloadAPIs": [
+    {
+      "name": "window.electronAPI.env.import",
+      "description": "Import environments from file content",
+      "signature": "import(content: string, format?: string): Promise<ImportResult>",
+      "parameters": {
+        "content": {
+          "type": "string",
+          "description": "File content as string"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["json", "env", "postman", "auto"],
+          "optional": true,
+          "description": "Format to use. Defaults to 'auto' for detection"
+        }
+      },
+      "returns": {
+        "$ref": "#/definitions/ImportResult"
+      }
+    },
+    {
+      "name": "window.electronAPI.env.export",
+      "description": "Export environments to specified format",
+      "signature": "export(environmentIds: number[], format: string): Promise<ExportResult>",
+      "parameters": {
+        "environmentIds": {
+          "type": "number[]",
+          "description": "IDs of environments to export. Empty array exports all"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["json", "env", "postman"],
+          "description": "Export format"
+        }
+      },
+      "returns": {
+        "$ref": "#/definitions/ExportResult"
+      }
+    },
+    {
+      "name": "window.electronAPI.env.detectFormat",
+      "description": "Auto-detect format of environment file content",
+      "signature": "detectFormat(content: string): Promise<FormatDetectionResult>",
+      "parameters": {
+        "content": {
+          "type": "string",
+          "description": "File content as string"
+        }
+      },
+      "returns": {
+        "$ref": "#/definitions/FormatDetectionResult"
+      }
+    },
+    {
+      "name": "window.electronAPI.env.getSupportedFormats",
+      "description": "Get list of supported import/export formats",
+      "signature": "getSupportedFormats(): Promise<FormatInfo[]>",
+      "parameters": {},
+      "returns": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/FormatInfo"
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "Environment": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "optional": true,
+          "description": "Environment ID (optional for new environments)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Environment name (internal identifier)"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name for UI"
+        },
+        "variables": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Environment variables as key-value pairs"
+        },
+        "isDefault": {
+          "type": "number",
+          "enum": [0, 1],
+          "optional": true,
+          "description": "Whether this is the default environment"
+        },
+        "lastUsed": {
+          "type": "string",
+          "format": "date-time",
+          "optional": true,
+          "description": "Last used timestamp"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "optional": true,
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["name", "displayName", "variables"]
+    },
+    "Conflict": {
+      "type": "object",
+      "properties": {
+        "environmentName": {
+          "type": "string",
+          "description": "Name of conflicting environment"
+        },
+        "existingId": {
+          "type": "number",
+          "description": "ID of existing environment"
+        },
+        "importedEnvironment": {
+          "$ref": "#/definitions/Environment",
+          "description": "Imported environment data"
+        }
+      },
+      "required": ["environmentName", "existingId", "importedEnvironment"]
+    },
+    "ImportResult": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "environments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Environment"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "conflicts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Conflict"
+          }
+        }
+      },
+      "required": ["success"]
+    },
+    "ExportResult": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "content": {
+          "type": "string"
+        },
+        "filename": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string",
+          "optional": true
+        }
+      },
+      "required": ["success"]
+    },
+    "FormatDetectionResult": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": ["json", "env", "postman", "unknown"]
+        },
+        "isValid": {
+          "type": "boolean"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": ["format", "isValid"]
+    },
+    "FormatInfo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Format identifier (json, env, postman)"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable format name"
+        },
+        "fileExtensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Supported file extensions"
+        },
+        "supportsImport": {
+          "type": "boolean",
+          "description": "Whether format supports import"
+        },
+        "supportsExport": {
+          "type": "boolean",
+          "description": "Whether format supports export"
+        }
+      },
+      "required": ["name", "displayName", "supportsImport", "supportsExport"]
+    }
+  }
+}

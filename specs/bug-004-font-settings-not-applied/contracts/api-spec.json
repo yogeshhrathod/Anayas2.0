@@ -1,0 +1,132 @@
+{
+  "bug": "font-settings-not-applied",
+  "status": "resolved",
+  "severity": "medium",
+  "priority": "P1",
+  "relatedFeature": "specs/013-font-settings/",
+  "rootCause": {
+    "issues": [
+      "FontProvider didn't handle empty/undefined values",
+      "No live preview - changes only applied on reload",
+      "Database defaults missing",
+      "Monaco editor not listening to font changes",
+      "Inconsistent state management between local and store"
+    ]
+  },
+  "solution": {
+    "components": [
+      {
+        "file": "src/constants/fonts.ts",
+        "type": "new",
+        "purpose": "Centralized font defaults",
+        "exports": {
+          "DEFAULT_UI_FONT_STACK": "system-ui, sans-serif",
+          "DEFAULT_CODE_FONT_STACK": "Menlo, Monaco, Courier New, monospace"
+        }
+      },
+      {
+        "file": "src/components/providers/FontProvider.tsx",
+        "type": "modified",
+        "changes": [
+          "Added robust value validation (trim, length check, type check)",
+          "Added CSS variable updates to document root",
+          "Added dynamic style injection with !important rules",
+          "Added proper fallback to defaults"
+        ]
+      },
+      {
+        "file": "src/pages/Settings.tsx",
+        "type": "modified",
+        "changes": [
+          "Update Zustand store immediately for live preview",
+          "Keep local state for form management",
+          "Added debounced database saves",
+          "Proper empty value handling"
+        ]
+      },
+      {
+        "file": "electron/database/json-db.ts",
+        "type": "modified",
+        "changes": [
+          "Added ensureFontSettingsDefaults() function",
+          "Call on database initialization",
+          "Ensures defaults always present"
+        ]
+      },
+      {
+        "file": "src/components/ui/monaco-editor.tsx",
+        "type": "modified",
+        "changes": [
+          "Listen to settings.codeFontFamily changes",
+          "Update editor options when font changes",
+          "Handle null/undefined editor gracefully"
+        ]
+      }
+    ]
+  },
+  "verification": {
+    "manual": [
+      {
+        "step": "Change UI font in Settings",
+        "expected": "Font applies immediately throughout app",
+        "status": "verified"
+      },
+      {
+        "step": "Change code font in Settings",
+        "expected": "Monaco editor font updates immediately",
+        "status": "verified"
+      },
+      {
+        "step": "Clear font values (empty input)",
+        "expected": "Falls back to system defaults",
+        "status": "verified"
+      },
+      {
+        "step": "Restart application",
+        "expected": "Font settings persist correctly",
+        "status": "verified"
+      }
+    ],
+    "automated": [
+      {
+        "test": "FontProvider validation",
+        "status": "passing"
+      },
+      {
+        "test": "Settings live preview",
+        "status": "passing"
+      },
+      {
+        "test": "Database defaults",
+        "status": "passing"
+      },
+      {
+        "test": "Monaco editor updates",
+        "status": "passing"
+      }
+    ]
+  },
+  "preventionMeasures": [
+    "Always test settings persistence and reload",
+    "Handle empty/undefined/null values consistently",
+    "Provide proper fallback values",
+    "Use TypeScript for type safety",
+    "Add integration tests for settings",
+    "Test live preview for all settings changes"
+  ],
+  "impact": {
+    "before": {
+      "userExperience": "Poor - fonts didn't apply or persist",
+      "frequency": "Every time font settings changed",
+      "workaround": "Restart app multiple times or manually edit config"
+    },
+    "after": {
+      "userExperience": "Excellent - immediate updates with live preview",
+      "frequency": "Bug eliminated",
+      "workaround": "None needed"
+    }
+  },
+  "resolutionDate": "2025-12-17",
+  "verifiedBy": "Development Team"
+}
+
