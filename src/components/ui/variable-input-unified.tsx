@@ -17,15 +17,15 @@
  * ```
  */
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useClickOutside } from '../../hooks/useClickOutside';
+import { useVariableInput } from '../../hooks/useVariableInput';
+import { useVariableResolution } from '../../hooks/useVariableResolution';
+import { cn } from '../../lib/utils';
 import { Input } from './input';
 import { VariableAutocomplete } from './variable-autocomplete';
 import { VariableContextMenu } from './variable-context-menu';
 import { VariableDefinitionDialog } from './variable-definition-dialog';
-import { useVariableInput } from '../../hooks/useVariableInput';
-import { useVariableResolution } from '../../hooks/useVariableResolution';
-import { useClickOutside } from '../../hooks/useClickOutside';
-import { cn } from '../../lib/utils';
 
 export interface VariableInputUnifiedProps {
   value: string;
@@ -59,8 +59,6 @@ const SHARED_STYLES: React.CSSProperties = {
   fontWeight: '400',
   boxSizing: 'border-box',
   margin: 0,
-  display: 'flex',
-  alignItems: 'center',
 };
 
 const VARIABLE_REGEX = /\{\{(\$)?[\w.]+\}\}/g;
@@ -313,7 +311,7 @@ export function VariableInputUnified({
           pointerEvents: 'none',
           whiteSpace: 'pre',
           overflow: 'hidden',
-          textOverflow: 'ellipsis',
+          textOverflow: 'clip',
           color: 'inherit',
           border: 'none',
           outline: 'none',
@@ -322,7 +320,7 @@ export function VariableInputUnified({
           MozOsxFontSmoothing: 'grayscale',
         }}
       >
-        <span style={{ display: 'inline-block', width: '100%', lineHeight: '20px' }}>
+        <span style={{ display: 'inline-block', minWidth: '100%', lineHeight: '20px' }}>
           {segments.map((seg, i) => 
             seg.type === 'variable' ? (
               <span
@@ -366,6 +364,11 @@ export function VariableInputUnified({
       {/* Input Layer - Interaction (ON TOP, captures all clicks) */}
       <input
         ref={inputRef}
+        onScroll={(e) => {
+          if (overlayRef.current) {
+            overlayRef.current.scrollLeft = e.currentTarget.scrollLeft;
+          }
+        }}
         value={value}
         onChange={handleChange}
         onContextMenu={(e) => {
@@ -417,8 +420,6 @@ export function VariableInputUnified({
           width: '100%',
           height: '100%',
           resize: 'none',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
           boxShadow: 'none',
           textRendering: 'auto',
           WebkitFontSmoothing: 'antialiased',
