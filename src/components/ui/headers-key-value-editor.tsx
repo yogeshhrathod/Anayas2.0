@@ -66,7 +66,7 @@ export const HeadersKeyValueEditor: React.FC<HeadersKeyValueEditorProps> = ({
       ) : (
         <div className="space-y-2">
           {headerEntries.map(([key, value], index) => (
-            <div key={`${key}-${index}`} className="flex items-center gap-2">
+            <div key={index} className="flex items-center gap-2">
               <Input
                 placeholder={placeholder.key}
                 value={key}

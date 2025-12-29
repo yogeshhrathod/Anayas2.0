@@ -75,6 +75,43 @@ export const BodyTab: React.FC<BodyTabProps> = ({
   bodyFormData,
   setBodyFormData,
 }) => {
+  // Sync data when toggling between table and JSON views
+  const handleViewToggle = () => {
+    if (bodyViewMode === 'table') {
+      // Converting from table to JSON - serialize bodyFormData to JSON string
+      const jsonObj: Record<string, string> = {};
+      bodyFormData.forEach(item => {
+        if (item.enabled && item.key.trim()) {
+          jsonObj[item.key] = item.value;
+        }
+      });
+      const jsonString = JSON.stringify(jsonObj, null, 2);
+      setRequestData({ ...requestData, body: jsonString });
+      setBodyViewMode('json');
+    } else {
+      // Converting from JSON to table - parse JSON and populate bodyFormData
+      try {
+        const parsed = JSON.parse(requestData.body || '{}');
+        const newFormData = Object.entries(parsed).map(([key, value]) => ({
+          key,
+          value: String(value),
+          enabled: true,
+        }));
+        // Keep at least one empty row if nothing was parsed
+        if (newFormData.length === 0) {
+          newFormData.push({ key: '', value: '', enabled: true });
+        }
+        setBodyFormData(newFormData);
+        setBodyViewMode('table');
+      } catch (e) {
+        // If JSON parsing fails, just switch view without converting
+        console.warn('Failed to parse JSON body for table view:', e);
+        setBodyViewMode('table');
+      }
+    }
+  };
+
+
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Header - Fixed height */}
@@ -160,9 +197,7 @@ export const BodyTab: React.FC<BodyTabProps> = ({
               {bodyType === 'raw' && (
                 <ViewToggleButton
                   currentView={bodyViewMode}
-                  onToggle={() =>
-                    setBodyViewMode(bodyViewMode === 'table' ? 'json' : 'table')
-                  }
+                  onToggle={handleViewToggle}
                 />
               )}
             </div>
