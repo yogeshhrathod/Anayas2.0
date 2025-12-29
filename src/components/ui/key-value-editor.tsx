@@ -1,8 +1,8 @@
+import { Plus, Trash2 } from 'lucide-react';
 import React from 'react';
 import { Button } from './button';
 import { Input } from './input';
 import { VariableInputUnified } from './variable-input-unified';
-import { Trash2, Plus } from 'lucide-react';
 
 interface KeyValueItem {
   key: string;
@@ -60,7 +60,7 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
       ) : (
         <div className="space-y-2">
           {items.map((item, index) => (
-            <div key={`${item.key}-${item.value}-${index}`} className="flex items-center gap-2">
+            <div key={index} className="flex items-center gap-2">
               {showEnabled && (
                 <input
                   type="checkbox"

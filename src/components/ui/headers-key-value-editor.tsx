@@ -1,8 +1,8 @@
+import { Plus, Trash2 } from 'lucide-react';
 import React from 'react';
 import { Button } from './button';
 import { Input } from './input';
 import { VariableInputUnified } from './variable-input-unified';
-import { Trash2, Plus } from 'lucide-react';
 
 interface HeadersKeyValueEditorProps {
   headers: Record<string, string>;
@@ -66,7 +66,7 @@ export const HeadersKeyValueEditor: React.FC<HeadersKeyValueEditorProps> = ({
       ) : (
         <div className="space-y-2">
           {headerEntries.map(([key, value], index) => (
-            <div key={`${key}-${value}-${index}`} className="flex items-center gap-2">
+            <div key={`${key}-${index}`} className="flex items-center gap-2">
               <Input
                 placeholder={placeholder.key}
                 value={key}
