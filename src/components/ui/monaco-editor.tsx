@@ -9,10 +9,10 @@ import { useStore } from '../../store/useStore';
 import { Button } from './button';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
 } from './tooltip';
 import { useToast } from './use-toast';
 

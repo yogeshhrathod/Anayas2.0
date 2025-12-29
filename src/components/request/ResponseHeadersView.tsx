@@ -21,11 +21,11 @@
 import { Check, Clock, Copy, Download } from 'lucide-react';
 import React, { useState } from 'react';
 import {
-  formatResponseTime,
-  getHeaderEntries,
-  getStatusDisplay,
-  getStatusVariant,
-  hasHeaders,
+    formatResponseTime,
+    getHeaderEntries,
+    getStatusDisplay,
+    getStatusVariant,
+    hasHeaders,
 } from '../../lib/response-utils';
 import { ResponseData } from '../../types/entities';
 import { Badge } from '../ui/badge';

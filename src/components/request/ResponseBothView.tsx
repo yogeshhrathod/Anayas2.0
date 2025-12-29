@@ -28,12 +28,12 @@
 import { Check, Clock, Copy, Download } from 'lucide-react';
 import React, { useState } from 'react';
 import {
-  formatResponseTime,
-  getHeaderEntries,
-  getStatusDisplay,
-  getStatusVariant,
-  hasHeaders,
-  safeStringifyBody,
+    formatResponseTime,
+    getHeaderEntries,
+    getStatusDisplay,
+    getStatusVariant,
+    hasHeaders,
+    safeStringifyBody,
 } from '../../lib/response-utils';
 import { ResponseData } from '../../types/entities';
 import { Badge } from '../ui/badge';

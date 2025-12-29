@@ -28,16 +28,16 @@
  * ```
  */
 
+import { Bookmark, Plus, Trash2, X } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
-import { Button } from '../ui/button';
+import { RequestPreset } from '../../types/entities';
 import { Badge } from '../ui/badge';
-import { Dialog } from '../ui/dialog';
+import { Button } from '../ui/button';
 import { Card } from '../ui/card';
+import { Dialog } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { Bookmark, Plus, Trash2 } from 'lucide-react';
-import { RequestPreset } from '../../types/entities';
 
 export interface RequestPresetsProps {
   presets: RequestPreset[];
@@ -84,10 +84,15 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
 
   return (
     <>
-      <div className={`border-l border-border/50 bg-card/30 transition-all duration-300 ${
-        isExpanded ? 'w-80' : 'w-12'
-      }`}>
-        <div className="p-4">
+      {/* Wrapper - Always takes w-12 space for the collapsed sidebar */}
+      <div className="relative w-12 flex-shrink-0">
+        {/* Presets Panel - Absolute overlay when expanded, fills wrapper when collapsed */}
+        <div className={`absolute right-0 top-0 bottom-0 transition-all duration-300 z-50 border-l border-border/50 bg-card ${
+          isExpanded 
+            ? 'w-80 shadow-2xl' 
+            : 'w-12'
+        }`}>
+          <div className="p-4 h-full overflow-y-auto">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <button
@@ -120,15 +125,26 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                 )}
               </button>
               {isExpanded && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onShowCreateDialog(true)}
-                  className="h-7 w-7 p-0"
-                  title="Create Preset"
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onShowCreateDialog(true)}
+                    className="h-7 w-7 p-0"
+                    title="Create Preset"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onToggleExpanded(false)}
+                    className="h-7 w-7 p-0"
+                    title="Close Presets"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               )}
             </div>
             
@@ -244,6 +260,7 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
             )}
           </div>
         </div>
+      </div>
       </div>
 
       {/* Create Preset Dialog */}

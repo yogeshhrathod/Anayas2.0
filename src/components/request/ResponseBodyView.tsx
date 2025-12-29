@@ -26,10 +26,10 @@
 import { Clock, Copy, Download } from 'lucide-react';
 import React from 'react';
 import {
-  formatResponseTime,
-  getStatusDisplay,
-  getStatusVariant,
-  safeStringifyBody,
+    formatResponseTime,
+    getStatusDisplay,
+    getStatusVariant,
+    safeStringifyBody,
 } from '../../lib/response-utils';
 import { ResponseData } from '../../types/entities';
 import { Badge } from '../ui/badge';
