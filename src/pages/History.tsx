@@ -1,15 +1,15 @@
-import { useState, useMemo, useEffect } from 'react';
-import { useStore } from '../store/useStore';
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Clock, Copy, Eye, Filter, Group, Play, Search, Trash2, XCircle } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Dialog } from '../components/ui/dialog';
-import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Trash2, Search, Filter, Clock, CheckCircle2, XCircle, Play, Eye, Copy, ArrowRight, Group, AlertTriangle, ArrowLeft } from 'lucide-react';
-import { useToast } from '../components/ui/use-toast';
-import { Request } from '../types/entities';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
+import { useToast } from '../components/ui/use-toast';
+import { useStore } from '../store/useStore';
+import { Request } from '../types/entities';
 
 export function History() {
   const { requestHistory, setRequestHistory, currentEnvironment, setSelectedRequest, setCurrentPage, historyFilter, setHistoryFilter } = useStore();
@@ -261,6 +261,7 @@ export function History() {
         : '';
 
       const result = await window.electronAPI.curl.generate({
+        name: request.requestName || 'Request from History',
         method: request.method,
         url: request.url,
         headers,
@@ -268,7 +269,7 @@ export function History() {
         queryParams: request.queryParams || [],
         auth: request.auth || { type: 'none' },
         collectionId: request.collectionId,
-      });
+      } as Request);
 
       if (result.success && result.command) {
         await navigator.clipboard.writeText(result.command);
@@ -641,7 +642,7 @@ export function History() {
             </div>
           }
           description={selectedRequest.url}
-          maxWidth="6xl"
+          maxWidth="4xl"
           className="w-[90vw] max-h-[85vh]"
         >
           <div className="space-y-4">

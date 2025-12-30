@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useStore } from '../store/useStore';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { AlertCircle, Check, RotateCcw } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ThemeCustomizer } from '../components/ThemeCustomizer';
 import { Button } from '../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { ThemeCustomizer } from '../components/ThemeCustomizer';
-import { RotateCcw, AlertCircle, Check } from 'lucide-react';
 import { useToast } from '../components/ui/use-toast';
 import { DEFAULT_CODE_FONT_STACK, DEFAULT_UI_FONT_STACK } from '../constants/fonts';
+import { useStore } from '../store/useStore';
 
 // Removed Qualys-specific module codes
 
@@ -88,26 +88,6 @@ export function Settings() {
     return undefined;
   };
 
-  const validateAllSettings = (): boolean => {
-    const errors: ValidationErrors = {};
-
-    // Validate requestTimeout
-    const requestTimeout = localSettings.requestTimeout || 30000;
-    const requestTimeoutError = validateRequestTimeout(requestTimeout);
-    if (requestTimeoutError) {
-      errors.requestTimeout = requestTimeoutError;
-    }
-
-    // Validate maxHistory
-    const maxHistory = localSettings.maxHistory || 100;
-    const maxHistoryError = validateMaxHistory(maxHistory);
-    if (maxHistoryError) {
-      errors.maxHistory = maxHistoryError;
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
 
   const performSave = useCallback(async (showToast = false) => {
     // Validate all settings before saving

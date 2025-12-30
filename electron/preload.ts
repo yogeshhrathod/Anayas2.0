@@ -24,7 +24,7 @@ export interface Collection {
   variables: Record<string, string>;
   environments?: CollectionEnvironment[];
   activeEnvironmentId?: number;
-  isFavorite?: boolean;
+  isFavorite?: number;
   lastUsed?: string;
   createdAt?: string;
 }
@@ -48,7 +48,7 @@ export interface Request {
   auth?: any;
   collectionId?: number;
   folderId?: number;
-  isFavorite?: boolean;
+  isFavorite?: number;
   order?: number;
   lastUsed?: string;
   createdAt?: string;

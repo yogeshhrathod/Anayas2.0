@@ -1,8 +1,7 @@
-import { Copy, Eye, Edit } from 'lucide-react';
+import { Copy, Edit, Eye } from 'lucide-react';
+import { forwardRef } from 'react';
 import { useVariableResolution } from '../../hooks/useVariableResolution';
-import { forwardRef, useState } from 'react';
 import { useStore } from '../../store/useStore';
-import { VariableDefinitionDialog } from './variable-definition-dialog';
 
 interface VariableContextMenuProps {
   variableName: string;
@@ -25,7 +24,6 @@ export const VariableContextMenu = forwardRef<HTMLDivElement, VariableContextMen
     setCurrentPage, 
     selectedRequest, 
     collections, 
-    setSelectedItem, 
     setCollectionToEditId,
     environments,
     setEnvironmentToEdit
