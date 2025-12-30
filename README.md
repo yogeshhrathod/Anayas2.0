@@ -12,6 +12,8 @@ A lightweight REST API Client built with Electron, React, TypeScript, and Tailwi
 - ✅ **Request History** - Complete history with search and filtering
 - ✅ **Cross-Platform** - Works on macOS, Windows, and Linux
 - ✅ **Real-time Response** - Live response viewing with syntax highlighting
+- ✅ **Command Palette** - Quick navigation and actions with Cmd+K
+- ✅ **Keyboard Shortcuts** - Extensive shortcuts for power users
 
 ### Key Capabilities
 - Send HTTP requests (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS)
@@ -134,7 +136,13 @@ anayas/
 1. Navigate to History page
 2. See all executed requests
 3. Filter by method, status, or date
+3. Filter by method, status, or date
 4. Re-run requests from history
+
+### Using Shortcuts
+- Press `Cmd+K` (macOS) or `Ctrl+K` (Windows/Linux) to open the Command Palette
+- Press `Cmd+?` or `Ctrl+?` to view all available keyboard shortcuts
+- Use `Cmd+Enter` to send the current request
 
 ## Configuration
 

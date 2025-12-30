@@ -316,7 +316,7 @@
 ### 4.6 UI Design System Alignment 🎨 📋 PLANNED
 - [ ] **Shell Layout Alignment** - Align app shell with editor-style three/four-pane model (activity/navigation, sidebar, main stage, response stage)
 - [ ] **Layout Modes** - Implement normal/write/debug modes with smooth transitions
-- [ ] **Request Builder Alignment** - Match design system patterns (URL strip, compact tabs, table-like sections)
+- [x] **Request Builder Alignment** - Match design system patterns (URL strip, compact tabs, table-like sections)
 - [ ] **Response Visualization** - Align with design system (tabs, status/metrics bar, large JSON handling)
 - [ ] **Virtualized JSON Viewer** - Implement virtualized viewer for large responses with in-pane search
 - [ ] **Command Palette** - First-class command palette (Cmd/Ctrl+K) with fuzzy search and context awareness
@@ -455,8 +455,10 @@
 - [x] **Loading States** - Skeleton loaders
 - [x] **Error States** - User-friendly error messages
 - [x] **Success Animations** - Subtle feedback
+- [x] **Request Body Polish** - Enhanced editors (Monaco/KeyValue) and format support
+- [x] **Overlay System** - Improved overlays context handling
 - [ ] **Onboarding** - First-time user guide
-- [ ] **Shortcuts Overlay** - Show available shortcuts
+- [x] **Shortcuts Overlay** - Show available shortcuts
 - [ ] **UI Design System Alignment** - Comprehensive alignment with design system (see Phase 4.6)
 
 ### Developer Experience 🛠️ 📋 PLANNED
@@ -517,7 +519,7 @@
 ---
 
 ## **Total Estimated Timeline**: 12-16 weeks for MVP
-## **Current Progress**: ~80% Complete
+## **Current Progress**: ~82% Complete
 
 ---
 
@@ -581,7 +583,10 @@
 ### 🔄 **IN PROGRESS**
 - **Settings Panel**: Core settings done, editor/network/privacy/advanced settings pending
 - **Performance**: Basic optimizations done, virtual scrolling and worker threads pending
-- **UI Design System Alignment**: Planned for comprehensive UI polish
+- **Settings Panel**: Core settings done, editor/network/privacy/advanced settings pending
+- **Performance**: Basic optimizations done, virtual scrolling and worker threads pending
+- **UI Design System Alignment**: Request builder alignment completed, comprehensive UI polish pending
+- **Shortcuts & Navigation**: Command Palette (Cmd+K) and Shortcuts Overlay (?) implemented
 
 ### 📋 **NEXT PRIORITIES**
 1. **Code Generation** - High user value (JavaScript, Python, etc.)
