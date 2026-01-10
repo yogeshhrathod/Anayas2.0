@@ -9,6 +9,9 @@ import { ThemeManager } from './components/ThemeManager';
 import { TitleBar } from './components/TitleBar';
 import Toaster from './components/Toaster';
 import { UnsavedRequestsSection } from './components/collection/UnsavedRequestsSection';
+import { CollectionEditDialog } from './components/dialogs/CollectionEditDialog';
+import { SaveRequestAsDialog } from './components/dialogs/SaveRequestAsDialog';
+import { ImportCollectionDialog } from './components/import/ImportCollectionDialog';
 import { CollapsibleSection } from './components/sidebar/CollapsibleSection';
 import { PageLoadingSpinner } from './components/ui/PageLoadingSpinner';
 import { Button } from './components/ui/button';
@@ -70,8 +73,10 @@ function App() {
     setCurrentPage,
     setEnvironments,
     setCurrentEnvironment,
+    collections,
     setCollections,
     setRequestHistory,
+    selectedRequest,
     setSelectedRequest,
     setSettings,
     setThemeMode,
@@ -95,6 +100,33 @@ function App() {
 
   const { showSuccess, showError } = useToastNotifications();
   const [showClearAllDialog, setShowClearAllDialog] = useState(false);
+  
+  // Dialog States
+  const [showSaveAsDialog, setShowSaveAsDialog] = useState(false);
+  const [showEditCollectionDialog, setShowEditCollectionDialog] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [collectionToEdit, setCollectionToEdit] = useState<any>(null);
+  const [requestToSaveAs, setRequestToSaveAs] = useState<any>(null);
+
+  // Helper to get full collection data for export
+  const getFullCollectionData = async (collectionId: number) => {
+    const collections = await window.electronAPI.collection.list();
+    const collection = collections.find((c: any) => c.id === collectionId);
+    if (!collection) throw new Error('Collection not found');
+
+    const folders = await window.electronAPI.folder.list(collectionId);
+    const requests = await window.electronAPI.request.list(collectionId);
+    
+    // Structure as a simple clean JSON export
+    return {
+      collection,
+      folders,
+      requests,
+      exportedAt: new Date().toISOString(),
+      type: 'luna-collection-export',
+      version: '1.0'
+    };
+  };
 
   const handleClearAllUnsaved = async () => {
     try {
@@ -167,8 +199,11 @@ function App() {
         setSelectedRequest(context.selectedItem.data);
         setCurrentPage('home');
       } else if (context.selectedItem.type === 'collection') {
-        // TODO: Implement collection editing
-        console.log('Collection edit not implemented yet');
+        const collection = collections.find((c: any) => c.id === context.selectedItem.id);
+        if (collection) {
+          setCollectionToEdit(collection);
+          setShowEditCollectionDialog(true);
+        }
       } else if (context.selectedItem.type === 'folder') {
         // TODO: Implement folder editing
         console.log('Folder edit not implemented yet');
@@ -360,26 +395,57 @@ function App() {
       console.log('New collection');
     },
 
-    'export-collection': () => {
-      // TODO: Implement collection export
-      console.log('Export collection');
+    'export-collection': async (_: KeyboardEvent, context: ContextState) => {
+      // Export currently selected collection OR ask user to select?
+      // For now, let's assume we export the selected one from sidebar context
+      if (context.selectedItem.type === 'collection' && context.selectedItem.id) {
+         try {
+           const data = await getFullCollectionData(context.selectedItem.id);
+           const fileName = `${data.collection.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.json`;
+           
+           // Show save dialog
+           const result = await window.electronAPI.file.saveFile(fileName, JSON.stringify(data, null, 2));
+           
+           if (result.success) {
+             showSuccess('Collection exported successfully');
+           }
+         } catch (error: any) {
+           showError('Failed to export collection', error.message);
+         }
+      } else {
+        showError('Selection Required', 'Please select a collection in the sidebar to export.');
+      }
     },
 
-    'export-request': () => {
-      // TODO: Implement request export
-      console.log('Export request');
+    'export-request': async (_: KeyboardEvent, context: ContextState) => {
+       const reqToExport = context.selectedItem.type === 'request' ? context.selectedItem.data : selectedRequest;
+       
+       if (reqToExport) {
+         try {
+           const fileName = `${reqToExport.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_request.json`;
+           const result = await window.electronAPI.file.saveFile(fileName, JSON.stringify(reqToExport, null, 2));
+           if (result.success) {
+             showSuccess('Request exported successfully');
+           }
+         } catch (error: any) {
+             showError('Failed to export request', error.message);
+         }
+       } else {
+          showError('No Request', 'Please select or open a request to export.');
+       }
     },
 
     'import-collection': () => {
-      // TODO: Implement collection import
-      console.log('Import collection');
+       setShowImportDialog(true);
     },
 
     'save-request-as': () => {
-      // TODO: Implement save request as dialog
-      // This will open a dialog to save the current request to a different collection/folder
-      console.log('Save request as...');
-      showSuccess('Coming soon: Save request as');
+      if (selectedRequest) {
+        setRequestToSaveAs(selectedRequest);
+        setShowSaveAsDialog(true);
+      } else {
+        showError('No Request', 'Open a request to save it.');
+      }
     },
 
     'close-tab': () => {
@@ -749,6 +815,40 @@ function App() {
             </Button>
           </div>
         </Dialog>
+
+
+        {/* Feature Dialogs */}
+        {showEditCollectionDialog && collectionToEdit && (
+          <CollectionEditDialog
+            open={showEditCollectionDialog}
+            onOpenChange={setShowEditCollectionDialog}
+            collection={collectionToEdit}
+            onSuccess={() => {
+              // Refresh collections
+              window.electronAPI.collection.list().then(setCollections);
+            }}
+          />
+        )}
+
+        {showSaveAsDialog && requestToSaveAs && (
+          <SaveRequestAsDialog
+            open={showSaveAsDialog}
+            onOpenChange={setShowSaveAsDialog}
+            request={requestToSaveAs}
+            onSuccess={() => {
+               // Refresh data
+               triggerSidebarRefresh();
+            }}
+          />
+        )}
+
+        <ImportCollectionDialog 
+          open={showImportDialog} 
+          onOpenChange={setShowImportDialog}
+          onSuccess={() => {
+             triggerSidebarRefresh();
+          }}
+        />
       </div>
     </FontProvider>
   );

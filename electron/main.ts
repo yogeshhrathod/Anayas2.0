@@ -6,7 +6,7 @@ import { createLogger } from './services/logger';
 
 const logger = createLogger('main');
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 
 let mainWindow: BrowserWindow | null = null;
 let lastGeneratedFilePath: string | null = null;
