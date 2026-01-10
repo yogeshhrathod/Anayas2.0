@@ -158,5 +158,34 @@ export const SHORTCUTS: Record<string, ShortcutDefinition> = {
     contexts: ['sidebar:collection', 'collections-page'],
     action: 'import-collection',
     description: 'Import collection'
+  },
+  
+  // Advanced shortcuts
+  SAVE_REQUEST_AS: {
+    key: 's',
+    metaKey: true,
+    ctrlKey: true,
+    shiftKey: true,
+    contexts: ['editor'],
+    action: 'save-request-as',
+    description: 'Save request as...'
+  },
+  
+  CLOSE_TAB: {
+    key: 'w',
+    metaKey: true,
+    ctrlKey: true,
+    contexts: ['editor'],
+    action: 'close-tab',
+    description: 'Close current tab'
+  },
+  
+  TOGGLE_SPLIT_VIEW: {
+    key: '\\',
+    metaKey: true,
+    ctrlKey: true,
+    contexts: ['editor'],
+    action: 'toggle-split-view',
+    description: 'Toggle split view'
   }
 };

@@ -15,10 +15,10 @@ import { Button } from './components/ui/button';
 import { Dialog } from './components/ui/dialog';
 import { ResizeHandle } from './components/ui/resize-handle';
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from './components/ui/tooltip';
 import { useSessionRecovery } from './hooks/useSessionRecovery';
 import { useShortcuts } from './hooks/useShortcuts';
@@ -50,6 +50,9 @@ const Settings = lazy(() =>
   import('./pages/Settings').then(module => ({ default: module.Settings }))
 );
 
+// Lazy load onboarding flow - only loaded for new users
+const OnboardingFlow = lazy(() => import('./components/OnboardingFlow'));
+
 import { FontProvider } from './components/providers/FontProvider';
 
 function App() {
@@ -58,6 +61,7 @@ function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isResizing, setIsResizing] = useState(false);
+  const [isWelcomeDone, setIsWelcomeDone] = useState(() => localStorage.getItem('anayas_welcome_seen') === 'true');
   const [_requests, setRequests] = useState<any[]>([]);
   const [isAppReady, setIsAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -85,6 +89,8 @@ function App() {
     loadSidebarState,
     setUnsavedRequests,
     setActiveUnsavedRequestId,
+    splitViewEnabled,
+    setSplitViewEnabled,
   } = useStore();
 
   const { showSuccess, showError } = useToastNotifications();
@@ -368,6 +374,25 @@ function App() {
       // TODO: Implement collection import
       console.log('Import collection');
     },
+
+    'save-request-as': () => {
+      // TODO: Implement save request as dialog
+      // This will open a dialog to save the current request to a different collection/folder
+      console.log('Save request as...');
+      showSuccess('Coming soon: Save request as');
+    },
+
+    'close-tab': () => {
+      // Close the current request tab
+      setSelectedRequest(null);
+      setActiveUnsavedRequestId(null);
+    },
+
+    'toggle-split-view': () => {
+      // Toggle split view for request/response
+      setSplitViewEnabled(!splitViewEnabled);
+      showSuccess(splitViewEnabled ? 'Split view disabled' : 'Split view enabled');
+    },
   });
 
   // Handle sidebar resize
@@ -503,7 +528,15 @@ function App() {
 
   return (
     <FontProvider>
-      {showSplash && (
+      {/* Welcome Experience - Lazy loaded so zero impact for existing users */}
+      {!isWelcomeDone && (
+        <Suspense fallback={null}>
+          <OnboardingFlow onDismiss={() => setIsWelcomeDone(true)} />
+        </Suspense>
+      )}
+
+      {/* Splash Screen - Waits for welcome flow if present */}
+      {isWelcomeDone && showSplash && (
         <SplashScreen 
           isLoading={!isAppReady} 
           onFinish={() => setShowSplash(false)} 
@@ -518,6 +551,7 @@ function App() {
 
         {/* Navigation Bar */}
         <NavigationBar />
+
 
         {/* Main Layout */}
         <div className="flex flex-1 overflow-hidden">

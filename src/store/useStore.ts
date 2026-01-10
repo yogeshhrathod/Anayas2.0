@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Theme } from '../lib/themes';
-import { Request, Environment, Collection, RequestHistory } from '../types/entities';
+import { Collection, Environment, Request, RequestHistory } from '../types/entities';
 
 export interface UnsavedRequest {
   id: string;
@@ -129,6 +129,10 @@ interface AppState {
   // Presets sidebar state
   presetsExpanded: boolean;
   setPresetsExpanded: (expanded: boolean) => void;
+  
+  // Split view state for editor
+  splitViewEnabled: boolean;
+  setSplitViewEnabled: (enabled: boolean) => void;
 
   // Legacy theme support (for backward compatibility)
   theme: 'light' | 'dark' | 'system';
@@ -293,6 +297,10 @@ export const useStore = create<AppState>()(
       // Presets sidebar state
       presetsExpanded: false,
       setPresetsExpanded: (presetsExpanded) => set({ presetsExpanded }),
+      
+      // Split view state for editor
+      splitViewEnabled: true, // Default enabled
+      setSplitViewEnabled: (splitViewEnabled) => set({ splitViewEnabled }),
 
       // Legacy theme support (for backward compatibility)
       theme: 'system',

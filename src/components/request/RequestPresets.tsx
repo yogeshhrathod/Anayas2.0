@@ -98,12 +98,13 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
               <button
                 onClick={() => onToggleExpanded(!isExpanded)}
                 className="flex items-center gap-2 hover:bg-muted/50 rounded py-1 transition-colors"
+                data-testid="request-scenarios-toggle"
               >
                 {isExpanded ? (
                   <>
                     <h4 className="font-medium text-sm flex items-center gap-2">
                       <Bookmark className="h-4 w-4" />
-                      Request Presets
+                      Request Scenarios
                       {presets.length > 0 && (
                         <Badge variant="secondary" className="h-5 px-1.5 text-xs">
                           {presets.length}
@@ -131,7 +132,7 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                     size="sm"
                     onClick={() => onShowCreateDialog(true)}
                     className="h-7 w-7 p-0"
-                    title="Create Preset"
+                    title="Create Scenario"
                   >
                     <Plus className="h-3 w-3" />
                   </Button>
@@ -140,7 +141,7 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                     size="sm"
                     onClick={() => onToggleExpanded(false)}
                     className="h-7 w-7 p-0"
-                    title="Close Presets"
+                    title="Close Scenarios"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -188,7 +189,7 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                             onDeletePreset(preset.id);
                           }}
                           className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                          title="Delete Preset"
+                          title="Delete Scenario"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -198,8 +199,8 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                 ) : (
                   <div className="text-center py-8 text-muted-foreground text-sm">
                     <Bookmark className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>No presets created yet</p>
-                    <p className="text-xs mt-1">Create your first preset to save request configurations</p>
+                    <p>No scenarios created yet</p>
+                    <p className="text-xs mt-1">Create your first scenario to save request configurations</p>
                   </div>
                 )}
               </div>
@@ -253,7 +254,7 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                 {presets.length === 0 && (
                   <div className="text-center py-4 text-muted-foreground text-xs flex flex-col items-center">
                     <Bookmark className="h-6 w-6 mb-1 opacity-50" />
-                    <p>No presets</p>
+                    <p>No scenarios</p>
                   </div>
                 )}
               </div>
@@ -267,8 +268,8 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
       <Dialog
         open={showCreateDialog}
         onOpenChange={onShowCreateDialog}
-        title="Create Request Preset"
-        description="Save the current request configuration as a reusable preset"
+        title="Create Request Scenario"
+        description="Save the current request configuration as a reusable scenario"
         maxWidth="sm"
       >
         <form
@@ -295,12 +296,12 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                     id="preset-description"
                     value={newPresetDescription}
                     onChange={(e) => onSetNewPresetDescription(e.target.value)}
-                    placeholder="Brief description of this preset"
+                    placeholder="Brief description of this scenario"
                   />
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button type="submit">
-                    Create Preset
+                    Create Scenario
                   </Button>
                   <Button 
                     type="button"

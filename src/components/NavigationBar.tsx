@@ -8,7 +8,7 @@ import {
     Plus,
     Settings as SettingsIcon,
     Terminal,
-    Upload,
+    Upload
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useToastNotifications } from '../hooks/useToastNotifications';
@@ -19,6 +19,7 @@ import { Request } from '../types/entities';
 import { CurlImportDialog } from './curl/CurlImportDialog';
 import { EnvironmentSelector } from './EnvironmentSelector';
 import { ImportCollectionDialog } from './import';
+import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -327,6 +328,7 @@ export function NavigationBar() {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+
           </>
         )}
 
@@ -352,6 +354,9 @@ export function NavigationBar() {
             </button>
           );
         })}
+
+        {/* Keyboard Shortcuts Help */}
+        <KeyboardShortcutsHelp />
 
         {/* Environment Selector */}
         <div className="ml-2">

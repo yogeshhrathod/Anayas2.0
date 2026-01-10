@@ -457,7 +457,7 @@
 - [x] **Success Animations** - Subtle feedback
 - [x] **Request Body Polish** - Enhanced editors (Monaco/KeyValue) and format support
 - [x] **Overlay System** - Improved overlays context handling
-- [ ] **Onboarding** - First-time user guide
+- [x] **Onboarding** - First-time user guide (Splash Screen & Product Tour) ✅ **COMPLETED**
 - [x] **Shortcuts Overlay** - Show available shortcuts
 - [ ] **UI Design System Alignment** - Comprehensive alignment with design system (see Phase 4.6)
 
@@ -579,6 +579,7 @@
 - **Variable Input Consolidation**: Unified variable input component with variants
 - **Multi-Platform Builds**: macOS, Windows, and Linux builds with electron-builder
 - **Comprehensive Test Suite**: 100% IPC coverage, integration tests, performance tests
+- **Onboarding Experience**: Premium Splash Screen and interactive Product Tour with custom tooltips
 
 ### 🔄 **IN PROGRESS**
 - **Settings Panel**: Core settings done, editor/network/privacy/advanced settings pending

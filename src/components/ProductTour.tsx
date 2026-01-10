@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronLeft, Command, Folder, Import, Layers, Rocket, X } from 'lucide-react';
+import { ArrowRight, Bookmark, ChevronLeft, Command, Folder, Import, Layers, Rocket, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from 'react-joyride';
 import { cn } from '../lib/utils';
@@ -216,6 +216,24 @@ export function ProductTour() {
       ),
       data: {
         icon: <Layers className="w-5 h-5 text-primary" />,
+      },
+    },
+    {
+      target: '[data-testid="request-scenarios-toggle"]',
+      title: "Request Scenarios",
+      content: (
+        <div className="space-y-2">
+          <p>
+            Save different configurations of the same request as <span className="text-foreground font-medium">scenarios</span>.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Perfect for testing success cases, error cases, or different parameter combinations.
+          </p>
+        </div>
+      ),
+      placement: 'left',
+      data: {
+        icon: <Bookmark className="w-5 h-5 text-primary" />,
       },
     },
   ];

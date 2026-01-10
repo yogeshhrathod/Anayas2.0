@@ -1,8 +1,8 @@
+import { X } from 'lucide-react';
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
 import { Button } from './button';
-import { X } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
 
 export interface DialogProps {
   open: boolean;
@@ -42,17 +42,26 @@ export function Dialog({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onOpenChange(false);
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open) {
+        onOpenChange(false);
+      }
+    };
+
+    if (open) {
+      window.addEventListener('keydown', handleKeyDown);
     }
-  };
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, onOpenChange]);
 
   const dialogContent = (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog p-4"
       onClick={handleBackdropClick}
-      onKeyDown={handleKeyDown}
     >
       <Card className={`w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-hidden flex flex-col ${className}`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
