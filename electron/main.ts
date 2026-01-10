@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { initDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
@@ -12,7 +12,8 @@ let mainWindow: BrowserWindow | null = null;
 let lastGeneratedFilePath: string | null = null;
 
 function createWindow() {
-  const isDarkMode = nativeTheme.shouldUseDarkColors;
+  // Force dark mode background to prevent white flash
+  const backgroundColor = '#0f172a';
   
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -27,7 +28,7 @@ function createWindow() {
     frame: false,
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 10, y: 10 },
-    backgroundColor: isDarkMode ? '#0f172a' : '#ffffff',
+    backgroundColor,
     show: false,
     vibrancy: 'under-window',
     visualEffectState: 'active',

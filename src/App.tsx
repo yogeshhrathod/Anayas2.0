@@ -50,8 +50,8 @@ const Settings = lazy(() =>
   import('./pages/Settings').then(module => ({ default: module.Settings }))
 );
 
-// Lazy load onboarding flow - only loaded for new users
-const OnboardingFlow = lazy(() => import('./components/OnboardingFlow'));
+// Static import for instant onboarding (no delay)
+import OnboardingFlow from './components/OnboardingFlow';
 
 import { FontProvider } from './components/providers/FontProvider';
 
@@ -531,7 +531,10 @@ function App() {
       {/* Welcome Experience - Lazy loaded so zero impact for existing users */}
       {!isWelcomeDone && (
         <Suspense fallback={null}>
-          <OnboardingFlow onDismiss={() => setIsWelcomeDone(true)} />
+          <OnboardingFlow onDismiss={() => {
+            setIsWelcomeDone(true);
+            setShowSplash(false); // Skip splash screen after onboarding to prevent "flash"
+          }} />
         </Suspense>
       )}
 
