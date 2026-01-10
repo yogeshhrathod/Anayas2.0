@@ -1,5 +1,5 @@
 /**
- * Core entity types for the Anayas application
+ * Core entity types for the Luna application
  * Centralized type definitions for all data models
  */
 

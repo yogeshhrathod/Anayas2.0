@@ -82,7 +82,7 @@ export function SplashScreen({ onFinish, isLoading = true }: SplashScreenProps) 
         {/* Text Section */}
         <div className="mt-12 text-center">
           <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent">
-            Anayas
+            Luna
           </h1>
           <p className="mt-3 text-white/40 font-medium tracking-widest uppercase text-[10px]">
             Professional API Workspace

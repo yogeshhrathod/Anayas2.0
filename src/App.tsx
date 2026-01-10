@@ -61,7 +61,7 @@ function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isResizing, setIsResizing] = useState(false);
-  const [isWelcomeDone, setIsWelcomeDone] = useState(() => localStorage.getItem('anayas_welcome_seen') === 'true');
+  const [isWelcomeDone, setIsWelcomeDone] = useState(() => localStorage.getItem('luna_welcome_seen') === 'true');
   const [_requests, setRequests] = useState<any[]>([]);
   const [isAppReady, setIsAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);

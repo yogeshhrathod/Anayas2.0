@@ -117,7 +117,7 @@ export function ProductTour() {
   const [run, setRun] = useState(false);
 
   useEffect(() => {
-    const hasSeenTour = localStorage.getItem('anayas_intro_seen');
+    const hasSeenTour = localStorage.getItem('luna_intro_seen');
     if (hasSeenTour === 'true') {
       return;
     }
@@ -134,14 +134,14 @@ export function ProductTour() {
     
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any) || action === 'close' || action === 'skip') {
       setRun(false);
-      localStorage.setItem('anayas_intro_seen', 'true');
+      localStorage.setItem('luna_intro_seen', 'true');
     }
   };
 
   const steps: Step[] = [
     {
       target: 'body',
-      title: "Welcome to Anayas",
+      title: "Welcome to Luna",
       content: (
         <div className="space-y-2">
           <p>Your professional workspace for API development and testing.</p>

@@ -1,7 +1,7 @@
 /**
  * cURL Parser
  * 
- * Parses cURL command strings into Request objects compatible with Anayas.
+ * Parses cURL command strings into Request objects compatible with Luna.
  * Supports common cURL flags and options.
  */
 

@@ -15,7 +15,7 @@ export function Logo({ className, size = 24, showText = false }: LogoProps) {
     <div className={cn("flex items-center gap-2", className)}>
       <img
         src="logo.png"
-        alt="Anayas Logo"
+        alt="Luna Logo"
         className={cn(
           "object-contain flex-shrink-0",
           // Apply slight adjustments for better visibility in different themes
@@ -27,7 +27,7 @@ export function Logo({ className, size = 24, showText = false }: LogoProps) {
         draggable={false}
       />
       {showText && (
-        <span className="text-sm font-semibold whitespace-nowrap">Anayas</span>
+        <span className="text-sm font-semibold whitespace-nowrap">Luna</span>
       )}
     </div>
   );

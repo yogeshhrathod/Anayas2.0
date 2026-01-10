@@ -24,7 +24,7 @@ export default function OnboardingFlow({ onDismiss }: { onDismiss?: () => void }
   const handleComplete = () => {
     setIsVisible(false); // Trigger fade out
     setTimeout(() => {
-      localStorage.setItem('anayas_welcome_seen', 'true');
+      localStorage.setItem('luna_welcome_seen', 'true');
       onDismiss?.();
     }, 500); // Wait for transition
   };
@@ -33,7 +33,7 @@ export default function OnboardingFlow({ onDismiss }: { onDismiss?: () => void }
     // Step 1: Welcome
     {
       icon: <Logo size={80} />,
-      title: "Welcome to Anayas",
+      title: "Welcome to Luna",
       description: "Your professional workspace for API development and testing is finally here.",
       content: (
         <div className="flex items-center justify-center gap-4 mt-8">

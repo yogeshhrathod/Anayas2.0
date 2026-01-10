@@ -1,5 +1,5 @@
 /**
- * Keyboard shortcut configuration for Anayas
+ * Keyboard shortcut configuration for Luna
  * Provides VSCode-like keyboard shortcuts with cross-platform support
  */
 

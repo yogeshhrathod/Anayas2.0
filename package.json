@@ -1,9 +1,9 @@
 {
-  "name": "anayas",
+  "name": "luna",
   "version": "1.0.0",
-  "description": "Anayas - Professional Electron desktop app for API testing and development",
+  "description": "Luna - Professional Electron desktop app for API testing and development",
   "main": "dist-electron/main.js",
-  "author": "Anayas",
+  "author": "Luna",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
@@ -86,8 +86,8 @@
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "com.anayas.app",
-    "productName": "Anayas",
+    "appId": "com.luna.app",
+    "productName": "Luna",
     "directories": {
       "output": "release",
       "buildResources": "build"

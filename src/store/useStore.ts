@@ -307,7 +307,7 @@ export const useStore = create<AppState>()(
       setTheme: (theme) => set({ theme, themeMode: theme }),
     }),
     {
-      name: 'anayas-store',
+      name: 'luna-store',
       partialize: (state) => ({
         expandedCollections: Array.from(state.expandedCollections),
         settings: state.settings,
