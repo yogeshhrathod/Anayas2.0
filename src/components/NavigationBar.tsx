@@ -1,14 +1,14 @@
 import {
-  ChevronDown,
-  FileJson,
-  FolderPlus,
-  Globe,
-  History as HistoryIcon,
-  Home,
-  Plus,
-  Settings as SettingsIcon,
-  Terminal,
-  Upload,
+    ChevronDown,
+    FileJson,
+    FolderPlus,
+    Globe,
+    History as HistoryIcon,
+    Home,
+    Plus,
+    Settings as SettingsIcon,
+    Terminal,
+    Upload,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useToastNotifications } from '../hooks/useToastNotifications';
@@ -20,17 +20,17 @@ import { CurlImportDialog } from './curl/CurlImportDialog';
 import { EnvironmentSelector } from './EnvironmentSelector';
 import { ImportCollectionDialog } from './import';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
 } from './ui/tooltip';
 
 export function NavigationBar() {
@@ -262,6 +262,7 @@ export function NavigationBar() {
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
                       <button
+                        data-testid="nav-import-btn"
                         className={cn(
                           'h-8 px-3 flex items-center gap-2 rounded-full transition-all duration-200',
                           'hover:bg-accent/50 hover:scale-[1.02] bg-blue-500/10 border border-blue-500/50 text-blue-600 dark:text-blue-400 shadow-sm',
@@ -308,6 +309,7 @@ export function NavigationBar() {
                 <TooltipTrigger asChild>
                   <button
                     onClick={handleNewRequest}
+                    data-testid="nav-new-request-btn"
                     className={cn(
                       'h-8 px-3 flex items-center gap-2 rounded-full transition-all duration-200',
                       'hover:bg-accent/50 hover:scale-[1.02] bg-primary/10 border border-primary/50 text-primary shadow-sm',

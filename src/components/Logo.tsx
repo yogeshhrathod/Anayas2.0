@@ -14,7 +14,7 @@ export function Logo({ className, size = 24, showText = false }: LogoProps) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <img
-        src="/logo.png"
+        src="logo.png"
         alt="Anayas Logo"
         className={cn(
           "object-contain flex-shrink-0",

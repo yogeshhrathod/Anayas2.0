@@ -3,6 +3,8 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { CollectionHierarchy } from './components/CollectionHierarchy';
 import { Logo } from './components/Logo';
 import { NavigationBar } from './components/NavigationBar';
+import { ProductTour } from './components/ProductTour';
+import { SplashScreen } from './components/SplashScreen';
 import { ThemeManager } from './components/ThemeManager';
 import { TitleBar } from './components/TitleBar';
 import Toaster from './components/Toaster';
@@ -13,10 +15,10 @@ import { Button } from './components/ui/button';
 import { Dialog } from './components/ui/dialog';
 import { ResizeHandle } from './components/ui/resize-handle';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
 } from './components/ui/tooltip';
 import { useSessionRecovery } from './hooks/useSessionRecovery';
 import { useShortcuts } from './hooks/useShortcuts';
@@ -57,6 +59,8 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isResizing, setIsResizing] = useState(false);
   const [_requests, setRequests] = useState<any[]>([]);
+  const [isAppReady, setIsAppReady] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const {
     currentPage,
     setCurrentPage,
@@ -178,7 +182,7 @@ function App() {
             auth: context.selectedItem.data.auth || { type: 'none' },
             collectionId: context.selectedItem.data.collectionId,
             folderId: context.selectedItem.data.folderId,
-            isFavorite: false,
+            isFavorite: 0,
           };
 
           // Use saveAfter to insert the duplicate right after the original request
@@ -203,7 +207,7 @@ function App() {
             name: `${context.selectedItem.data.name} (Copy)`,
             description: context.selectedItem.data.description || '',
             variables: context.selectedItem.data.variables || {},
-            isFavorite: false,
+            isFavorite: 0,
           };
 
           const result = await window.electronAPI.collection.save(duplicate);
@@ -231,7 +235,7 @@ function App() {
               auth: request.auth,
               collectionId: newCollectionId,
               folderId: undefined, // Reset folder association for simplicity
-              isFavorite: false,
+              isFavorite: 0,
             };
 
             await window.electronAPI.request.save(duplicateRequest);
@@ -439,10 +443,14 @@ function App() {
       if (settings.theme && !settings.themeMode) {
         setThemeMode(settings.theme);
       }
+
+      // Mark app as ready once all data is loaded
+      setIsAppReady(true);
     } catch (error) {
       console.error('Failed to load initial data:', error);
       // Show user-friendly error - you could add a toast here
       alert('Failed to load application data. Please restart the application.');
+      setIsAppReady(true); // Still set to ready so user can at least see the app/error
     }
   };
 
@@ -495,8 +503,15 @@ function App() {
 
   return (
     <FontProvider>
+      {showSplash && (
+        <SplashScreen 
+          isLoading={!isAppReady} 
+          onFinish={() => setShowSplash(false)} 
+        />
+      )}
       <ThemeManager />
       <Toaster />
+      {!showSplash && <ProductTour />}
       <div className="flex h-screen flex-col bg-background">
         {/* Title Bar */}
         <TitleBar />

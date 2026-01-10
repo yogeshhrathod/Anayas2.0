@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, Notification, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
 import path from 'path';
 import { initDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
@@ -40,9 +40,8 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow?.show();
-  });
+  // Show immediately for the splash screen to take over
+  mainWindow.show();
 
   mainWindow.on('closed', () => {
     mainWindow = null;
