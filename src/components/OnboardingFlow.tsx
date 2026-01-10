@@ -2,7 +2,7 @@ import confetti from 'canvas-confetti';
 import { ArrowRight, Box, ChevronRight, Layers, Sparkles, Zap } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { cn } from '../lib/utils';
-import { Logo } from './Logo';
+import { BikeLogoAnimation } from './BikeLogoAnimation';
 import { Button } from './ui/button';
 
 export default function OnboardingFlow({ onDismiss }: { onDismiss?: () => void }) {
@@ -41,7 +41,7 @@ export default function OnboardingFlow({ onDismiss }: { onDismiss?: () => void }
   const steps = useMemo(() => [
     // Step 1: Welcome
     {
-      icon: <Logo size={120} />,
+      icon: <BikeLogoAnimation size={120} />,
       title: "Welcome to Luna",
       description: "Your professional workspace for API development and testing is finally here.",
       content: (
