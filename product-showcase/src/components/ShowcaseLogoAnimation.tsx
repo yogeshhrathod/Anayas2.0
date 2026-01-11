@@ -46,7 +46,7 @@ export function ShowcaseLogoAnimation({ size = 120, className }: ShowcaseLogoAni
       >
         <div className="relative transform -rotate-6"> {/* Forward lean base */}
             <div className="relative z-10 rounded-2xl p-4">
-                <img src="/logo.png" alt="Luna Logo" style={{ width: size, height: size }} className="object-contain drop-shadow-2xl" />
+                <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Luna Logo" style={{ width: size, height: size }} className="object-contain drop-shadow-2xl" />
             </div>
              {/* Wheel spin effect (subtle blur or circular motion hint) */}
         </div>

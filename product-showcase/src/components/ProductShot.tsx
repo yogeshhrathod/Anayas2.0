@@ -34,7 +34,7 @@ export function ProductShot() {
             {/* Mac Window Frame */}
             <div className="relative aspect-[16/10] bg-black/50 overflow-hidden group">
                     <img 
-                        src="/product-shot.png" 
+                        src={`${import.meta.env.BASE_URL}product-shot.png`} 
                         alt="Luna Interface" 
                         className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.01]" 
                     />

@@ -37,7 +37,7 @@ export function Navbar() {
            <div className="relative w-10 h-10 flex items-center justify-center">
                 {/* Using the Bike Logo Animation scaled down */}
                 <span className="absolute inset-0 bg-primary/20 blur-lg rounded-full opacity-50 group-hover:opacity-100 transition-opacity" />
-                <img src="/logo.png" alt="Luna Logo" className="w-full h-full object-contain relative z-10" />
+                <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Luna Logo" className="w-full h-full object-contain relative z-10" />
            </div>
            <span className="font-display font-bold text-xl tracking-tighter uppercase text-white">
                 Luna<span className="text-primary">_</span>
