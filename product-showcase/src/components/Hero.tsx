@@ -1,6 +1,7 @@
 import { motion, useScroll, useTime, useTransform } from 'framer-motion';
-import { Terminal } from 'lucide-react';
-import { useRef } from 'react';
+import { Apple, ChevronDown, Terminal as Linux, Terminal, Monitor as Windows } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { cn } from '../lib/utils';
 import { ShowcaseLogoAnimation } from './ShowcaseLogoAnimation';
 import { Button } from './ui/Button';
 
@@ -31,7 +32,31 @@ const TunnelText = ({ text, delay = 0, x = 0, y = 0 }: { text: string, delay?: n
 
 export function Hero() {
   const ref = useRef(null);
+  const [platform, setPlatform] = useState<'mac' | 'windows' | 'linux' | 'other'>('other');
+  const [showAllDownloads, setShowAllDownloads] = useState(false);
   const { scrollYProgress } = useScroll({ target: ref });
+
+  useEffect(() => {
+    const ua = window.navigator.userAgent.toLowerCase();
+    if (ua.includes('mac')) setPlatform('mac');
+    else if (ua.includes('win')) setPlatform('windows');
+    else if (ua.includes('linux')) setPlatform('linux');
+  }, []);
+
+  const DOWNLOAD_URLS = {
+    mac: 'https://github.com/yogeshhrathod/Anayas2.0/releases/latest/download/Luna-mac.dmg',
+    windows: 'https://github.com/yogeshhrathod/Anayas2.0/releases/latest/download/Luna-win.exe',
+    linux: 'https://github.com/yogeshhrathod/Anayas2.0/releases/latest/download/Luna-linux.AppImage'
+  };
+
+  const platformInfo = {
+    mac: { label: 'macOS (DMG)', icon: Apple, url: DOWNLOAD_URLS.mac },
+    windows: { label: 'Windows (EXE)', icon: Windows, url: DOWNLOAD_URLS.windows },
+    linux: { label: 'Linux (AppImage)', icon: Linux, url: DOWNLOAD_URLS.linux },
+    other: { label: 'Download Luna', icon: Terminal, url: 'https://github.com/yogeshhrathod/Anayas2.0/releases/latest' }
+  };
+
+  const currentPlatform = platformInfo[platform];
   
   const y = useTransform(scrollYProgress, [0, 1], [0, 300]);
 
@@ -73,22 +98,55 @@ export function Hero() {
                 Local First. Privacy Focused. Professional Grade.
             </p>
 
-            <div className="flex flex-col md:flex-row items-center gap-6">
-                <Button 
-                  onClick={() => {
-                    document.getElementById('manifesto')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="h-14 px-8 bg-primary rounded-none text-black font-bold uppercase tracking-widest hover:bg-primary/90 transition-all border border-primary hover:shadow-[0_0_30px_rgba(255,100,0,0.3)]"
-                >
-                    Initialize Sequence
-                </Button>
-                {/* <Button 
-                  variant="outline" 
-                  onClick={() => window.location.href = '/docs'}
-                  className="h-14 px-8 rounded-none border-white/20 text-white font-mono hover:bg-white hover:text-black uppercase tracking-widest transition-all"
-                >
-                    View Specs <ArrowRight className="w-4 h-4 ml-2" />
-                </Button> */}
+            <div className="flex flex-col items-center gap-4">
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                    <Button 
+                      onClick={() => {
+                        window.location.href = currentPlatform.url;
+                      }}
+                      className="h-14 px-8 bg-primary rounded-none text-black font-bold uppercase tracking-widest hover:bg-primary/90 transition-all border border-primary hover:shadow-[0_0_30px_rgba(255,100,0,0.3)] flex items-center gap-3"
+                    >
+                        <currentPlatform.icon className="w-5 h-5" />
+                        Download for {platform === 'other' ? 'Desktop' : platform}
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowAllDownloads(!showAllDownloads)}
+                      className="h-14 px-8 rounded-none border-white/20 text-white font-mono hover:bg-white hover:text-black uppercase tracking-widest transition-all flex items-center gap-2"
+                    >
+                        Platforms <ChevronDown className={cn("w-4 h-4 transition-transform", showAllDownloads && "rotate-180")} />
+                    </Button>
+                </div>
+
+                {showAllDownloads && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-wrap justify-center gap-4 p-4 bg-white/5 backdrop-blur-md border border-white/10"
+                  >
+                    {Object.entries(platformInfo).map(([key, info]) => (
+                      key !== 'other' && (
+                        <a 
+                          key={key}
+                          href={info.url}
+                          className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-gray-400 hover:text-primary transition-colors uppercase border border-transparent hover:border-primary/20"
+                        >
+                          <info.icon className="w-3 h-3" />
+                          {info.label}
+                        </a>
+                      )
+                    ))}
+                    <a 
+                      href="https://github.com/yogeshhrathod/Anayas2.0/releases"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-gray-400 hover:text-primary transition-colors uppercase"
+                    >
+                      All Releases
+                    </a>
+                  </motion.div>
+                )}
             </div>
         </motion.div>
 
