@@ -32,23 +32,7 @@ export function ProductShot() {
             <div className="absolute -inset-4 bg-primary/20 blur-3xl rounded-[30px] opacity-40" />
 
             {/* Mac Window Frame */}
-            <div className="relative bg-[#0d1117] rounded-xl border border-white/10 shadow-2xl overflow-hidden">
-                {/* Window Header */}
-                <div className="h-12 bg-white/5 border-b border-white/5 flex items-center px-4 justify-between">
-                    <div className="flex gap-2">
-                        <div className="w-3 h-3 rounded-full bg-[#FF5F56]" />
-                        <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
-                        <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
-                    </div>
-                    <div className="text-xs font-mono text-gray-500 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                        luna_interface_main.exe
-                    </div>
-                    <div className="w-16" /> {/* Spacer for centering */}
-                </div>
-
-                {/* Screenshot Image */}
-                <div className="relative aspect-[16/10] bg-black/50 overflow-hidden group">
+            <div className="relative aspect-[16/10] bg-black/50 overflow-hidden group">
                     <img 
                         src="/product-shot.png" 
                         alt="Luna Interface" 
@@ -58,7 +42,7 @@ export function ProductShot() {
                     {/* Scanline Overlay */}
                     <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-10 bg-[length:100%_4px,3px_100%] pointer-events-none opacity-20" />
                 </div>
-            </div>
+
             
             {/* Reflection/Grounding Shadow */}
             <div className="absolute top-full left-0 right-0 h-40 bg-gradient-to-b from-primary/10 to-transparent blur-2xl transform -scale-y-100 opacity-30 pointer-events-none" />

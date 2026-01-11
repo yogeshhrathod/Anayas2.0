@@ -69,11 +69,15 @@ export function Navbar() {
             ))}
           </div>
           <div className="flex items-center gap-6">
-            <a href="https://github.com/luna" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition-colors">
+            <a href="https://github.com/yogeshhrathod/Anayas2.0" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition-colors">
               <Github className="w-5 h-5" />
             </a>
-            <Button size="sm" className="rounded-none bg-white text-black font-bold uppercase tracking-widest border border-white hover:bg-transparent hover:text-white transition-all">
-                Download Beta
+            <Button 
+              size="sm" 
+              onClick={() => window.location.href = 'https://github.com/yogeshhrathod/Anayas2.0/releases/latest'}
+              className="rounded-none bg-white text-black font-bold uppercase tracking-widest border border-white hover:bg-transparent hover:text-white transition-all"
+            >
+                Download Alpha
             </Button>
           </div>
         </div>
