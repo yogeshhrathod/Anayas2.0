@@ -1,9 +1,7 @@
-name: Deploy Website
+name: Product Showcase
 
 on:
   push:
-    branches:
-      - main
     paths:
       - 'product-showcase/**'
   workflow_dispatch:
