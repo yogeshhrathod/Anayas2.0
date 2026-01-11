@@ -3,7 +3,7 @@
   "version": "0.0.1-alpha",
   "description": "Luna - Professional Electron desktop app for API testing and development",
   "main": "dist-electron/main.js",
-  "author": "yogeshhrathod",
+  "author": "Yogesh Rathod <yrathod33@gmail.com>",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
