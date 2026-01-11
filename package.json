@@ -1,9 +1,9 @@
 {
   "name": "luna",
-  "version": "1.0.0",
+  "version": "0.0.1-alpha",
   "description": "Luna - Professional Electron desktop app for API testing and development",
   "main": "dist-electron/main.js",
-  "author": "Luna",
+  "author": "yogeshhrathod",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
@@ -92,6 +92,14 @@
   "build": {
     "appId": "com.luna.app",
     "productName": "Luna",
+    "artifactName": "${productName}-${os}.${ext}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "yogeshhrathod",
+        "repo": "Anayas2.0"
+      }
+    ],
     "directories": {
       "output": "release",
       "buildResources": "build"
