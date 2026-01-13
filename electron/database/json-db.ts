@@ -1,6 +1,6 @@
+import { app } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import { app } from 'electron';
 import { createLogger } from '../services/logger';
 
 const logger = createLogger('database');
@@ -175,64 +175,399 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
 
   // Seed sample data if database is empty (skip in test mode)
   if (db.environments.length === 0 && !process.env.TEST_MODE) {
-    // Add sample environment
+    // ============================================
+    // DEMO ENVIRONMENTS
+    // ============================================
+    
+    // Development Environment
     addEnvironment({
       name: 'development',
       displayName: 'Development',
       variables: {
         base_url: 'https://jsonplaceholder.typicode.com',
-        api_key: 'dev-key-123'
+        api_key: 'dev-api-key-12345',
+        user_id: '1',
+        timeout: '5000'
       },
       isDefault: 1,
     });
 
-    // Add sample collection
-    addCollection({
-      name: 'JSONPlaceholder API',
-      description: 'Sample REST API for testing',
+    // Production Environment
+    addEnvironment({
+      name: 'production',
+      displayName: 'Production',
+      variables: {
+        base_url: 'https://api.example.com',
+        api_key: 'prod-api-key-secret',
+        user_id: '100',
+        timeout: '30000'
+      },
+      isDefault: 0,
+    });
+
+    // ============================================
+    // DEMO COLLECTION: REST API Examples
+    // ============================================
+    const restApiCollectionId = addCollection({
+      name: '🚀 REST API Examples',
+      description: 'A comprehensive collection demonstrating REST API operations with JSONPlaceholder - a free fake REST API for testing.',
       variables: {
         base_url: 'https://jsonplaceholder.typicode.com',
-        user_id: '1'
+        user_id: '1',
+        post_id: '1'
       },
       isFavorite: 1,
     });
 
-    // Add sample request
+    // GET - List all posts
     addRequest({
-      name: 'Get Users',
+      name: 'GET All Posts',
       method: 'GET',
-      url: '{{base_url}}/users',
+      url: '{{base_url}}/posts',
       headers: {
-        'Content-Type': 'application/json'
+        'Accept': 'application/json'
       },
-      body: null,
+      body: '',
       queryParams: [
-        { key: 'page', value: '1', enabled: true },
-        { key: 'limit', value: '10', enabled: true }
+        { key: '_limit', value: '10', enabled: true },
+        { key: '_page', value: '1', enabled: true }
       ],
       auth: { type: 'none' },
-      collectionId: 1,
+      collectionId: restApiCollectionId,
       isFavorite: 0,
     });
 
-    // Add sample request history
-    addRequestHistory({
+    // GET - Single post by ID
+    addRequest({
+      name: 'GET Post by ID',
       method: 'GET',
-      url: 'https://jsonplaceholder.typicode.com/users',
-      status: 200,
-      response_time: 245,
-      response_body: JSON.stringify([
-        {
-          "id": 1,
-          "name": "Leanne Graham",
-          "username": "Bret",
-          "email": "Sincere@april.biz"
-        }
-      ]),
-      headers: JSON.stringify({
-        'content-type': 'application/json'
-      }),
+      url: '{{base_url}}/posts/{{post_id}}',
+      headers: {
+        'Accept': 'application/json'
+      },
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: restApiCollectionId,
+      isFavorite: 0,
     });
+
+    // GET - Posts with query params
+    addRequest({
+      name: 'GET Posts by User',
+      method: 'GET',
+      url: '{{base_url}}/posts',
+      headers: {
+        'Accept': 'application/json'
+      },
+      body: '',
+      queryParams: [
+        { key: 'userId', value: '{{user_id}}', enabled: true }
+      ],
+      auth: { type: 'none' },
+      collectionId: restApiCollectionId,
+      isFavorite: 0,
+    });
+
+    // POST - Create new post
+    addRequest({
+      name: 'POST Create Post',
+      method: 'POST',
+      url: '{{base_url}}/posts',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        title: 'My New Post',
+        body: 'This is the content of my new post. It demonstrates how to create resources using POST.',
+        userId: 1
+      }, null, 2),
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: restApiCollectionId,
+      isFavorite: 0,
+    });
+
+    // PUT - Update post
+    addRequest({
+      name: 'PUT Update Post',
+      method: 'PUT',
+      url: '{{base_url}}/posts/{{post_id}}',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        id: 1,
+        title: 'Updated Post Title',
+        body: 'This post has been completely updated using PUT.',
+        userId: 1
+      }, null, 2),
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: restApiCollectionId,
+      isFavorite: 0,
+    });
+
+    // PATCH - Partial update
+    addRequest({
+      name: 'PATCH Partial Update',
+      method: 'PATCH',
+      url: '{{base_url}}/posts/{{post_id}}',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        title: 'Only Title Updated'
+      }, null, 2),
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: restApiCollectionId,
+      isFavorite: 0,
+    });
+
+    // DELETE - Delete post
+    addRequest({
+      name: 'DELETE Post',
+      method: 'DELETE',
+      url: '{{base_url}}/posts/{{post_id}}',
+      headers: {
+        'Accept': 'application/json'
+      },
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: restApiCollectionId,
+      isFavorite: 0,
+    });
+
+    // GET - Nested resource (comments for a post)
+    addRequest({
+      name: 'GET Post Comments',
+      method: 'GET',
+      url: '{{base_url}}/posts/{{post_id}}/comments',
+      headers: {
+        'Accept': 'application/json'
+      },
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: restApiCollectionId,
+      isFavorite: 0,
+    });
+
+    // ============================================
+    // DEMO COLLECTION: User Management
+    // ============================================
+    const userCollectionId = addCollection({
+      name: '👤 User Management',
+      description: 'Examples of user-related API operations including fetching user data, albums, and todos.',
+      variables: {
+        base_url: 'https://jsonplaceholder.typicode.com',
+        user_id: '1'
+      },
+      isFavorite: 0,
+    });
+
+    // GET - All users
+    addRequest({
+      name: 'GET All Users',
+      method: 'GET',
+      url: '{{base_url}}/users',
+      headers: {
+        'Accept': 'application/json'
+      },
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: userCollectionId,
+      isFavorite: 0,
+    });
+
+    // GET - Single user
+    addRequest({
+      name: 'GET User Details',
+      method: 'GET',
+      url: '{{base_url}}/users/{{user_id}}',
+      headers: {
+        'Accept': 'application/json'
+      },
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: userCollectionId,
+      isFavorite: 0,
+    });
+
+    // GET - User's posts
+    addRequest({
+      name: 'GET User Posts',
+      method: 'GET',
+      url: '{{base_url}}/users/{{user_id}}/posts',
+      headers: {
+        'Accept': 'application/json'
+      },
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: userCollectionId,
+      isFavorite: 0,
+    });
+
+    // GET - User's todos
+    addRequest({
+      name: 'GET User Todos',
+      method: 'GET',
+      url: '{{base_url}}/users/{{user_id}}/todos',
+      headers: {
+        'Accept': 'application/json'
+      },
+      body: '',
+      queryParams: [
+        { key: 'completed', value: 'false', enabled: false }
+      ],
+      auth: { type: 'none' },
+      collectionId: userCollectionId,
+      isFavorite: 0,
+    });
+
+    // GET - User's albums
+    addRequest({
+      name: 'GET User Albums',
+      method: 'GET',
+      url: '{{base_url}}/users/{{user_id}}/albums',
+      headers: {
+        'Accept': 'application/json'
+      },
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: userCollectionId,
+      isFavorite: 0,
+    });
+
+    // ============================================
+    // DEMO COLLECTION: HTTPBin Testing
+    // ============================================
+    const httpbinCollectionId = addCollection({
+      name: '🔧 HTTPBin Testing',
+      description: 'Test various HTTP features using httpbin.org - a simple HTTP Request & Response Service.',
+      variables: {
+        httpbin_url: 'https://httpbin.org'
+      },
+      isFavorite: 0,
+    });
+
+    // Echo request
+    addRequest({
+      name: 'GET Echo Headers',
+      method: 'GET',
+      url: '{{httpbin_url}}/headers',
+      headers: {
+        'X-Custom-Header': 'Luna-Test',
+        'Accept': 'application/json'
+      },
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: httpbinCollectionId,
+      isFavorite: 0,
+    });
+
+    // Get IP
+    addRequest({
+      name: 'GET My IP',
+      method: 'GET',
+      url: '{{httpbin_url}}/ip',
+      headers: {},
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: httpbinCollectionId,
+      isFavorite: 0,
+    });
+
+    // User Agent
+    addRequest({
+      name: 'GET User Agent',
+      method: 'GET',
+      url: '{{httpbin_url}}/user-agent',
+      headers: {},
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: httpbinCollectionId,
+      isFavorite: 0,
+    });
+
+    // Delayed response
+    addRequest({
+      name: 'GET Delayed Response (3s)',
+      method: 'GET',
+      url: '{{httpbin_url}}/delay/3',
+      headers: {},
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: httpbinCollectionId,
+      isFavorite: 0,
+    });
+
+    // Status codes
+    addRequest({
+      name: 'GET Test Status 200',
+      method: 'GET',
+      url: '{{httpbin_url}}/status/200',
+      headers: {},
+      body: '',
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: httpbinCollectionId,
+      isFavorite: 0,
+    });
+
+    // POST with JSON body
+    addRequest({
+      name: 'POST Echo JSON',
+      method: 'POST',
+      url: '{{httpbin_url}}/post',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Hello from Luna!',
+        timestamp: '{{$timestamp}}',
+        nested: {
+          key1: 'value1',
+          key2: 'value2'
+        }
+      }, null, 2),
+      queryParams: [],
+      auth: { type: 'none' },
+      collectionId: httpbinCollectionId,
+      isFavorite: 0,
+    });
+
+    // Basic Auth Test
+    addRequest({
+      name: 'GET Basic Auth Test',
+      method: 'GET',
+      url: '{{httpbin_url}}/basic-auth/user/passwd',
+      headers: {},
+      body: '',
+      queryParams: [],
+      auth: { 
+        type: 'basic',
+        username: 'user',
+        password: 'passwd'
+      },
+      collectionId: httpbinCollectionId,
+      isFavorite: 0,
+    });
+
+    logger.info('Seeded demo collections with comprehensive examples');
   }
 }
 
