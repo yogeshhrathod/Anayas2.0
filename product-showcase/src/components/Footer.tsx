@@ -6,9 +6,9 @@ export function Footer() {
       <div className="container px-4 md:px-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center font-bold text-white text-lg">L</div>
-            <span className="font-bold text-lg text-white">Luna</span>
+          <div className="flex items-center gap-3">
+             <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Luna Logo" className="w-8 h-8 object-contain" />
+             <span className="font-bold text-lg text-white">Luna</span>
           </div>
 
           <div className="text-sm text-gray-500">
