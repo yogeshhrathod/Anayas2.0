@@ -34,6 +34,10 @@ jobs:
         if: matrix.os == 'macos-latest'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_APP_VERSION: ${{ github.ref_name }}
+          NODE_ENV: production
         run: npm run build:mac
 
       # Build for Windows
@@ -41,6 +45,10 @@ jobs:
         if: matrix.os == 'windows-latest'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_APP_VERSION: ${{ github.ref_name }}
+          NODE_ENV: production
         run: npm run build:win
 
       # Build for Linux
@@ -48,4 +56,8 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_APP_VERSION: ${{ github.ref_name }}
+          NODE_ENV: production
         run: npm run build:linux

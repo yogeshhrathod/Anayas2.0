@@ -1,10 +1,18 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
+
+// Initialize Sentry as early as possible to capture all errors
+import { addBreadcrumb, flushSentry, initSentry } from './sentry';
+initSentry();
+
 import { initDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
 import { createLogger } from './services/logger';
 
 const logger = createLogger('main');
+
+// Track app startup
+addBreadcrumb('app', 'Application starting', { version: app.getVersion() });
 
 
 
@@ -104,6 +112,8 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
   logger.info('Application shutting down');
+  // Flush any pending Sentry events before quitting
+  await flushSentry();
 });
