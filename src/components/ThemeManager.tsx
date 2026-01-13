@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
+import { applyTheme, darkTheme, getThemeById, lightTheme } from '../lib/themes';
 import { useStore } from '../store/useStore';
-import { applyTheme, getThemeById, lightTheme, darkTheme } from '../lib/themes';
 
 /**
  * ThemeManager component handles theme application based on mode and selected theme
@@ -13,13 +13,14 @@ export function ThemeManager() {
     const applyCurrentTheme = () => {
       let themeToApply;
 
-      if (themeMode === 'system') {
+        if (themeMode === 'system') {
         // Use system preference
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const systemTheme = getThemeById(currentThemeId, customThemes);
+        const selectedTheme = getThemeById(currentThemeId, customThemes);
         
-        if (systemTheme) {
-          themeToApply = systemTheme;
+        // Only use the selected theme if it matches the system preference
+        if (selectedTheme && selectedTheme.type === (prefersDark ? 'dark' : 'light')) {
+          themeToApply = selectedTheme;
         } else {
           // Fallback to default light/dark based on system preference
           themeToApply = prefersDark ? darkTheme : lightTheme;

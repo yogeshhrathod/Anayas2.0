@@ -6,6 +6,49 @@
   <link rel="icon" type="image/png" href="logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Luna</title>
+  <script>
+    // Early theme detection to prevent flash of wrong theme
+    (function () {
+      try {
+        // Check stored theme preference first
+        const stored = localStorage.getItem('luna-store');
+        if (stored) {
+          const data = JSON.parse(stored);
+          const mode = data.state?.themeMode || 'system';
+
+          if (mode === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else if (mode === 'system') {
+            // Use system preference
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              document.documentElement.classList.add('dark');
+            }
+          }
+          // 'light' mode: no class needed
+        } else {
+          // No stored preference, default to system
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+          }
+        }
+      } catch (e) {
+        // Fallback to system preference on error
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.classList.add('dark');
+        }
+      }
+    })();
+  </script>
+  <style>
+    /* Prevent flash of unstyled content - match app background */
+    html {
+      background-color: #ffffff;
+    }
+
+    html.dark {
+      background-color: #020817;
+    }
+  </style>
 </head>
 
 <body>

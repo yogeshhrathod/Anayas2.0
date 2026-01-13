@@ -1,5 +1,13 @@
+import {
+  Check,
+  Download,
+  Edit2,
+  Palette,
+  Plus,
+  Trash2,
+  Upload,
+} from 'lucide-react';
 import { useState } from 'react';
-import { useStore } from '../store/useStore';
 import {
   Theme,
   ThemeColors,
@@ -9,20 +17,12 @@ import {
   importTheme,
   validateThemeColors,
 } from '../lib/themes';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { cn } from '../lib/utils';
+import { useStore } from '../store/useStore';
 import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import {
-  Palette,
-  Plus,
-  Trash2,
-  Download,
-  Upload,
-  Check,
-  Edit2,
-} from 'lucide-react';
-import { cn } from '../lib/utils';
 
 export function ThemeCustomizer() {
   const {
@@ -170,13 +170,20 @@ export function ThemeCustomizer() {
       </Card>
 
       {/* Theme Selection */}
-      <Card>
+      <Card className={cn(themeMode === 'system' && "opacity-60")}>
         <CardHeader>
           <CardTitle>Select Theme</CardTitle>
-          <CardDescription>Choose from built-in or custom themes</CardDescription>
+          <CardDescription>
+            {themeMode === 'system' 
+              ? "Theme selection is disabled while using System mode" 
+              : "Choose from built-in or custom themes"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={cn(
+            "grid gap-3 sm:grid-cols-2 lg:grid-cols-3",
+            themeMode === 'system' && "pointer-events-none grayscale"
+          )}>
             {filteredThemes.map((theme) => (
               <div
                 key={theme.id}
@@ -258,7 +265,7 @@ export function ThemeCustomizer() {
       </Card>
 
       {/* Create Custom Theme */}
-      <Card>
+      <Card className={cn(themeMode === 'system' && "opacity-60 pointer-events-none")}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />

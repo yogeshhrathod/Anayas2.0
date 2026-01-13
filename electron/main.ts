@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
 import path from 'path';
 
 // Import Sentry functions (initialization happens after database is ready)
@@ -16,8 +16,9 @@ let mainWindow: BrowserWindow | null = null;
 let lastGeneratedFilePath: string | null = null;
 
 function createWindow() {
-  // Force dark mode background to prevent white flash
-  const backgroundColor = '#0f172a';
+  // Detect system dark mode and set appropriate background
+  const isDarkMode = nativeTheme.shouldUseDarkColors;
+  const backgroundColor = isDarkMode ? '#020817' : '#ffffff';
   
   mainWindow = new BrowserWindow({
     width: 1400,
