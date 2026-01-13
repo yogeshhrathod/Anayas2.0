@@ -5,24 +5,47 @@
  * providing error tracking and performance monitoring for the React UI.
  * 
  * In development: Disabled to keep console clean
- * In production: Enabled for comprehensive error tracking
+ * In production: Enabled for comprehensive error tracking (unless user opts out)
  */
 
 import * as Sentry from '@sentry/electron/renderer';
 
-// Check if we're in development mode
+// Check if we're in development mode (Vite injects these at build time)
 // @ts-expect-error - Vite injects import.meta.env
 const isDev = import.meta.env?.DEV || 
               // @ts-expect-error - Vite injects import.meta.env
-              import.meta.env?.MODE === 'development' ||
-              process.env.NODE_ENV === 'development';
+              import.meta.env?.MODE === 'development';
 
-// Get Sentry DSN from environment variable
+// Get Sentry DSN from environment variable (Vite injects at build time)
 // @ts-expect-error - Vite injects import.meta.env
-const SENTRY_DSN = import.meta.env?.VITE_SENTRY_DSN || process.env.VITE_SENTRY_DSN;
+const SENTRY_DSN = import.meta.env?.VITE_SENTRY_DSN;
 
 // @ts-expect-error - Vite injects import.meta.env
 const APP_VERSION = import.meta.env?.VITE_APP_VERSION || '0.0.1';
+
+// Track telemetry state
+let sentryInitialized = false;
+let telemetryEnabled = true;
+
+/**
+ * Check if telemetry is enabled from store/localStorage
+ */
+function checkTelemetryEnabled(): boolean {
+  try {
+    // Check localStorage for cached settings (zustand persist)
+    const stored = localStorage.getItem('luna-store');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed.state?.settings?.telemetryEnabled !== undefined) {
+        return parsed.state.settings.telemetryEnabled !== false;
+      }
+    }
+    // Default to enabled
+    return true;
+  } catch {
+    return true;
+  }
+}
 
 /**
  * Initialize Sentry for the renderer process
@@ -38,6 +61,13 @@ export function initSentryRenderer(): void {
   // Skip if no DSN configured
   if (!SENTRY_DSN) {
     console.warn('[Sentry Renderer] No VITE_SENTRY_DSN configured - tracking disabled');
+    return;
+  }
+
+  // Check if user has disabled telemetry
+  telemetryEnabled = checkTelemetryEnabled();
+  if (!telemetryEnabled) {
+    console.log('[Sentry Renderer] User has disabled telemetry - tracking disabled');
     return;
   }
 
@@ -83,6 +113,11 @@ export function initSentryRenderer(): void {
 
       // Filter events before sending
       beforeSend(event, hint) {
+        // Check if telemetry is still enabled
+        if (!telemetryEnabled) {
+          return null;
+        }
+
         const error = hint.originalException;
 
         // Filter out common non-actionable errors
@@ -119,6 +154,7 @@ export function initSentryRenderer(): void {
       },
     });
 
+    sentryInitialized = true;
     console.log('[Sentry Renderer] Initialized successfully for production');
   } catch (error) {
     console.error('[Sentry Renderer] Failed to initialize:', error);
@@ -126,12 +162,33 @@ export function initSentryRenderer(): void {
 }
 
 /**
+ * Update telemetry enabled state (called when user changes setting)
+ */
+export function setRendererTelemetryEnabled(enabled: boolean): void {
+  telemetryEnabled = enabled;
+  console.log(`[Sentry Renderer] Telemetry ${enabled ? 'enabled' : 'disabled'} by user`);
+  
+  // When disabled, we just set the flag - the beforeSend hook will prevent events from being sent
+  // Note: Sentry SDK doesn't have a close() method in renderer, so we rely on beforeSend filtering
+  if (!enabled) {
+    sentryInitialized = false;
+  }
+}
+
+/**
+ * Check if Sentry is active
+ */
+function isSentryActive(): boolean {
+  return sentryInitialized && telemetryEnabled && !isDev;
+}
+
+/**
  * Set React Error Boundary handler
  * Call this to capture React component errors
  */
 export function captureReactError(error: Error, errorInfo: { componentStack?: string }): void {
-  if (isDev) {
-    console.error('[Sentry Dev] React Error:', error, errorInfo);
+  if (!isSentryActive()) {
+    if (isDev) console.error('[Sentry Dev] React Error:', error, errorInfo);
     return;
   }
 
@@ -147,8 +204,8 @@ export function captureReactError(error: Error, errorInfo: { componentStack?: st
  * Track user action for analytics
  */
 export function trackUserAction(action: string, data?: Record<string, unknown>): void {
-  if (isDev) {
-    console.log(`[Sentry Dev] User action: ${action}`, data);
+  if (!isSentryActive()) {
+    if (isDev) console.log(`[Sentry Dev] User action: ${action}`, data);
     return;
   }
 
@@ -164,7 +221,7 @@ export function trackUserAction(action: string, data?: Record<string, unknown>):
  * Track page navigation
  */
 export function trackPageNavigation(page: string): void {
-  if (isDev) return;
+  if (!isSentryActive()) return;
 
   Sentry.addBreadcrumb({
     category: 'navigation',
@@ -182,7 +239,7 @@ export function trackApiRequest(
   status?: number, 
   duration?: number
 ): void {
-  if (isDev) return;
+  if (!isSentryActive()) return;
 
   Sentry.addBreadcrumb({
     category: 'api',
@@ -196,8 +253,8 @@ export function trackApiRequest(
  * Capture a custom error with context
  */
 export function captureError(error: Error, context?: Record<string, unknown>): void {
-  if (isDev) {
-    console.error('[Sentry Dev]', error, context);
+  if (!isSentryActive()) {
+    if (isDev) console.error('[Sentry Dev]', error, context);
     return;
   }
 
@@ -216,8 +273,8 @@ export function captureMessage(
   message: string, 
   level: 'info' | 'warning' | 'error' = 'info'
 ): void {
-  if (isDev) {
-    console.log(`[Sentry Dev ${level}]`, message);
+  if (!isSentryActive()) {
+    if (isDev) console.log(`[Sentry Dev ${level}]`, message);
     return;
   }
 

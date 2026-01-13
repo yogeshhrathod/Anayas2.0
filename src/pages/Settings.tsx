@@ -413,6 +413,58 @@ export function Settings() {
         </CardContent>
       </Card>
 
+      {/* Privacy & Data */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Privacy & Data</CardTitle>
+          <CardDescription>Control telemetry and data collection</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start space-x-3">
+            <input
+              type="checkbox"
+              id="telemetryEnabled"
+              checked={localSettings.telemetryEnabled !== false}
+              onChange={(e) => updateSetting('telemetryEnabled', e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-gray-300"
+            />
+            <div className="space-y-1">
+              <Label htmlFor="telemetryEnabled" className="cursor-pointer font-medium">
+                Send anonymous usage data & crash reports
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Help improve Luna by sending anonymous crash reports and usage analytics. 
+                No personal data, API content, or secrets are ever collected.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-md border border-border bg-muted/50 p-3">
+            <h4 className="text-sm font-medium mb-1">What we collect when enabled:</h4>
+            <ul className="text-xs text-muted-foreground space-y-0.5 list-disc pl-4">
+              <li>Crash reports and error messages</li>
+              <li>Feature usage counts (anonymized)</li>
+              <li>Performance metrics</li>
+              <li>OS type and app version</li>
+            </ul>
+          </div>
+
+          <div className="pt-2">
+            <Button
+              variant="link"
+              className="h-auto p-0 text-primary"
+              onClick={() => {
+                // Navigate to privacy page using currentPage
+                const { setCurrentPage } = useStore.getState();
+                setCurrentPage('privacy');
+              }}
+            >
+              Read our Privacy Policy →
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* About */}
       <Card>
         <CardHeader>

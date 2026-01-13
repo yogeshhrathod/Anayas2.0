@@ -7,6 +7,7 @@
  * Configuration:
  * - In development: Sentry is DISABLED to avoid polluting production data
  * - In production: Sentry is ENABLED using DSN from environment variables
+ * - User can disable telemetry in Settings → Privacy & Data
  * 
  * GitHub Secrets Required:
  * - SENTRY_DSN: Your Sentry DSN (e.g., https://xxx@xxx.ingest.sentry.io/xxx)
@@ -23,11 +24,37 @@ const isDev = process.env.NODE_ENV === 'development' ||
 // Get Sentry DSN from environment variable (set via GitHub secrets in CI/CD)
 const SENTRY_DSN = process.env.SENTRY_DSN;
 
+// Track if Sentry is initialized and enabled
+let sentryInitialized = false;
+let telemetryEnabled = true; // Default to enabled
+
+/**
+ * Check if telemetry is enabled from settings database
+ */
+async function isTelemetryEnabled(): Promise<boolean> {
+  try {
+    // Dynamically import to avoid circular dependencies
+    const { getDatabase } = await import('./database');
+    const db = getDatabase();
+    
+    // Check settings for telemetryEnabled
+    if (db.settings && db.settings.telemetryEnabled !== undefined) {
+      return db.settings.telemetryEnabled !== false;
+    }
+    
+    // Default to enabled if setting doesn't exist
+    return true;
+  } catch (error) {
+    console.log('[Sentry] Could not read telemetry setting, defaulting to enabled');
+    return true;
+  }
+}
+
 /**
  * Initialize Sentry for the main process
- * Only enables tracking in production builds with valid DSN
+ * Only enables tracking in production builds with valid DSN and user consent
  */
-export function initSentry(): void {
+export async function initSentry(): Promise<void> {
   // Skip Sentry in development mode
   if (isDev) {
     console.log('[Sentry] Development mode - Sentry tracking disabled');
@@ -37,6 +64,13 @@ export function initSentry(): void {
   // Skip if no DSN configured
   if (!SENTRY_DSN) {
     console.warn('[Sentry] No SENTRY_DSN configured - Sentry tracking disabled');
+    return;
+  }
+
+  // Check if user has disabled telemetry
+  telemetryEnabled = await isTelemetryEnabled();
+  if (!telemetryEnabled) {
+    console.log('[Sentry] User has disabled telemetry - Sentry tracking disabled');
     return;
   }
 
@@ -69,6 +103,11 @@ export function initSentry(): void {
 
       // Before send hook - allows filtering/modifying events
       beforeSend(event, hint) {
+        // Check if telemetry is still enabled (user might have disabled it after init)
+        if (!telemetryEnabled) {
+          return null; // Don't send if user has disabled telemetry
+        }
+
         // You can filter out certain errors here
         const error = hint.originalException;
         
@@ -120,10 +159,32 @@ export function initSentry(): void {
       app_version: app.getVersion(),
     });
 
+    sentryInitialized = true;
     console.log('[Sentry] Initialized successfully for production');
   } catch (error) {
     console.error('[Sentry] Failed to initialize:', error);
   }
+}
+
+/**
+ * Update telemetry enabled state (called when user changes setting)
+ */
+export function setTelemetryEnabled(enabled: boolean): void {
+  telemetryEnabled = enabled;
+  console.log(`[Sentry] Telemetry ${enabled ? 'enabled' : 'disabled'} by user`);
+  
+  if (!enabled && sentryInitialized) {
+    // Close Sentry when user disables telemetry
+    Sentry.close();
+    sentryInitialized = false;
+  }
+}
+
+/**
+ * Check if telemetry is currently enabled
+ */
+export function isTelemetryCurrentlyEnabled(): boolean {
+  return telemetryEnabled && !isDev;
 }
 
 /**
@@ -144,11 +205,18 @@ function getAnonymousUserId(): string {
 }
 
 /**
+ * Check if Sentry should be active (initialized + telemetry enabled)
+ */
+function isSentryActive(): boolean {
+  return sentryInitialized && telemetryEnabled && !isDev;
+}
+
+/**
  * Capture a custom error with context
  */
 export function captureError(error: Error, context?: Record<string, unknown>): void {
-  if (isDev) {
-    console.error('[Sentry Dev]', error, context);
+  if (!isSentryActive()) {
+    if (isDev) console.error('[Sentry Dev]', error, context);
     return;
   }
 
@@ -164,8 +232,8 @@ export function captureError(error: Error, context?: Record<string, unknown>): v
  * Capture a custom message for tracking
  */
 export function captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info'): void {
-  if (isDev) {
-    console.log(`[Sentry Dev ${level}]`, message);
+  if (!isSentryActive()) {
+    if (isDev) console.log(`[Sentry Dev ${level}]`, message);
     return;
   }
 
@@ -181,7 +249,7 @@ export function addBreadcrumb(
   data?: Record<string, unknown>,
   level: 'info' | 'warning' | 'error' = 'info'
 ): void {
-  if (isDev) return;
+  if (!isSentryActive()) return;
 
   Sentry.addBreadcrumb({
     category,
@@ -203,7 +271,7 @@ export function trackFeatureUsage(feature: string, data?: Record<string, unknown
  * Track performance of an operation
  */
 export function trackPerformance(name: string, durationMs: number, data?: Record<string, unknown>): void {
-  if (isDev) return;
+  if (!isSentryActive()) return;
 
   Sentry.addBreadcrumb({
     category: 'performance',
@@ -218,7 +286,7 @@ export function trackPerformance(name: string, durationMs: number, data?: Record
  * Use this to track anonymous usage patterns
  */
 export function setUserId(userId: string): void {
-  if (isDev) return;
+  if (!isSentryActive()) return;
   
   Sentry.setUser({ id: userId });
 }
@@ -227,7 +295,7 @@ export function setUserId(userId: string): void {
  * Flush all pending events before app closes
  */
 export async function flushSentry(): Promise<void> {
-  if (isDev) return;
+  if (!isSentryActive()) return;
   
   await Sentry.flush(2000);
 }

@@ -18,10 +18,10 @@ import { Button } from './components/ui/button';
 import { Dialog } from './components/ui/dialog';
 import { ResizeHandle } from './components/ui/resize-handle';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
 } from './components/ui/tooltip';
 import { useSessionRecovery } from './hooks/useSessionRecovery';
 import { useShortcuts } from './hooks/useShortcuts';
@@ -51,6 +51,9 @@ const History = lazy(() =>
 );
 const Settings = lazy(() =>
   import('./pages/Settings').then(module => ({ default: module.Settings }))
+);
+const Privacy = lazy(() =>
+  import('./pages/Privacy').then(module => ({ default: module.Privacy }))
 );
 
 // Static import for instant onboarding (no delay)
@@ -582,6 +585,8 @@ function App() {
           return <History />;
         case 'settings':
           return <Settings />;
+        case 'privacy':
+          return <Privacy />;
         default:
           return <Homepage />;
       }

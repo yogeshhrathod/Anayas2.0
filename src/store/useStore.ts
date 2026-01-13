@@ -105,8 +105,8 @@ interface AppState {
   updateCustomTheme: (themeId: string, theme: Theme) => void;
   
   // Navigation
-  currentPage: 'home' | 'collections' | 'environments' | 'history' | 'settings';
-  setCurrentPage: (page: 'home' | 'collections' | 'environments' | 'history' | 'settings') => void;
+  currentPage: 'home' | 'collections' | 'environments' | 'history' | 'settings' | 'privacy';
+  setCurrentPage: (page: 'home' | 'collections' | 'environments' | 'history' | 'settings' | 'privacy') => void;
   
   // Sidebar refresh trigger
   sidebarRefreshTrigger: number;

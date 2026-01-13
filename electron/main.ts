@@ -1,18 +1,14 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 
-// Initialize Sentry as early as possible to capture all errors
+// Import Sentry functions (initialization happens after database is ready)
 import { addBreadcrumb, flushSentry, initSentry } from './sentry';
-initSentry();
 
 import { initDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
 import { createLogger } from './services/logger';
 
 const logger = createLogger('main');
-
-// Track app startup
-addBreadcrumb('app', 'Application starting', { version: app.getVersion() });
 
 
 
@@ -62,6 +58,11 @@ app.whenReady().then(async () => {
     // Support test mode: use custom database path if provided
     const testDbPath = process.env.TEST_DB_PATH;
     await initDatabase(testDbPath);
+    
+    // Initialize Sentry after database (so it can check telemetry settings)
+    await initSentry();
+    addBreadcrumb('app', 'Application starting', { version: app.getVersion() });
+    
     registerIpcHandlers();
     
     // Register test handlers if in test mode
