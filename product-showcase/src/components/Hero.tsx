@@ -30,11 +30,17 @@ const TunnelText = ({ text, delay = 0, x = 0, y = 0 }: { text: string, delay?: n
   );
 };
 
+import { useLatestRelease } from '../hooks/useLatestRelease';
+
+// ... (TunnelText component remains unchanged)
+
 export function Hero() {
   const ref = useRef(null);
   const [platform, setPlatform] = useState<'mac' | 'windows' | 'linux' | 'other'>('other');
   const [showAllDownloads, setShowAllDownloads] = useState(false);
   const { scrollYProgress } = useScroll({ target: ref });
+  
+  const { mac, windows, linux, releaseUrl, version } = useLatestRelease();
 
   useEffect(() => {
     const ua = window.navigator.userAgent.toLowerCase();
@@ -43,17 +49,11 @@ export function Hero() {
     else if (ua.includes('linux')) setPlatform('linux');
   }, []);
 
-  const DOWNLOAD_URLS = {
-    mac: 'https://github.com/yogeshhrathod/Anayas2.0/releases/latest/download/Luna-mac.dmg',
-    windows: 'https://github.com/yogeshhrathod/Anayas2.0/releases/latest/download/Luna-win.exe',
-    linux: 'https://github.com/yogeshhrathod/Anayas2.0/releases/latest/download/Luna-linux.AppImage'
-  };
-
   const platformInfo = {
-    mac: { label: 'macOS (DMG)', icon: Apple, url: DOWNLOAD_URLS.mac },
-    windows: { label: 'Windows (EXE)', icon: Windows, url: DOWNLOAD_URLS.windows },
-    linux: { label: 'Linux (AppImage)', icon: Linux, url: DOWNLOAD_URLS.linux },
-    other: { label: 'Download Luna', icon: Terminal, url: 'https://github.com/yogeshhrathod/Anayas2.0/releases/latest' }
+    mac: { label: 'macOS (DMG)', icon: Apple, url: mac },
+    windows: { label: 'Windows (EXE)', icon: Windows, url: windows },
+    linux: { label: 'Linux (AppImage)', icon: Linux, url: linux },
+    other: { label: 'Download Luna', icon: Terminal, url: releaseUrl }
   };
 
   const currentPlatform = platformInfo[platform];
@@ -84,7 +84,7 @@ export function Hero() {
             {/* Tech Badge */}
             <div className="mb-8 flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-none transform hover:scale-105 transition-transform duration-300 cursor-cell">
                 <Terminal className="w-3 h-3 text-primary animate-pulse" />
-                <span className="text-primary text-xs font-mono tracking-widest uppercase">System v0.0.1-alpha // Active</span>
+                <span className="text-primary text-xs font-mono tracking-widest uppercase">System {version || 'v0.0.1-alpha'} // Active</span>
             </div>
 
             {/* Main Headline */}
@@ -138,7 +138,7 @@ export function Hero() {
                       )
                     ))}
                     <a 
-                      href="https://github.com/yogeshhrathod/Anayas2.0/releases"
+                      href={releaseUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-gray-400 hover:text-primary transition-colors uppercase"

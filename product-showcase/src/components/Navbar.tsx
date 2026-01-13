@@ -2,13 +2,16 @@ import { motion, useMotionValueEvent, useScroll } from 'framer-motion';
 import { Github, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useLatestRelease } from '../hooks/useLatestRelease';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
+
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { scrollY } = useScroll();
+  const { releaseUrl } = useLatestRelease();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     setIsScrolled(latest > 50);
@@ -74,7 +77,7 @@ export function Navbar() {
             </a>
             <Button 
               size="sm" 
-              onClick={() => window.location.href = 'https://github.com/yogeshhrathod/Anayas2.0/releases/latest'}
+              onClick={() => window.location.href = releaseUrl}
               className="rounded-none bg-white text-black font-bold uppercase tracking-widest border border-white hover:bg-transparent hover:text-white transition-all"
             >
                 Download Alpha
@@ -110,7 +113,7 @@ export function Navbar() {
                 </Link>
             ))}
             <hr className="border-white/10"/>
-             <Button className="w-full rounded-none bg-primary text-black font-bold uppercase tracking-widest">Download Beta</Button>
+             <Button className="w-full rounded-none bg-primary text-black font-bold uppercase tracking-widest" onClick={() => window.location.href = releaseUrl}>Download Alpha</Button>
           </div>
         </motion.div>
       )}
