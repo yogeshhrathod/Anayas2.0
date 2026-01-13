@@ -18,7 +18,7 @@ function LandingPage() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <div className="min-h-screen bg-background text-foreground font-sans antialiased overflow-x-hidden selection:bg-purple-500/30">
         <Navbar />
         <Routes>
