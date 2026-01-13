@@ -37,3 +37,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./product-showcase/dist
           force_orphan: true
+          cname: luna.wesparkvault.com
+          commit_message: "Deploy ${{ github.sha }} at ${{ github.event.head_commit.timestamp }}"
