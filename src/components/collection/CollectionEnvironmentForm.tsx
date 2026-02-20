@@ -17,19 +17,19 @@
  * ```
  */
 
-import {
-  useState,
-  useEffect,
-  useImperativeHandle,
-  forwardRef,
-  useCallback,
-} from 'react';
 import { Loader2 } from 'lucide-react';
+import {
+    forwardRef,
+    useCallback,
+    useEffect,
+    useImperativeHandle,
+    useState,
+} from 'react';
+import { useFormValidation } from '../../hooks/useFormValidation';
+import { CollectionEnvironment } from '../../types/entities';
+import { EnvironmentVariable } from '../EnvironmentVariable';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { EnvironmentVariable } from '../EnvironmentVariable';
-import { CollectionEnvironment } from '../../types/entities';
-import { useFormValidation } from '../../hooks/useFormValidation';
 
 export interface CollectionEnvironmentFormProps {
   environment?: CollectionEnvironment | null;
@@ -130,25 +130,36 @@ export const CollectionEnvironmentForm = forwardRef<
 
     return (
       <div className="w-full">
-        <div className="space-y-6">
-          <div>
-            <Label htmlFor="name">Environment Name *</Label>
+        <div className="space-y-5">
+          {/* Name Field */}
+          <div className="rounded-xl border border-border/50 bg-muted/20 p-5 space-y-2 backdrop-blur-sm">
+            <Label
+              htmlFor="name"
+              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+            >
+              <span className="inline-block h-2 w-2 rounded-full bg-primary/80" />
+              Environment Name
+            </Label>
             <Input
               id="name"
               value={formData.name}
               onChange={e => handleInputChange('name', e.target.value)}
               onBlur={() => validateField('name', formData.name)}
-              className={errors.name ? 'border-red-500' : ''}
+              className={`h-10 bg-background/80 focus:bg-background transition-colors border-border/50 ${errors.name ? 'border-red-500' : ''}`}
               placeholder="e.g., Development, Staging, Production"
               disabled={isLoading}
               onKeyDown={handleKeyDown}
             />
             {errors.name && (
-              <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+              <p className="text-xs text-destructive flex items-center gap-1 mt-1">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-destructive" />
+                {errors.name}
+              </p>
             )}
           </div>
 
-          <div>
+          {/* Variables Section */}
+          <div className="rounded-xl border border-border/50 bg-muted/20 backdrop-blur-sm overflow-hidden">
             <EnvironmentVariable
               variables={formData.variables}
               onVariablesChange={handleVariableChange}
@@ -158,12 +169,12 @@ export const CollectionEnvironmentForm = forwardRef<
           </div>
 
           {showActions && (
-            <div className="flex justify-end gap-2 pt-4 border-t">
+            <div className="flex justify-end gap-3 pt-4 border-t">
               <button
                 type="button"
                 onClick={onCancel}
                 disabled={isLoading}
-                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="px-4 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
               >
                 Cancel
               </button>
@@ -171,7 +182,7 @@ export const CollectionEnvironmentForm = forwardRef<
                 type="button"
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="px-5 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 shadow-sm transition-all duration-200 hover:-translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>

@@ -317,22 +317,29 @@ export function Environments() {
           onCancel={handleCancelEdit}
           isLoading={isSaving}
         />
-        <div className="flex justify-end gap-2 pt-4 border-t mt-4">
+        <div className="flex justify-end gap-3 pt-6 pb-2 border-t mt-4">
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={handleCancelEdit}
             disabled={isSaving}
+            className="hover:bg-muted text-muted-foreground transition-colors"
           >
             Cancel
           </Button>
-          <Button onClick={() => formRef.current?.submit()} disabled={isSaving}>
+          <Button
+            onClick={() => formRef.current?.submit()}
+            disabled={isSaving}
+            className="min-w-[150px] bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200 hover:-translate-y-[1px]"
+          >
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Saving...
               </>
+            ) : editingEnvironment ? (
+              'Update Environment'
             ) : (
-              'Save'
+              'Create Environment'
             )}
           </Button>
         </div>

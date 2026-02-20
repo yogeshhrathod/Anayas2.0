@@ -129,104 +129,136 @@ export function CollectionEnvironmentManager({
   return (
     <>
       <div className="space-y-4">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold">Collection Environments</h3>
-            <p className="text-sm text-muted-foreground mt-1">
+            <h3 className="text-sm font-semibold tracking-tight text-foreground">Collection Environments</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
               Manage environments specific to this collection
             </p>
           </div>
-          <Button onClick={handleNewEnvironment} size="sm" type="button">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button
+            onClick={handleNewEnvironment}
+            size="sm"
+            type="button"
+            className="h-8 gap-1.5 text-xs font-medium px-3 bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-primary-foreground transition-all duration-200 shadow-none rounded-lg"
+          >
+            <Plus className="h-3.5 w-3.5" />
             Add Environment
           </Button>
         </div>
 
         {environments.length === 0 ? (
-          <div className="text-center py-12 border border-dashed rounded-lg">
-            <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-sm text-muted-foreground mb-4">
-              No environments configured
-            </p>
+          /* Empty State */
+          <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-dashed border-border/50 bg-muted/10">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/50 mb-3">
+              <Building2 className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground mb-1">No environments yet</p>
+            <p className="text-xs text-muted-foreground/70 mb-4">Add one to manage variables for this collection</p>
             <Button
               onClick={handleNewEnvironment}
               variant="outline"
               size="sm"
               type="button"
+              className="h-8 gap-1.5 text-xs"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-3.5 w-3.5" />
               Create First Environment
             </Button>
           </div>
         ) : (
+          /* Environment List */
           <div className="space-y-2">
-            {environments.map(env => (
-              <div
-                key={env.id}
-                className={cn(
-                  'flex items-center justify-between p-4 border rounded-lg',
-                  activeEnvironmentId === env.id &&
-                    'border-primary bg-primary/5'
-                )}
-              >
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{env.name}</span>
-                      {activeEnvironmentId === env.id && (
-                        <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">
-                          Active
+            {environments.map(env => {
+              const varCount = Object.keys(env.variables || {}).length;
+              const isActive = activeEnvironmentId === env.id;
+              return (
+                <div
+                  key={env.id}
+                  className={cn(
+                    'group flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200',
+                    isActive
+                      ? 'border-primary/30 bg-primary/5 shadow-sm'
+                      : 'border-border/60 bg-muted/10 hover:border-border hover:bg-muted/20'
+                  )}
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {/* Color dot */}
+                    <div className={cn(
+                      'h-2 w-2 flex-shrink-0 rounded-full',
+                      isActive ? 'bg-primary shadow-[0_0_6px_currentColor] text-primary' : 'bg-muted-foreground/40'
+                    )} />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={cn('text-sm font-medium truncate', isActive ? 'text-primary' : 'text-foreground')}>
+                          {env.name}
                         </span>
-                      )}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {Object.keys(env.variables || {}).length} variable
-                      {Object.keys(env.variables || {}).length !== 1 ? 's' : ''}
+                        {isActive && (
+                          <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary tracking-wide uppercase">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {varCount} variable{varCount !== 1 ? 's' : ''}
+                      </p>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {activeEnvironmentId !== env.id && env.id && (
+
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    {!isActive && env.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSetActiveClick(env.id!)}
+                        title="Set as active"
+                        type="button"
+                        disabled={isLoading}
+                        className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleSetActiveClick(env.id!)}
-                      title="Set as active"
+                      onClick={() => handleEditEnvironment(env)}
+                      title="Edit environment"
                       type="button"
                       disabled={isLoading}
+                      className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
                     >
-                      <Check className="h-4 w-4" />
+                      <Edit className="h-3.5 w-3.5" />
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteClick(env)}
+                      title="Delete environment"
+                      type="button"
+                      disabled={isLoading || deletingId === env.id}
+                      className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    >
+                      {deletingId === env.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Always-visible active checkmark if active */}
+                  {isActive && (
+                    <div className="ml-2 flex-shrink-0">
+                      <div className="h-5 w-5 rounded-full bg-primary/15 text-primary flex items-center justify-center">
+                        <Check className="h-3 w-3" />
+                      </div>
+                    </div>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEditEnvironment(env)}
-                    title="Edit environment"
-                    type="button"
-                    disabled={isLoading}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteClick(env)}
-                    title="Delete environment"
-                    className="text-destructive hover:text-destructive"
-                    type="button"
-                    disabled={isLoading || deletingId === env.id}
-                  >
-                    {deletingId === env.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-4 w-4" />
-                    )}
-                  </Button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -242,20 +274,23 @@ export function CollectionEnvironmentManager({
         }
         maxWidth="2xl"
       >
-        <CollectionEnvironmentForm
-          ref={formRef}
-          environment={editingEnvironment}
-          onSave={handleSaveEnvironment}
-          onCancel={handleCancelEdit}
-          isLoading={isLoading}
-          showActions={false}
-        />
-        <div className="flex justify-end gap-2 pt-4 border-t">
+        <div className="py-4">
+          <CollectionEnvironmentForm
+            ref={formRef}
+            environment={editingEnvironment}
+            onSave={handleSaveEnvironment}
+            onCancel={handleCancelEdit}
+            isLoading={isLoading}
+            showActions={false}
+          />
+        </div>
+        <div className="flex justify-end gap-3 pt-6 pb-2 border-t mt-2">
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={handleCancelEdit}
             disabled={isLoading}
             type="button"
+            className="hover:bg-muted text-muted-foreground transition-colors"
           >
             Cancel
           </Button>
@@ -263,6 +298,7 @@ export function CollectionEnvironmentManager({
             onClick={() => formRef.current?.submit()}
             disabled={isLoading}
             type="button"
+            className="min-w-[170px] bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200 hover:-translate-y-[1px]"
           >
             {isLoading ? (
               <>

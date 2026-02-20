@@ -19,18 +19,19 @@
  * ```
  */
 
+import { Globe, Star, Tag } from 'lucide-react';
 import React, {
-  useState,
-  useEffect,
-  useImperativeHandle,
-  forwardRef,
+    forwardRef,
+    useEffect,
+    useImperativeHandle,
+    useState,
 } from 'react';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { EnvironmentVariable } from '../EnvironmentVariable';
+import { useFormValidation } from '../../hooks/useFormValidation';
 import { Environment } from '../../types/entities';
 import { EnvironmentFormData } from '../../types/forms';
-import { useFormValidation } from '../../hooks/useFormValidation';
+import { EnvironmentVariable } from '../EnvironmentVariable';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
 export interface EnvironmentFormProps {
   environment?: Environment | null;
@@ -121,26 +122,43 @@ export const EnvironmentForm = forwardRef<
 
     return (
       <form onSubmit={handleSubmit} className="w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5">
           {/* Left Column: Basic Info */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Name *</Label>
+          <div className="space-y-4 rounded-xl border border-border/50 bg-muted/20 p-5 backdrop-blur-sm h-fit">
+            {/* Identifier / Name */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="name"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+              >
+                <Tag className="h-3.5 w-3.5 text-primary" />
+                Identifier
+              </Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={e => handleInputChange('name', e.target.value)}
                 onBlur={() => validateField('name', formData.name)}
-                className={errors.name ? 'border-red-500' : ''}
+                className={`h-10 bg-background/80 focus:bg-background transition-colors border-border/50 ${errors.name ? 'border-destructive' : ''}`}
                 placeholder="e.g., production, staging"
               />
               {errors.name && (
-                <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-destructive" />
+                  {errors.name}
+                </p>
               )}
             </div>
 
-            <div>
-              <Label htmlFor="display_name">Display Name *</Label>
+            {/* Display Name */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="display_name"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+              >
+                <span className="inline-flex items-center justify-center h-3.5 w-3.5 text-primary font-bold text-[10px] leading-none border border-primary/30 rounded-sm">Aa</span>
+                Display Name
+              </Label>
               <Input
                 id="display_name"
                 value={formData.display_name}
@@ -150,47 +168,73 @@ export const EnvironmentForm = forwardRef<
                 onBlur={() =>
                   validateField('display_name', formData.display_name)
                 }
-                className={errors.display_name ? 'border-red-500' : ''}
+                className={`h-10 bg-background/80 focus:bg-background transition-colors border-border/50 ${errors.display_name ? 'border-destructive' : ''}`}
                 placeholder="e.g., Production API"
               />
               {errors.display_name && (
-                <p className="text-sm text-red-500 mt-1">
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-destructive" />
                   {errors.display_name}
                 </p>
               )}
             </div>
 
-            <div>
-              <Label htmlFor="base_url">Base URL</Label>
+            {/* Base URL */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="base_url"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+              >
+                <Globe className="h-3.5 w-3.5 text-primary" />
+                Base URL
+              </Label>
               <Input
                 id="base_url"
                 value={formData.base_url}
                 onChange={e => handleInputChange('base_url', e.target.value)}
                 onBlur={() => validateField('base_url', formData.base_url)}
-                className={errors.base_url ? 'border-red-500' : ''}
+                className={`h-10 bg-background/80 focus:bg-background transition-colors border-border/50 ${errors.base_url ? 'border-destructive' : ''}`}
                 placeholder="https://api.example.com"
               />
               {errors.base_url && (
-                <p className="text-sm text-red-500 mt-1">{errors.base_url}</p>
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-destructive" />
+                  {errors.base_url}
+                </p>
               )}
             </div>
 
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="is_default"
-                checked={formData.is_default}
-                onChange={e =>
-                  handleInputChange('is_default', e.target.checked)
-                }
-                className="rounded"
-              />
-              <Label htmlFor="is_default">Set as default</Label>
+            {/* Default toggle */}
+            <div className="pt-2 border-t border-border/40">
+              <label
+                htmlFor="is_default"
+                className="flex items-center gap-3 cursor-pointer group select-none"
+              >
+                <div className="relative flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    id="is_default"
+                    checked={formData.is_default}
+                    onChange={e =>
+                      handleInputChange('is_default', e.target.checked)
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 rounded-full border border-border/60 bg-muted peer-checked:bg-primary peer-checked:border-primary transition-colors duration-200" />
+                  <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 peer-checked:translate-x-4" />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Star className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <span className="text-sm font-medium text-foreground">
+                    Set as default
+                  </span>
+                </div>
+              </label>
             </div>
           </div>
 
           {/* Right Column: Environment Variables */}
-          <div className="flex-1">
+          <div className="rounded-xl border border-border/50 bg-muted/20 backdrop-blur-sm overflow-hidden">
             <EnvironmentVariable
               variables={formData.variables}
               onVariablesChange={handleVariableChange}
