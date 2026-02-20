@@ -832,7 +832,7 @@ function App() {
           />
 
           {/* Main Content */}
-          <div className="flex flex-1 flex-col">
+          <div className="flex flex-1 flex-col min-w-0">
             {/* Top Bar - Only show for non-home pages */}
             {currentPage !== 'home' && (
               <div className="flex h-12 items-center border-b bg-card px-4 gap-3">

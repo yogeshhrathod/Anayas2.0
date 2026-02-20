@@ -144,3 +144,29 @@ export function getHeaderEntries(
   }
   return Object.entries(headers);
 }
+
+/**
+ * Format response size for display (calculates byte size of data)
+ */
+export function formatResponseSize(data: unknown): string {
+  if (data === undefined || data === null) {
+    return '0 B';
+  }
+
+  let size = 0;
+  if (typeof data === 'string') {
+    size = new TextEncoder().encode(data).length;
+  } else {
+    try {
+      // For objects/arrays, estimate size from JSON string
+      size = new TextEncoder().encode(JSON.stringify(data)).length;
+    } catch {
+      size = 0;
+    }
+  }
+
+  if (size === 0) return '0 B';
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+}

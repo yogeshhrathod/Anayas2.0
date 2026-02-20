@@ -238,7 +238,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
           </Select>
 
           {/* URL Input with Variable Support */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <VariableInputUnified
               variant="overlay"
               value={requestData.url}

@@ -1,13 +1,13 @@
 import { Editor } from '@monaco-editor/react';
 import {
-  AlertCircle,
-  CheckCircle,
-  Copy,
-  FileText,
-  Maximize2,
-  Minimize2,
-  Plus,
-  Trash2,
+    AlertCircle,
+    CheckCircle,
+    Copy,
+    FileText,
+    Maximize2,
+    Minimize2,
+    Plus,
+    Trash2,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { DEFAULT_CODE_FONT_STACK } from '../../constants/fonts';

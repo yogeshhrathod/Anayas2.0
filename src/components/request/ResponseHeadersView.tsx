@@ -21,20 +21,20 @@
 import { Check, Clock, Copy, Download } from 'lucide-react';
 import React, { useState } from 'react';
 import {
-  formatResponseTime,
-  getHeaderEntries,
-  getStatusDisplay,
-  getStatusVariant,
-  hasHeaders,
+    formatResponseTime,
+    getHeaderEntries,
+    getStatusDisplay,
+    getStatusVariant,
+    hasHeaders,
 } from '../../lib/response-utils';
 import { ResponseData } from '../../types/entities';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
 } from '../ui/tooltip';
 
 export interface ResponseHeadersViewProps {
@@ -76,24 +76,26 @@ export const ResponseHeadersView: React.FC<ResponseHeadersViewProps> = ({
     <TooltipProvider>
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* Header with Status and Actions - Fixed height */}
-        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
-          <div className="flex items-center gap-4">
-            <h3 className="text-sm font-semibold">Response Headers</h3>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant={getStatusVariant(response.status)}
-                className="text-xs"
-              >
-                {getStatusDisplay(response.status)}{' '}
-                {response.statusText ?? 'Unknown'}
-              </Badge>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                {formatResponseTime(response.time)}
+        {showActions && (
+          <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <div className="flex items-center gap-4">
+              <h3 className="text-sm font-semibold">Response Headers</h3>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={getStatusVariant(response.status)}
+                  className="text-xs"
+                >
+                  {getStatusDisplay(response.status)}{' '}
+                  {response.statusText ?? 'Unknown'}
+                </Badge>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {formatResponseTime(response.time)}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {showActions && (onCopy || onDownload) && (
           <div className="flex gap-2 px-4 py-2 border-b border-border/50">

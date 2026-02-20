@@ -29,20 +29,47 @@
  * ```
  */
 
-import { FileText, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import React from 'react';
 import { RequestFormData } from '../../types/forms';
 import { Button } from '../ui/button';
 import { KeyValueEditor } from '../ui/key-value-editor';
 import { MonacoEditor } from '../ui/monaco-editor';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '../ui/select';
-import { ViewToggleButton } from '../ui/view-toggle-button';
+
+export interface BodyTabProps {
+  requestData: RequestFormData;
+  setRequestData: (
+    data: RequestFormData | ((prev: RequestFormData) => RequestFormData)
+  ) => void;
+  bodyType: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded';
+  setBodyType: (
+    type: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded'
+  ) => void;
+  bodyContentType: 'json' | 'text';
+  setBodyContentType: (type: 'json' | 'text') => void;
+  bodyViewMode: 'table' | 'json';
+  setBodyViewMode: (mode: 'table' | 'json') => void;
+  bodyFormData: Array<{ key: string; value: string; enabled: boolean }>;
+  setBodyFormData: (
+    data: Array<{ key: string; value: string; enabled: boolean }>
+  ) => void;
+}
+
+import { Ban, Braces, Code, Layers, Sparkles, Table2 } from 'lucide-react';
+import { cn } from '../../lib/utils';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '../ui/tooltip';
 
 export interface BodyTabProps {
   requestData: RequestFormData;
@@ -78,7 +105,6 @@ export const BodyTab: React.FC<BodyTabProps> = ({
   // Sync data when toggling between table and JSON views
   const handleViewToggle = () => {
     if (bodyViewMode === 'table') {
-      // Converting from table to JSON - serialize bodyFormData to JSON string
       const jsonObj: Record<string, string> = {};
       bodyFormData.forEach(item => {
         if (item.enabled && item.key.trim()) {
@@ -89,7 +115,6 @@ export const BodyTab: React.FC<BodyTabProps> = ({
       setRequestData({ ...requestData, body: jsonString });
       setBodyViewMode('json');
     } else {
-      // Converting from JSON to table - parse JSON and populate bodyFormData
       try {
         const parsed = JSON.parse(requestData.body || '{}');
         const newFormData = Object.entries(parsed).map(([key, value]) => ({
@@ -97,14 +122,12 @@ export const BodyTab: React.FC<BodyTabProps> = ({
           value: String(value),
           enabled: true,
         }));
-        // Keep at least one empty row if nothing was parsed
         if (newFormData.length === 0) {
           newFormData.push({ key: '', value: '', enabled: true });
         }
         setBodyFormData(newFormData);
         setBodyViewMode('table');
       } catch (e) {
-        // If JSON parsing fails, just switch view without converting
         console.warn('Failed to parse JSON body for table view:', e);
         setBodyViewMode('table');
       }
@@ -112,170 +135,174 @@ export const BodyTab: React.FC<BodyTabProps> = ({
   };
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-      {/* Header - Fixed height */}
-      <div className="flex-shrink-0 flex items-center justify-between pb-2">
-        <div>
-          <h3 className="text-base font-semibold flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
-            Request Body
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            Define the request payload
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Body Type Dropdown */}
-          <Select
-            value={bodyType}
-            onValueChange={(
-              value: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded'
-            ) => setBodyType(value)}
-          >
-            <SelectTrigger className="w-32 h-7 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none" className="text-muted-foreground">
-                None
-              </SelectItem>
-              <SelectItem value="raw" className="text-blue-600">
-                Raw
-              </SelectItem>
-              <SelectItem value="form-data" className="text-green-600">
-                Form Data
-              </SelectItem>
-              <SelectItem
-                value="x-www-form-urlencoded"
-                className="text-purple-600"
-              >
-                URL Encoded
-              </SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Format Dropdown - Only visible when bodyType === 'raw' */}
-          {bodyType === 'raw' && (
-            <Select
-              value={bodyContentType}
-              onValueChange={(value: 'json' | 'text') =>
-                setBodyContentType(value)
-              }
-            >
-              <SelectTrigger className="w-20 h-7 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="json">JSON</SelectItem>
-                <SelectItem value="text">Text</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-
-          {/* Action Buttons - Conditional based on body type */}
-          {bodyType !== 'none' && (
-            <div className="flex gap-1">
-              {(bodyType === 'form-data' ||
-                bodyType === 'x-www-form-urlencoded' ||
-                (bodyType === 'raw' && bodyViewMode === 'table')) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setBodyFormData([
-                      ...bodyFormData,
-                      { key: '', value: '', enabled: true },
-                    ])
-                  }
-                  className="h-7 w-7 p-0"
-                  title="Add Field"
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              )}
-              {bodyType === 'raw' && (
-                <ViewToggleButton
-                  currentView={bodyViewMode}
-                  onToggle={handleViewToggle}
-                />
-              )}
+    <TooltipProvider>
+      <div className="flex flex-col flex-1 min-h-0 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        {/* Premium Header Area */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 shadow-sm shadow-blue-500/5">
+              <Code className="h-5 w-5 text-blue-500" />
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Content Area - Fills remaining space */}
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-        {bodyType === 'none' ? (
-          <div className="border rounded-md bg-card flex-1 flex items-center justify-center">
-            <div className="text-center text-muted-foreground text-sm">
-              <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>No body data</p>
-              <p className="text-xs mt-1">Select a body type to add content</p>
+            <div>
+              <h3 className="text-sm font-bold tracking-tight flex items-center gap-2">
+                Request Body
+                <Sparkles className="h-3 w-3 text-blue-400" />
+              </h3>
+              <p className="text-[11px] text-muted-foreground/80 font-medium">
+                Define the payload for your request
+              </p>
             </div>
           </div>
-        ) : (
-          <div className="border rounded-md bg-card flex-1 min-h-0 overflow-hidden flex flex-col">
-            {bodyType === 'raw' ? (
-              // Raw mode: Show table/JSON toggle
-              bodyViewMode === 'table' ? (
-                <div className="p-3 flex-1 min-h-0 overflow-auto">
-                  <KeyValueEditor
-                    items={bodyFormData}
-                    onChange={setBodyFormData}
-                    placeholder={{ key: 'Field Name', value: 'Field Value' }}
-                    showEnabled={true}
-                  />
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Body Type Select - Polished */}
+            <Select
+              value={bodyType}
+              onValueChange={(value: any) => setBodyType(value)}
+            >
+              <SelectTrigger className="w-36 h-9 rounded-xl border-border/40 bg-muted/20 text-xs font-bold transition-all hover:bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-3.5 w-3.5 text-blue-500" />
+                  <SelectValue />
                 </div>
-              ) : (
-                <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-                  <MonacoEditor
-                    value={requestData.body}
-                    onChange={value =>
-                      setRequestData({ ...requestData, body: value })
-                    }
-                    language={bodyContentType}
-                    placeholder={
-                      bodyContentType === 'json'
-                        ? '{"key": "value"}'
-                        : 'Enter text content'
-                    }
-                    title=""
-                    description=""
-                    height="100%"
-                    showActions={true}
-                    validateJson={bodyContentType === 'json'}
-                    readOnly={false}
-                    minimap={false}
-                    fontSize={13}
-                    className="border-0"
-                    automaticLayout={true}
-                  />
-                </div>
-              )
-            ) : (
-              // Form Data and URL Encoded: Show table view only
-              <div className="p-3 flex-1 min-h-0 overflow-auto">
-                <KeyValueEditor
-                  items={bodyFormData}
-                  onChange={setBodyFormData}
-                  placeholder={{
-                    key:
-                      bodyType === 'form-data'
-                        ? 'Field Name'
-                        : 'Parameter Name',
-                    value:
-                      bodyType === 'form-data'
-                        ? 'Field Value'
-                        : 'Parameter Value',
-                  }}
-                  showEnabled={true}
-                />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border/40 shadow-2xl">
+                <SelectItem value="none" className="text-xs font-medium">None</SelectItem>
+                <SelectItem value="raw" className="text-xs font-medium text-blue-500 focus:text-blue-600">Raw</SelectItem>
+                <SelectItem value="form-data" className="text-xs font-medium text-green-500 focus:text-green-600">Form Data</SelectItem>
+                <SelectItem value="x-www-form-urlencoded" className="text-xs font-medium text-purple-500 focus:text-purple-600">URL Encoded</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Content Type Select - Raw only */}
+            {bodyType === 'raw' && (
+              <Select
+                value={bodyContentType}
+                onValueChange={(value: any) => setBodyContentType(value)}
+              >
+                <SelectTrigger className="w-24 h-9 rounded-xl border-border/40 bg-muted/20 text-xs font-bold transition-all hover:bg-muted/30">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border/40 shadow-2xl">
+                  <SelectItem value="json" className="text-xs font-medium uppercase tracking-tighter">JSON</SelectItem>
+                  <SelectItem value="text" className="text-xs font-medium uppercase tracking-tighter">Text</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* Sub-actions */}
+            {bodyType !== 'none' && (
+              <div className="flex items-center gap-2 bg-muted/30 p-1 rounded-xl border border-border/20 shadow-inner">
+                {bodyType === 'raw' && (
+                  <div className="flex gap-1 p-0.5">
+                    <button
+                      onClick={() => bodyViewMode !== 'table' && handleViewToggle()}
+                      className={cn(
+                        'flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold rounded-lg transition-all duration-300',
+                        bodyViewMode === 'table'
+                          ? 'bg-background text-foreground shadow-sm scale-[1.02]'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      )}
+                    >
+                      <Table2 className="h-3.5 w-3.5" />
+                      Table
+                    </button>
+                    <button
+                      onClick={() => bodyViewMode !== 'json' && handleViewToggle()}
+                      className={cn(
+                        'flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold rounded-lg transition-all duration-300',
+                        bodyViewMode === 'json'
+                          ? 'bg-background text-foreground shadow-sm scale-[1.02]'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      )}
+                    >
+                      <Braces className="h-3.5 w-3.5" />
+                      Bulk
+                    </button>
+                  </div>
+                )}
+                
+                {(bodyType === 'form-data' || bodyType === 'x-www-form-urlencoded' || (bodyType === 'raw' && bodyViewMode === 'table')) && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setBodyFormData([
+                            ...bodyFormData,
+                            { key: '', value: '', enabled: true },
+                          ])
+                        }
+                        className="h-7 w-7 p-0 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-300"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="font-bold text-[10px]">Add field</TooltipContent>
+                  </Tooltip>
+                )}
               </div>
             )}
           </div>
-        )}
+        </div>
+
+        {/* Content Area - Card with Glassmorphism */}
+        <div className="flex-1 min-h-0 bg-background/40 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl shadow-black/5 overflow-hidden flex flex-col transition-all duration-500 hover:shadow-2xl hover:border-border/60">
+          {bodyType === 'none' ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/30 gap-4 py-20 animate-in fade-in zoom-in-95 duration-700">
+              <div className="w-20 h-20 rounded-full border-4 border-dashed border-border/40 flex items-center justify-center bg-muted/5">
+                <Ban className="h-10 w-10 opacity-20" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-black uppercase tracking-[0.2em]">No Body Data</p>
+                <p className="text-[11px] font-medium opacity-60 mt-1">Select a body type from the dropdown above</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 min-h-0 flex flex-col">
+              {bodyType === 'raw' && bodyViewMode === 'json' ? (
+                <MonacoEditor
+                  value={requestData.body}
+                  onChange={value => setRequestData({ ...requestData, body: value })}
+                  language={bodyContentType}
+                  placeholder={bodyContentType === 'json' ? '{"key": "value"}' : 'Enter text content'}
+                  title=""
+                  description=""
+                  height="100%"
+                  showActions={false}
+                  validateJson={bodyContentType === 'json'}
+                  readOnly={false}
+                  minimap={false}
+                  fontSize={13}
+                  className="border-0"
+                  automaticLayout={true}
+                />
+              ) : (
+                <div className="flex-1 min-h-0 overflow-auto scrollbar-thin scrollbar-thumb-border/40 scrollbar-track-transparent p-4">
+                  <KeyValueEditor
+                    items={bodyFormData}
+                    onChange={setBodyFormData}
+                    placeholder={{
+                      key: bodyType === 'form-data' ? 'Field Name' : 'Parameter Name',
+                      value: bodyType === 'form-data' ? 'Field Value' : 'Parameter Value',
+                    }}
+                    showEnabled={true}
+                  />
+                  {bodyFormData.length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground/30 gap-3 py-10 opacity-60">
+                      <div className="w-12 h-12 rounded-full border-2 border-dashed border-border/60 flex items-center justify-center">
+                        <Plus className="h-6 w-6" />
+                      </div>
+                      <p className="text-xs font-bold uppercase tracking-widest">Add first field</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 };
