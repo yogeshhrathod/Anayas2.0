@@ -20,8 +20,6 @@ const isDev = import.meta.env?.DEV ||
 // @ts-expect-error - Vite injects import.meta.env
 const SENTRY_DSN = import.meta.env?.VITE_SENTRY_DSN;
 
-// @ts-expect-error - Vite injects import.meta.env
-const APP_VERSION = import.meta.env?.VITE_APP_VERSION || '0.0.1';
 
 // Track telemetry state
 let sentryInitialized = false;
@@ -51,7 +49,7 @@ function checkTelemetryEnabled(): boolean {
  * Initialize Sentry for the renderer process
  * Should be called early in the app initialization (before React renders)
  */
-export function initSentryRenderer(): void {
+export async function initSentryRenderer(): Promise<void> {
   // Skip Sentry in development mode
   if (isDev) {
     console.log('[Sentry Renderer] Development mode - tracking disabled');
@@ -72,11 +70,13 @@ export function initSentryRenderer(): void {
   }
 
   try {
+    const appVersion = await window.electronAPI.app.getVersion().catch(() => '0.0.1');
+
     Sentry.init({
       dsn: SENTRY_DSN,
 
       // Release tracking
-      release: `luna@${APP_VERSION}`,
+      release: `luna@${appVersion}`,
 
       // Environment
       environment: isDev ? 'development' : 'production',

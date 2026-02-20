@@ -99,6 +99,8 @@ function App() {
     setActiveUnsavedRequestId,
     splitViewEnabled,
     setSplitViewEnabled,
+    appVersion,
+    setAppVersion,
   } = useStore();
 
   const { showSuccess, showError } = useToastNotifications();
@@ -127,7 +129,7 @@ function App() {
       requests,
       exportedAt: new Date().toISOString(),
       type: 'luna-collection-export',
-      version: '1.0'
+      version: appVersion || '1.0'
     };
   };
 
@@ -499,7 +501,7 @@ function App() {
 
   const loadData = async () => {
     try {
-      const [envs, currentEnv, collections, history, settings, requests] =
+      const [envs, currentEnv, collections, history, settings, requests, version] =
         await Promise.all([
           window.electronAPI.env.list(),
           window.electronAPI.env.getCurrent(),
@@ -507,6 +509,7 @@ function App() {
           window.electronAPI.request.history(100),
           window.electronAPI.settings.getAll(),
           window.electronAPI.request.list(),
+          window.electronAPI.app.getVersion(),
         ]);
 
       setEnvironments(envs);
@@ -516,6 +519,7 @@ function App() {
       // DB settings are the source of truth - they override any cached localStorage values
       setSettings(settings);
       setRequests(requests);
+      setAppVersion(version);
 
       // Load theme settings
       if (settings.themeMode) {

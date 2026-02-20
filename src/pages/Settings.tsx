@@ -30,6 +30,7 @@ export function Settings() {
     themeMode, 
     currentThemeId,
     customThemes,
+    appVersion,
   } = useStore();
   const [localSettings, setLocalSettings] = useState<Record<string, any>>(() => createLocalSettings(settings));
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
@@ -478,11 +479,15 @@ export function Settings() {
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">Version:</span>
-            <span className="text-muted-foreground">1.0.0</span>
+            <span className="text-muted-foreground">{appVersion}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">Platform:</span>
-            <span className="text-muted-foreground">Electron + React</span>
+            <span className="text-muted-foreground">
+              {navigator.userAgent.includes('Win') ? 'Windows' : 
+               navigator.userAgent.includes('Mac') ? 'macOS' : 
+               navigator.userAgent.includes('Linux') ? 'Linux' : 'Unknown'}
+            </span>
           </div>
         </CardContent>
       </Card>

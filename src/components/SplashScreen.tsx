@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { cn } from '../lib/utils';
+import { useStore } from '../store/useStore';
 import { Logo } from './Logo';
 
 interface SplashScreenProps {
@@ -12,9 +13,9 @@ export function SplashScreen({ onFinish, isLoading = true }: SplashScreenProps) 
   const [showContent, setShowContent] = useState(false);
   const [progress, setProgress] = useState(0);
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const { appVersion } = useStore();
 
   useEffect(() => {
-    // Reveal content with a slight delay
     const contentTimeout = setTimeout(() => setShowContent(true), 100);
     
     // Minimum display time of 1.5 seconds to ensure splash is visible
@@ -112,7 +113,7 @@ export function SplashScreen({ onFinish, isLoading = true }: SplashScreenProps) 
 
       {/* Footer Branding */}
       <div className="absolute bottom-12 text-muted-foreground/30 text-xs font-light tracking-widest uppercase">
-        Version 2.0
+        Version {appVersion}
       </div>
     </div>
   );

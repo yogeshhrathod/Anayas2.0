@@ -19,11 +19,11 @@
  * ```
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { RequestFormData } from '../types/forms';
-import { Request } from '../types/entities';
-import { useStore } from '../store/useStore';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { generateDraftName } from '../lib/draftNaming';
+import { useStore } from '../store/useStore';
+import { Request } from '../types/entities';
+import { RequestFormData } from '../types/forms';
 
 export interface RequestState {
   requestData: RequestFormData;
@@ -82,12 +82,20 @@ const defaultRequestData: RequestFormData = {
 };
 
 export function useRequestState(selectedRequest: Request | null) {
-  const { settings, triggerSidebarRefresh, setUnsavedRequests, activeUnsavedRequestId, setActiveUnsavedRequestId } = useStore();
+  // Individual selectors for better performance and stability
+  const settings = useStore(state => state.settings);
+  const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
+  const setUnsavedRequests = useStore(state => state.setUnsavedRequests);
+  const activeUnsavedRequestId = useStore(state => state.activeUnsavedRequestId);
+  const setActiveUnsavedRequestId = useStore(state => state.setActiveUnsavedRequestId);
+  const setSelectedRequest = useStore(state => state.setSelectedRequest);
+
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const unsavedSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInternalUpdateRef = useRef<boolean>(false);
 
   // Load default responseSubTab from settings (defaults to 'headers' if not set)
-  const defaultResponseSubTab = (settings.defaultResponseSubTab as 'headers' | 'body' | 'both') || 'headers';
+  const defaultResponseSubTab = (settings?.defaultResponseSubTab as 'headers' | 'body' | 'both') || 'headers';
 
   const [state, setState] = useState<RequestState>({
     requestData: defaultRequestData,
@@ -107,8 +115,13 @@ export function useRequestState(selectedRequest: Request | null) {
     tempName: '',
   });
 
-  // Load selected request when it changes
+  // Load selected request when it changes from outside
   useEffect(() => {
+    if (isInternalUpdateRef.current) {
+      isInternalUpdateRef.current = false;
+      return;
+    }
+
     if (selectedRequest) {
       setState(prev => ({
         ...prev,
@@ -138,6 +151,41 @@ export function useRequestState(selectedRequest: Request | null) {
     }
   }, [selectedRequest]);
 
+  // Synchronize local changes back to the global store
+  useEffect(() => {
+    // IMPORTANT: Never sync if there's no selected request.
+    // This prevents the infinite loop when selectedRequest is cleared (null).
+    if (!selectedRequest || !state.requestData) return;
+    
+    // Check if there are actual data changes to avoid redundant updates
+    // Use a helper for shallow object comparison to avoid order-related issues with JSON.stringify
+    const areObjectsEqual = (a: any, b: any) => {
+      const keysA = Object.keys(a || {}).sort();
+      const keysB = Object.keys(b || {}).sort();
+      if (keysA.length !== keysB.length) return false;
+      return keysA.every(key => a[key] === b[key]);
+    };
+
+    const isDifferent = 
+      state.requestData.id !== selectedRequest.id ||
+      state.requestData.name !== selectedRequest.name ||
+      state.requestData.method !== selectedRequest.method ||
+      state.requestData.url !== selectedRequest.url ||
+      state.requestData.body !== selectedRequest.body ||
+      !areObjectsEqual(state.requestData.headers, selectedRequest.headers) ||
+      !areObjectsEqual(state.requestData.auth, selectedRequest.auth) ||
+      JSON.stringify(state.requestData.queryParams || []) !== JSON.stringify(selectedRequest.queryParams || []);
+
+    if (isDifferent) {
+      isInternalUpdateRef.current = true;
+      setSelectedRequest({
+        ...selectedRequest,
+        ...state.requestData,
+        isFavorite: state.requestData.isFavorite ? 1 : 0,
+      } as Request);
+    }
+  }, [state.requestData, setSelectedRequest, selectedRequest]);
+
   // Auto-save functionality for saved requests
   const autoSave = useCallback(async () => {
     if (!settings.autoSaveRequests || !state.requestData.name.trim() || !state.requestData.collectionId) {
@@ -156,7 +204,7 @@ export function useRequestState(selectedRequest: Request | null) {
         auth: state.requestData.auth,
         collectionId: state.requestData.collectionId,
         folderId: state.requestData.folderId,
-        isFavorite: state.requestData.isFavorite,
+        isFavorite: state.requestData.isFavorite ? 1 : 0,
       });
       
       setState(prev => ({
@@ -339,7 +387,7 @@ export function useRequestState(selectedRequest: Request | null) {
             auth: state.requestData.auth,
             collectionId: state.requestData.collectionId,
             folderId: state.requestData.folderId,
-            isFavorite: state.requestData.isFavorite,
+            isFavorite: state.requestData.isFavorite ? 1 : 0,
           });
           
           // Trigger sidebar refresh for real-time updates

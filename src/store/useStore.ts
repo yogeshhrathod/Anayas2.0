@@ -137,6 +137,10 @@ interface AppState {
   // Legacy theme support (for backward compatibility)
   theme: 'light' | 'dark' | 'system';
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
+
+  // App Version
+  appVersion: string;
+  setAppVersion: (version: string) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -305,6 +309,10 @@ export const useStore = create<AppState>()(
       // Legacy theme support (for backward compatibility)
       theme: 'system',
       setTheme: (theme) => set({ theme, themeMode: theme }),
+
+      // App Version
+      appVersion: '',
+      setAppVersion: (appVersion) => set({ appVersion }),
     }),
     {
       name: 'luna-store',
@@ -317,6 +325,9 @@ export const useStore = create<AppState>()(
         sidebarWidth: state.sidebarWidth,
         unsavedSectionHeight: state.unsavedSectionHeight,
         presetsExpanded: state.presetsExpanded,
+        selectedRequest: state.selectedRequest,
+        activeUnsavedRequestId: state.activeUnsavedRequestId,
+        currentPage: state.currentPage,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
