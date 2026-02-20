@@ -4,20 +4,20 @@
  * Shows all unsaved/draft requests with indicators for active/edited state
  */
 
+import { Circle, MoreVertical, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Trash2, Save, Circle, MoreVertical } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { useStore, UnsavedRequest } from '../../store/useStore';
-import { Request } from '../../types/entities';
-import { PromoteRequestDialog } from '../ui/promote-request-dialog';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
+import { UnsavedRequest, useStore } from '../../store/useStore';
+import { Request } from '../../types/entities';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
+import { PromoteRequestDialog } from '../ui/promote-request-dialog';
 
 export function UnsavedRequestsSection() {
   const { 
@@ -46,7 +46,7 @@ export function UnsavedRequestsSection() {
       collectionId: undefined,
       folderId: undefined,
       isFavorite: 0,
-      lastResponse: undefined,
+      lastResponse: unsaved.lastResponse,
     };
     
     setSelectedRequest(request);

@@ -1,53 +1,53 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import fs from 'fs';
 import {
-  addCollection,
-  addEnvironment,
-  addFolder,
-  addFolderAfter,
-  addPreset,
-  addRequest,
-  addRequestAfter,
-  addRequestHistory,
-  addUnsavedRequest,
-  clearUnsavedRequests,
-  deleteCollection,
-  deleteEnvironment,
-  deleteFolder,
-  deletePreset,
-  deleteRequest,
-  deleteRequestHistory,
-  clearAllRequestHistory,
-  deleteUnsavedRequest,
-  generateUniqueId,
-  getAllPresets,
-  getAllSettings,
-  getAllUnsavedRequests,
-  getDatabase,
-  getSetting,
-  promoteUnsavedRequest,
-  reorderFolder,
-  reorderRequest,
-  resetSettings,
-  saveDatabase,
-  setSetting,
-  updateCollection,
-  updateEnvironment,
-  updateFolder,
-  updateRequest,
-  updateUnsavedRequest,
+    addCollection,
+    addEnvironment,
+    addFolder,
+    addFolderAfter,
+    addPreset,
+    addRequest,
+    addRequestAfter,
+    addRequestHistory,
+    addUnsavedRequest,
+    clearAllRequestHistory,
+    clearUnsavedRequests,
+    deleteCollection,
+    deleteEnvironment,
+    deleteFolder,
+    deletePreset,
+    deleteRequest,
+    deleteRequestHistory,
+    deleteUnsavedRequest,
+    generateUniqueId,
+    getAllPresets,
+    getAllSettings,
+    getAllUnsavedRequests,
+    getDatabase,
+    getSetting,
+    promoteUnsavedRequest,
+    reorderFolder,
+    reorderRequest,
+    resetSettings,
+    saveDatabase,
+    setSetting,
+    updateCollection,
+    updateEnvironment,
+    updateFolder,
+    updateRequest,
+    updateUnsavedRequest,
 } from '../database';
 import { generateCurlCommand } from '../lib/curl-generator';
 import { parseCurlCommand, parseCurlCommands } from '../lib/curl-parser';
+import {
+    EnvironmentExportGenerator,
+    getEnvironmentImportFactory,
+} from '../lib/environment';
 import type { ImportOptions, ImportResult } from '../lib/import';
 import { getImportFactory } from '../lib/import';
-import {
-  getEnvironmentImportFactory,
-  EnvironmentExportGenerator,
-} from '../lib/environment';
 import { apiService } from '../services/api';
-import { variableResolver } from '../services/variable-resolver';
 import { createLogger } from '../services/logger';
+import { variableResolver } from '../services/variable-resolver';
 
 const logger = createLogger('ipc-handlers');
 
@@ -1196,6 +1196,7 @@ export function registerIpcHandlers() {
           body: request.body || '',
           queryParams: request.queryParams || [],
           auth: request.auth || null,
+          lastResponse: request.lastResponse,
         });
         return { success: true, id: request.id };
       } else {
@@ -1207,6 +1208,7 @@ export function registerIpcHandlers() {
           body: request.body || '',
           queryParams: request.queryParams || [],
           auth: request.auth || null,
+          lastResponse: request.lastResponse,
           lastModified: new Date().toISOString(),
         });
         return { success: true, id };

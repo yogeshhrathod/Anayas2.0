@@ -97,22 +97,38 @@ export function useRequestState(selectedRequest: Request | null) {
   // Load default responseSubTab from settings (defaults to 'headers' if not set)
   const defaultResponseSubTab = (settings?.defaultResponseSubTab as 'headers' | 'body' | 'both') || 'headers';
 
-  const [state, setState] = useState<RequestState>({
-    requestData: defaultRequestData,
-    activeTab: 'params',
-    bodyType: 'raw',
-    bodyContentType: 'json',
-    bodyViewMode: 'table',
-    bodyFormData: [],
-    paramsViewMode: 'table',
-    headersViewMode: 'table',
-    bulkEditJson: '',
-    responseSubTab: defaultResponseSubTab,
-    splitViewRatio: 50,
-    isSaved: false,
-    lastSavedAt: null,
-    isEditingName: false,
-    tempName: '',
+  const [state, setState] = useState<RequestState>(() => {
+    const initialRequestData = selectedRequest ? {
+      id: selectedRequest.id,
+      name: selectedRequest.name,
+      method: selectedRequest.method as RequestFormData['method'],
+      url: selectedRequest.url,
+      headers: selectedRequest.headers || {},
+      body: selectedRequest.body || '',
+      queryParams: selectedRequest.queryParams || [],
+      auth: selectedRequest.auth || { type: 'none' },
+      collectionId: selectedRequest.collectionId,
+      folderId: selectedRequest.folderId,
+      isFavorite: Boolean(selectedRequest.isFavorite),
+    } : defaultRequestData;
+
+    return {
+      requestData: initialRequestData,
+      activeTab: 'params',
+      bodyType: 'raw',
+      bodyContentType: 'json',
+      bodyViewMode: 'table',
+      bodyFormData: [],
+      paramsViewMode: 'table',
+      headersViewMode: 'table',
+      bulkEditJson: '',
+      responseSubTab: defaultResponseSubTab,
+      splitViewRatio: 50,
+      isSaved: !!selectedRequest,
+      lastSavedAt: selectedRequest ? new Date() : null,
+      isEditingName: false,
+      tempName: '',
+    };
   });
 
   // Load selected request when it changes from outside
@@ -122,7 +138,31 @@ export function useRequestState(selectedRequest: Request | null) {
       return;
     }
 
-    if (selectedRequest) {
+    if (!selectedRequest) {
+      // Only reset if we're not already at default
+      if (state.requestData.url !== '' || state.requestData.body !== '') {
+        setState(prev => ({
+          ...prev,
+          requestData: defaultRequestData,
+          isSaved: false,
+          lastSavedAt: null,
+        }));
+      }
+      return;
+    }
+
+    // Deep check to avoid redundant updates if we already have this request loaded
+    const isSameRequest = 
+      state.requestData.id === selectedRequest.id &&
+      state.requestData.name === selectedRequest.name &&
+      state.requestData.method === selectedRequest.method &&
+      state.requestData.url === selectedRequest.url &&
+      state.requestData.body === selectedRequest.body &&
+      JSON.stringify(state.requestData.headers) === JSON.stringify(selectedRequest.headers || {}) &&
+      JSON.stringify(state.requestData.queryParams) === JSON.stringify(selectedRequest.queryParams || []) &&
+      JSON.stringify(state.requestData.auth) === JSON.stringify(selectedRequest.auth || { type: 'none' });
+
+    if (!isSameRequest) {
       setState(prev => ({
         ...prev,
         requestData: {
@@ -140,13 +180,6 @@ export function useRequestState(selectedRequest: Request | null) {
         },
         isSaved: true,
         lastSavedAt: new Date(),
-      }));
-    } else {
-      setState(prev => ({
-        ...prev,
-        requestData: defaultRequestData,
-        isSaved: false,
-        lastSavedAt: null,
       }));
     }
   }, [selectedRequest]);
@@ -241,6 +274,7 @@ export function useRequestState(selectedRequest: Request | null) {
         body: state.requestData.body || '',
         queryParams: state.requestData.queryParams,
         auth: state.requestData.auth,
+        lastResponse: selectedRequest?.lastResponse,
       });
       
       // Update active unsaved request ID only if it was newly created
@@ -364,6 +398,7 @@ export function useRequestState(selectedRequest: Request | null) {
             body: state.requestData.body || '',
             queryParams: state.requestData.queryParams,
             auth: state.requestData.auth,
+            lastResponse: selectedRequest?.lastResponse,
           });
           
           // Update active unsaved request ID if it was newly created

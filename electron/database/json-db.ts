@@ -14,6 +14,7 @@ export interface UnsavedRequest {
   body: string;
   queryParams: Array<{ key: string; value: string; enabled: boolean }>;
   auth: any;
+  lastResponse?: any;
   lastModified: string;
   createdAt: string;
 }

@@ -150,6 +150,14 @@ export function useRequestActions(requestData: RequestFormData) {
 
       setState(prev => ({ ...prev, response }));
 
+      // Update the selected request in store so it's persisted by zustand/persist
+      if (selectedRequest) {
+        setSelectedRequest({
+          ...selectedRequest,
+          lastResponse: response,
+        });
+      }
+
       // Show appropriate notification based on success/failure
       if (result.success) {
         showSuccess('Request completed', {
@@ -169,6 +177,27 @@ export function useRequestActions(requestData: RequestFormData) {
           });
         } catch (error) {
           console.error('Failed to save response with request:', error);
+        }
+      } else if (activeUnsavedRequestId) {
+        // Save response for unsaved draft requests
+        try {
+          await window.electronAPI.unsavedRequest.save({
+            id: activeUnsavedRequestId,
+            name: requestData.name || 'Unsaved Request',
+            method: requestData.method,
+            url: requestData.url,
+            headers: requestData.headers,
+            body: requestData.body || '',
+            queryParams: requestData.queryParams,
+            auth: requestData.auth,
+            lastResponse: response,
+          });
+          
+          // Refresh unsaved requests list to ensure consistency
+          const updatedUnsaved = await window.electronAPI.unsavedRequest.getAll();
+          useStore.getState().setUnsavedRequests(updatedUnsaved);
+        } catch (error) {
+          console.error('Failed to save response for unsaved request:', error);
         }
       }
     } catch (err: any) {

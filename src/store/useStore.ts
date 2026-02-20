@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Theme } from '../lib/themes';
-import { Collection, EntityId, Environment, Request, RequestHistory } from '../types/entities';
+import { Collection, EntityId, Environment, Request, RequestHistory, ResponseData } from '../types/entities';
 
 export interface UnsavedRequest {
   id: string;
@@ -12,6 +12,7 @@ export interface UnsavedRequest {
   body: string;
   queryParams: Array<{ key: string; value: string; enabled: boolean }>;
   auth: any;
+  lastResponse?: ResponseData;
   lastModified: string;
   createdAt: string;
 }

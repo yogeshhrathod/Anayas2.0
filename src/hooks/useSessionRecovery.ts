@@ -37,6 +37,7 @@ export function useSessionRecovery() {
               collectionId: undefined,
               folderId: undefined,
               isFavorite: 0,
+              lastResponse: activeRequest.lastResponse,
             });
             setCurrentPage('home');
           }
