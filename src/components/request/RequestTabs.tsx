@@ -32,6 +32,7 @@ export interface RequestTabsProps {
   requestData: RequestFormData;
   bodyContentType: 'json' | 'text';
   response?: ResponseData | null;
+  isLoading?: boolean;
 }
 
 export const RequestTabs: React.FC<RequestTabsProps> = ({
@@ -40,6 +41,7 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
   requestData,
   bodyContentType,
   response,
+  isLoading,
 }) => {
   const tabs = [
     {
@@ -99,7 +101,7 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
                   activeTab === tab.id
                     ? 'border-primary text-primary bg-primary/5'
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }`}
+                } ${isLoading ? 'status-pulse' : ''}`}
               >
                 <Icon className="h-4 w-4" />
                 <span>{tab.label}</span>

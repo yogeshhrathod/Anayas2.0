@@ -19,21 +19,21 @@
  * ```
  */
 
-import React, { useState, useCallback } from 'react';
-import { Collection, CollectionEnvironment } from '../../types/entities';
+import { Building2, Check, Edit, Loader2, Plus, Trash2 } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
 import {
-  CollectionEnvironmentForm,
-  CollectionEnvironmentFormRef,
-} from './CollectionEnvironmentForm';
-import { Dialog } from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Plus, Edit, Trash2, Check, Building2, Loader2 } from 'lucide-react';
-import { cn } from '../../lib/utils';
-import { useConfirmation } from '../../hooks/useConfirmation';
-import {
-  useCollectionEnvironmentOperations,
-  CollectionEnvironmentFormData,
+    CollectionEnvironmentFormData,
+    useCollectionEnvironmentOperations,
 } from '../../hooks/useCollectionEnvironmentOperations';
+import { useConfirmation } from '../../hooks/useConfirmation';
+import { cn } from '../../lib/utils';
+import { Collection, CollectionEnvironment } from '../../types/entities';
+import { Button } from '../ui/button';
+import { Dialog } from '../ui/dialog';
+import {
+    CollectionEnvironmentForm,
+    CollectionEnvironmentFormRef,
+} from './CollectionEnvironmentForm';
 
 export interface CollectionEnvironmentManagerProps {
   collectionId: number;
@@ -240,7 +240,7 @@ export function CollectionEnvironmentManager({
             ? 'Update environment details and variables'
             : 'Create a new collection environment'
         }
-        maxWidth="lg"
+        maxWidth="2xl"
       >
         <CollectionEnvironmentForm
           ref={formRef}

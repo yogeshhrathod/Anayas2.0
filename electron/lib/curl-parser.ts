@@ -325,7 +325,7 @@ function parseQueryParams(
   }
 }
 
-function generateRequestName(method: string, url: string): string {
+function generateRequestName(_method: string, url: string): string {
   try {
     const urlObj = new URL(url);
     const path = urlObj.pathname.split('/').filter(Boolean).pop() || 'request';

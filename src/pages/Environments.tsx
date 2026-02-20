@@ -14,19 +14,19 @@
  * ```
  */
 
-import { lazy, Suspense, useState, useRef, useEffect } from 'react';
-import { PageLayout } from '../components/shared/PageLayout';
-import { Dialog } from '../components/ui/dialog';
+import { Loader2 } from 'lucide-react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { CollectionActions } from '../components/collection/CollectionActions';
 import { EnvironmentForm } from '../components/environment/EnvironmentForm';
 import { EnvironmentGrid } from '../components/environment/EnvironmentGrid';
-import { CollectionActions } from '../components/collection/CollectionActions';
-import { useEnvironmentOperations } from '../hooks/useEnvironmentOperations';
+import { PageLayout } from '../components/shared/PageLayout';
+import { Button } from '../components/ui/button';
+import { Dialog } from '../components/ui/dialog';
 import { useConfirmation } from '../hooks/useConfirmation';
+import { useEnvironmentOperations } from '../hooks/useEnvironmentOperations';
 import { useStore } from '../store/useStore';
 import { Environment } from '../types/entities';
 import { EnvironmentFormData } from '../types/forms';
-import { Button } from '../components/ui/button';
-import { Loader2 } from 'lucide-react';
 
 // Lazy load import/export dialogs
 const EnvironmentImportDialog = lazy(() =>
@@ -308,7 +308,7 @@ export function Environments() {
             ? 'Update environment details and variables'
             : 'Create a new environment with variables'
         }
-        maxWidth="4xl"
+        maxWidth="2xl"
       >
         <EnvironmentForm
           ref={formRef}

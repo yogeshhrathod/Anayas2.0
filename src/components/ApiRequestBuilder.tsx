@@ -382,6 +382,7 @@ export function ApiRequestBuilder() {
             requestData={requestState.requestData}
             bodyContentType={requestState.bodyContentType}
             response={requestActions.response}
+            isLoading={requestActions.isLoading}
           />
 
           {/* Tab Content - Fills remaining space */}

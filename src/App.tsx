@@ -688,7 +688,7 @@ function App() {
           {/* Sidebar */}
           <div
             className={cn(
-              'app-sidebar flex flex-col border-r bg-card min-h-0',
+              'app-sidebar flex flex-col border-r bg-card/60 backdrop-blur-xl min-h-0 z-10',
               !isResizing && 'transition-all duration-300'
             )}
             data-testid="app-sidebar"

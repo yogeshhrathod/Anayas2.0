@@ -3,11 +3,11 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from './button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from './card';
 
 export interface DialogProps {
@@ -66,11 +66,11 @@ export function Dialog({
 
   const dialogContent = (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog p-4"
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-dialog p-4 transition-all duration-300"
       onClick={handleBackdropClick}
     >
       <Card
-        className={`w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-hidden flex flex-col ${className}`}
+        className={`w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-hidden flex flex-col bg-card/90 backdrop-blur-xl border-border/50 shadow-2xl ${className}`}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex-1">

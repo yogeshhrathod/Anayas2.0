@@ -24,28 +24,28 @@
  * ```
  */
 
+import { Check, Circle, Copy, Loader2, Send } from 'lucide-react';
 import React from 'react';
+import { useToastNotifications } from '../../hooks/useToastNotifications';
+import { KEYMAP, getShortcutDisplay } from '../../lib/keymap';
+import { RequestFormData } from '../../types/forms';
+import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { VariableInputUnified } from '../ui/variable-input-unified';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '../ui/select';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
 } from '../ui/tooltip';
-import { Badge } from '../ui/badge';
-import { Send, Loader2, Check, Circle, Copy } from 'lucide-react';
-import { RequestFormData } from '../../types/forms';
-import { KEYMAP, getShortcutDisplay } from '../../lib/keymap';
-import { useToastNotifications } from '../../hooks/useToastNotifications';
+import { VariableInputUnified } from '../ui/variable-input-unified';
 
 const METHODS = [
   'GET',
@@ -109,7 +109,8 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
 
       // Convert RequestFormData to Request format for IPC
       // Include collectionId so variables can be resolved
-      const request = {
+      const request: any = {
+        name: requestData.name || 'Untitled Request',
         method: requestData.method,
         url: requestData.url,
         headers: requestData.headers || {},
@@ -272,6 +273,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
             onClick={onSend}
             disabled={isLoading || !requestData.url.trim()}
             title={`Send Request (${getShortcutDisplay(KEYMAP.SEND_REQUEST)})`}
+            className={isLoading ? 'animate-ripple' : 'transition-transform active:scale-95'}
           >
             {isLoading ? (
               <>
