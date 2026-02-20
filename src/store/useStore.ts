@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Theme } from '../lib/themes';
-import { Collection, Environment, Request, RequestHistory } from '../types/entities';
+import { Collection, EntityId, Environment, Request, RequestHistory } from '../types/entities';
 
 export interface UnsavedRequest {
   id: string;
@@ -76,8 +76,8 @@ interface AppState {
   // Request History
   requestHistory: RequestHistory[];
   setRequestHistory: (history: RequestHistory[]) => void;
-  historyFilter: { requestId?: number; method?: string; url?: string } | null;
-  setHistoryFilter: (filter: { requestId?: number; method?: string; url?: string } | null) => void;
+  historyFilter: { requestId?: EntityId; method?: string; url?: string } | null;
+  setHistoryFilter: (filter: { requestId?: EntityId; method?: string; url?: string } | null) => void;
 
   // Request Progress
   requestProgress: RequestProgress | null;

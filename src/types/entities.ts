@@ -4,7 +4,7 @@
  */
 
 export interface Request {
-  id?: number;
+  id?: EntityId;
   name: string;
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
   url: string;
@@ -73,7 +73,7 @@ export interface RequestHistory {
   response_body?: string;
   headers?: string;
   createdAt?: string;
-  requestId?: number; // Link to original saved request
+  requestId?: EntityId; // Link to original saved request
   collectionId?: number; // Link to collection if request was saved
   requestBody?: string; // Store request body for reconstruction
   queryParams?: Array<{ key: string; value: string; enabled: boolean }>; // Store query params
@@ -85,7 +85,7 @@ export interface RequestPreset {
   id: string;
   name: string;
   description?: string;
-  requestId?: number; // The request this preset belongs to
+  requestId?: EntityId; // The request this preset belongs to
   requestData: {
     method: Request['method'];
     url: string;
@@ -114,7 +114,7 @@ export interface ResponseData {
 }
 
 // Utility types for API operations
-export type EntityId = number;
+export type EntityId = number | string;
 export type EntityType = 'collection' | 'environment' | 'request' | 'folder' | 'history';
 
 export interface EntityOperation<T> {

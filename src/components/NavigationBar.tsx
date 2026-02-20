@@ -41,6 +41,7 @@ export function NavigationBar() {
     setSelectedRequest,
     setActiveUnsavedRequestId,
     setCollections,
+    setHistoryFilter,
   } = useStore();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [showCurlImport, setShowCurlImport] = useState(false);
@@ -338,7 +339,12 @@ export function NavigationBar() {
           return (
             <button
               key={item.id}
-              onClick={() => setCurrentPage(item.id)}
+              onClick={() => {
+                if (item.id === 'history') {
+                  setHistoryFilter(null);
+                }
+                setCurrentPage(item.id);
+              }}
               className={cn(
                 'h-8 w-8 flex items-center justify-center rounded-full transition-all duration-200',
                 'hover:bg-accent/50 hover:scale-[1.02]',

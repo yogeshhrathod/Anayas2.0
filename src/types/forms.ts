@@ -34,7 +34,7 @@ export interface EnvironmentFormData {
 }
 
 export interface RequestFormData {
-  id?: number;
+  id?: number | string;
   name: string;
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
   url: string;

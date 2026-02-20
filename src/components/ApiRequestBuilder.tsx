@@ -32,6 +32,7 @@ export function ApiRequestBuilder() {
     triggerSidebarRefresh,
     setSelectedRequest,
     setFocusedContext,
+    activeUnsavedRequestId,
   } = useStore();
 
   // Use custom hooks for state and actions
@@ -238,7 +239,7 @@ export function ApiRequestBuilder() {
         auth: requestState.requestData.auth,
         collectionId: data.collectionId,
         folderId: data.folderId,
-        isFavorite: requestState.requestData.isFavorite,
+        isFavorite: requestState.requestData.isFavorite ? 1 : 0,
       });
 
       // Update the request data with the new ID and collection info
@@ -336,7 +337,7 @@ export function ApiRequestBuilder() {
             setSplitRatio={requestState.setSplitViewRatio}
             requestMethod={requestState.requestData.method}
             requestUrl={requestState.requestData.url}
-            requestId={requestState.requestData.id}
+            requestId={requestState.requestData.id || activeUnsavedRequestId || undefined}
           />
         );
       default:

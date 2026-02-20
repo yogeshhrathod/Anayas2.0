@@ -64,6 +64,7 @@ export function useRequestActions(requestData: RequestFormData) {
     setSelectedRequest,
     selectedRequest,
     currentEnvironment,
+    activeUnsavedRequestId,
   } = useStore();
   const { showSuccess, showError } = useToastNotifications();
 
@@ -134,7 +135,7 @@ export function useRequestActions(requestData: RequestFormData) {
         auth: requestData.auth,
         collectionId: selectedRequest?.collectionId,
         queryParams: requestData.queryParams,
-        requestId: requestData.id, // Link to saved request for history
+        requestId: requestData.id || activeUnsavedRequestId || undefined, // Link to saved request for history
         environmentId: currentEnvironment?.id,
       });
 
@@ -163,6 +164,7 @@ export function useRequestActions(requestData: RequestFormData) {
         try {
           await window.electronAPI.request.save({
             ...requestData,
+            isFavorite: requestData.isFavorite ? 1 : 0,
             lastResponse: response,
           });
         } catch (error) {
@@ -208,7 +210,7 @@ export function useRequestActions(requestData: RequestFormData) {
         auth: requestData.auth,
         collectionId: requestData.collectionId,
         folderId: requestData.folderId,
-        isFavorite: requestData.isFavorite,
+        isFavorite: requestData.isFavorite ? 1 : 0,
       });
 
       showSuccess('Request saved', {

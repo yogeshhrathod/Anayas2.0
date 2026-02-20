@@ -197,10 +197,49 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                     </Card>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground text-sm">
-                    <Bookmark className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>No scenarios created yet</p>
-                    <p className="text-xs mt-1">Create your first scenario to save request configurations</p>
+                  <div className="space-y-6 text-left py-2">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-primary">
+                        <Bookmark className="h-4 w-4" />
+                        <h5 className="font-semibold text-sm">What are Scenarios?</h5>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Scenarios are saved snapshots of your request configurations. They capture the URL, method, headers, and body so you can switch between different test cases (like Success, Error, or Auth) instantly.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-primary">
+                        <Plus className="h-4 w-4" />
+                        <h5 className="font-semibold text-sm">How to use?</h5>
+                      </div>
+                      <ul className="text-xs text-muted-foreground space-y-3 p-0">
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary font-bold text-[10px]">1</span>
+                          <span>Configure your request in the main editor.</span>
+                        </li>
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary font-bold text-[10px]">2</span>
+                          <span>Click the <Plus className="h-3 w-3 inline mb-0.5" /> icon at the top of this panel.</span>
+                        </li>
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary font-bold text-[10px]">3</span>
+                          <span>Restore any saved scenario with a single click from this list later.</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="pt-4 border-t border-border/50">
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        className="w-full text-xs gap-2 shadow-sm"
+                        onClick={() => onShowCreateDialog(true)}
+                      >
+                        <Plus className="h-3 w-3" />
+                        Get Started
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>

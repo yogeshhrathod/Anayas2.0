@@ -48,7 +48,7 @@ export interface ResponseTabProps {
   setSplitRatio: (ratio: number) => void;
   requestMethod?: string;
   requestUrl?: string;
-  requestId?: number;
+  requestId?: number | string;
 }
 
 export function ResponseTab({
@@ -194,26 +194,30 @@ export function ResponseTab({
           Both
         </button>
         </div>
-        {(requestId || (requestMethod && requestUrl)) && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleShowHistory}
-                  className="p-2"
-                  title="Show History"
-                >
-                  <History className="h-4 w-4 text-primary" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                View history for this request
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShowHistory}
+                disabled={!requestId && (!requestMethod || !requestUrl)}
+                className={cn(
+                  "p-2 hover:bg-primary/10 hover:text-primary transition-all",
+                  (requestId || (requestMethod && requestUrl)) ? "text-primary flex animate-in fade-in slide-in-from-right-2" : "text-muted-foreground opacity-50"
+                )}
+                title="Show History"
+              >
+                <History className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              {!requestId && (!requestMethod || !requestUrl) 
+                ? "Send a request to see its history" 
+                : "View history for this request"}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {/* Sub-tab Content - Fills remaining space */}

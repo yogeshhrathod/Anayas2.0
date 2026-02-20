@@ -6,10 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Dialog } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/use-toast';
 import { useStore } from '../store/useStore';
-import { Request } from '../types/entities';
+import { EntityId, Request } from '../types/entities';
 
 export function History() {
   const { requestHistory, setRequestHistory, currentEnvironment, setSelectedRequest, setCurrentPage, historyFilter, setHistoryFilter } = useStore();
@@ -22,8 +21,18 @@ export function History() {
   const [selectedRequest, setSelectedRequestDetail] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [activeDetailTab, setActiveDetailTab] = useState<'request' | 'response' | 'headers'>('request');
-  const [rerunningRequest, setRerunningRequest] = useState<number | null>(null);
+  const [rerunningRequest, setRerunningRequest] = useState<EntityId | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  
+  const clearAllFilters = () => {
+    setHistoryFilter(null);
+    setSearchTerm('');
+    setFilterStatus('all');
+    setFilterMethod('all');
+    setFilterDate('all');
+    setGroupByRequest(false);
+    success('Filters cleared', 'Showing all request history');
+  };
 
   // Load history on mount and when navigating to this page
   useEffect(() => {
@@ -70,9 +79,13 @@ export function History() {
         setFilterMethod('all');
       } else if (historyFilter.method && historyFilter.url) {
         // For unsaved requests, filter by method and URL
-        setSearchTerm(historyFilter.url);
+        // We don't set searchTerm here anymore as it interferes with matchesHistoryFilter
+        setSearchTerm(''); 
         setFilterMethod(historyFilter.method);
       }
+      
+      // Auto-enable grouping for a cleaner view when looking at request history
+      setGroupByRequest(true);
     }
   }, [historyFilter]);
 
@@ -81,11 +94,16 @@ export function History() {
     let matchesHistoryFilter = true;
     if (historyFilter) {
       if (historyFilter.requestId) {
-        matchesHistoryFilter = request.requestId === historyFilter.requestId;
+        // Use loose equality to handle string vs number comparison
+        matchesHistoryFilter = String(request.requestId) === String(historyFilter.requestId);
       } else if (historyFilter.method && historyFilter.url) {
+        // Normalization for better matching
+        const normalizeUrl = (u: string) => u.trim().replace(/\/+$/, '').toLowerCase();
+        
         matchesHistoryFilter = 
           request.method.toLowerCase() === historyFilter.method.toLowerCase() &&
-          request.url === historyFilter.url;
+          (normalizeUrl(request.url).includes(normalizeUrl(historyFilter.url)) || 
+          normalizeUrl(historyFilter.url).includes(normalizeUrl(request.url)));
       }
     }
 
@@ -450,30 +468,55 @@ export function History() {
             View and manage your API request history
           </p>
         </div>
-        {historyFilter && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setHistoryFilter(null);
-                    setCurrentPage('home');
-                  }}
-                  className="p-2"
-                  title="Back to Request"
-                >
-                  <ArrowLeft className="h-4 w-4 text-primary" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                Back to Request
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
       </div>
+      
+      {/* Active Filter Banner */}
+      {historyFilter && (
+        <div className="bg-muted/40 border border-border/50 rounded-xl p-3 px-4 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-3">
+            <div className="bg-background p-2 rounded-full border border-border/50 shadow-sm">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-foreground">Active Filter</span>
+                <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+                <span className="text-xs text-muted-foreground font-mono">
+                  {historyFilter.requestId 
+                    ? `ID: ${historyFilter.requestId}` 
+                    : `${historyFilter.method} ${historyFilter.url}`}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground/80 mt-0.5">
+                {historyFilter.requestId 
+                  ? `Showing results for: ${filteredHistory[0]?.requestName || 'Saved Request'}` 
+                  : `Showing results for specific URL matches`}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clearAllFilters}
+              className="h-8 text-xs gap-2 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
+            >
+              <XCircle className="h-3.5 w-3.5" />
+              Clear All
+            </Button>
+            <div className="w-px h-4 bg-border/50 mx-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentPage('home')}
+              className="h-8 text-xs gap-2 hover:bg-primary/10 hover:text-primary transition-all"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <Card className="border-2">
