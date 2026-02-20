@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-    paths-ignore:
-      - 'product-showcase/**'
 
 permissions:
   contents: write
