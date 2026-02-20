@@ -1,6 +1,6 @@
 {
   "name": "luna",
-  "version": "0.0.1-alpha.5",
+  "version": "0.0.1-alpha.6",
   "description": "Luna - Professional Electron desktop app for API testing and development",
   "main": "dist-electron/main.js",
   "author": "Yogesh Rathod <yrathod33@gmail.com>",
