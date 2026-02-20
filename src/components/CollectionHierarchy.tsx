@@ -11,15 +11,15 @@
  * This refactored version is much smaller and more maintainable than the original.
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { useStore } from '../store/useStore';
+import { useEffect, useRef, useState } from 'react';
 import { useCollectionDragDrop } from '../hooks/useCollectionDragDrop';
 import { useToastNotifications } from '../hooks/useToastNotifications';
+import { calculateOrderForPosition } from '../lib/drag-drop-utils';
+import { useStore } from '../store/useStore';
+import { EntityId, Folder, Request } from '../types/entities';
 import { CollectionItem } from './collection/CollectionItem';
 import { FolderItem } from './collection/FolderItem';
 import { RequestItem } from './collection/RequestItem';
-import { Request, Folder } from '../types/entities';
-import { calculateOrderForPosition } from '../lib/drag-drop-utils';
 
 export interface CollectionHierarchyProps {
   onRequestSelect: (request: Request) => void;
@@ -262,7 +262,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
   };
 
   // Reorder handlers
-  const handleReorderRequest = async (requestId: number, targetRequestId: number, position: 'above' | 'below') => {
+  const handleReorderRequest = async (requestId: EntityId, targetRequestId: EntityId, position: 'above' | 'below') => {
     try {
       const draggedRequest = requests.find(r => r.id === requestId);
       const targetRequest = requests.find(r => r.id === targetRequestId);
@@ -295,7 +295,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
       const newOrder = calculateOrderForPosition(containerRequests, dropIndex);
       
       // Update order
-      await window.electronAPI.request.reorder(requestId, newOrder);
+      await window.electronAPI.request.reorder(requestId as any, newOrder);
       
       // Refresh data
       const requestsData = await window.electronAPI.request.list();
@@ -353,10 +353,10 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
   // Drag and drop functionality
   const dragDrop = useCollectionDragDrop({
     resolveFolderCollectionId: resolveFolderCollectionId,
-    onMoveRequest: async (requestId, targetCollectionId, targetFolderId) => {
+    onMoveRequest: async (requestId: EntityId, targetCollectionId: number, targetFolderId) => {
       try {
         await window.electronAPI.request.save({
-          id: requestId,
+          id: requestId as any,
           name: requests.find(r => r.id === requestId)?.name || '',
           method: requests.find(r => r.id === requestId)?.method as any || 'GET',
           url: requests.find(r => r.id === requestId)?.url || '',
@@ -366,7 +366,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
           auth: requests.find(r => r.id === requestId)?.auth || { type: 'none' },
           collectionId: targetCollectionId,
           folderId: targetFolderId,
-          isFavorite: Boolean(requests.find(r => r.id === requestId)?.isFavorite),
+          isFavorite: (requests.find(r => r.id === requestId)?.isFavorite) || 0,
         });
         showSuccess('Request moved successfully');
         // Refresh data
@@ -435,7 +435,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         if (orderA !== orderB) {
           return orderA - orderB;
         }
-        return (a.id || 0) - (b.id || 0);
+        return String(a.id || '').localeCompare(String(b.id || ''));
       });
   };
 
@@ -448,7 +448,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         if (orderA !== orderB) {
           return orderA - orderB;
         }
-        return (a.id || 0) - (b.id || 0);
+        return String(a.id || '').localeCompare(String(b.id || ''));
       });
   };
 
@@ -461,7 +461,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         if (orderA !== orderB) {
           return orderA - orderB;
         }
-        return (a.id || 0) - (b.id || 0);
+        return String(a.id || '').localeCompare(String(b.id || ''));
       });
   };
 
@@ -548,7 +548,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         name: `${collection.name} (Copy)`,
         description: collection.description || '',
         environments: collection.environments ? collection.environments.map(env => ({ ...env, id: undefined })) : [],
-        isFavorite: false
+        isFavorite: 0
       };
 
       const result = await window.electronAPI.collection.save(duplicateCollection);
@@ -574,7 +574,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
           auth: request.auth,
           collectionId: newCollectionId,
           folderId: undefined, // Reset folder association for simplicity
-          isFavorite: false
+          isFavorite: 0
         };
         
         await window.electronAPI.request.save(duplicateRequest);
@@ -610,9 +610,9 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     }
   };
 
-  const handleDeleteRequest = async (requestId: number) => {
+  const handleDeleteRequest = async (requestId: EntityId) => {
     try {
-      await window.electronAPI.request.delete(requestId);
+      await window.electronAPI.request.delete(requestId as any);
       showSuccess('Request deleted successfully');
       setRequests(requests.filter(r => r.id !== requestId));
       // Trigger sidebar refresh for real-time updates
@@ -622,7 +622,7 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
     }
   };
 
-  const handleDuplicateRequest = async (requestId: number) => {
+  const handleDuplicateRequest = async (requestId: EntityId) => {
     try {
       const originalRequest = requests.find(r => r.id === requestId);
       if (!originalRequest) return;
@@ -637,11 +637,11 @@ export function CollectionHierarchy({ onRequestSelect }: CollectionHierarchyProp
         auth: originalRequest.auth,
         collectionId: originalRequest.collectionId,
         folderId: originalRequest.folderId,
-        isFavorite: false,
+        isFavorite: 0,
       };
 
       // Use saveAfter to insert the duplicate right after the original request
-      await window.electronAPI.request.saveAfter(duplicatedRequest, requestId);
+      await window.electronAPI.request.saveAfter(duplicatedRequest, requestId as any);
       showSuccess('Request duplicated successfully');
       
       // Refresh requests

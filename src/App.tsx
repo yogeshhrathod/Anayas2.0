@@ -18,10 +18,10 @@ import { Button } from './components/ui/button';
 import { Dialog } from './components/ui/dialog';
 import { ResizeHandle } from './components/ui/resize-handle';
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from './components/ui/tooltip';
 import { useSessionRecovery } from './hooks/useSessionRecovery';
 import { useShortcuts } from './hooks/useShortcuts';
@@ -30,7 +30,7 @@ import { trackFeatureLoad } from './lib/performance';
 import { ContextState } from './lib/shortcuts/types';
 import { cn } from './lib/utils';
 import { useStore } from './store/useStore';
-import { Request } from './types/entities';
+import { EntityId, Request } from './types/entities';
 // Lazy load pages for better performance
 // Pages use named exports, so we need to map them to default exports for lazy()
 const Homepage = lazy(() =>
@@ -114,13 +114,13 @@ function App() {
   const [requestToSaveAs, setRequestToSaveAs] = useState<any>(null);
 
   // Helper to get full collection data for export
-  const getFullCollectionData = async (collectionId: number) => {
+  const getFullCollectionData = async (collectionId: EntityId) => {
     const collections = await window.electronAPI.collection.list();
     const collection = collections.find((c: any) => c.id === collectionId);
     if (!collection) throw new Error('Collection not found');
 
-    const folders = await window.electronAPI.folder.list(collectionId);
-    const requests = await window.electronAPI.request.list(collectionId);
+    const folders = await window.electronAPI.folder.list(collectionId as number);
+    const requests = await window.electronAPI.request.list(collectionId as number);
     
     // Structure as a simple clean JSON export
     return {
@@ -234,7 +234,7 @@ function App() {
           // Use saveAfter to insert the duplicate right after the original request
           await window.electronAPI.request.saveAfter(
             duplicate,
-            context.selectedItem.id!
+            context.selectedItem.id as any
           );
 
           // Refresh both collections and requests
@@ -266,7 +266,7 @@ function App() {
 
           // Get all requests for the original collection
           const originalRequests = await window.electronAPI.request.list(
-            context.selectedItem.id!
+            context.selectedItem.id as number
           );
 
           // Duplicate all requests for the new collection
@@ -304,7 +304,7 @@ function App() {
     'delete-item': async (_: KeyboardEvent, context: ContextState) => {
       if (context.selectedItem.type === 'request') {
         try {
-          await window.electronAPI.request.delete(context.selectedItem.id!);
+          await window.electronAPI.request.delete(context.selectedItem.id as any);
           const updated = await window.electronAPI.collection.list();
           setCollections(updated);
           setSelectedItem({ type: null, id: null, data: null });
@@ -316,7 +316,7 @@ function App() {
         }
       } else if (context.selectedItem.type === 'collection') {
         try {
-          await window.electronAPI.collection.delete(context.selectedItem.id!);
+          await window.electronAPI.collection.delete(context.selectedItem.id as number);
           const updated = await window.electronAPI.collection.list();
           setCollections(updated);
           setSelectedItem({ type: null, id: null, data: null });
@@ -328,7 +328,7 @@ function App() {
         }
       } else if (context.selectedItem.type === 'folder') {
         try {
-          await window.electronAPI.folder.delete(context.selectedItem.id!);
+          await window.electronAPI.folder.delete(context.selectedItem.id as number);
           const updated = await window.electronAPI.collection.list();
           setCollections(updated);
           setSelectedItem({ type: null, id: null, data: null });
@@ -405,11 +405,11 @@ function App() {
       // For now, let's assume we export the selected one from sidebar context
       if (context.selectedItem.type === 'collection' && context.selectedItem.id) {
          try {
-           const data = await getFullCollectionData(context.selectedItem.id);
-           const fileName = `${data.collection.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.json`;
-           
-           // Show save dialog
-           const result = await window.electronAPI.file.saveFile(fileName, JSON.stringify(data, null, 2));
+            const data = await getFullCollectionData(context.selectedItem.id);
+            const fileName = `${data.collection.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.json`;
+            
+            // Show save dialog
+            const result = await window.electronAPI.file.saveFile(fileName, JSON.stringify(data, null, 2));
            
            if (result.success) {
              showSuccess('Collection exported successfully');

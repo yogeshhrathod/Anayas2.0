@@ -21,7 +21,7 @@ export interface Collection {
   name: string;
   description?: string;
   documentation?: string; // Markdown documentation for the collection
-  variables: Record<string, string>;
+  variables?: Record<string, string>;
   environments?: CollectionEnvironment[];
   activeEnvironmentId?: number;
   isFavorite?: number;

@@ -3,7 +3,7 @@
  * Request/response types for Electron API communication
  */
 
-import { Request, Environment, Collection, Folder, RequestHistory, ResponseData } from './entities';
+import { Collection, Environment, Folder, Request, RequestHistory, ResponseData } from './entities';
 
 // Generic API response wrapper
 export interface ApiResponse<T = any> {
@@ -17,7 +17,7 @@ export interface ApiResponse<T = any> {
 export interface CollectionCreateRequest {
   name: string;
   description: string;
-  variables: Record<string, string>;
+  variables?: Record<string, string>;
   isFavorite: boolean;
 }
 

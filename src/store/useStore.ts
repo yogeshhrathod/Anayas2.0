@@ -65,10 +65,10 @@ interface AppState {
   // Selected Item for keyboard shortcuts
   selectedItem: {
     type: 'collection' | 'request' | 'folder' | null;
-    id: number | null;
+    id: EntityId | null;
     data: any;
   };
-  setSelectedItem: (item: { type: 'collection' | 'request' | 'folder' | null; id: number | null; data: any }) => void;
+  setSelectedItem: (item: { type: 'collection' | 'request' | 'folder' | null; id: EntityId | null; data: any }) => void;
 
   // Enhanced context tracking for shortcuts
   focusedContext: 'sidebar' | 'editor' | 'page' | null;

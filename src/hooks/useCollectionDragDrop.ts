@@ -28,12 +28,13 @@
  * ```
  */
 
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
+import { EntityId } from '../types/entities';
 import { useToastNotifications } from './useToastNotifications';
 
 export interface DragItem {
   type: 'collection' | 'request' | 'folder';
-  id: number;
+  id: EntityId;
   collectionId?: number; // For requests/folders, track their current collection
   folderId?: number; // For requests, track their current folder
 }
@@ -41,9 +42,9 @@ export interface DragItem {
 export type DropPosition = 'above' | 'below' | 'inside';
 
 export interface DragDropConfig {
-  onMoveRequest?: (requestId: number, targetCollectionId: number, targetFolderId?: number) => Promise<void>;
+  onMoveRequest?: (requestId: EntityId, targetCollectionId: number, targetFolderId?: number) => Promise<void>;
   onMoveFolder?: (folderId: number, targetCollectionId: number) => Promise<void>;
-  onReorderRequest?: (requestId: number, targetRequestId: number, position: 'above' | 'below') => Promise<void>;
+  onReorderRequest?: (requestId: EntityId, targetRequestId: EntityId, position: 'above' | 'below') => Promise<void>;
   onReorderFolder?: (folderId: number, targetFolderId: number, position: 'above' | 'below') => Promise<void>;
   resolveFolderCollectionId?: (folderId: number) => number | undefined; // Helper to resolve folder's collectionId
 }
@@ -181,11 +182,11 @@ export function useCollectionDragDrop(config: DragDropConfig) {
             let targetCollectionId: number;
             
             if (targetItem.type === 'collection') {
-              targetCollectionId = targetItem.id;
+              targetCollectionId = targetItem.id as number;
             } else {
               // Folder - need to resolve collectionId
               if (config.resolveFolderCollectionId) {
-                targetCollectionId = config.resolveFolderCollectionId(targetItem.id) || 0;
+                targetCollectionId = config.resolveFolderCollectionId(targetItem.id as number) || 0;
               } else {
                 // Fallback: use folder's collectionId if provided
                 targetCollectionId = targetItem.collectionId || 0;
@@ -196,7 +197,7 @@ export function useCollectionDragDrop(config: DragDropConfig) {
               }
             }
             
-            const targetFolderId = targetItem.type === 'folder' ? targetItem.id : undefined;
+            const targetFolderId = targetItem.type === 'folder' ? targetItem.id as number : undefined;
             
             await config.onMoveRequest(state.draggedItem.id, targetCollectionId, targetFolderId);
           }
@@ -210,12 +211,12 @@ export function useCollectionDragDrop(config: DragDropConfig) {
         if (targetItem.type === 'collection') {
           // Move operation
           if (config.onMoveFolder) {
-            await config.onMoveFolder(state.draggedItem.id, targetItem.id);
+            await config.onMoveFolder(state.draggedItem.id as number, targetItem.id as number);
           }
         } else if (targetItem.type === 'folder') {
           // Reorder operation
           if (config.onReorderFolder && (dropPosition === 'above' || dropPosition === 'below')) {
-            await config.onReorderFolder(state.draggedItem.id, targetItem.id, dropPosition);
+            await config.onReorderFolder(state.draggedItem.id as number, targetItem.id as number, dropPosition);
           }
         }
       }

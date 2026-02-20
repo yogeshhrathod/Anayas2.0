@@ -27,9 +27,11 @@ export interface ShortcutDefinition {
   handler?: (event: KeyboardEvent, context: ContextState) => void;
 }
 
+import { EntityId } from '../../types/entities';
+
 export interface ContextState {
   page: string;
-  selectedItem: { type: string | null; id: number | null; data: any };
+  selectedItem: { type: string | null; id: EntityId | null; data: any };
   selectedRequest: any;
   focusedElement: Element | null;
   sidebarOpen: boolean;
