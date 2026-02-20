@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { applyTheme, darkTheme, getThemeById, lightTheme } from '../lib/themes';
+import { applyTheme, resolveTheme } from '../lib/themes';
 import { useStore } from '../store/useStore';
 
 /**
@@ -11,35 +11,7 @@ export function ThemeManager() {
 
   useEffect(() => {
     const applyCurrentTheme = () => {
-      let themeToApply;
-
-        if (themeMode === 'system') {
-        // Use system preference
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const selectedTheme = getThemeById(currentThemeId, customThemes);
-        
-        // Only use the selected theme if it matches the system preference
-        if (selectedTheme && selectedTheme.type === (prefersDark ? 'dark' : 'light')) {
-          themeToApply = selectedTheme;
-        } else {
-          // Fallback to default light/dark based on system preference
-          themeToApply = prefersDark ? darkTheme : lightTheme;
-        }
-      } else if (themeMode === 'light' || themeMode === 'dark') {
-        // Use selected theme or fallback to default light/dark
-        const selectedTheme = getThemeById(currentThemeId, customThemes);
-        
-        if (selectedTheme && selectedTheme.type === themeMode) {
-          themeToApply = selectedTheme;
-        } else {
-          // Fallback to default theme matching the mode
-          themeToApply = themeMode === 'dark' ? darkTheme : lightTheme;
-        }
-      } else {
-        // Fallback to light theme
-        themeToApply = lightTheme;
-      }
-
+      const themeToApply = resolveTheme(themeMode, currentThemeId, customThemes);
       applyTheme(themeToApply);
     };
 

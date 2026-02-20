@@ -379,9 +379,42 @@ export function applyTheme(theme: Theme) {
 }
 
 // Get theme by ID
-export function getThemeById(id: string, customThemes: Theme[] = []): Theme | undefined {
+export function getThemeById(
+  id: string,
+  customThemes: Theme[] = []
+): Theme | undefined {
   const allThemes = [...builtInThemes, ...customThemes];
   return allThemes.find(theme => theme.id === id);
+}
+
+/**
+ * Resolves which theme should be applied based on mode and settings
+ */
+export function resolveTheme(
+  themeMode: 'light' | 'dark' | 'system',
+  currentThemeId: string,
+  customThemes: Theme[] = []
+): Theme {
+  if (themeMode === 'system') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const selectedTheme = getThemeById(currentThemeId, customThemes);
+    
+    if (selectedTheme && selectedTheme.type === (prefersDark ? 'dark' : 'light')) {
+      return selectedTheme;
+    }
+    return prefersDark ? darkTheme : lightTheme;
+  }
+  
+  if (themeMode === 'light' || themeMode === 'dark') {
+    const selectedTheme = getThemeById(currentThemeId, customThemes);
+    
+    if (selectedTheme && selectedTheme.type === themeMode) {
+      return selectedTheme;
+    }
+    return themeMode === 'dark' ? darkTheme : lightTheme;
+  }
+  
+  return lightTheme;
 }
 
 // Create a new custom theme

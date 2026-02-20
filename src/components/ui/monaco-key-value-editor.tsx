@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
 import { Editor } from '@monaco-editor/react';
+import { AlertCircle, CheckCircle, Copy, FileText, Maximize2, Minimize2, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { DEFAULT_CODE_FONT_STACK } from '../../constants/fonts';
+import { resolveTheme } from '../../lib/themes';
 import { useStore } from '../../store/useStore';
-import { getThemeById } from '../../lib/themes';
+import { Alert, AlertDescription } from './alert';
 import { Button } from './button';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
-import { Alert, AlertDescription } from './alert';
-import { CheckCircle, AlertCircle, Copy, Maximize2, Minimize2, Plus, Trash2, FileText } from 'lucide-react';
 import { useToast } from './use-toast';
-import { DEFAULT_CODE_FONT_STACK } from '../../constants/fonts';
 
 interface KeyValuePair {
   key: string;
@@ -61,12 +61,9 @@ export function MonacoKeyValueEditor({
     ? settings.codeFontFamily.trim()
     : DEFAULT_CODE_FONT_STACK;
 
-  // Get current theme and determine Monaco theme
-  const currentTheme = getThemeById(currentThemeId, customThemes);
-  const isDarkMode = themeMode === 'dark' || 
-    (themeMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ||
-    (currentTheme && currentTheme.type === 'dark');
-
+  // Resolve which theme should be applied
+  const currentTheme = resolveTheme(themeMode, currentThemeId, customThemes);
+  const isDarkMode = currentTheme.type === 'dark';
   const monacoTheme = isDarkMode ? 'vs-dark' : 'vs';
 
   // Convert data to JSON string for bulk editing
