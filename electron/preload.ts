@@ -127,14 +127,10 @@ const api = {
     save: (env: Environment) => ipcRenderer.invoke('env:save', env),
     delete: (id: number) => ipcRenderer.invoke('env:delete', id),
     test: (env: Environment) => ipcRenderer.invoke('env:test', env),
-    import: (
-      content: string,
-      format?: 'json' | 'env' | 'postman' | 'auto'
-    ) => ipcRenderer.invoke('env:import', content, format),
-    export: (
-      environmentIds: number[],
-      format: 'json' | 'env' | 'postman'
-    ) => ipcRenderer.invoke('env:export', environmentIds, format),
+    import: (content: string, format?: 'json' | 'env' | 'postman' | 'auto') =>
+      ipcRenderer.invoke('env:import', content, format),
+    export: (environmentIds: number[], format: 'json' | 'env' | 'postman') =>
+      ipcRenderer.invoke('env:export', environmentIds, format),
     detectFormat: (content: string) =>
       ipcRenderer.invoke('env:detect-format', content),
     getSupportedFormats: () => ipcRenderer.invoke('env:supported-formats'),
@@ -147,7 +143,8 @@ const api = {
     list: () => ipcRenderer.invoke('collection:list'),
     save: (collection: Collection) =>
       ipcRenderer.invoke('collection:save', collection),
-    delete: (id: number | string) => ipcRenderer.invoke('collection:delete', id),
+    delete: (id: number | string) =>
+      ipcRenderer.invoke('collection:delete', id),
     toggleFavorite: (id: number) =>
       ipcRenderer.invoke('collection:toggleFavorite', id),
     addEnvironment: (
@@ -236,7 +233,8 @@ const api = {
 
   // Preset operations
   preset: {
-    list: (requestId?: number | string) => ipcRenderer.invoke('preset:list', requestId),
+    list: (requestId?: number | string) =>
+      ipcRenderer.invoke('preset:list', requestId),
     save: (preset: RequestPreset) => ipcRenderer.invoke('preset:save', preset),
     delete: (id: string) => ipcRenderer.invoke('preset:delete', id),
   },

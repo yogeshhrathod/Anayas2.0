@@ -1,14 +1,14 @@
 import {
-    ChevronDown,
-    FileJson,
-    FolderPlus,
-    Globe,
-    History as HistoryIcon,
-    Home,
-    Plus,
-    Settings as SettingsIcon,
-    Terminal,
-    Upload
+  ChevronDown,
+  FileJson,
+  FolderPlus,
+  Globe,
+  History as HistoryIcon,
+  Home,
+  Plus,
+  Settings as SettingsIcon,
+  Terminal,
+  Upload,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useToastNotifications } from '../hooks/useToastNotifications';
@@ -21,17 +21,17 @@ import { EnvironmentSelector } from './EnvironmentSelector';
 import { ImportCollectionDialog } from './import';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from './ui/tooltip';
 
 export function NavigationBar() {
@@ -329,7 +329,6 @@ export function NavigationBar() {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-
           </>
         )}
 

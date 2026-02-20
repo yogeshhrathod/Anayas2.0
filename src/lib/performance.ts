@@ -1,9 +1,9 @@
 /**
  * Performance Tracking Utility
- * 
+ *
  * Tracks memory usage, load times, and bundle sizes for features.
  * Helps ensure we meet performance budgets and identify regressions.
- * 
+ *
  * Usage:
  * ```typescript
  * const tracker = trackFeatureLoad('FeatureName');
@@ -28,10 +28,10 @@ interface PerformanceTracker {
 
 /**
  * Track feature load performance
- * 
+ *
  * @param featureName - Name of the feature being loaded
  * @returns Tracker object with end() and cancel() methods
- * 
+ *
  * @example
  * ```typescript
  * const tracker = trackFeatureLoad('MonacoEditor');
@@ -60,9 +60,9 @@ export function trackFeatureLoad(featureName: string): PerformanceTracker {
       const metrics: PerformanceMetrics = {
         feature: featureName,
         loadTime: Math.round(loadTime * 100) / 100, // Round to 2 decimals
-        memoryDelta: Math.round(memoryDelta / 1024 / 1024 * 100) / 100, // MB, 2 decimals
-        memoryBefore: Math.round(memoryBefore / 1024 / 1024 * 100) / 100, // MB
-        memoryAfter: Math.round(memoryAfter / 1024 / 1024 * 100) / 100, // MB
+        memoryDelta: Math.round((memoryDelta / 1024 / 1024) * 100) / 100, // MB, 2 decimals
+        memoryBefore: Math.round((memoryBefore / 1024 / 1024) * 100) / 100, // MB
+        memoryAfter: Math.round((memoryAfter / 1024 / 1024) * 100) / 100, // MB
         timestamp: Date.now(),
       };
 
@@ -82,7 +82,7 @@ export function trackFeatureLoad(featureName: string): PerformanceTracker {
 
 /**
  * Get current memory usage
- * 
+ *
  * @returns Memory usage in bytes (0 if not available)
  */
 function getMemoryUsage(): number {
@@ -92,11 +92,12 @@ function getMemoryUsage(): number {
 
 /**
  * Log performance metrics
- * 
+ *
  * @param metrics - Performance metrics to log
  */
 function logPerformanceMetrics(metrics: PerformanceMetrics): void {
-  const logMessage = `[Performance] Feature loaded: ${metrics.feature} | ` +
+  const logMessage =
+    `[Performance] Feature loaded: ${metrics.feature} | ` +
     `Load time: ${metrics.loadTime}ms | ` +
     `Memory delta: ${metrics.memoryDelta}MB | ` +
     `Memory: ${metrics.memoryBefore}MB → ${metrics.memoryAfter}MB`;
@@ -113,7 +114,7 @@ function logPerformanceMetrics(metrics: PerformanceMetrics): void {
 
 /**
  * Check performance budgets and alert on violations
- * 
+ *
  * @param metrics - Performance metrics to check
  */
 function checkPerformanceBudgets(metrics: PerformanceMetrics): void {
@@ -125,17 +126,21 @@ function checkPerformanceBudgets(metrics: PerformanceMetrics): void {
   const violations: string[] = [];
 
   if (metrics.loadTime > BUDGETS.LOAD_TIME) {
-    violations.push(`Load time ${metrics.loadTime}ms exceeds budget of ${BUDGETS.LOAD_TIME}ms`);
+    violations.push(
+      `Load time ${metrics.loadTime}ms exceeds budget of ${BUDGETS.LOAD_TIME}ms`
+    );
   }
 
   if (metrics.memoryDelta > BUDGETS.MEMORY_DELTA) {
-    violations.push(`Memory delta ${metrics.memoryDelta}MB exceeds budget of ${BUDGETS.MEMORY_DELTA}MB`);
+    violations.push(
+      `Memory delta ${metrics.memoryDelta}MB exceeds budget of ${BUDGETS.MEMORY_DELTA}MB`
+    );
   }
 
   if (violations.length > 0) {
     const warningMessage = `[Performance Warning] ${metrics.feature}:\n${violations.join('\n')}`;
     console.warn(warningMessage);
-    
+
     // TODO: Send to IPC handler to log warning to Winston logger
     // window.electronAPI?.performance?.logWarning(metrics, violations);
   }
@@ -143,34 +148,34 @@ function checkPerformanceBudgets(metrics: PerformanceMetrics): void {
 
 /**
  * Track bundle size (to be called during build)
- * 
+ *
  * @param bundleName - Name of the bundle
  * @param sizeBytes - Size of the bundle in bytes
  */
 export function trackBundleSize(bundleName: string, sizeBytes: number): void {
-  const sizeKB = Math.round(sizeBytes / 1024 * 100) / 100;
-  const sizeMB = Math.round(sizeBytes / 1024 / 1024 * 100) / 100;
-  
+  const sizeKB = Math.round((sizeBytes / 1024) * 100) / 100;
+  const sizeMB = Math.round((sizeBytes / 1024 / 1024) * 100) / 100;
+
   const BUDGET = 500; // KB
-  
+
   const logMessage = `[Performance] Bundle: ${bundleName} | Size: ${sizeKB}KB (${sizeMB}MB)`;
-  
+
   if (process.env.NODE_ENV === 'development') {
     console.log(logMessage);
   }
-  
+
   if (sizeKB > BUDGET) {
     const warning = `[Performance Warning] Bundle ${bundleName} size ${sizeKB}KB exceeds budget of ${BUDGET}KB`;
     console.warn(warning);
   }
-  
+
   // TODO: Send to IPC handler to log to Winston logger
   // window.electronAPI?.performance?.logBundleSize(bundleName, sizeKB);
 }
 
 /**
  * Get current performance snapshot
- * 
+ *
  * @returns Current memory usage and performance metrics
  */
 export function getPerformanceSnapshot(): {
@@ -179,18 +184,18 @@ export function getPerformanceSnapshot(): {
 } {
   const memory = getMemoryUsage();
   return {
-    memory: Math.round(memory / 1024 / 1024 * 100) / 100, // MB
+    memory: Math.round((memory / 1024 / 1024) * 100) / 100, // MB
     timestamp: Date.now(),
   };
 }
 
 /**
  * Measure function execution time
- * 
+ *
  * @param fn - Function to measure
  * @param label - Label for the measurement
  * @returns Execution time in milliseconds
- * 
+ *
  * @example
  * ```typescript
  * const time = measureExecution(() => expensiveOperation(), 'ExpensiveOp');
@@ -202,21 +207,21 @@ export function measureExecution<T>(fn: () => T, label?: string): T {
   const result = fn();
   const endTime = performance.now();
   const executionTime = endTime - startTime;
-  
+
   if (label) {
     console.log(`[Performance] ${label} took ${executionTime.toFixed(2)}ms`);
   }
-  
+
   return result;
 }
 
 /**
  * Measure async function execution time
- * 
+ *
  * @param fn - Async function to measure
  * @param label - Label for the measurement
  * @returns Execution time in milliseconds
- * 
+ *
  * @example
  * ```typescript
  * const time = await measureAsyncExecution(async () => await fetchData(), 'FetchData');
@@ -231,11 +236,10 @@ export async function measureAsyncExecution<T>(
   const result = await fn();
   const endTime = performance.now();
   const executionTime = endTime - startTime;
-  
+
   if (label) {
     console.log(`[Performance] ${label} took ${executionTime.toFixed(2)}ms`);
   }
-  
+
   return result;
 }
-

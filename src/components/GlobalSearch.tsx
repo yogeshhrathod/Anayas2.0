@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Clock, Globe, FolderPlus, Zap, ArrowRight } from 'lucide-react';
+import {
+  Search,
+  Clock,
+  Globe,
+  FolderPlus,
+  Zap,
+  ArrowRight,
+} from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { cn } from '../lib/utils';
 import { useClickOutside } from '../hooks/useClickOutside';
@@ -58,7 +65,7 @@ export function GlobalSearch() {
     const searchResults: SearchResult[] = [];
 
     // Search requests
-    allRequests.forEach((request) => {
+    allRequests.forEach(request => {
       const matchesName = request.name?.toLowerCase().includes(searchTerm);
       const matchesUrl = request.url?.toLowerCase().includes(searchTerm);
       const matchesMethod = request.method?.toLowerCase().includes(searchTerm);
@@ -78,27 +85,30 @@ export function GlobalSearch() {
               name: request.name || '',
               method: request.method,
               url: request.url,
-              headers: typeof request.headers === 'string' 
-                ? JSON.parse(request.headers) 
-                : (request.headers || {}),
+              headers:
+                typeof request.headers === 'string'
+                  ? JSON.parse(request.headers)
+                  : request.headers || {},
               body: request.body || '',
               queryParams: [],
               auth: { type: 'none' },
               collectionId: request.collectionId,
               isFavorite: request.isFavorite,
-              lastResponse: request.lastResponse
+              lastResponse: request.lastResponse,
             });
             setIsOpen(false);
             setQuery('');
-          }
+          },
         });
       }
     });
 
     // Search collections
-    collections.forEach((collection) => {
+    collections.forEach(collection => {
       const matchesName = collection.name?.toLowerCase().includes(searchTerm);
-      const matchesDescription = collection.description?.toLowerCase().includes(searchTerm);
+      const matchesDescription = collection.description
+        ?.toLowerCase()
+        .includes(searchTerm);
 
       if (matchesName || matchesDescription) {
         searchResults.push({
@@ -111,15 +121,17 @@ export function GlobalSearch() {
             setCurrentPage('collections');
             setIsOpen(false);
             setQuery('');
-          }
+          },
         });
       }
     });
 
     // Search environments
-    environments.forEach((env) => {
+    environments.forEach(env => {
       const matchesName = env.name?.toLowerCase().includes(searchTerm);
-      const matchesDisplayName = env.displayName?.toLowerCase().includes(searchTerm);
+      const matchesDisplayName = env.displayName
+        ?.toLowerCase()
+        .includes(searchTerm);
 
       if (matchesName || matchesDisplayName) {
         searchResults.push({
@@ -133,13 +145,13 @@ export function GlobalSearch() {
             setCurrentPage('environments');
             setIsOpen(false);
             setQuery('');
-          }
+          },
         });
       }
     });
 
     // Search history
-    requestHistory.forEach((history) => {
+    requestHistory.forEach(history => {
       const matchesUrl = history.url?.toLowerCase().includes(searchTerm);
       const matchesMethod = history.method?.toLowerCase().includes(searchTerm);
 
@@ -154,20 +166,34 @@ export function GlobalSearch() {
             setCurrentPage('history');
             setIsOpen(false);
             setQuery('');
-          }
+          },
         });
       }
     });
 
     // Sort results by type and relevance
     searchResults.sort((a, b) => {
-      const typeOrder = { request: 0, collection: 1, environment: 2, history: 3 };
+      const typeOrder = {
+        request: 0,
+        collection: 1,
+        environment: 2,
+        history: 3,
+      };
       return typeOrder[a.type] - typeOrder[b.type];
     });
 
     setResults(searchResults.slice(0, 8)); // Limit to 8 results
     setSelectedIndex(0);
-  }, [query, allRequests, collections, environments, requestHistory, setCurrentPage, setSelectedRequest, setCurrentEnvironment]);
+  }, [
+    query,
+    allRequests,
+    collections,
+    environments,
+    requestHistory,
+    setCurrentPage,
+    setSelectedRequest,
+    setCurrentEnvironment,
+  ]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -219,26 +245,36 @@ export function GlobalSearch() {
     setIsOpen(false);
     setQuery('');
   };
-  
+
   useClickOutside(resultsRef, handleClose, isOpen, { handleEscape: false });
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'request': return 'text-primary';
-      case 'collection': return 'text-success';
-      case 'environment': return 'text-info';
-      case 'history': return 'text-warning';
-      default: return 'text-muted-foreground';
+      case 'request':
+        return 'text-primary';
+      case 'collection':
+        return 'text-success';
+      case 'environment':
+        return 'text-info';
+      case 'history':
+        return 'text-warning';
+      default:
+        return 'text-muted-foreground';
     }
   };
 
   const getTypeBgColor = (type: string) => {
     switch (type) {
-      case 'request': return 'bg-primary/5 border-primary/20';
-      case 'collection': return 'bg-success/5 border-success/20';
-      case 'environment': return 'bg-info/5 border-info/20';
-      case 'history': return 'bg-warning/5 border-warning/20';
-      default: return 'bg-muted/5 border-muted/20';
+      case 'request':
+        return 'bg-primary/5 border-primary/20';
+      case 'collection':
+        return 'bg-success/5 border-success/20';
+      case 'environment':
+        return 'bg-info/5 border-info/20';
+      case 'history':
+        return 'bg-warning/5 border-warning/20';
+      default:
+        return 'bg-muted/5 border-muted/20';
     }
   };
 
@@ -252,7 +288,7 @@ export function GlobalSearch() {
           type="text"
           placeholder="Search... (⌘K)"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={e => setQuery(e.target.value)}
           onFocus={() => {
             setIsOpen(true);
             setIsFocused(true);
@@ -263,8 +299,8 @@ export function GlobalSearch() {
             setTimeout(() => setIsOpen(false), 150);
           }}
           className={cn(
-            "h-8 pl-10 pr-4 bg-background/80 backdrop-blur-sm border border-input/50 rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring/50 focus:bg-background transition-all duration-300 shadow-sm hover:shadow",
-            isFocused ? "w-[420px]" : "w-64"
+            'h-8 pl-10 pr-4 bg-background/80 backdrop-blur-sm border border-input/50 rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring/50 focus:bg-background transition-all duration-300 shadow-sm hover:shadow',
+            isFocused ? 'w-[420px]' : 'w-64'
           )}
         />
         {query && (
@@ -281,52 +317,63 @@ export function GlobalSearch() {
       </div>
 
       {/* Search Results - Portal */}
-      {isOpen && createPortal(
-        <div 
-          className="fixed bg-card/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-xl z-global-search max-h-96 overflow-y-auto transition-all duration-300"
-          style={{
-            top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 8,
-            left: (inputRef.current?.getBoundingClientRect().left ?? 0),
-            width: isFocused ? 420 : 260,
-          }}
-        >
-          {results.length > 0 ? (
-            <div className="p-2">
-              {results.map((result, index) => {
-                const Icon = result.icon;
-                return (
-                  <button
-                    key={result.id}
-                    onClick={result.action}
-                    className={cn(
-                      "group w-full flex items-center gap-3 p-3 rounded-lg text-left hover:bg-accent transition-all duration-200 border border-transparent hover:border-border/50",
-                      index === selectedIndex && "bg-accent border-border/50 shadow-sm"
-                    )}
-                  >
-                    <div className={cn("p-2 rounded-md border", getTypeBgColor(result.type))}>
-                      <Icon className={cn("h-4 w-4", getTypeColor(result.type))} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{result.title}</div>
-                      {result.subtitle && (
-                        <div className="text-xs text-muted-foreground truncate mt-0.5">{result.subtitle}</div>
+      {isOpen &&
+        createPortal(
+          <div
+            className="fixed bg-card/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-xl z-global-search max-h-96 overflow-y-auto transition-all duration-300"
+            style={{
+              top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 8,
+              left: inputRef.current?.getBoundingClientRect().left ?? 0,
+              width: isFocused ? 420 : 260,
+            }}
+          >
+            {results.length > 0 ? (
+              <div className="p-2">
+                {results.map((result, index) => {
+                  const Icon = result.icon;
+                  return (
+                    <button
+                      key={result.id}
+                      onClick={result.action}
+                      className={cn(
+                        'group w-full flex items-center gap-3 p-3 rounded-lg text-left hover:bg-accent transition-all duration-200 border border-transparent hover:border-border/50',
+                        index === selectedIndex &&
+                          'bg-accent border-border/50 shadow-sm'
                       )}
-                    </div>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                );
-              })}
-            </div>
-          ) : query ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              No results found for "{query}"
-            </div>
-          ) : (
-            null
-          )}
-        </div>,
-        document.body
-      )}
+                    >
+                      <div
+                        className={cn(
+                          'p-2 rounded-md border',
+                          getTypeBgColor(result.type)
+                        )}
+                      >
+                        <Icon
+                          className={cn('h-4 w-4', getTypeColor(result.type))}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">
+                          {result.title}
+                        </div>
+                        {result.subtitle && (
+                          <div className="text-xs text-muted-foreground truncate mt-0.5">
+                            {result.subtitle}
+                          </div>
+                        )}
+                      </div>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  );
+                })}
+              </div>
+            ) : query ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                No results found for "{query}"
+              </div>
+            ) : null}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

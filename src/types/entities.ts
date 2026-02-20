@@ -115,7 +115,12 @@ export interface ResponseData {
 
 // Utility types for API operations
 export type EntityId = number | string;
-export type EntityType = 'collection' | 'environment' | 'request' | 'folder' | 'history';
+export type EntityType =
+  | 'collection'
+  | 'environment'
+  | 'request'
+  | 'folder'
+  | 'history';
 
 export interface EntityOperation<T> {
   type: 'create' | 'update' | 'delete' | 'read';

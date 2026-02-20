@@ -16,26 +16,17 @@
           "targets": ["dmg", "zip"],
           "category": "public.app-category.developer-tools",
           "icon": "build/icons/icon.png",
-          "outputs": [
-            "Anayas-{version}.dmg",
-            "Anayas-{version}-mac.zip"
-          ]
+          "outputs": ["Anayas-{version}.dmg", "Anayas-{version}-mac.zip"]
         },
         "win": {
           "targets": ["nsis", "zip"],
           "icon": "build/icons/icon.png",
-          "outputs": [
-            "Anayas Setup {version}.exe",
-            "Anayas-{version}-win.zip"
-          ]
+          "outputs": ["Anayas Setup {version}.exe", "Anayas-{version}-win.zip"]
         },
         "linux": {
           "targets": ["AppImage", "deb"],
           "icon": "build/icons/icon.png",
-          "outputs": [
-            "Anayas-{version}.AppImage",
-            "anayas_{version}_amd64.deb"
-          ]
+          "outputs": ["Anayas-{version}.AppImage", "anayas_{version}_amd64.deb"]
         }
       }
     },
@@ -52,20 +43,12 @@
       "buildMac": {
         "command": "npm run build:mac",
         "description": "Build for macOS only",
-        "steps": [
-          "npm run type-check",
-          "vite build",
-          "electron-builder --mac"
-        ]
+        "steps": ["npm run type-check", "vite build", "electron-builder --mac"]
       },
       "buildWin": {
         "command": "npm run build:win",
         "description": "Build for Windows only",
-        "steps": [
-          "npm run type-check",
-          "vite build",
-          "electron-builder --win"
-        ]
+        "steps": ["npm run type-check", "vite build", "electron-builder --win"]
       },
       "buildLinux": {
         "command": "npm run build:linux",
@@ -154,4 +137,3 @@
     "Flatpak for Linux"
   ]
 }
-

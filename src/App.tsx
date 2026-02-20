@@ -1,4 +1,5 @@
-import { Menu, Trash2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft, Menu, Trash2 } from 'lucide-react';
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { CollectionHierarchy } from './components/CollectionHierarchy';
 import { Logo } from './components/Logo';
@@ -67,7 +68,9 @@ function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isResizing, setIsResizing] = useState(false);
-  const [isWelcomeDone, setIsWelcomeDone] = useState(() => localStorage.getItem('luna_welcome_seen') === 'true');
+  const [isWelcomeDone, setIsWelcomeDone] = useState(
+    () => localStorage.getItem('luna_welcome_seen') === 'true'
+  );
   const [_requests, setRequests] = useState<any[]>([]);
   const [isAppReady, setIsAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -105,10 +108,11 @@ function App() {
 
   const { showSuccess, showError } = useToastNotifications();
   const [showClearAllDialog, setShowClearAllDialog] = useState(false);
-  
+
   // Dialog States
   const [showSaveAsDialog, setShowSaveAsDialog] = useState(false);
-  const [showEditCollectionDialog, setShowEditCollectionDialog] = useState(false);
+  const [showEditCollectionDialog, setShowEditCollectionDialog] =
+    useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [collectionToEdit, setCollectionToEdit] = useState<any>(null);
   const [requestToSaveAs, setRequestToSaveAs] = useState<any>(null);
@@ -119,9 +123,13 @@ function App() {
     const collection = collections.find((c: any) => c.id === collectionId);
     if (!collection) throw new Error('Collection not found');
 
-    const folders = await window.electronAPI.folder.list(collectionId as number);
-    const requests = await window.electronAPI.request.list(collectionId as number);
-    
+    const folders = await window.electronAPI.folder.list(
+      collectionId as number
+    );
+    const requests = await window.electronAPI.request.list(
+      collectionId as number
+    );
+
     // Structure as a simple clean JSON export
     return {
       collection,
@@ -129,7 +137,7 @@ function App() {
       requests,
       exportedAt: new Date().toISOString(),
       type: 'luna-collection-export',
-      version: appVersion || '1.0'
+      version: appVersion || '1.0',
     };
   };
 
@@ -204,7 +212,9 @@ function App() {
         setSelectedRequest(context.selectedItem.data);
         setCurrentPage('home');
       } else if (context.selectedItem.type === 'collection') {
-        const collection = collections.find((c: any) => c.id === context.selectedItem.id);
+        const collection = collections.find(
+          (c: any) => c.id === context.selectedItem.id
+        );
         if (collection) {
           setCollectionToEdit(collection);
           setShowEditCollectionDialog(true);
@@ -304,7 +314,9 @@ function App() {
     'delete-item': async (_: KeyboardEvent, context: ContextState) => {
       if (context.selectedItem.type === 'request') {
         try {
-          await window.electronAPI.request.delete(context.selectedItem.id as any);
+          await window.electronAPI.request.delete(
+            context.selectedItem.id as any
+          );
           const updated = await window.electronAPI.collection.list();
           setCollections(updated);
           setSelectedItem({ type: null, id: null, data: null });
@@ -316,7 +328,9 @@ function App() {
         }
       } else if (context.selectedItem.type === 'collection') {
         try {
-          await window.electronAPI.collection.delete(context.selectedItem.id as number);
+          await window.electronAPI.collection.delete(
+            context.selectedItem.id as number
+          );
           const updated = await window.electronAPI.collection.list();
           setCollections(updated);
           setSelectedItem({ type: null, id: null, data: null });
@@ -328,7 +342,9 @@ function App() {
         }
       } else if (context.selectedItem.type === 'folder') {
         try {
-          await window.electronAPI.folder.delete(context.selectedItem.id as number);
+          await window.electronAPI.folder.delete(
+            context.selectedItem.id as number
+          );
           const updated = await window.electronAPI.collection.list();
           setCollections(updated);
           setSelectedItem({ type: null, id: null, data: null });
@@ -403,45 +419,60 @@ function App() {
     'export-collection': async (_: KeyboardEvent, context: ContextState) => {
       // Export currently selected collection OR ask user to select?
       // For now, let's assume we export the selected one from sidebar context
-      if (context.selectedItem.type === 'collection' && context.selectedItem.id) {
-         try {
-            const data = await getFullCollectionData(context.selectedItem.id);
-            const fileName = `${data.collection.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.json`;
-            
-            // Show save dialog
-            const result = await window.electronAPI.file.saveFile(fileName, JSON.stringify(data, null, 2));
-           
-           if (result.success) {
-             showSuccess('Collection exported successfully');
-           }
-         } catch (error: any) {
-           showError('Failed to export collection', error.message);
-         }
+      if (
+        context.selectedItem.type === 'collection' &&
+        context.selectedItem.id
+      ) {
+        try {
+          const data = await getFullCollectionData(context.selectedItem.id);
+          const fileName = `${data.collection.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.json`;
+
+          // Show save dialog
+          const result = await window.electronAPI.file.saveFile(
+            fileName,
+            JSON.stringify(data, null, 2)
+          );
+
+          if (result.success) {
+            showSuccess('Collection exported successfully');
+          }
+        } catch (error: any) {
+          showError('Failed to export collection', error.message);
+        }
       } else {
-        showError('Selection Required', 'Please select a collection in the sidebar to export.');
+        showError(
+          'Selection Required',
+          'Please select a collection in the sidebar to export.'
+        );
       }
     },
 
     'export-request': async (_: KeyboardEvent, context: ContextState) => {
-       const reqToExport = context.selectedItem.type === 'request' ? context.selectedItem.data : selectedRequest;
-       
-       if (reqToExport) {
-         try {
-           const fileName = `${reqToExport.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_request.json`;
-           const result = await window.electronAPI.file.saveFile(fileName, JSON.stringify(reqToExport, null, 2));
-           if (result.success) {
-             showSuccess('Request exported successfully');
-           }
-         } catch (error: any) {
-             showError('Failed to export request', error.message);
-         }
-       } else {
-          showError('No Request', 'Please select or open a request to export.');
-       }
+      const reqToExport =
+        context.selectedItem.type === 'request'
+          ? context.selectedItem.data
+          : selectedRequest;
+
+      if (reqToExport) {
+        try {
+          const fileName = `${reqToExport.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_request.json`;
+          const result = await window.electronAPI.file.saveFile(
+            fileName,
+            JSON.stringify(reqToExport, null, 2)
+          );
+          if (result.success) {
+            showSuccess('Request exported successfully');
+          }
+        } catch (error: any) {
+          showError('Failed to export request', error.message);
+        }
+      } else {
+        showError('No Request', 'Please select or open a request to export.');
+      }
     },
 
     'import-collection': () => {
-       setShowImportDialog(true);
+      setShowImportDialog(true);
     },
 
     'save-request-as': () => {
@@ -462,7 +493,9 @@ function App() {
     'toggle-split-view': () => {
       // Toggle split view for request/response
       setSplitViewEnabled(!splitViewEnabled);
-      showSuccess(splitViewEnabled ? 'Split view disabled' : 'Split view enabled');
+      showSuccess(
+        splitViewEnabled ? 'Split view disabled' : 'Split view enabled'
+      );
     },
   });
 
@@ -501,16 +534,23 @@ function App() {
 
   const loadData = async () => {
     try {
-      const [envs, currentEnv, collections, history, settings, requests, version] =
-        await Promise.all([
-          window.electronAPI.env.list(),
-          window.electronAPI.env.getCurrent(),
-          window.electronAPI.collection.list(),
-          window.electronAPI.request.history(100),
-          window.electronAPI.settings.getAll(),
-          window.electronAPI.request.list(),
-          window.electronAPI.app.getVersion(),
-        ]);
+      const [
+        envs,
+        currentEnv,
+        collections,
+        history,
+        settings,
+        requests,
+        version,
+      ] = await Promise.all([
+        window.electronAPI.env.list(),
+        window.electronAPI.env.getCurrent(),
+        window.electronAPI.collection.list(),
+        window.electronAPI.request.history(100),
+        window.electronAPI.settings.getAll(),
+        window.electronAPI.request.list(),
+        window.electronAPI.app.getVersion(),
+      ]);
 
       setEnvironments(envs);
       setCurrentEnvironment(currentEnv);
@@ -597,7 +637,18 @@ function App() {
     })();
 
     return (
-      <Suspense fallback={<PageLoadingSpinner />}>{pageComponent}</Suspense>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentPage}
+          initial={{ opacity: 0, scale: 0.98, filter: 'blur(4px)' }}
+          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, scale: 0.98, filter: 'blur(4px)' }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className="flex-1 flex flex-col min-h-0 relative"
+        >
+          <Suspense fallback={<PageLoadingSpinner />}>{pageComponent}</Suspense>
+        </motion.div>
+      </AnimatePresence>
     );
   };
 
@@ -606,18 +657,20 @@ function App() {
       {/* Welcome Experience - Lazy loaded so zero impact for existing users */}
       {!isWelcomeDone && (
         <Suspense fallback={null}>
-          <OnboardingFlow onDismiss={() => {
-            setIsWelcomeDone(true);
-            setShowSplash(false); // Skip splash screen after onboarding to prevent "flash"
-          }} />
+          <OnboardingFlow
+            onDismiss={() => {
+              setIsWelcomeDone(true);
+              setShowSplash(false); // Skip splash screen after onboarding to prevent "flash"
+            }}
+          />
         </Suspense>
       )}
 
       {/* Splash Screen - Waits for welcome flow if present */}
       {isWelcomeDone && showSplash && (
-        <SplashScreen 
-          isLoading={!isAppReady} 
-          onFinish={() => setShowSplash(false)} 
+        <SplashScreen
+          isLoading={!isAppReady}
+          onFinish={() => setShowSplash(false)}
         />
       )}
       <ThemeManager />
@@ -629,7 +682,6 @@ function App() {
 
         {/* Navigation Bar */}
         <NavigationBar />
-
 
         {/* Main Layout */}
         <div className="flex flex-1 overflow-hidden">
@@ -783,8 +835,17 @@ function App() {
           <div className="flex flex-1 flex-col">
             {/* Top Bar - Only show for non-home pages */}
             {currentPage !== 'home' && (
-              <div className="flex h-10 items-center border-b bg-card px-4">
-                <h2 className="text-base font-semibold capitalize">
+              <div className="flex h-12 items-center border-b bg-card px-4 gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full bg-muted/50 hover:bg-muted"
+                  onClick={() => setCurrentPage('home')}
+                >
+                  <ArrowLeft className="h-4 w-4 text-foreground/80" />
+                </Button>
+                <div className="h-4 w-px bg-border/60 mx-1" />
+                <h2 className="text-base font-semibold capitalize tracking-tight font-display">
                   {currentPage}
                 </h2>
               </div>
@@ -825,7 +886,6 @@ function App() {
           </div>
         </Dialog>
 
-
         {/* Feature Dialogs */}
         {showEditCollectionDialog && collectionToEdit && (
           <CollectionEditDialog
@@ -845,17 +905,17 @@ function App() {
             onOpenChange={setShowSaveAsDialog}
             request={requestToSaveAs}
             onSuccess={() => {
-               // Refresh data
-               triggerSidebarRefresh();
+              // Refresh data
+              triggerSidebarRefresh();
             }}
           />
         )}
 
-        <ImportCollectionDialog 
-          open={showImportDialog} 
+        <ImportCollectionDialog
+          open={showImportDialog}
           onOpenChange={setShowImportDialog}
           onSuccess={() => {
-             triggerSidebarRefresh();
+            triggerSidebarRefresh();
           }}
         />
       </div>

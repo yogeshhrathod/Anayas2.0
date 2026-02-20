@@ -21,7 +21,11 @@ export interface CollectionFormData {
   name: string;
   description: string;
   documentation?: string; // Markdown documentation
-  environments?: Array<{ id?: number; name: string; variables: Record<string, string> }>;
+  environments?: Array<{
+    id?: number;
+    name: string;
+    variables: Record<string, string>;
+  }>;
   isFavorite: boolean;
 }
 

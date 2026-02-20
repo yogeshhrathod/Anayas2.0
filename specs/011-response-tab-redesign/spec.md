@@ -14,22 +14,26 @@ Redesign the response display mechanism in the Request Builder by converting it 
 ## Goal Alignment Summary
 
 **How this feature supports the performance-first project goal:**
+
 - **Maintains Low Memory**: Response data only rendered when tab is active, reducing memory when not viewing responses
 - **Improves Developer Experience**: Cleaner tab-based interface matches developer expectations from other API tools
 - **Better Screen Real Estate**: Removes bottom panel, provides more vertical space for request/response viewing
 - **Lazy Rendering**: Response components only mount when Response tab is selected
 
 **Success Criteria:**
+
 - **Performance**: No memory regression, Response tab loads in <100ms
 - **UX**: Users can easily switch between request configuration and response viewing
 - **Responsiveness**: Monaco editor and all panels resize properly with window width changes
 
 **Constraints:**
+
 - **Memory Budget**: Response rendering <20MB additional (within Request Builder's 30MB budget)
 - **Lazy Loading**: Response components lazy-loaded when tab activated
 - **Cleanup**: Full cleanup when switching away from Response tab or closing request
 
 **Unclear Points (to confirm):**
+
 - ✅ Confirmed: 50/50 split for "Both" sub-tab, resizable
 - ✅ Confirmed: Response tab shows empty state before request sent
 - ✅ Confirmed: Copy/Download buttons in all 3 sub-tabs
@@ -37,32 +41,38 @@ Redesign the response display mechanism in the Request Builder by converting it 
 ## Performance Impact Analysis (MANDATORY)
 
 ### Memory Impact
+
 - **Estimated Memory Footprint**: ~15MB (Response display components + data)
 - **Memory Budget**: Request Builder total remains <30MB (current + response rendering)
-- **Memory Cleanup Strategy**: 
+- **Memory Cleanup Strategy**:
   - Unmount Response components when switching to other tabs
   - Clear response data when closing request or switching requests
   - Monaco editor instance cleanup when leaving Body/Both sub-tabs
 
 ### Load Time Impact (PRIMARY)
+
 - **Estimated Load Time**: <100ms (render response data)
 - **Initialization Strategy**: Lazy mount Response tab components on first activation
 - **Performance Tracking**: Track time to render headers/body, log to performance system
 
 ### Lazy Loading Strategy (REQUIRED)
+
 - **How feature loads on-demand**: Response tab components (sub-tabs, panels) only loaded when Response tab clicked
 - **Code Splitting Plan**: Response components can be in main bundle (lightweight, part of Request Builder)
 - **Trigger**: User clicks "Response" tab
 
 ### Bundle Size Impact (INFORMATIONAL - Not Primary)
+
 - **Estimated Bundle Size**: ~10KB (Response tab components, no heavy dependencies)
 
 ### Performance Monitoring (PRIMARY)
+
 - [x] Memory usage will be tracked (before/after Response tab load) - MANDATORY
 - [x] Load time will be measured and logged - MANDATORY
 - [x] Performance metrics will be logged to monitoring system - MANDATORY
 
 **Optional/Informational:**
+
 - [x] Bundle size will be tracked in build (for awareness)
 
 ## Goals
@@ -81,6 +91,7 @@ Redesign the response display mechanism in the Request Builder by converting it 
 ### Story 1: As an API developer, I want to view responses in a dedicated tab so that I have more screen space and a cleaner interface
 
 **Acceptance Criteria:**
+
 - [x] Response tab appears as the 5th tab after Body tab
 - [x] Response tab integrates seamlessly with existing tabs (Params, Auth, Headers, Body)
 - [x] Clicking Response tab shows response content (if available) or empty state
@@ -95,6 +106,7 @@ Redesign the response display mechanism in the Request Builder by converting it 
 ### Story 2: As an API developer, I want to view response headers separately so that I can quickly inspect status codes and header values
 
 **Acceptance Criteria:**
+
 - [x] Headers sub-tab shows status code, status text, and response time
 - [x] Headers displayed in readable key-value format
 - [x] Copy and Download buttons available in Headers sub-tab
@@ -108,6 +120,7 @@ Redesign the response display mechanism in the Request Builder by converting it 
 ### Story 3: As an API developer, I want to view response body in Monaco editor so that I can see formatted JSON/text responses
 
 **Acceptance Criteria:**
+
 - [x] Body sub-tab shows response body in full-width Monaco editor
 - [x] Monaco editor has syntax highlighting for JSON
 - [x] Monaco editor is read-only
@@ -123,6 +136,7 @@ Redesign the response display mechanism in the Request Builder by converting it 
 ### Story 4: As an API developer, I want to view headers and body side-by-side so that I can see both at once
 
 **Acceptance Criteria:**
+
 - [x] Both sub-tab shows headers on left, body on right
 - [x] 50/50 split by default
 - [x] Resizable divider allows adjusting left/right panel widths
@@ -138,6 +152,7 @@ Redesign the response display mechanism in the Request Builder by converting it 
 ### Story 5: As an API developer, I want all panels to resize properly when I adjust the window width so that content is always visible
 
 **Acceptance Criteria:**
+
 - [x] Monaco editor in Body sub-tab resizes with window width
 - [x] Split view panels in Both sub-tab resize with window width
 - [x] Headers panel resizes with window width
@@ -152,6 +167,7 @@ Redesign the response display mechanism in the Request Builder by converting it 
 ## Technical Requirements
 
 ### Existing Code to Leverage
+
 - [x] Component: `src/components/request/ResponsePanel.tsx` - Refactor into Response tab structure
 - [x] Component: `src/components/request/RequestTabs.tsx` - Extend to include Response tab
 - [x] Component: `src/components/ui/monaco-editor.tsx` - Use for Body display
@@ -161,17 +177,19 @@ Redesign the response display mechanism in the Request Builder by converting it 
 - [x] Type: `src/types/entities.ts` - ResponseData interface already exists
 
 ### Integration Points
+
 - **Where to add**: Modify `ApiRequestBuilder.tsx` to replace ResponsePanel with Response tab
-- **How to integrate**: 
+- **How to integrate**:
   1. Update RequestTabs to add "Response" as 5th tab
   2. Create ResponseTab component with 3 sub-tabs
   3. Remove ResponsePanel from bottom of ApiRequestBuilder
   4. Update activeTab state to include 'response' type
-- **Existing patterns to follow**: 
+- **Existing patterns to follow**:
   - Tab structure similar to `ParamsTab`, `HeadersTab`, `BodyTab`, `AuthTab`
   - Sub-tab pattern can reference existing tab navigation patterns
 
 ### Architecture Decisions
+
 - **Decision 1**: Response tab components are NOT code-split (part of Request Builder bundle)
   - Rationale: Response viewing is core functionality, minimal bundle impact (~10KB), always needed
 - **Decision 2**: Use CSS resize for Monaco editor instead of manual event listeners
@@ -182,16 +200,18 @@ Redesign the response display mechanism in the Request Builder by converting it 
   - Rationale: Session-only persistence, reduces DB writes, follows UX best practices
 
 ### Dependencies
-- Internal: 
+
+- Internal:
   - `ApiRequestBuilder` (main container)
   - `RequestTabs` (tab navigation)
   - `MonacoEditor` (body display)
   - `useRequestState` (state management)
   - `useRequestActions` (response data)
-- External: 
+- External:
   - `react-resizable-panels` (for resizable split view) OR custom CSS Grid implementation
 
 ### File Structure Changes
+
 ```
 CREATE:
 - src/components/request/ResponseTab.tsx          # Main Response tab with sub-tabs
@@ -211,17 +231,21 @@ DELETE:
 ```
 
 ### Data Model Changes
+
 No database schema changes. Only UI state changes:
+
 - Extend `activeTab` type: `'params' | 'auth' | 'headers' | 'body' | 'response'`
 - Add `responseSubTab` state: `'headers' | 'body' | 'both'`
 - Add `splitViewRatio` state: `number` (0-100, default 50)
 
 ### API Changes
+
 No IPC handler changes. Response data already available via `useRequestActions.response`.
 
 ## Acceptance Criteria
 
 ### Functional Requirements
+
 - [x] Response tab appears as 5th tab in Request Builder
 - [x] Response tab has 3 sub-tabs: Headers, Body, Both
 - [x] Headers sub-tab displays status, time, and headers in readable format
@@ -238,23 +262,24 @@ No IPC handler changes. Response data already available via `useRequestActions.r
 - [x] Response tab auto-activates after sending request
 
 ### Non-Functional Requirements
-- [x] **Performance (PRIMARY)**: 
+
+- [x] **Performance (PRIMARY)**:
   - Memory: <20MB for Response rendering (within 30MB Request Builder budget) ✅
   - Load time: <100ms to render Response tab ✅
   - Lazy-loaded: Response components mount only when tab activated ✅
   - Cleanup: Full cleanup when switching away or closing request ✅
   - No memory leaks from Monaco editor instances (ResizeObserver cleanup) ✅
   - Resize operations run at 60fps ✅
-- [x] **Accessibility**: 
+- [x] **Accessibility**:
   - Keyboard navigation works for tabs and sub-tabs ✅
   - Screen readers announce tab changes ✅
   - Copy/Download buttons have accessible labels ✅
-- [x] **UX**: 
+- [x] **UX**:
   - Tab switching is instant (<50ms) ✅
   - Resize divider has visual feedback on hover/drag ✅
   - Empty state is clear and helpful ✅
   - Auto-activate Response tab after request ✅
-- [ ] **Testing** (Deferred - Non-Critical): 
+- [ ] **Testing** (Deferred - Non-Critical):
   - Unit tests for Response tab components
   - Integration tests for tab switching
   - Performance tests for resize operations
@@ -279,13 +304,13 @@ No IPC handler changes. Response data already available via `useRequestActions.r
 
 ## Risks & Mitigation
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|------------|------------|
-| Monaco editor resize issue persists | High | Medium | Use CSS `width: 100%` and container resize detection, test thoroughly |
-| Memory leak from Monaco instances | High | Low | Proper cleanup in useEffect, dispose editor on unmount |
-| Resizable split view adds bundle size | Low | Low | Use lightweight library or custom CSS Grid, monitor bundle |
-| Users don't discover Response tab | Medium | Low | Use badge/indicator when response available, clear UX |
-| Performance regression from extra rendering | Medium | Low | Lazy mount, memoization, performance tests |
+| Risk                                        | Impact | Probability | Mitigation                                                            |
+| ------------------------------------------- | ------ | ----------- | --------------------------------------------------------------------- |
+| Monaco editor resize issue persists         | High   | Medium      | Use CSS `width: 100%` and container resize detection, test thoroughly |
+| Memory leak from Monaco instances           | High   | Low         | Proper cleanup in useEffect, dispose editor on unmount                |
+| Resizable split view adds bundle size       | Low    | Low         | Use lightweight library or custom CSS Grid, monitor bundle            |
+| Users don't discover Response tab           | Medium | Low         | Use badge/indicator when response available, clear UX                 |
+| Performance regression from extra rendering | Medium | Low         | Lazy mount, memoization, performance tests                            |
 
 ## References
 
@@ -298,13 +323,16 @@ No IPC handler changes. Response data already available via `useRequestActions.r
 ## Notes
 
 ### Design Decisions
+
 - Response tab is always visible (not hidden before request sent) to reduce UI flickering
 - Empty state encourages users to send a request
 - Default to Headers sub-tab when opening Response (most commonly checked first)
 - Split view ratio NOT persisted to database (session-only) to reduce writes
 
 ### Monaco Editor Resize Fix
+
 The current Monaco editor resize issue likely stems from:
+
 1. Container not passing width changes to editor
 2. Missing resize observer or event listener
 3. Fixed width CSS preventing responsive behavior
@@ -312,13 +340,16 @@ The current Monaco editor resize issue likely stems from:
 **Solution**: Use CSS `width: 100%` + `useEffect` with ResizeObserver to trigger Monaco `layout()` when container size changes.
 
 ### Split View Implementation
+
 Options:
+
 1. **react-resizable-panels** (recommended if lightweight)
 2. **Custom CSS Grid** with drag handler (full control, no dependency)
 
 Choose based on bundle size impact analysis.
 
 ### Testing Strategy
+
 - Test all 3 sub-tabs render correctly
 - Test Monaco editor resize with window width changes
 - Test split view drag and resize

@@ -17,9 +17,9 @@ interface EnvironmentVariableProps {
 export function EnvironmentVariable({
   variables,
   onVariablesChange,
-  title = "Environment Variables",
-  description = "Manage key-value pairs for your environment",
-  className = ""
+  title = 'Environment Variables',
+  description = 'Manage key-value pairs for your environment',
+  className = '',
 }: EnvironmentVariableProps) {
   const [viewMode, setViewMode] = useState<'table' | 'json'>('table');
   const [bulkEditJson, setBulkEditJson] = useState('');
@@ -28,12 +28,15 @@ export function EnvironmentVariable({
   const toggleView = () => {
     if (viewMode === 'table') {
       // Convert variables to JSON
-      const jsonData = Object.keys(variables).reduce((acc, key) => {
-        if (key && variables[key]) {
-          acc[key] = variables[key];
-        }
-        return acc;
-      }, {} as Record<string, string>);
+      const jsonData = Object.keys(variables).reduce(
+        (acc, key) => {
+          if (key && variables[key]) {
+            acc[key] = variables[key];
+          }
+          return acc;
+        },
+        {} as Record<string, string>
+      );
       setBulkEditJson(JSON.stringify(jsonData, null, 2));
     } else {
       // Convert JSON back to variables
@@ -70,10 +73,7 @@ export function EnvironmentVariable({
             >
               <Plus className="h-3 w-3" />
             </Button>
-            <ViewToggleButton
-              currentView={viewMode}
-              onToggle={toggleView}
-            />
+            <ViewToggleButton currentView={viewMode} onToggle={toggleView} />
           </div>
         </div>
       </CardHeader>
@@ -92,7 +92,7 @@ export function EnvironmentVariable({
           ) : (
             <MonacoEditor
               value={bulkEditJson}
-              onChange={(value) => setBulkEditJson(value)}
+              onChange={value => setBulkEditJson(value)}
               language="json"
               placeholder='{"base_url": "https://api.example.com", "api_key": "your-api-key"}'
               title=""

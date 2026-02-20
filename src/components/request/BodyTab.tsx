@@ -111,7 +111,6 @@ export const BodyTab: React.FC<BodyTabProps> = ({
     }
   };
 
-
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Header - Fixed height */}

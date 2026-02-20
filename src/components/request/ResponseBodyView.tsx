@@ -26,16 +26,21 @@
 import { Clock, Copy, Download } from 'lucide-react';
 import React from 'react';
 import {
-    formatResponseTime,
-    getStatusDisplay,
-    getStatusVariant,
-    safeStringifyBody,
+  formatResponseTime,
+  getStatusDisplay,
+  getStatusVariant,
+  safeStringifyBody,
 } from '../../lib/response-utils';
 import { ResponseData } from '../../types/entities';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { MonacoEditor } from '../ui/monaco-editor';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip';
 
 export interface ResponseBodyViewProps {
   response: ResponseData | null;
@@ -82,13 +87,18 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
               </div>
             </div>
           </div>
-          
+
           {showActions && (onCopy || onDownload) && (
             <div className="flex gap-2">
               {onCopy && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" onClick={onCopy} className="px-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onCopy}
+                      className="px-2"
+                    >
                       <Copy className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
@@ -98,7 +108,12 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
               {onDownload && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" onClick={onDownload} className="px-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onDownload}
+                      className="px-2"
+                    >
                       <Download className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>

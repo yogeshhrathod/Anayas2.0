@@ -38,25 +38,25 @@
   }
 
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 222 47% 3%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 224 50% 4%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 224 50% 4%;
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 98%;
     --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    --secondary: 215 28% 12%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --muted: 215 28% 12%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 215 28% 12%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --border: 215 28% 12%;
+    --input: 215 28% 12%;
+    --ring: 215 28% 85%;
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
@@ -77,7 +77,16 @@
   }
 
   html {
-    @apply h-full overflow-hidden;
+    @apply h-full overflow-hidden antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display tracking-tight font-semibold;
   }
 
   body {
@@ -113,8 +122,8 @@
 
 /* Custom scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -122,13 +131,15 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/20 hover:bg-muted-foreground/30;
-  border-radius: 3px;
-  transition: background-color 0.2s ease;
+  @apply bg-muted-foreground/20 hover:bg-muted-foreground/40;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: all 0.2s ease;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground/40;
+::-webkit-scrollbar-corner {
+  @apply bg-transparent;
 }
 
 /* Enhanced transitions for all interactive elements */
@@ -142,7 +153,9 @@ textarea {
 
 /* Smooth card transitions */
 .card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .card-hover:hover {
@@ -152,7 +165,6 @@ textarea {
 
 /* Loading pulse animation */
 @keyframes pulse-glow {
-
   0%,
   100% {
     opacity: 1;
@@ -234,23 +246,43 @@ textarea {
 
 /* Gradient backgrounds and modern enhancements */
 .gradient-primary {
-  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary) / 0.8) 100%
+  );
 }
 
 .gradient-success {
-  background: linear-gradient(135deg, hsl(var(--success)) 0%, hsl(var(--success) / 0.8) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--success)) 0%,
+    hsl(var(--success) / 0.8) 100%
+  );
 }
 
 .gradient-warning {
-  background: linear-gradient(135deg, hsl(var(--warning)) 0%, hsl(var(--warning) / 0.8) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--warning)) 0%,
+    hsl(var(--warning) / 0.8) 100%
+  );
 }
 
 .gradient-info {
-  background: linear-gradient(135deg, hsl(var(--info)) 0%, hsl(var(--info) / 0.8) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--info)) 0%,
+    hsl(var(--info) / 0.8) 100%
+  );
 }
 
 .gradient-destructive {
-  background: linear-gradient(135deg, hsl(var(--destructive)) 0%, hsl(var(--destructive) / 0.8) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--destructive)) 0%,
+    hsl(var(--destructive) / 0.8) 100%
+  );
 }
 
 /* Glass morphism effect */
@@ -288,7 +320,6 @@ textarea {
 
 /* Status indicator animations */
 @keyframes status-pulse {
-
   0%,
   100% {
     opacity: 1;
@@ -310,22 +341,28 @@ textarea {
 
 /* Modern card shadows */
 .card-shadow {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .card-shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .dark .card-shadow {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.3),
+    0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 .dark .card-shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.3),
+    0 4px 6px -2px rgba(0, 0, 0, 0.2);
 }
-
-
 
 @layer base {
   * {

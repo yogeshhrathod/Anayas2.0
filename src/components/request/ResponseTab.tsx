@@ -33,7 +33,12 @@ import { cn } from '../../lib/utils';
 import { useStore } from '../../store/useStore';
 import { ResponseData } from '../../types/entities';
 import { Button } from '../ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip';
 import { ResponseBodyView } from './ResponseBodyView';
 import { ResponseBothView } from './ResponseBothView';
 import { ResponseHeadersView } from './ResponseHeadersView';
@@ -160,39 +165,39 @@ export function ResponseTab({
       {/* Sub-tab Navigation - Fixed height */}
       <div className="flex-shrink-0 flex items-center justify-between gap-2 border-b border-border/50 bg-muted/20">
         <div className="flex items-center gap-2">
-        <button
-          onClick={() => setResponseSubTab('headers')}
-          className={cn(
-            'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
-            responseSubTab === 'headers'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
-          )}
-        >
-          Headers
-        </button>
-        <button
-          onClick={() => setResponseSubTab('body')}
-          className={cn(
-            'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
-            responseSubTab === 'body'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
-          )}
-        >
-          Body
-        </button>
-        <button
-          onClick={() => setResponseSubTab('both')}
-          className={cn(
-            'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
-            responseSubTab === 'both'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
-          )}
-        >
-          Both
-        </button>
+          <button
+            onClick={() => setResponseSubTab('headers')}
+            className={cn(
+              'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+              responseSubTab === 'headers'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
+            )}
+          >
+            Headers
+          </button>
+          <button
+            onClick={() => setResponseSubTab('body')}
+            className={cn(
+              'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+              responseSubTab === 'body'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
+            )}
+          >
+            Body
+          </button>
+          <button
+            onClick={() => setResponseSubTab('both')}
+            className={cn(
+              'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+              responseSubTab === 'both'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
+            )}
+          >
+            Both
+          </button>
         </div>
         <TooltipProvider>
           <Tooltip>
@@ -203,8 +208,10 @@ export function ResponseTab({
                 onClick={handleShowHistory}
                 disabled={!requestId && (!requestMethod || !requestUrl)}
                 className={cn(
-                  "p-2 hover:bg-primary/10 hover:text-primary transition-all",
-                  (requestId || (requestMethod && requestUrl)) ? "text-primary flex animate-in fade-in slide-in-from-right-2" : "text-muted-foreground opacity-50"
+                  'p-2 hover:bg-primary/10 hover:text-primary transition-all',
+                  requestId || (requestMethod && requestUrl)
+                    ? 'text-primary flex animate-in fade-in slide-in-from-right-2'
+                    : 'text-muted-foreground opacity-50'
                 )}
                 title="Show History"
               >
@@ -212,9 +219,9 @@ export function ResponseTab({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">
-              {!requestId && (!requestMethod || !requestUrl) 
-                ? "Send a request to see its history" 
-                : "View history for this request"}
+              {!requestId && (!requestMethod || !requestUrl)
+                ? 'Send a request to see its history'
+                : 'View history for this request'}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

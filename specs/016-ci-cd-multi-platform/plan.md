@@ -184,10 +184,7 @@ README.md
       "output": "release",
       "buildResources": "build"
     },
-    "files": [
-      "dist/**/*",
-      "dist-electron/**/*"
-    ],
+    "files": ["dist/**/*", "dist-electron/**/*"],
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "build/icons/icon.png",

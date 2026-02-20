@@ -159,7 +159,10 @@
     },
     "highlighting": {
       "variant": "highlighted",
-      "features": ["Visual highlighting of variables", "Context menu on right-click"]
+      "features": [
+        "Visual highlighting of variables",
+        "Context menu on right-click"
+      ]
     },
     "overlay": {
       "variant": "overlay",
@@ -178,4 +181,3 @@
     "loadTime": "No change"
   }
 }
-

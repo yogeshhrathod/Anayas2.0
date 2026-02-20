@@ -177,7 +177,7 @@ Tasks are organized by user story and phase. Tasks marked with `[P]` can be exec
 
 #### Task 6.1: Audit and improve focus & ARIA attributes
 
-- **File**: 
+- **File**:
   - `src/App.tsx`
   - `src/components/NavigationBar.tsx`
   - `src/components/CollectionHierarchy.tsx`
@@ -266,12 +266,12 @@ Tasks are organized by user story and phase. Tasks marked with `[P]` can be exec
 
 ### Sequential Tasks (high-level)
 
-1. Task 1.1 → 1.2 → 1.3  
-2. Task 2.1  
-3. Task 3.1 → 3.2 → 3.3  
-4. Task 4.1 → 4.2 → 4.3  
-5. Task 5.1 → 5.2  
-6. Task 6.1 → 6.2  
+1. Task 1.1 → 1.2 → 1.3
+2. Task 2.1
+3. Task 3.1 → 3.2 → 3.3
+4. Task 4.1 → 4.2 → 4.3
+5. Task 5.1 → 5.2
+6. Task 6.1 → 6.2
 7. Test Tasks 1–5 (as dependencies are satisfied)
 
 ### Parallel Tasks

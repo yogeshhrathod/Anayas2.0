@@ -9,15 +9,17 @@ import { ShortcutContext, ContextState } from './types';
  */
 export function detectContext(state: ContextState): ShortcutContext[] {
   const contexts: ShortcutContext[] = ['global'];
-  
+
   // Check if user is typing in an input field
   const activeElement = document.activeElement;
-  if (activeElement?.tagName === 'INPUT' || 
-      activeElement?.tagName === 'TEXTAREA' ||
-      activeElement?.getAttribute('contenteditable') === 'true') {
+  if (
+    activeElement?.tagName === 'INPUT' ||
+    activeElement?.tagName === 'TEXTAREA' ||
+    activeElement?.getAttribute('contenteditable') === 'true'
+  ) {
     return ['global']; // Only global shortcuts when typing
   }
-  
+
   // Page context
   if (state.page === 'home') {
     contexts.push('editor');
@@ -30,7 +32,7 @@ export function detectContext(state: ContextState): ShortcutContext[] {
   } else if (state.page === 'settings') {
     contexts.push('settings-page');
   }
-  
+
   // Sidebar context
   if (state.sidebarOpen && state.selectedItem.type) {
     contexts.push('sidebar');
@@ -42,14 +44,14 @@ export function detectContext(state: ContextState): ShortcutContext[] {
       contexts.push('sidebar:request');
     }
   }
-  
+
   // Focus context
   if (state.focusedContext === 'sidebar') {
     contexts.push('sidebar');
   } else if (state.focusedContext === 'editor') {
     contexts.push('editor');
   }
-  
+
   return contexts;
 }
 

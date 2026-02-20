@@ -10,7 +10,14 @@
  */
 
 import { AlertCircle, FileText, Loader2, Upload } from 'lucide-react';
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import type { Environment } from '../../types/entities';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
 import { Button } from '../ui/button';
@@ -98,7 +105,10 @@ export function EnvironmentImportDialog({
         await handleParse(content, detection.format as Format);
       } catch (error: any) {
         console.error('Failed to read file:', error);
-        showError('File read failed', error.message || 'Failed to read the selected file');
+        showError(
+          'File read failed',
+          error.message || 'Failed to read the selected file'
+        );
       }
     },
     [showError]
@@ -116,7 +126,10 @@ export function EnvironmentImportDialog({
           setImportResult(result);
           setStep('preview');
         } else {
-          showError('Import failed', result.errors.join(', ') || 'Failed to parse file');
+          showError(
+            'Import failed',
+            result.errors.join(', ') || 'Failed to parse file'
+          );
         }
       } catch (error: any) {
         console.error('Failed to parse:', error);
@@ -128,7 +141,7 @@ export function EnvironmentImportDialog({
 
   const handleConflictResolution = useCallback(
     (environmentName: string, resolution: ConflictResolution) => {
-      setConflictResolutions((prev) => {
+      setConflictResolutions(prev => {
         const next = new Map(prev);
         next.set(environmentName, resolution);
         return next;
@@ -151,11 +164,9 @@ export function EnvironmentImportDialog({
 
       for (const env of importResult.environments) {
         const conflict = importResult.conflicts.find(
-          (c) => c.environmentName === env.name
+          c => c.environmentName === env.name
         );
-        const resolution = conflict
-          ? conflictResolutions.get(env.name)
-          : null;
+        const resolution = conflict ? conflictResolutions.get(env.name) : null;
 
         if (resolution === 'skip') {
           skippedNames.add(env.name);
@@ -164,7 +175,7 @@ export function EnvironmentImportDialog({
 
         if (resolution === 'overwrite') {
           // Find existing environment and update it
-          const existing = existingEnvironments.find((e) => e.name === env.name);
+          const existing = existingEnvironments.find(e => e.name === env.name);
           if (existing?.id) {
             await window.electronAPI.env.save({
               ...env,
@@ -178,8 +189,8 @@ export function EnvironmentImportDialog({
           let newName = `${env.name}_imported`;
           let counter = 1;
           while (
-            existingEnvironments.some((e) => e.name === newName) ||
-            environmentsToImport.some((e) => e.name === newName)
+            existingEnvironments.some(e => e.name === newName) ||
+            environmentsToImport.some(e => e.name === newName)
           ) {
             newName = `${env.name}_imported_${counter}`;
             counter++;
@@ -214,11 +225,21 @@ export function EnvironmentImportDialog({
       onOpenChange(false);
     } catch (error: any) {
       console.error('Failed to import environments:', error);
-      showError('Import failed', error.message || 'Failed to import environments');
+      showError(
+        'Import failed',
+        error.message || 'Failed to import environments'
+      );
     } finally {
       setIsImporting(false);
     }
-  }, [importResult, conflictResolutions, showSuccess, showError, onSuccess, onOpenChange]);
+  }, [
+    importResult,
+    conflictResolutions,
+    showSuccess,
+    showError,
+    onSuccess,
+    onOpenChange,
+  ]);
 
   const handleBack = useCallback(() => {
     setStep('select');
@@ -228,7 +249,7 @@ export function EnvironmentImportDialog({
 
   const allConflictsResolved = useCallback(() => {
     if (!importResult || importResult.conflicts.length === 0) return true;
-    return importResult.conflicts.every((conflict) =>
+    return importResult.conflicts.every(conflict =>
       conflictResolutions.has(conflict.environmentName)
     );
   }, [importResult, conflictResolutions]);
@@ -323,7 +344,9 @@ export function EnvironmentImportDialog({
                   <p className="font-medium">Warnings</p>
                   <ul className="list-disc list-inside mt-1 text-xs">
                     {importResult.warnings.map((warning, i) => (
-                      <li key={`warning-${i}-${warning.substring(0, 20)}`}>{warning}</li>
+                      <li key={`warning-${i}-${warning.substring(0, 20)}`}>
+                        {warning}
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -360,4 +383,3 @@ export function EnvironmentImportDialog({
     </Dialog>
   );
 }
-

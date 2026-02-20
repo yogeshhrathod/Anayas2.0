@@ -14,6 +14,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Phase 1: Setup & Foundation
 
 #### Task 1.1: [Task Name]
+
 - **File**: `path/to/file.ts`
 - **Description**: [What needs to be done]
 - **Dependencies**: [Task IDs that must complete first]
@@ -21,6 +22,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 - **Status**: `pending` | `in-progress` | `completed` | `blocked`
 
 #### Task 1.2: [Task Name] `[P]`
+
 - **File**: `path/to/file.tsx`
 - **Description**: [What needs to be done]
 - **Dependencies**: Task 1.1
@@ -32,6 +34,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Phase 2: Core Implementation
 
 #### Task 2.1: [Task Name]
+
 - **File**: `path/to/file.ts`
 - **Description**: [What needs to be done]
 - **Dependencies**: Task 1.1, Task 1.2
@@ -47,6 +50,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Phase 1: [Phase Name]
 
 #### Task 2.1.1: [Task Name]
+
 - **File**: `path/to/file.ts`
 - **Description**: [What needs to be done]
 - **Dependencies**: [Task IDs]
@@ -60,6 +64,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Unit Tests
 
 #### Test Task 1: [Test Name]
+
 - **File**: `tests/path/to/test.spec.ts`
 - **Description**: [What to test]
 - **Dependencies**: [Implementation task IDs]
@@ -68,6 +73,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### Integration Tests
 
 #### Test Task 2: [Test Name]
+
 - **File**: `tests/path/to/integration.spec.ts`
 - **Description**: [What to test]
 - **Dependencies**: [Implementation task IDs]
@@ -76,6 +82,7 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ### E2E Tests
 
 #### Test Task 3: [Test Name]
+
 - **File**: `tests/path/to/e2e.spec.ts`
 - **Description**: [What to test]
 - **Dependencies**: [Implementation task IDs]
@@ -86,11 +93,13 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ## Task Execution Order
 
 ### Sequential Tasks
+
 1. Task 1.1
 2. Task 1.2 (depends on 1.1)
 3. Task 2.1 (depends on 1.1, 1.2)
 
 ### Parallel Tasks
+
 - Task 1.3 `[P]` and Task 1.4 `[P]` can run simultaneously after Task 1.2
 
 ---
@@ -110,4 +119,3 @@ Tasks are organized by user story and implementation phase. Tasks marked with `[
 ## Notes
 
 [Additional notes about task execution, blockers, or considerations]
-

@@ -1,12 +1,12 @@
 /**
  * CollectionCard - Card component for displaying collection information
- * 
+ *
  * Features:
  * - Collection details display
  * - Action menu with edit/delete/duplicate options
  * - Request count and last used information
  * - Favorite toggle
- * 
+ *
  * @example
  * ```tsx
  * <CollectionCard
@@ -21,10 +21,25 @@
  */
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Star, StarOff, FolderOpen, Calendar, Edit, Trash2, Copy, Play } from 'lucide-react';
+import {
+  Star,
+  StarOff,
+  FolderOpen,
+  Calendar,
+  Edit,
+  Trash2,
+  Copy,
+  Play,
+} from 'lucide-react';
 import { ActionMenu } from '../shared/ActionMenu';
 import { Collection } from '../../types/entities';
 
@@ -49,18 +64,39 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
   onToggleFavorite,
   onExport,
   onImport,
-  onRun
+  onRun,
 }) => {
   const actions = [
-    ...(onRun ? [{ label: 'Run Collection', icon: <Play className="h-4 w-4" />, onClick: onRun }] : []),
+    ...(onRun
+      ? [
+          {
+            label: 'Run Collection',
+            icon: <Play className="h-4 w-4" />,
+            onClick: onRun,
+          },
+        ]
+      : []),
     { type: 'separator' as const },
     { label: 'Edit', icon: <Edit className="h-4 w-4" />, onClick: onEdit },
-    { label: 'Duplicate', icon: <Copy className="h-4 w-4" />, onClick: onDuplicate },
+    {
+      label: 'Duplicate',
+      icon: <Copy className="h-4 w-4" />,
+      onClick: onDuplicate,
+    },
     { type: 'separator' as const },
-    ...(onExport ? [{ label: 'Export', icon: <span>📤</span>, onClick: onExport }] : []),
-    ...(onImport ? [{ label: 'Import', icon: <span>📥</span>, onClick: onImport }] : []),
+    ...(onExport
+      ? [{ label: 'Export', icon: <span>📤</span>, onClick: onExport }]
+      : []),
+    ...(onImport
+      ? [{ label: 'Import', icon: <span>📥</span>, onClick: onImport }]
+      : []),
     { type: 'separator' as const },
-    { label: 'Delete', icon: <Trash2 className="h-4 w-4" />, onClick: onDelete, destructive: true }
+    {
+      label: 'Delete',
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: onDelete,
+      destructive: true,
+    },
   ];
 
   const formatDate = (dateString?: string) => {
@@ -90,7 +126,11 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
               size="sm"
               onClick={onToggleFavorite}
               className="p-1 h-8 w-8"
-              aria-label={collection.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+              aria-label={
+                collection.isFavorite
+                  ? 'Remove from favorites'
+                  : 'Add to favorites'
+              }
             >
               {collection.isFavorite ? (
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -102,7 +142,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="pt-0">
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -124,7 +164,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
                 Collection Environments
               </div>
               <div className="flex flex-wrap gap-1">
-                {collection.environments.slice(0, 3).map((env) => (
+                {collection.environments.slice(0, 3).map(env => (
                   <Badge key={env.id} variant="secondary" className="text-xs">
                     {env.name}
                   </Badge>

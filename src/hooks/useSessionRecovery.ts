@@ -1,6 +1,6 @@
 /**
  * useSessionRecovery - Hook for restoring unsaved requests on app startup
- * 
+ *
  * Loads unsaved requests from database and optionally restores the last active one
  */
 
@@ -8,8 +8,8 @@ import { useEffect } from 'react';
 import { useStore } from '../store/useStore';
 
 export function useSessionRecovery() {
-  const { 
-    setUnsavedRequests, 
+  const {
+    setUnsavedRequests,
     setSelectedRequest,
     activeUnsavedRequestId,
     setCurrentPage,
@@ -23,7 +23,9 @@ export function useSessionRecovery() {
 
         // Auto-restore the last active unsaved request if it exists
         if (requests.length > 0 && activeUnsavedRequestId) {
-          const activeRequest = requests.find((r: any) => r.id === activeUnsavedRequestId);
+          const activeRequest = requests.find(
+            (r: any) => r.id === activeUnsavedRequestId
+          );
           if (activeRequest) {
             setSelectedRequest({
               id: undefined,
@@ -52,4 +54,3 @@ export function useSessionRecovery() {
 
   // Hook doesn't need to return anything, it just loads data on mount
 }
-

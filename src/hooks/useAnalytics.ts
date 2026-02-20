@@ -1,16 +1,16 @@
 /**
  * Analytics & Usage Tracking Hooks
- * 
+ *
  * Provides React hooks for tracking user actions, page views, and feature usage.
  * All tracking is sent to Sentry for analysis (disabled in development).
  */
 
 import { useCallback, useEffect, useRef } from 'react';
 import {
-    captureMessage,
-    trackApiRequest,
-    trackPageNavigation,
-    trackUserAction
+  captureMessage,
+  trackApiRequest,
+  trackPageNavigation,
+  trackUserAction,
 } from '../lib/sentry-renderer';
 
 /**
@@ -35,16 +35,19 @@ export function useFeatureTracking(featureName: string) {
     trackUserAction(`${featureName}_started`);
   }, [featureName]);
 
-  const endTracking = useCallback((success: boolean = true, data?: Record<string, unknown>) => {
-    const duration = startTimeRef.current ? 
-      Math.round(performance.now() - startTimeRef.current) : 
-      undefined;
-    
-    trackUserAction(`${featureName}_${success ? 'completed' : 'failed'}`, {
-      ...data,
-      duration_ms: duration,
-    });
-  }, [featureName]);
+  const endTracking = useCallback(
+    (success: boolean = true, data?: Record<string, unknown>) => {
+      const duration = startTimeRef.current
+        ? Math.round(performance.now() - startTimeRef.current)
+        : undefined;
+
+      trackUserAction(`${featureName}_${success ? 'completed' : 'failed'}`, {
+        ...data,
+        duration_ms: duration,
+      });
+    },
+    [featureName]
+  );
 
   return { startTracking, endTracking };
 }
@@ -54,24 +57,27 @@ export function useFeatureTracking(featureName: string) {
  * Wraps a fetch/request function with automatic tracking
  */
 export function useApiTracking() {
-  const trackRequest = useCallback(async <T>(
-    method: string,
-    url: string,
-    requestFn: () => Promise<T>
-  ): Promise<T> => {
-    const startTime = performance.now();
-    
-    try {
-      const result = await requestFn();
-      const duration = Math.round(performance.now() - startTime);
-      trackApiRequest(method, url, 200, duration);
-      return result;
-    } catch (error) {
-      const duration = Math.round(performance.now() - startTime);
-      trackApiRequest(method, url, 500, duration);
-      throw error;
-    }
-  }, []);
+  const trackRequest = useCallback(
+    async <T>(
+      method: string,
+      url: string,
+      requestFn: () => Promise<T>
+    ): Promise<T> => {
+      const startTime = performance.now();
+
+      try {
+        const result = await requestFn();
+        const duration = Math.round(performance.now() - startTime);
+        trackApiRequest(method, url, 200, duration);
+        return result;
+      } catch (error) {
+        const duration = Math.round(performance.now() - startTime);
+        trackApiRequest(method, url, 500, duration);
+        throw error;
+      }
+    },
+    []
+  );
 
   return { trackRequest };
 }
@@ -81,20 +87,32 @@ export function useApiTracking() {
  * Call specific functions when users perform actions
  */
 export function useEngagementTracking() {
-  const trackClick = useCallback((element: string, data?: Record<string, unknown>) => {
-    trackUserAction('click', { element, ...data });
-  }, []);
+  const trackClick = useCallback(
+    (element: string, data?: Record<string, unknown>) => {
+      trackUserAction('click', { element, ...data });
+    },
+    []
+  );
 
-  const trackInput = useCallback((field: string, data?: Record<string, unknown>) => {
-    trackUserAction('input', { field, ...data });
-  }, []);
+  const trackInput = useCallback(
+    (field: string, data?: Record<string, unknown>) => {
+      trackUserAction('input', { field, ...data });
+    },
+    []
+  );
 
-  const trackSubmit = useCallback((form: string, success: boolean, data?: Record<string, unknown>) => {
-    trackUserAction('form_submit', { form, success, ...data });
-  }, []);
+  const trackSubmit = useCallback(
+    (form: string, success: boolean, data?: Record<string, unknown>) => {
+      trackUserAction('form_submit', { form, success, ...data });
+    },
+    []
+  );
 
   const trackSearch = useCallback((query: string, resultsCount: number) => {
-    trackUserAction('search', { query_length: query.length, results_count: resultsCount });
+    trackUserAction('search', {
+      query_length: query.length,
+      results_count: resultsCount,
+    });
   }, []);
 
   return { trackClick, trackInput, trackSubmit, trackSearch };
@@ -118,7 +136,9 @@ export function useSessionTracking() {
 
     // Track session end on unmount/page close
     const handleUnload = () => {
-      const duration = Math.round((Date.now() - sessionStartRef.current) / 1000);
+      const duration = Math.round(
+        (Date.now() - sessionStartRef.current) / 1000
+      );
       trackUserAction('session_end', {
         duration_seconds: duration,
       });
@@ -137,7 +157,10 @@ export function useSessionTracking() {
  */
 export function useErrorTracking() {
   const trackError = useCallback((error: Error, context?: string) => {
-    captureMessage(`Error in ${context || 'unknown'}: ${error.message}`, 'error');
+    captureMessage(
+      `Error in ${context || 'unknown'}: ${error.message}`,
+      'error'
+    );
   }, []);
 
   const trackWarning = useCallback((message: string, context?: string) => {
@@ -171,14 +194,17 @@ export function useRequestBuilderTracking() {
     trackUserAction('request_auth_type', { type });
   }, []);
 
-  const trackRequestSent = useCallback((method: string, status?: number, duration?: number) => {
-    trackUserAction('request_sent', { 
-      method, 
-      status, 
-      duration_ms: duration,
-      success: status ? status < 400 : undefined
-    });
-  }, []);
+  const trackRequestSent = useCallback(
+    (method: string, status?: number, duration?: number) => {
+      trackUserAction('request_sent', {
+        method,
+        status,
+        duration_ms: duration,
+        success: status ? status < 400 : undefined,
+      });
+    },
+    []
+  );
 
   return {
     trackMethodChange,

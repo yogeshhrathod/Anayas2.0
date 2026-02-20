@@ -19,10 +19,10 @@ This feature aligns the live application with that document across four main are
 
 This spec explicitly references:
 
-- `ui-design-system.md` §§4–5 (layout & shell, navigation system)  
-- `ui-design-system.md` §7 (request builder patterns)  
-- `ui-design-system.md` §8 (response visualization patterns)  
-- `ui-design-system.md` §6 (command palette)  
+- `ui-design-system.md` §§4–5 (layout & shell, navigation system)
+- `ui-design-system.md` §7 (request builder patterns)
+- `ui-design-system.md` §8 (response visualization patterns)
+- `ui-design-system.md` §6 (command palette)
 - `ui-design-system.md` §10 (performance & accessibility)
 
 ## Goal Alignment Summary
@@ -101,8 +101,8 @@ This spec explicitly references:
 
 ### Performance Monitoring (PRIMARY)
 
-- [x] Memory usage will be tracked (before/after feature load) for new UI chunks.  
-- [x] Load time will be measured and logged via `trackFeatureLoad` or similar.  
+- [x] Memory usage will be tracked (before/after feature load) for new UI chunks.
+- [x] Load time will be measured and logged via `trackFeatureLoad` or similar.
 - [x] Performance metrics will be logged via the existing renderer logging/performance utilities.
 
 **Optional/Informational:**
@@ -200,14 +200,14 @@ This spec explicitly references:
 
 ### File Structure Changes (high-level)
 
-src/components/command/CommandPalette.tsx                # New
-src/components/request/ResponseJsonVirtualizedView.tsx  # New
-src/App.tsx                                             # Updated shell/layout
-src/components/NavigationBar.tsx                        # Updated navigation/activity bar
-src/components/CollectionHierarchy.tsx                  # Updated tree behavior
-src/components/ApiRequestBuilder.tsx                    # Updated request/response integration
-src/components/request/ResponseTab.tsx                  # Updated response stage + status bar
-src/store/useStore.ts                                   # New layout mode / pane state### Data Model Changes
+src/components/command/CommandPalette.tsx # New
+src/components/request/ResponseJsonVirtualizedView.tsx # New
+src/App.tsx # Updated shell/layout
+src/components/NavigationBar.tsx # Updated navigation/activity bar
+src/components/CollectionHierarchy.tsx # Updated tree behavior
+src/components/ApiRequestBuilder.tsx # Updated request/response integration
+src/components/request/ResponseTab.tsx # Updated response stage + status bar
+src/store/useStore.ts # New layout mode / pane state### Data Model Changes
 
 - None; this feature is UI-only and must not change DB schema or IPC contracts.
 
@@ -254,11 +254,11 @@ src/store/useStore.ts                                   # New layout mode / pane
 
 ## Risks & Mitigation
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|------------|------------|
-| Virtualization adds complexity or subtle bugs | Medium | Medium | Start with limited scope, good test coverage, and a clean fallback path to existing view |
-| Layout changes break existing tests or flows | High | Medium | Follow TDD/BDD, update tests in parallel, run full `tests/integration/` frequently |
-| Command palette scope creep | Medium | Medium | Keep initial command set constrained to this spec; new commands require separate specs |
+| Risk                                          | Impact | Probability | Mitigation                                                                               |
+| --------------------------------------------- | ------ | ----------- | ---------------------------------------------------------------------------------------- |
+| Virtualization adds complexity or subtle bugs | Medium | Medium      | Start with limited scope, good test coverage, and a clean fallback path to existing view |
+| Layout changes break existing tests or flows  | High   | Medium      | Follow TDD/BDD, update tests in parallel, run full `tests/integration/` frequently       |
+| Command palette scope creep                   | Medium | Medium      | Keep initial command set constrained to this spec; new commands require separate specs   |
 
 ## References
 

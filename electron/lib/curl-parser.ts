@@ -1,6 +1,6 @@
 /**
  * cURL Parser (Main Process)
- * 
+ *
  * Parses cURL command strings into Request objects compatible with Anayas.
  * This is a copy of the renderer version for use in the main process.
  */
@@ -48,7 +48,7 @@ export function parseCurlCommand(curlCommand: string): Request {
   }
 
   const args = parseArguments(command);
-  
+
   const result: ParseResult = {
     method: 'GET',
     url: '',
@@ -63,7 +63,7 @@ export function parseCurlCommand(curlCommand: string): Request {
   result.method = parseMethod(args);
   result.url = parseUrl(args);
   result.headers = parseHeaders(args);
-  
+
   const bodyData = parseData(args);
   if (bodyData) {
     result.body = bodyData;
@@ -151,7 +151,15 @@ function parseMethod(args: string[]): string {
     if (arg === '-X' || arg === '--request') {
       if (i + 1 < args.length) {
         const method = args[i + 1].toUpperCase();
-        const validMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+        const validMethods = [
+          'GET',
+          'POST',
+          'PUT',
+          'PATCH',
+          'DELETE',
+          'HEAD',
+          'OPTIONS',
+        ];
         if (validMethods.includes(method)) {
           return method;
         }
@@ -175,7 +183,7 @@ function parseUrl(args: string[]): string {
     if (arg.startsWith('-')) {
       continue;
     }
-    
+
     if (arg.startsWith('http://') || arg.startsWith('https://')) {
       return arg;
     }
@@ -210,7 +218,7 @@ function parseData(args: string[]): string | undefined {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    
+
     if (arg === '-d' || arg === '--data' || arg === '--data-raw') {
       if (i + 1 < args.length) {
         data = args[i + 1];
@@ -275,7 +283,13 @@ function parseAuth(
     }
   }
 
-  const apiKeyHeaders = ['X-API-Key', 'X-Api-Key', 'API-Key', 'apikey', 'x-api-key'];
+  const apiKeyHeaders = [
+    'X-API-Key',
+    'X-Api-Key',
+    'API-Key',
+    'apikey',
+    'x-api-key',
+  ];
   for (const key of apiKeyHeaders) {
     if (headers[key] || headers[key.toLowerCase()]) {
       const value = headers[key] || headers[key.toLowerCase()];
@@ -290,7 +304,9 @@ function parseAuth(
   return auth;
 }
 
-function parseQueryParams(url: string): Array<{ key: string; value: string; enabled: boolean }> {
+function parseQueryParams(
+  url: string
+): Array<{ key: string; value: string; enabled: boolean }> {
   try {
     const urlObj = new URL(url);
     const params: Array<{ key: string; value: string; enabled: boolean }> = [];
@@ -313,13 +329,16 @@ function generateRequestName(method: string, url: string): string {
   try {
     const urlObj = new URL(url);
     const path = urlObj.pathname.split('/').filter(Boolean).pop() || 'request';
-    return `${method} ${path}`;
+    return path;
   } catch (e) {
-    return `${method} Request`;
+    return 'Request';
   }
 }
 
-export function parseCurlCommands(commands: string[]): Array<{ success: boolean; request?: Request; error?: string }> {
+
+export function parseCurlCommands(
+  commands: string[]
+): Array<{ success: boolean; request?: Request; error?: string }> {
   return commands.map((command, index) => {
     try {
       const request = parseCurlCommand(command);
@@ -332,4 +351,3 @@ export function parseCurlCommands(commands: string[]): Array<{ success: boolean;
     }
   });
 }
-

@@ -307,14 +307,17 @@ Tasks organized by implementation phase.
 ### Files Created/Modified
 
 **New Files:**
+
 - `build/icons/icon.png` - Application icon
 
 **Modified Files:**
+
 - `package.json` - Added build configuration and scripts
 - `README.md` - Added build instructions and troubleshooting
 - `.gitignore` - Verified build output ignored
 
 **Generated Files (in release/):**
+
 - macOS: DMG, ZIP
 - Windows: NSIS (.exe), ZIP
 - Linux: AppImage, DEB

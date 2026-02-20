@@ -131,20 +131,23 @@ tests/integration/
 Each IPC handler test follows this pattern:
 
 ```typescript
-test('handler-name - should [description]', async ({ electronPage, testDbPath }) => {
+test('handler-name - should [description]', async ({
+  electronPage,
+  testDbPath,
+}) => {
   // 1. Setup
   const beforeState = await captureState(electronPage, testDbPath);
-  
+
   // 2. Execute
   const result = await electronPage.evaluate(async () => {
     return await window.electronAPI.handler.method(...args);
   });
-  
+
   // 3. Verify
   expect(result).toMatchExpected();
   const afterState = await captureState(electronPage, testDbPath);
   expect(afterState).toMatchExpected();
-  
+
   // 4. Debug (automatic on failure)
   await captureDebugInfo(electronPage, testDbPath, 'handler-name');
 });
@@ -155,23 +158,32 @@ test('handler-name - should [description]', async ({ electronPage, testDbPath })
 Each rendering test follows this pattern:
 
 ```typescript
-test('should render [component] after [action]', async ({ electronPage, testDbPath }) => {
+test('should render [component] after [action]', async ({
+  electronPage,
+  testDbPath,
+}) => {
   // 1. Capture initial render state
-  const beforeRender = await captureComponentState(electronPage, 'ComponentName');
-  
+  const beforeRender = await captureComponentState(
+    electronPage,
+    'ComponentName'
+  );
+
   // 2. Trigger action (IPC call or UI interaction)
   await triggerAction(electronPage);
-  
+
   // 3. Wait for re-render
   await waitForRender(electronPage);
-  
+
   // 4. Verify render updated
-  const afterRender = await captureComponentState(electronPage, 'ComponentName');
+  const afterRender = await captureComponentState(
+    electronPage,
+    'ComponentName'
+  );
   expect(afterRender).toMatchExpected();
-  
+
   // 5. Verify DOM updated
   await expect(element).toBeVisible();
-  
+
   // 6. Debug (automatic on failure)
   await captureDebugInfo(electronPage, testDbPath, 'rendering');
 });
@@ -182,25 +194,28 @@ test('should render [component] after [action]', async ({ electronPage, testDbPa
 Each data flow test follows this pattern:
 
 ```typescript
-test('should complete flow: [description]', async ({ electronPage, testDbPath }) => {
+test('should complete flow: [description]', async ({
+  electronPage,
+  testDbPath,
+}) => {
   // 1. UI Action
   await performUIAction(electronPage);
-  
+
   // 2. Verify IPC called
   const ipcLogs = await captureIPCLogs(electronPage);
   expect(ipcLogs).toContain('expected-handler');
-  
+
   // 3. Verify database updated
   const dbState = getDatabaseContents(testDbPath);
   expect(dbState).toMatchExpected();
-  
+
   // 4. Verify UI updated
   await expect(uiElement).toMatchExpected();
-  
+
   // 5. Verify store updated
   const storeState = await captureZustandState(electronPage);
   expect(storeState).toMatchExpected();
-  
+
   // 6. Debug (automatic on failure)
   await generateFullCycleReport(electronPage, testDbPath);
 });

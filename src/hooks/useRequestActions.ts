@@ -192,9 +192,10 @@ export function useRequestActions(requestData: RequestFormData) {
             auth: requestData.auth,
             lastResponse: response,
           });
-          
+
           // Refresh unsaved requests list to ensure consistency
-          const updatedUnsaved = await window.electronAPI.unsavedRequest.getAll();
+          const updatedUnsaved =
+            await window.electronAPI.unsavedRequest.getAll();
           useStore.getState().setUnsavedRequests(updatedUnsaved);
         } catch (error) {
           console.error('Failed to save response for unsaved request:', error);

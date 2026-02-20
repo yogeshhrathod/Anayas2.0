@@ -10,7 +10,10 @@ export async function assertRendered(
   message?: string
 ): Promise<void> {
   const element = page.locator(selector);
-  await expect(element, message || `Element ${selector} should be rendered`).toBeVisible();
+  await expect(
+    element,
+    message || `Element ${selector} should be rendered`
+  ).toBeVisible();
 }
 
 /**
@@ -23,7 +26,9 @@ export function assertStateUpdated(
 ): void {
   for (const [key, expectedValue] of Object.entries(expectedChanges)) {
     const actualValue = after[key];
-    expect(actualValue, `State ${key} should be updated`).toEqual(expectedValue);
+    expect(actualValue, `State ${key} should be updated`).toEqual(
+      expectedValue
+    );
   }
 }
 
@@ -39,7 +44,7 @@ export function assertDataPersisted(
   if (!dbContents) {
     throw new Error('Database not found');
   }
-  
+
   const collectionData = dbContents[collection] || [];
   const found = collectionData.find((item: any) => {
     // Try to match by id if available
@@ -52,7 +57,7 @@ export function assertDataPersisted(
     }
     return false;
   });
-  
+
   expect(found, `Data should be persisted in ${collection}`).toBeDefined();
 }
 
@@ -65,7 +70,10 @@ export async function assertUIUpdated(
   expectedText: string | RegExp
 ): Promise<void> {
   const element = page.locator(selector);
-  await expect(element, `UI element ${selector} should show ${expectedText}`).toContainText(expectedText);
+  await expect(
+    element,
+    `UI element ${selector} should show ${expectedText}`
+  ).toContainText(expectedText);
 }
 
 /**
@@ -82,7 +90,7 @@ export async function assertComponentMounted(
     `.${componentName}`,
     `#${componentName}`,
   ];
-  
+
   let found = false;
   for (const selector of selectors) {
     const element = page.locator(selector);
@@ -92,7 +100,7 @@ export async function assertComponentMounted(
       break;
     }
   }
-  
+
   expect(found, `Component ${componentName} should be mounted`).toBe(true);
 }
 
@@ -104,15 +112,17 @@ export async function assertStoreUpdated(
   storeKey: string,
   expectedValue: any
 ): Promise<void> {
-  const storeState = await page.evaluate((key) => {
+  const storeState = await page.evaluate(key => {
     const store = (window as any).__ZUSTAND_STORE__;
     if (store) {
       return store.getState()[key];
     }
     return null;
   }, storeKey);
-  
-  expect(storeState, `Store key ${storeKey} should be updated`).toEqual(expectedValue);
+
+  expect(storeState, `Store key ${storeKey} should be updated`).toEqual(
+    expectedValue
+  );
 }
 
 /**
@@ -128,11 +138,14 @@ export function assertDatabaseContains(
   if (!dbContents) {
     throw new Error('Database not found');
   }
-  
+
   const collectionData = dbContents[collection] || [];
   const found = collectionData.find(predicate);
-  
-  expect(found, message || `Database ${collection} should contain expected data`).toBeDefined();
+
+  expect(
+    found,
+    message || `Database ${collection} should contain expected data`
+  ).toBeDefined();
 }
 
 /**
@@ -147,8 +160,10 @@ export function assertDatabaseCount(
   if (!dbContents) {
     throw new Error('Database not found');
   }
-  
-  const collectionData = dbContents[collection] || [];
-  expect(collectionData.length, `Database ${collection} should have ${expectedCount} items`).toBe(expectedCount);
-}
 
+  const collectionData = dbContents[collection] || [];
+  expect(
+    collectionData.length,
+    `Database ${collection} should have ${expectedCount} items`
+  ).toBe(expectedCount);
+}

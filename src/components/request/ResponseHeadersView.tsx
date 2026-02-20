@@ -21,16 +21,21 @@
 import { Check, Clock, Copy, Download } from 'lucide-react';
 import React, { useState } from 'react';
 import {
-    formatResponseTime,
-    getHeaderEntries,
-    getStatusDisplay,
-    getStatusVariant,
-    hasHeaders,
+  formatResponseTime,
+  getHeaderEntries,
+  getStatusDisplay,
+  getStatusVariant,
+  hasHeaders,
 } from '../../lib/response-utils';
 import { ResponseData } from '../../types/entities';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip';
 
 export interface ResponseHeadersViewProps {
   response: ResponseData | null;
@@ -95,7 +100,12 @@ export const ResponseHeadersView: React.FC<ResponseHeadersViewProps> = ({
             {onCopy && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={onCopy} className="px-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onCopy}
+                    className="px-2"
+                  >
                     <Copy className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
@@ -105,7 +115,12 @@ export const ResponseHeadersView: React.FC<ResponseHeadersViewProps> = ({
             {onDownload && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={onDownload} className="px-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onDownload}
+                    className="px-2"
+                  >
                     <Download className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>

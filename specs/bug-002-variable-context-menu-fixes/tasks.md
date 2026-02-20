@@ -8,6 +8,7 @@
 ## Task Breakdown
 
 ### Task 1: Add Click-Outside Handling to Context Menu
+
 **Status**: `completed`  
 **File**: `src/components/ui/variable-input-unified.tsx`
 
@@ -17,6 +18,7 @@
 - [x] Apply to both `highlighted` and `overlay` variants
 
 ### Task 2: Update VariableContextMenu to Accept Ref
+
 **Status**: `completed`  
 **File**: `src/components/ui/variable-context-menu.tsx`
 
@@ -27,6 +29,7 @@
 - [x] Add `displayName` for debugging
 
 ### Task 3: Hide Copy Value for Dynamic Variables
+
 **Status**: `completed`  
 **File**: `src/components/ui/variable-context-menu.tsx`
 
@@ -36,6 +39,7 @@
 - [x] Test with non-dynamic resolved variables (copy button visible)
 
 ### Task 4: Testing and Verification
+
 **Status**: `completed`
 
 - [x] Test context menu closes on outside click

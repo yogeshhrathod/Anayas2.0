@@ -38,7 +38,7 @@ export function JsonEditor({
   height = 400,
   readOnly = false,
   minimap = true,
-  fontSize = 14
+  fontSize = 14,
 }: JsonEditorProps) {
   const [isValid, setIsValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -137,7 +137,7 @@ export function JsonEditor({
         <div className="space-y-2">
           <Textarea
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={e => onChange(e.target.value)}
             placeholder={placeholder}
             rows={rows}
             className={`font-mono text-sm resize-none ${

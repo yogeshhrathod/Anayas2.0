@@ -9,10 +9,11 @@
 
 ### Issue 1: Context Menu Not Closing on Outside Click
 
-**Root Cause**: 
+**Root Cause**:
 The `VariableContextMenu` component was rendered without any mechanism to detect outside clicks. The `VariableInputUnified` component (which replaced `OverlayVariableInput`) did not integrate the context menu with the `useClickOutside` hook that was already available in the codebase.
 
 **Why it happened**:
+
 - During the consolidation of variable input components, the context menu was ported but the click-outside handling was not properly integrated
 - The original `HighlightedVariableInput` had `useClickOutside` for both autocomplete and context menu, but this was not carried over to the unified component
 
@@ -22,6 +23,7 @@ The `VariableContextMenu` component was rendered without any mechanism to detect
 The `VariableContextMenu` component only checked if a variable was resolved (`isResolved`), but didn't distinguish between static and dynamic variables. Dynamic variables (starting with `$`) always have resolved values since they're generated at runtime, but copying these values is useless since they change on each request.
 
 **Why it happened**:
+
 - The component logic was: "Show copy value if variable is resolved"
 - Dynamic variables are always resolved (they generate values immediately)
 - No check was made to exclude dynamic variables from showing the copy button
@@ -31,16 +33,19 @@ The `VariableContextMenu` component only checked if a variable was resolved (`is
 ### Fix 1: Add Click-Outside Handling
 
 **Approach**:
+
 1. Add a ref (`contextMenuRef`) to track the context menu element
 2. Use the existing `useClickOutside` hook to detect outside clicks
 3. Update `VariableContextMenu` to accept a ref using React's `forwardRef`
 4. Apply the hook to close the menu when clicking outside
 
 **Files to Modify**:
+
 - `src/components/ui/variable-input-unified.tsx`
 - `src/components/ui/variable-context-menu.tsx`
 
 **Implementation Details**:
+
 - Import `useClickOutside` hook
 - Create `contextMenuRef` using `useRef<HTMLDivElement>(null)`
 - Call `useClickOutside(contextMenuRef, () => setShowContextMenu(false), showContextMenu)`
@@ -50,14 +55,17 @@ The `VariableContextMenu` component only checked if a variable was resolved (`is
 ### Fix 2: Hide Copy Value for Dynamic Variables
 
 **Approach**:
+
 1. Detect if variable is dynamic (starts with `$`)
 2. Update the condition to exclude dynamic variables from showing copy value button
 3. Change from `isResolved` to `isResolved && !isDynamic`
 
 **Files to Modify**:
+
 - `src/components/ui/variable-context-menu.tsx`
 
 **Implementation Details**:
+
 - Add `const isDynamic = variableName.startsWith('$');`
 - Change condition from `{isResolved && (` to `{isResolved && !isDynamic && (`
 
@@ -75,6 +83,7 @@ The `VariableContextMenu` component only checked if a variable was resolved (`is
 ## Testing Plan
 
 ### Test Case 1: Context Menu Closes on Outside Click
+
 - [x] Right-click on variable in overlay variant
 - [x] Click outside menu → Menu closes
 - [x] Press Escape → Menu closes
@@ -82,6 +91,7 @@ The `VariableContextMenu` component only checked if a variable was resolved (`is
 - [x] Test in highlighted variant → Same behavior
 
 ### Test Case 2: Copy Value Hidden for Dynamic Variables
+
 - [x] Right-click `{{$timestamp}}` → No copy value button
 - [x] Right-click `{{$randomInt}}` → No copy value button
 - [x] Right-click `{{$guid}}` → No copy value button
@@ -90,7 +100,8 @@ The `VariableContextMenu` component only checked if a variable was resolved (`is
 
 ## Risk Assessment
 
-**Low Risk**: 
+**Low Risk**:
+
 - Changes are isolated to context menu component
 - No breaking changes to API
 - Backward compatible

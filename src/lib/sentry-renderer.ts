@@ -1,9 +1,9 @@
 /**
  * Sentry Configuration for Renderer Process (React Frontend)
- * 
+ *
  * This module initializes Sentry for the Electron renderer process,
  * providing error tracking and performance monitoring for the React UI.
- * 
+ *
  * In development: Disabled to keep console clean
  * In production: Enabled for comprehensive error tracking (unless user opts out)
  */
@@ -11,15 +11,12 @@
 import * as Sentry from '@sentry/electron/renderer';
 
 // Check if we're in development mode (Vite injects these at build time)
-// @ts-expect-error - Vite injects import.meta.env
-const isDev = import.meta.env?.DEV || 
-              // @ts-expect-error - Vite injects import.meta.env
-              import.meta.env?.MODE === 'development';
+const isDev =
+  (import.meta as any).env?.DEV ||
+  (import.meta as any).env?.MODE === 'development';
 
 // Get Sentry DSN from environment variable (Vite injects at build time)
-// @ts-expect-error - Vite injects import.meta.env
-const SENTRY_DSN = import.meta.env?.VITE_SENTRY_DSN;
-
+const SENTRY_DSN = (import.meta as any).env?.VITE_SENTRY_DSN;
 
 // Track telemetry state
 let sentryInitialized = false;
@@ -58,19 +55,25 @@ export async function initSentryRenderer(): Promise<void> {
 
   // Skip if no DSN configured
   if (!SENTRY_DSN) {
-    console.warn('[Sentry Renderer] No VITE_SENTRY_DSN configured - tracking disabled');
+    console.warn(
+      '[Sentry Renderer] No VITE_SENTRY_DSN configured - tracking disabled'
+    );
     return;
   }
 
   // Check if user has disabled telemetry
   telemetryEnabled = checkTelemetryEnabled();
   if (!telemetryEnabled) {
-    console.log('[Sentry Renderer] User has disabled telemetry - tracking disabled');
+    console.log(
+      '[Sentry Renderer] User has disabled telemetry - tracking disabled'
+    );
     return;
   }
 
   try {
-    const appVersion = await window.electronAPI.app.getVersion().catch(() => '0.0.1');
+    const appVersion = await window.electronAPI.app
+      .getVersion()
+      .catch(() => '0.0.1');
 
     Sentry.init({
       dsn: SENTRY_DSN,
@@ -97,7 +100,7 @@ export async function initSentryRenderer(): Promise<void> {
       integrations: [
         // Capture React component errors
         Sentry.browserTracingIntegration(),
-        
+
         // Capture React error boundaries (replay for context)
         Sentry.replayIntegration({
           // Mask all text for privacy
@@ -123,17 +126,18 @@ export async function initSentryRenderer(): Promise<void> {
         // Filter out common non-actionable errors
         if (error instanceof Error) {
           const message = error.message.toLowerCase();
-          
+
           // Network errors that are usually user's connection issues
-          if (message.includes('network error') ||
-              message.includes('failed to fetch') ||
-              message.includes('load failed')) {
+          if (
+            message.includes('network error') ||
+            message.includes('failed to fetch') ||
+            message.includes('load failed')
+          ) {
             return null;
           }
 
           // User-initiated cancellations
-          if (message.includes('aborted') ||
-              message.includes('cancelled')) {
+          if (message.includes('aborted') || message.includes('cancelled')) {
             return null;
           }
         }
@@ -146,7 +150,10 @@ export async function initSentryRenderer(): Promise<void> {
         // Don't log XHR/fetch to avoid noise
         if (breadcrumb.category === 'xhr' || breadcrumb.category === 'fetch') {
           // Only keep failed requests
-          if (breadcrumb.data?.status_code && breadcrumb.data.status_code < 400) {
+          if (
+            breadcrumb.data?.status_code &&
+            breadcrumb.data.status_code < 400
+          ) {
             return null;
           }
         }
@@ -166,8 +173,10 @@ export async function initSentryRenderer(): Promise<void> {
  */
 export function setRendererTelemetryEnabled(enabled: boolean): void {
   telemetryEnabled = enabled;
-  console.log(`[Sentry Renderer] Telemetry ${enabled ? 'enabled' : 'disabled'} by user`);
-  
+  console.log(
+    `[Sentry Renderer] Telemetry ${enabled ? 'enabled' : 'disabled'} by user`
+  );
+
   // When disabled, we just set the flag - the beforeSend hook will prevent events from being sent
   // Note: Sentry SDK doesn't have a close() method in renderer, so we rely on beforeSend filtering
   if (!enabled) {
@@ -186,13 +195,16 @@ function isSentryActive(): boolean {
  * Set React Error Boundary handler
  * Call this to capture React component errors
  */
-export function captureReactError(error: Error, errorInfo: { componentStack?: string }): void {
+export function captureReactError(
+  error: Error,
+  errorInfo: { componentStack?: string }
+): void {
   if (!isSentryActive()) {
     if (isDev) console.error('[Sentry Dev] React Error:', error, errorInfo);
     return;
   }
 
-  Sentry.withScope((scope) => {
+  Sentry.withScope(scope => {
     scope.setExtras({
       componentStack: errorInfo.componentStack,
     });
@@ -203,7 +215,10 @@ export function captureReactError(error: Error, errorInfo: { componentStack?: st
 /**
  * Track user action for analytics
  */
-export function trackUserAction(action: string, data?: Record<string, unknown>): void {
+export function trackUserAction(
+  action: string,
+  data?: Record<string, unknown>
+): void {
   if (!isSentryActive()) {
     if (isDev) console.log(`[Sentry Dev] User action: ${action}`, data);
     return;
@@ -234,9 +249,9 @@ export function trackPageNavigation(page: string): void {
  * Track API request for debugging
  */
 export function trackApiRequest(
-  method: string, 
-  url: string, 
-  status?: number, 
+  method: string,
+  url: string,
+  status?: number,
   duration?: number
 ): void {
   if (!isSentryActive()) return;
@@ -252,13 +267,16 @@ export function trackApiRequest(
 /**
  * Capture a custom error with context
  */
-export function captureError(error: Error, context?: Record<string, unknown>): void {
+export function captureError(
+  error: Error,
+  context?: Record<string, unknown>
+): void {
   if (!isSentryActive()) {
     if (isDev) console.error('[Sentry Dev]', error, context);
     return;
   }
 
-  Sentry.withScope((scope) => {
+  Sentry.withScope(scope => {
     if (context) {
       scope.setExtras(context);
     }
@@ -270,7 +288,7 @@ export function captureError(error: Error, context?: Record<string, unknown>): v
  * Capture a message
  */
 export function captureMessage(
-  message: string, 
+  message: string,
   level: 'info' | 'warning' | 'error' = 'info'
 ): void {
   if (!isSentryActive()) {

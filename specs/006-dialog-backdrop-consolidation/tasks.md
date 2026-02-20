@@ -8,6 +8,7 @@
 ## Task Breakdown
 
 ### Task 1: Extend Dialog Component to Support Custom Headers
+
 **Status**: `completed`  
 **File**: `src/components/ui/dialog.tsx`
 
@@ -17,6 +18,7 @@
 - [x] Test with custom headers
 
 ### Task 2: Migrate InputDialog to Base Dialog
+
 **Status**: `completed`  
 **File**: `src/components/ui/input-dialog.tsx`
 
@@ -27,6 +29,7 @@
 - [x] Verify no regressions
 
 ### Task 3: Migrate SaveRequestDialog to Dialog
+
 **Status**: `completed`  
 **File**: `src/components/ui/save-request-dialog.tsx`
 
@@ -37,6 +40,7 @@
 - [x] Verify no regressions
 
 ### Task 4: Migrate PromoteRequestDialog to Dialog
+
 **Status**: `completed`  
 **File**: `src/components/ui/promote-request-dialog.tsx`
 
@@ -47,6 +51,7 @@
 - [x] Verify no regressions
 
 ### Task 5: Migrate BulkEditModal to Dialog
+
 **Status**: `completed`  
 **File**: `src/components/ui/bulk-edit-modal.tsx`
 
@@ -57,6 +62,7 @@
 - [x] Verify no regressions
 
 ### Task 6: Migrate CurlImportDialog to Dialog
+
 **Status**: `completed`  
 **File**: `src/components/curl/CurlImportDialog.tsx`
 
@@ -68,6 +74,7 @@
 - [x] Verify no regressions
 
 ### Task 7: Migrate CollectionRunner to Dialog
+
 **Status**: `completed`  
 **File**: `src/components/collection/CollectionRunner.tsx`
 
@@ -78,6 +85,7 @@
 - [x] Verify no regressions
 
 ### Task 8: Migrate RequestPresets to Dialog
+
 **Status**: `completed`  
 **File**: `src/components/request/RequestPresets.tsx`
 
@@ -88,6 +96,7 @@
 - [x] Verify no regressions
 
 ### Task 9: Migrate ShortcutHelp to Dialog
+
 **Status**: `completed`  
 **File**: `src/components/ShortcutHelp.tsx`
 
@@ -98,6 +107,7 @@
 - [x] Verify no regressions
 
 ### Task 10: Migrate History Dialog to Dialog
+
 **Status**: `completed`  
 **File**: `src/pages/History.tsx`
 
@@ -108,6 +118,7 @@
 - [x] Verify no regressions
 
 ### Task 11: Testing and Verification
+
 **Status**: `completed`
 
 - [x] Test all 10 dialogs open/close correctly
@@ -121,6 +132,7 @@
 - [x] Verify no visual regressions
 
 ### Task 12: Documentation Update
+
 **Status**: `completed`
 
 - [x] Update `common-utils.md` with Dialog documentation

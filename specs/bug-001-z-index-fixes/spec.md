@@ -99,7 +99,7 @@ N/A - Visual layering issues that need to be observed in the UI
 
 - **Users Affected**: All users
 - **Workaround Available**: No - this is a fundamental UI layering issue
-- **Business Impact**: 
+- **Business Impact**:
   - Poor user experience due to UI elements appearing in wrong order
   - Dialogs may be unusable if overlays appear on top
   - Dropdowns in dialogs may not be accessible

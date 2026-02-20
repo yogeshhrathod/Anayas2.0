@@ -3,4 +3,3 @@ export const DEFAULT_UI_FONT_STACK =
 
 export const DEFAULT_CODE_FONT_STACK =
   '"SFMono-Regular", "Fira Code", "Menlo", "Consolas", "Liberation Mono", "Courier New", monospace';
-

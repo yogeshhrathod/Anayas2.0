@@ -11,7 +11,11 @@ export function ThemeManager() {
 
   useEffect(() => {
     const applyCurrentTheme = () => {
-      const themeToApply = resolveTheme(themeMode, currentThemeId, customThemes);
+      const themeToApply = resolveTheme(
+        themeMode,
+        currentThemeId,
+        customThemes
+      );
       applyTheme(themeToApply);
     };
 

@@ -78,4 +78,3 @@
 ## Notes
 
 [Additional notes, questions, or considerations]
-

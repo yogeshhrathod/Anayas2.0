@@ -34,32 +34,32 @@ This directory contains feature specifications and bug reports following the spe
 
 ## Feature List
 
-| ID | Feature Name | Status | Phase | Owner |
-|----|--------------|--------|-------|-------|
-| `001-curl-import-export` | [curl-import-export](specs/001-curl-import-export/spec.md) | `completed` | Phase 3: Import/Export & Interoperability (plan-timeline.md) | Development Team |
-| `002-environment-inheritance-and-overrides` | [environment-inheritance-and-overrides](specs/002-environment-inheritance-and-overrides/spec.md) | `completed` | Phase 2: Essential Features (plan-timeline.md) | Development Team |
+| ID                                          | Feature Name                                                                                     | Status      | Phase                                                                     | Owner            |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------- | ---------------- |
+| `001-curl-import-export`                    | [curl-import-export](specs/001-curl-import-export/spec.md)                                       | `completed` | Phase 3: Import/Export & Interoperability (plan-timeline.md)              | Development Team |
+| `002-environment-inheritance-and-overrides` | [environment-inheritance-and-overrides](specs/002-environment-inheritance-and-overrides/spec.md) | `completed` | Phase 2: Essential Features (plan-timeline.md)                            | Development Team |
 | `003-performance-optimization-lazy-loading` | [performance-optimization-lazy-loading](specs/003-performance-optimization-lazy-loading/spec.md) | `completed` | Phase 4: Advanced Features - Performance Optimizations (plan-timeline.md) | Development Team |
-| `004-reusable-click-outside-hook` | [reusable-click-outside-hook](specs/004-reusable-click-outside-hook/spec.md) | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact) | Development Team |
-| `006-dialog-backdrop-consolidation` | [dialog-backdrop-consolidation](specs/006-dialog-backdrop-consolidation/spec.md) | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact) | Development Team |
-| `007-form-validation-consolidation` | [form-validation-consolidation](specs/007-form-validation-consolidation/spec.md) | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact) | Development Team |
-| `008-comprehensive-test-suite` | [comprehensive-test-suite](specs/008-comprehensive-test-suite/spec.md) | `completed` | Infrastructure & Quality Assurance | Development Team |
-| `010-vscode-style-sidebar` | [vscode-style-sidebar](specs/010-vscode-style-sidebar/spec.md) | `completed` | Phase 1 - Core UI Improvements | Development Team |
-| `011-response-tab-redesign` | [response-tab-redesign](specs/011-response-tab-redesign/spec.md) | `completed` | Phase 2 - Core Features Enhancement | Development Team |
-| `012-ui-design-system-alignment` | [ui-design-system-alignment](specs/012-ui-design-system-alignment/spec.md) | `planned` | [UI & DX polish phase in `plan-timeline.md` – to be finalized] | [TBD] |
-| `013-font-settings` | [font-settings](specs/013-font-settings/spec.md) | `completed` |  | @yrathod |
-| `005-variable-input-consolidation` | [variable-input-consolidation](specs/005-variable-input-consolidation/spec.md) | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact) | Development Team |
-| `014-postman-collection-import` | [postman-collection-import](specs/014-postman-collection-import/spec.md) | `completed` | Phase 3: Import/Export & Interoperability (plan-timeline.md) | Development Team |
-| `016-ci-cd-multi-platform` | [ci-cd-multi-platform](specs/016-ci-cd-multi-platform/spec.md) | `completed` | Infrastructure & DevOps | Development Team |
-| `015-environment-import-export` | [environment-import-export](specs/015-environment-import-export/spec.md) | `completed` | Phase 3: Import/Export & Interoperability (plan-timeline.md) | Development Team |
+| `004-reusable-click-outside-hook`           | [reusable-click-outside-hook](specs/004-reusable-click-outside-hook/spec.md)                     | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact)                   | Development Team |
+| `006-dialog-backdrop-consolidation`         | [dialog-backdrop-consolidation](specs/006-dialog-backdrop-consolidation/spec.md)                 | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact)                   | Development Team |
+| `007-form-validation-consolidation`         | [form-validation-consolidation](specs/007-form-validation-consolidation/spec.md)                 | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact)                   | Development Team |
+| `008-comprehensive-test-suite`              | [comprehensive-test-suite](specs/008-comprehensive-test-suite/spec.md)                           | `completed` | Infrastructure & Quality Assurance                                        | Development Team |
+| `010-vscode-style-sidebar`                  | [vscode-style-sidebar](specs/010-vscode-style-sidebar/spec.md)                                   | `completed` | Phase 1 - Core UI Improvements                                            | Development Team |
+| `011-response-tab-redesign`                 | [response-tab-redesign](specs/011-response-tab-redesign/spec.md)                                 | `completed` | Phase 2 - Core Features Enhancement                                       | Development Team |
+| `012-ui-design-system-alignment`            | [ui-design-system-alignment](specs/012-ui-design-system-alignment/spec.md)                       | `planned`   | [UI & DX polish phase in `plan-timeline.md` – to be finalized]            | [TBD]            |
+| `013-font-settings`                         | [font-settings](specs/013-font-settings/spec.md)                                                 | `completed` |                                                                           | @yrathod         |
+| `005-variable-input-consolidation`          | [variable-input-consolidation](specs/005-variable-input-consolidation/spec.md)                   | `completed` | Phase 2: Code Duplication Consolidation (Medium Impact)                   | Development Team |
+| `014-postman-collection-import`             | [postman-collection-import](specs/014-postman-collection-import/spec.md)                         | `completed` | Phase 3: Import/Export & Interoperability (plan-timeline.md)              | Development Team |
+| `016-ci-cd-multi-platform`                  | [ci-cd-multi-platform](specs/016-ci-cd-multi-platform/spec.md)                                   | `completed` | Infrastructure & DevOps                                                   | Development Team |
+| `015-environment-import-export`             | [environment-import-export](specs/015-environment-import-export/spec.md)                         | `completed` | Phase 3: Import/Export & Interoperability (plan-timeline.md)              | Development Team |
 
 ## Bug List
 
-| ID | Bug Name | Status | Severity | Priority | Related Feature | Assignee |
-|----|----------|--------|----------|----------|-----------------|----------|
-| `bug-001-z-index-fixes` | [z-index-fixes](specs/bug-001-z-index-fixes/spec.md) | `resolved` | `high` | `P1` | N/A (Infrastructure/UI Fix) | Development Team |
-| `bug-002-variable-context-menu-fixes` | [variable-context-menu-fixes](specs/bug-002-variable-context-menu-fixes/spec.md) | `resolved` | `medium` | `P1` | `specs/005-variable-input-consolidation/` (Variable Input Components Consolidation) | Development Team |
-| `bug-003-sidebar-collection-collapse` | [sidebar-collection-collapse](specs/bug-003-sidebar-collection-collapse/spec.md) | `resolved` | `medium` | `P2` | Collections Management (Phase 2) | Development Team |
-| `bug-004-font-settings-not-applied` | [font-settings-not-applied](specs/bug-004-font-settings-not-applied/spec.md) | `resolved` | `medium` | `P1` | `specs/013-font-settings/` (Font Settings) | Development Team |
+| ID                                    | Bug Name                                                                         | Status     | Severity | Priority | Related Feature                                                                     | Assignee         |
+| ------------------------------------- | -------------------------------------------------------------------------------- | ---------- | -------- | -------- | ----------------------------------------------------------------------------------- | ---------------- |
+| `bug-001-z-index-fixes`               | [z-index-fixes](specs/bug-001-z-index-fixes/spec.md)                             | `resolved` | `high`   | `P1`     | N/A (Infrastructure/UI Fix)                                                         | Development Team |
+| `bug-002-variable-context-menu-fixes` | [variable-context-menu-fixes](specs/bug-002-variable-context-menu-fixes/spec.md) | `resolved` | `medium` | `P1`     | `specs/005-variable-input-consolidation/` (Variable Input Components Consolidation) | Development Team |
+| `bug-003-sidebar-collection-collapse` | [sidebar-collection-collapse](specs/bug-003-sidebar-collection-collapse/spec.md) | `resolved` | `medium` | `P2`     | Collections Management (Phase 2)                                                    | Development Team |
+| `bug-004-font-settings-not-applied`   | [font-settings-not-applied](specs/bug-004-font-settings-not-applied/spec.md)     | `resolved` | `medium` | `P1`     | `specs/013-font-settings/` (Font Settings)                                          | Development Team |
 
 ## Creating Items
 
@@ -90,8 +90,8 @@ To update this index after creating or modifying features/bugs:
 ## Integration with plan-timeline.md
 
 Features should be linked to phases in `plan-timeline.md`. When creating a feature:
+
 1. Reference the phase in the spec.md `Phase` field
 2. Update plan-timeline.md when the feature is completed
 
 Bug fixes can be linked to maintenance phases in plan-timeline.md.
-

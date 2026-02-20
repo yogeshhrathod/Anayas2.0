@@ -1,12 +1,12 @@
 /**
  * Collections - Refactored Collections page using smaller components
- * 
+ *
  * Features:
  * - Collection management (CRUD operations)
  * - Search and filtering
  * - Import/Export functionality
  * - Responsive grid layout
- * 
+ *
  * @example
  * ```tsx
  * <Collections />
@@ -31,14 +31,24 @@ import { useToastNotifications } from '../hooks/useToastNotifications';
 
 export function Collections() {
   const [isEditing, setIsEditing] = useState(false);
-  const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
+  const [editingCollection, setEditingCollection] = useState<Collection | null>(
+    null
+  );
   const [isSaving, setIsSaving] = useState(false);
-  const [runningCollection, setRunningCollection] = useState<Collection | null>(null);
+  const [runningCollection, setRunningCollection] = useState<Collection | null>(
+    null
+  );
   const [showCurlImport, setShowCurlImport] = useState(false);
   const [showPostmanImport, setShowPostmanImport] = useState(false);
   const formRef = useRef<React.ElementRef<typeof CollectionForm>>(null);
 
-  const { setCurrentPage, setSelectedRequest, triggerSidebarRefresh, collectionToEditId, setCollectionToEditId } = useStore();
+  const {
+    setCurrentPage,
+    setSelectedRequest,
+    triggerSidebarRefresh,
+    collectionToEditId,
+    setCollectionToEditId,
+  } = useStore();
   const { showSuccess, showError } = useToastNotifications();
 
   const {
@@ -52,7 +62,7 @@ export function Collections() {
     deleteCollection,
     duplicateCollection,
     toggleFavorite,
-    exportCollections
+    exportCollections,
   } = useCollectionOperations();
 
   const { confirm } = useConfirmation();
@@ -89,7 +99,7 @@ export function Collections() {
       folderId: undefined,
       isFavorite: 0,
     };
-    
+
     setSelectedRequest(newRequest);
     setCurrentPage('home');
   };
@@ -102,13 +112,13 @@ export function Collections() {
   const handleSaveCollection = async (data: CollectionFormData) => {
     try {
       setIsSaving(true);
-      
+
       if (editingCollection?.id) {
         await updateCollection(editingCollection.id, data);
       } else {
         await createCollection(data);
       }
-      
+
       setIsEditing(false);
       setEditingCollection(null);
     } catch (error) {
@@ -126,7 +136,7 @@ export function Collections() {
   const handleDeleteCollection = async (collection: Collection) => {
     const confirmed = await confirm({
       title: 'Delete Collection',
-      message: `Are you sure you want to delete "${collection.name}"? This action cannot be undone.`
+      message: `Are you sure you want to delete "${collection.name}"? This action cannot be undone.`,
     });
 
     if (confirmed) {
@@ -170,10 +180,13 @@ export function Collections() {
     try {
       // Save each request
       if (!collectionId) {
-        showError('Collection required', 'Please select a collection to import requests');
+        showError(
+          'Collection required',
+          'Please select a collection to import requests'
+        );
         return;
       }
-      
+
       for (const request of requests) {
         await window.electronAPI.request.save({
           ...request,
@@ -182,7 +195,7 @@ export function Collections() {
           isFavorite: request.isFavorite || 0,
         });
       }
-      
+
       triggerSidebarRefresh();
       showSuccess('Import successful', {
         description: `Imported ${requests.length} request(s)`,
@@ -198,13 +211,24 @@ export function Collections() {
     return (
       <PageLayout
         title={editingCollection ? 'Edit Collection' : 'New Collection'}
-        description={editingCollection ? 'Update collection details and variables' : 'Create a new collection with variables'}
+        description={
+          editingCollection
+            ? 'Update collection details and variables'
+            : 'Create a new collection with variables'
+        }
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
+            <Button
+              variant="outline"
+              onClick={handleCancelEdit}
+              disabled={isSaving}
+            >
               Cancel
             </Button>
-            <Button onClick={() => formRef.current?.submit()} disabled={isSaving}>
+            <Button
+              onClick={() => formRef.current?.submit()}
+              disabled={isSaving}
+            >
               {isSaving ? 'Saving...' : 'Save'}
             </Button>
           </div>
@@ -215,7 +239,7 @@ export function Collections() {
           collection={editingCollection}
           onSave={handleSaveCollection}
           onCancel={handleCancelEdit}
-          onCollectionUpdate={(updatedCollection) => {
+          onCollectionUpdate={updatedCollection => {
             setEditingCollection(updatedCollection);
           }}
           isLoading={isSaving}

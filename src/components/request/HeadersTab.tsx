@@ -1,12 +1,12 @@
 /**
  * HeadersTab - HTTP headers with table/JSON toggle
- * 
+ *
  * Handles HTTP headers configuration with:
  * - Table view for key-value editing
  * - JSON view for bulk editing
  * - Add/remove header functionality
  * - View mode toggle
- * 
+ *
  * @example
  * ```tsx
  * <HeadersTab
@@ -32,7 +32,9 @@ import { useToastNotifications } from '../../hooks/useToastNotifications';
 
 export interface HeadersTabProps {
   requestData: RequestFormData;
-  setRequestData: (data: RequestFormData | ((prev: RequestFormData) => RequestFormData)) => void;
+  setRequestData: (
+    data: RequestFormData | ((prev: RequestFormData) => RequestFormData)
+  ) => void;
   headersViewMode: 'table' | 'json';
   setHeadersViewMode: (mode: 'table' | 'json') => void;
   bulkEditJson: string;
@@ -45,7 +47,7 @@ export const HeadersTab: React.FC<HeadersTabProps> = ({
   headersViewMode,
   setHeadersViewMode,
   bulkEditJson,
-  setBulkEditJson
+  setBulkEditJson,
 }) => {
   const { showError } = useToastNotifications();
 
@@ -57,7 +59,10 @@ export const HeadersTab: React.FC<HeadersTabProps> = ({
         const parsed = JSON.parse(bulkEditJson);
         setRequestData({ ...requestData, headers: parsed });
       } catch (e: any) {
-        showError('Invalid JSON', 'Please fix JSON syntax errors before switching to table view');
+        showError(
+          'Invalid JSON',
+          'Please fix JSON syntax errors before switching to table view'
+        );
         return;
       }
     }
@@ -95,20 +100,20 @@ export const HeadersTab: React.FC<HeadersTabProps> = ({
           />
         </div>
       </div>
-      
+
       <div className="border rounded-md bg-card">
         {headersViewMode === 'table' ? (
           <div className="p-3">
             <HeadersKeyValueEditor
               headers={requestData.headers}
-              onChange={(headers) => setRequestData({ ...requestData, headers })}
+              onChange={headers => setRequestData({ ...requestData, headers })}
               placeholder={{ key: 'Header Name', value: 'Header Value' }}
             />
           </div>
         ) : (
           <MonacoEditor
             value={bulkEditJson}
-            onChange={(value) => setBulkEditJson(value)}
+            onChange={value => setBulkEditJson(value)}
             language="json"
             placeholder='{"Content-Type": "application/json"}'
             title=""

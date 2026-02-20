@@ -8,7 +8,11 @@ export interface AutocompletePosition {
 }
 
 interface VariableAutocompleteProps {
-  variables: Array<{ name: string; value: string; scope: 'collection' | 'global' | 'dynamic' }>;
+  variables: Array<{
+    name: string;
+    value: string;
+    scope: 'collection' | 'global' | 'dynamic';
+  }>;
   onSelect: (variableName: string) => void;
   onClose: () => void;
   position: AutocompletePosition;
@@ -31,16 +35,19 @@ export function VariableAutocomplete({
   const filteredVariables = showOnlyDynamic
     ? variables.filter(v => v.scope === 'dynamic')
     : searchTerm && searchTerm.length > 0
-    ? variables.filter(v => {
-        const searchLower = searchTerm.toLowerCase();
-        const nameLower = v.name.toLowerCase();
-        // Allow searching without $ prefix for dynamic variables
-        if (v.scope === 'dynamic' && nameLower.startsWith('$')) {
-          return nameLower.includes(searchLower) || nameLower.slice(1).includes(searchLower);
-        }
-        return nameLower.includes(searchLower);
-      })
-    : variables;
+      ? variables.filter(v => {
+          const searchLower = searchTerm.toLowerCase();
+          const nameLower = v.name.toLowerCase();
+          // Allow searching without $ prefix for dynamic variables
+          if (v.scope === 'dynamic' && nameLower.startsWith('$')) {
+            return (
+              nameLower.includes(searchLower) ||
+              nameLower.slice(1).includes(searchLower)
+            );
+          }
+          return nameLower.includes(searchLower);
+        })
+      : variables;
 
   // Group variables by scope
   const groupedVariables = {
@@ -184,7 +191,10 @@ export function VariableAutocomplete({
           </div>
         )}
         {groupedVariables.dynamic.map((variable, index) => {
-          const dynamicIndex = groupedVariables.collection.length + groupedVariables.global.length + index;
+          const dynamicIndex =
+            groupedVariables.collection.length +
+            groupedVariables.global.length +
+            index;
           const isSelected = selectedIndex === dynamicIndex;
           return (
             <button

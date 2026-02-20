@@ -1,47 +1,47 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import fs from 'fs';
 import {
-    addCollection,
-    addEnvironment,
-    addFolder,
-    addFolderAfter,
-    addPreset,
-    addRequest,
-    addRequestAfter,
-    addRequestHistory,
-    addUnsavedRequest,
-    clearAllRequestHistory,
-    clearUnsavedRequests,
-    deleteCollection,
-    deleteEnvironment,
-    deleteFolder,
-    deletePreset,
-    deleteRequest,
-    deleteRequestHistory,
-    deleteUnsavedRequest,
-    generateUniqueId,
-    getAllPresets,
-    getAllSettings,
-    getAllUnsavedRequests,
-    getDatabase,
-    getSetting,
-    promoteUnsavedRequest,
-    reorderFolder,
-    reorderRequest,
-    resetSettings,
-    saveDatabase,
-    setSetting,
-    updateCollection,
-    updateEnvironment,
-    updateFolder,
-    updateRequest,
-    updateUnsavedRequest,
+  addCollection,
+  addEnvironment,
+  addFolder,
+  addFolderAfter,
+  addPreset,
+  addRequest,
+  addRequestAfter,
+  addRequestHistory,
+  addUnsavedRequest,
+  clearAllRequestHistory,
+  clearUnsavedRequests,
+  deleteCollection,
+  deleteEnvironment,
+  deleteFolder,
+  deletePreset,
+  deleteRequest,
+  deleteRequestHistory,
+  deleteUnsavedRequest,
+  generateUniqueId,
+  getAllPresets,
+  getAllSettings,
+  getAllUnsavedRequests,
+  getDatabase,
+  getSetting,
+  promoteUnsavedRequest,
+  reorderFolder,
+  reorderRequest,
+  resetSettings,
+  saveDatabase,
+  setSetting,
+  updateCollection,
+  updateEnvironment,
+  updateFolder,
+  updateRequest,
+  updateUnsavedRequest,
 } from '../database';
 import { generateCurlCommand } from '../lib/curl-generator';
 import { parseCurlCommand, parseCurlCommands } from '../lib/curl-parser';
 import {
-    EnvironmentExportGenerator,
-    getEnvironmentImportFactory,
+  EnvironmentExportGenerator,
+  getEnvironmentImportFactory,
 } from '../lib/environment';
 import type { ImportOptions, ImportResult } from '../lib/import';
 import { getImportFactory } from '../lib/import';
@@ -129,19 +129,21 @@ export function registerIpcHandlers() {
         );
 
         // Validate parsed environments
-        const validationResults = parsedEnvironments.map((env) => {
+        const validationResults = parsedEnvironments.map(env => {
           const strategy = factory.getStrategy(env.name || 'json');
-          return strategy?.validate([env]) || {
-            isValid: true,
-            errors: [],
-            warnings: [],
-          };
+          return (
+            strategy?.validate([env]) || {
+              isValid: true,
+              errors: [],
+              warnings: [],
+            }
+          );
         });
 
         const allErrors: string[] = [];
         const allWarnings: string[] = [];
 
-        validationResults.forEach((result) => {
+        validationResults.forEach(result => {
           allErrors.push(...result.errors);
           allWarnings.push(...result.warnings);
         });
@@ -149,10 +151,8 @@ export function registerIpcHandlers() {
         // Detect conflicts with existing environments
         const db = getDatabase();
         const conflicts = parsedEnvironments
-          .map((env) => {
-            const existing = db.environments.find(
-              (e) => e.name === env.name
-            );
+          .map(env => {
+            const existing = db.environments.find(e => e.name === env.name);
             if (existing) {
               return {
                 environmentName: env.name,
@@ -197,11 +197,7 @@ export function registerIpcHandlers() {
   // Environment export handler
   ipcMain.handle(
     'env:export',
-    async (
-      _,
-      environmentIds: number[],
-      format: 'json' | 'env' | 'postman'
-    ) => {
+    async (_, environmentIds: number[], format: 'json' | 'env' | 'postman') => {
       try {
         const db = getDatabase();
         let environmentsToExport;
@@ -211,7 +207,7 @@ export function registerIpcHandlers() {
           environmentsToExport = db.environments;
         } else {
           // Export selected environments
-          environmentsToExport = db.environments.filter((env) =>
+          environmentsToExport = db.environments.filter(env =>
             environmentIds.includes(env.id!)
           );
         }
@@ -759,7 +755,10 @@ export function registerIpcHandlers() {
         headers: JSON.stringify(resolvedHeaders),
         requestId: options.requestId, // Link to saved request if available
         collectionId: options.collectionId, // Link to collection if available
-        requestBody: typeof options.body === 'string' ? options.body : JSON.stringify(options.body || ''),
+        requestBody:
+          typeof options.body === 'string'
+            ? options.body
+            : JSON.stringify(options.body || ''),
         queryParams: options.queryParams || [],
         auth: options.auth || null,
         requestName: requestName, // Store request name for display
@@ -945,7 +944,10 @@ export function registerIpcHandlers() {
             headers: JSON.stringify(resolvedHeaders),
             requestId: request.id, // Link to saved request
             collectionId: request.collectionId, // Link to collection
-            requestBody: typeof request.body === 'string' ? request.body : JSON.stringify(request.body || ''),
+            requestBody:
+              typeof request.body === 'string'
+                ? request.body
+                : JSON.stringify(request.body || ''),
             queryParams: request.queryParams || [],
             auth: request.auth || null,
             requestName: request.name, // Store request name for display

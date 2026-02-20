@@ -14,12 +14,14 @@ Build a comprehensive test suite that enables individual test execution, deep de
 ## Goal Alignment Summary
 
 **How this feature supports the performance-first project goal:**
+
 - **Prevents Regressions**: Comprehensive tests catch performance regressions before they reach production
 - **Enables Confident Refactoring**: With full test coverage, we can optimize code without fear of breaking functionality
 - **Faster Development**: Individual test execution allows quick feedback during development
 - **Quality Assurance**: Automated testing ensures all features work correctly, reducing manual testing time
 
 **Success Criteria:**
+
 - 100% IPC handler test coverage
 - 90%+ component rendering verification
 - 100% data flow verification (UI → IPC → DB → UI)
@@ -28,6 +30,7 @@ Build a comprehensive test suite that enables individual test execution, deep de
 - Test execution time < 5 minutes for full suite
 
 **Constraints:**
+
 - Tests must be independent (no shared state between tests)
 - Tests must be deterministic (same input = same output)
 - Tests must provide detailed debugging information on failure
@@ -35,29 +38,35 @@ Build a comprehensive test suite that enables individual test execution, deep de
 - Test infrastructure must not impact app performance
 
 **Unclear Points (to confirm):**
+
 - None - clear requirements from analysis
 
 ## Performance Impact Analysis (MANDATORY)
 
 ### Memory Impact
+
 - **Estimated Memory Footprint**: <10MB for test infrastructure (Target: Minimal)
 - **Memory Budget**: Test helpers and utilities should be lightweight
 - **Memory Cleanup Strategy**: Test databases cleaned up after each test, no persistent state
 
 ### Load Time Impact (PRIMARY)
+
 - **Estimated Load Time**: <200ms per test setup (Target: <200ms)
 - **Initialization Strategy**: Lazy load test utilities, fast database initialization
 - **Performance Tracking**: Track test execution time, identify slow tests
 
 ### Lazy Loading Strategy (REQUIRED)
+
 - **How feature loads on-demand**: Test utilities loaded only when needed
 - **Code Splitting Plan**: Test files split by category (IPC, rendering, data-flow, etc.)
 - **Trigger**: Individual test execution triggers specific test category
 
 ### Bundle Size Impact (INFORMATIONAL - Not Primary)
+
 - **Estimated Bundle Size**: Test code not included in production bundle (separate test build)
 
 ### Performance Monitoring (PRIMARY)
+
 - [x] Test execution time will be tracked - MANDATORY
 - [x] Test memory usage will be monitored - MANDATORY
 - [x] Slow tests will be identified and optimized - MANDATORY
@@ -78,6 +87,7 @@ Build a comprehensive test suite that enables individual test execution, deep de
 ### As a developer, I want to test IPC handlers individually so that I can verify each handler works correctly in isolation
 
 **Acceptance Criteria:**
+
 - [ ] Each IPC handler has dedicated test file
 - [ ] Tests can run individually: `npm run test:electron -- tests/integration/ipc-handlers/env-handlers.spec.ts`
 - [ ] Tests provide detailed error messages on failure
@@ -91,6 +101,7 @@ Build a comprehensive test suite that enables individual test execution, deep de
 ### As a developer, I want to verify UI rendering after IPC calls so that I know components update correctly
 
 **Acceptance Criteria:**
+
 - [ ] Tests verify React components render after IPC calls
 - [ ] Tests verify Zustand store updates correctly
 - [ ] Tests verify DOM updates match expected state
@@ -104,6 +115,7 @@ Build a comprehensive test suite that enables individual test execution, deep de
 ### As a developer, I want to test complete data flow so that I can verify end-to-end functionality
 
 **Acceptance Criteria:**
+
 - [ ] Tests verify UI action → IPC call → Database update → UI update flow
 - [ ] Tests verify data persistence across operations
 - [ ] Tests verify state synchronization between components
@@ -117,6 +129,7 @@ Build a comprehensive test suite that enables individual test execution, deep de
 ### As a developer, I want detailed debugging information when tests fail so that I can quickly find root causes
 
 **Acceptance Criteria:**
+
 - [ ] Test failures generate comprehensive error reports
 - [ ] Error reports include: console logs, network activity, React state, Zustand state, database state, screenshots
 - [ ] Error reports include execution trace
@@ -130,6 +143,7 @@ Build a comprehensive test suite that enables individual test execution, deep de
 ### As a developer, I want to test components individually so that I can develop and verify features in isolation
 
 **Acceptance Criteria:**
+
 - [ ] Each major component has integration test
 - [ ] Component tests can run independently
 - [ ] Component tests verify IPC integration
@@ -143,6 +157,7 @@ Build a comprehensive test suite that enables individual test execution, deep de
 ### As a developer, I want performance tests so that I can identify memory leaks and performance regressions
 
 **Acceptance Criteria:**
+
 - [ ] Tests for large datasets (1000+ items)
 - [ ] Tests for concurrent operations
 - [ ] Tests for memory leak detection
@@ -154,6 +169,7 @@ Build a comprehensive test suite that enables individual test execution, deep de
 ## Technical Requirements
 
 ### Existing Code to Leverage
+
 - [ ] Test Infrastructure: `tests/helpers/electron-fixtures.ts` - Extend with debugging capabilities
 - [ ] Database Utilities: `tests/helpers/test-db.ts` - Use for isolated test databases
 - [ ] Existing Tests: `tests/integration/*.spec.ts` - Reference for patterns
@@ -161,11 +177,13 @@ Build a comprehensive test suite that enables individual test execution, deep de
 - [ ] IPC Handlers: `electron/ipc/handlers.ts` - Reference for all handlers to test
 
 ### Integration Points
+
 - **Where to add**: New test files in `tests/integration/` subdirectories
 - **How to integrate**: Extend existing test fixtures with debugging utilities
 - **Existing patterns to follow**: Follow structure of existing integration tests
 
 ### Architecture Decisions
+
 - **Decision 1**: Use Playwright for all testing (already established)
 - **Decision 2**: Mock electronAPI for testing (allows testing without full Electron)
 - **Decision 3**: Isolated test databases per test (prevents test interference)
@@ -173,16 +191,18 @@ Build a comprehensive test suite that enables individual test execution, deep de
 - **Decision 5**: Structured test organization by category (IPC, rendering, data-flow, etc.)
 
 ### Dependencies
-- Internal: 
+
+- Internal:
   - `tests/helpers/electron-fixtures.ts` - Test fixtures
   - `tests/helpers/test-db.ts` - Database utilities
   - `electron/ipc/handlers.ts` - IPC handlers to test
   - `electron/database/json-db.ts` - Database implementation
-- External: 
+- External:
   - `@playwright/test` - Testing framework (already installed)
   - No new external dependencies required
 
 ### File Structure Changes
+
 ```
 tests/
 ├── integration/
@@ -229,11 +249,13 @@ tests/
 ```
 
 ### Data Model Changes
+
 - No database schema changes
 - Test databases use same schema as production
 - Test utilities may add metadata for debugging
 
 ### API Changes
+
 - No API changes
 - Tests verify existing IPC handlers
 - Tests verify existing UI components
@@ -241,6 +263,7 @@ tests/
 ## Acceptance Criteria
 
 ### Functional Requirements
+
 - [x] **IPC Handler Coverage**: All 53+ IPC handlers have individual tests
   - [x] Environment handlers (7): list, save, delete, test, import, getCurrent, setCurrent
   - [x] Collection handlers (9): list, save, delete, toggleFavorite, addEnvironment, updateEnvironment, deleteEnvironment, setActiveEnvironment, run
@@ -293,19 +316,20 @@ tests/
   - [x] No shared state between tests
 
 ### Non-Functional Requirements
-- [ ] **Performance**: 
+
+- [ ] **Performance**:
   - Test setup time: <200ms per test
   - Full test suite execution: <5 minutes
   - Individual test execution: <30 seconds average
-- [ ] **Reliability**: 
+- [ ] **Reliability**:
   - Tests are deterministic (same input = same output)
   - Tests are independent (no shared state)
   - Tests clean up after themselves
-- [ ] **Maintainability**: 
+- [ ] **Maintainability**:
   - Tests are well-organized by category
   - Tests follow consistent patterns
   - Tests are documented
-- [ ] **Debugging**: 
+- [ ] **Debugging**:
   - All failures generate detailed error reports
   - Error reports include actionable information
   - Debug artifacts are easily accessible
@@ -336,6 +360,7 @@ tests/
 **Purpose**: Test each IPC handler individually with success and error cases
 
 **Structure**:
+
 - One test file per handler category
 - Each handler has multiple test cases (success, error, edge cases)
 - Tests verify IPC call → Database update
@@ -343,9 +368,13 @@ tests/
 - Tests verify error handling
 
 **Example**:
+
 ```typescript
 test.describe('Environment IPC Handlers', () => {
-  test('env:test - should test environment connection', async ({ electronPage, testDbPath }) => {
+  test('env:test - should test environment connection', async ({
+    electronPage,
+    testDbPath,
+  }) => {
     // Setup, Execute, Verify, Debug
   });
 });
@@ -356,6 +385,7 @@ test.describe('Environment IPC Handlers', () => {
 **Purpose**: Verify UI components render and update correctly after IPC calls
 
 **Structure**:
+
 - Test component rendering after IPC calls
 - Test state updates (React + Zustand)
 - Test loading states
@@ -367,6 +397,7 @@ test.describe('Environment IPC Handlers', () => {
 **Purpose**: Verify complete data flow from UI to database and back
 
 **Structure**:
+
 - Test UI → IPC flow
 - Test IPC → Database flow
 - Test Database → UI flow
@@ -377,6 +408,7 @@ test.describe('Environment IPC Handlers', () => {
 **Purpose**: Test React components with IPC integration
 
 **Structure**:
+
 - Test component with IPC calls
 - Test component state management
 - Test component user interactions
@@ -387,6 +419,7 @@ test.describe('Environment IPC Handlers', () => {
 **Purpose**: Test performance with large datasets and concurrent operations
 
 **Structure**:
+
 - Test with 1000+ items
 - Test concurrent operations
 - Test memory leaks
@@ -397,6 +430,7 @@ test.describe('Environment IPC Handlers', () => {
 ### Debug Helpers (`tests/helpers/debug-helpers.ts`)
 
 **Functions**:
+
 - `captureConsoleLogs(page)` - Capture all console output
 - `captureNetworkActivity(page)` - Track all network requests
 - `captureReactState(page, componentName)` - Get React component state
@@ -409,6 +443,7 @@ test.describe('Environment IPC Handlers', () => {
 ### Test Logger (`tests/helpers/logger.ts`)
 
 **Features**:
+
 - Log levels: DEBUG, INFO, WARN, ERROR
 - File-based logging
 - Console output
@@ -419,6 +454,7 @@ test.describe('Environment IPC Handlers', () => {
 ### Custom Assertions (`tests/helpers/assertions.ts`)
 
 **Assertions**:
+
 - `assertRendered(element, message)` - Verify element rendered
 - `assertStateUpdated(before, after, expected)` - Verify state updated
 - `assertDataPersisted(data, dbPath)` - Verify data persisted
@@ -434,41 +470,53 @@ When a test fails, automatically generate:
 # Error Report: {test-name}
 
 ## Test Information
+
 - Test: {test name}
 - Status: FAILED
 - Duration: {duration}ms
 - Timestamp: {timestamp}
 
 ## Error Details
+
 {error message}
 {stack trace}
 
 ## State at Failure
+
 ### React State
+
 {react state}
 
 ### Zustand Store
+
 {zustand state}
 
 ### Database State
+
 {database state}
 
 ## Execution Trace
+
 {execution steps}
 
 ## Console Logs
+
 {console output}
 
 ## Network Activity
+
 {network requests}
 
 ## Screenshots
+
 {screenshot paths}
 
 ## Root Cause Analysis
+
 {automated analysis}
 
 ## Suggested Fixes
+
 {actionable suggestions}
 ```
 
@@ -522,12 +570,12 @@ npm run test:electron -- tests/integration/performance/
 
 ## Risks & Mitigation
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|------------|------------|
-| Test execution time too long | Medium | Medium | Optimize test setup, parallel execution, identify slow tests |
-| Debug artifacts too large | Low | Low | Clean up old artifacts, compress logs, limit screenshot count |
-| Test flakiness | High | Medium | Ensure tests are deterministic, proper waits, isolated state |
-| Maintenance burden | Medium | Medium | Well-organized structure, consistent patterns, good documentation |
+| Risk                         | Impact | Probability | Mitigation                                                        |
+| ---------------------------- | ------ | ----------- | ----------------------------------------------------------------- |
+| Test execution time too long | Medium | Medium      | Optimize test setup, parallel execution, identify slow tests      |
+| Debug artifacts too large    | Low    | Low         | Clean up old artifacts, compress logs, limit screenshot count     |
+| Test flakiness               | High   | Medium      | Ensure tests are deterministic, proper waits, isolated state      |
+| Maintenance burden           | Medium | Medium      | Well-organized structure, consistent patterns, good documentation |
 
 ## References
 

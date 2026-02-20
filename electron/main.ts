@@ -10,8 +10,6 @@ import { createLogger } from './services/logger';
 
 const logger = createLogger('main');
 
-
-
 let mainWindow: BrowserWindow | null = null;
 let lastGeneratedFilePath: string | null = null;
 
@@ -19,7 +17,7 @@ function createWindow() {
   // Detect system dark mode and set appropriate background
   const isDarkMode = nativeTheme.shouldUseDarkColors;
   const backgroundColor = isDarkMode ? '#020817' : '#ffffff';
-  
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -59,13 +57,13 @@ app.whenReady().then(async () => {
     // Support test mode: use custom database path if provided
     const testDbPath = process.env.TEST_DB_PATH;
     await initDatabase(testDbPath);
-    
+
     // Initialize Sentry after database (so it can check telemetry settings)
     await initSentry();
     addBreadcrumb('app', 'Application starting', { version: app.getVersion() });
-    
+
     registerIpcHandlers();
-    
+
     // Register test handlers if in test mode
     if (process.env.TEST_MODE === 'true') {
       // Test utilities IPC handlers
@@ -92,7 +90,7 @@ app.whenReady().then(async () => {
         return { ready: app.isReady() && mainWindow !== null };
       });
     }
-    
+
     createWindow();
 
     app.on('activate', () => {

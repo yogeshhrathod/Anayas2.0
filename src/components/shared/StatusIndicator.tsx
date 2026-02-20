@@ -1,12 +1,12 @@
 /**
  * StatusIndicator - Badge/status display used in multiple places
- * 
+ *
  * Provides consistent status indicators with:
  * - Color-coded status types
  * - Optional icons
  * - Consistent styling
  * - Support for custom variants
- * 
+ *
  * @example
  * ```tsx
  * <StatusIndicator
@@ -36,7 +36,7 @@ const statusVariants: Record<StatusType, string> = {
   warning: 'bg-yellow-500 text-white',
   error: 'bg-red-500 text-white',
   info: 'bg-blue-500 text-white',
-  default: 'bg-gray-500 text-white'
+  default: 'bg-gray-500 text-white',
 };
 
 const statusIconColors: Record<StatusType, string> = {
@@ -44,7 +44,7 @@ const statusIconColors: Record<StatusType, string> = {
   warning: 'text-yellow-500',
   error: 'text-red-500',
   info: 'text-blue-500',
-  default: 'text-gray-500'
+  default: 'text-gray-500',
 };
 
 export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
@@ -52,17 +52,11 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   text,
   icon,
   className = '',
-  variant = 'default'
+  variant = 'default',
 }) => {
   if (variant === 'default') {
     return (
-      <Badge 
-        className={cn(
-          'text-xs',
-          statusVariants[type],
-          className
-        )}
-      >
+      <Badge className={cn('text-xs', statusVariants[type], className)}>
         {icon && <span className="mr-1">{icon}</span>}
         {text}
       </Badge>
@@ -70,14 +64,9 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   }
 
   return (
-    <Badge 
-      variant={variant}
-      className={cn('text-xs', className)}
-    >
+    <Badge variant={variant} className={cn('text-xs', className)}>
       {icon && (
-        <span className={cn('mr-1', statusIconColors[type])}>
-          {icon}
-        </span>
+        <span className={cn('mr-1', statusIconColors[type])}>{icon}</span>
       )}
       {text}
     </Badge>

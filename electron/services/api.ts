@@ -19,9 +19,12 @@ interface ApiResponse {
 }
 
 export class ApiService {
-  private async request<T>(url: string, options: FetchOptions): Promise<ApiResponse> {
+  private async request<T>(
+    url: string,
+    options: FetchOptions
+  ): Promise<ApiResponse> {
     const startTime = Date.now();
-    
+
     try {
       const headers = { ...options.headers };
       let body = options.body;
@@ -37,13 +40,16 @@ export class ApiService {
 
       // Create AbortController for timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), options.timeout || 30000);
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        options.timeout || 30000
+      );
 
-      const response = await fetch(url, { 
-        method: options.method, 
-        headers, 
+      const response = await fetch(url, {
+        method: options.method,
+        headers,
         body,
-        signal: controller.signal
+        signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
@@ -77,72 +83,142 @@ export class ApiService {
         statusText: response.statusText,
         headers: responseHeaders,
         body: responseBody,
-        responseTime
+        responseTime,
       };
 
       if (!response.ok) {
-        logger.error(`API Error: ${response.status} ${response.statusText}`, { 
-          url, 
+        logger.error(`API Error: ${response.status} ${response.statusText}`, {
+          url,
           status: response.status,
           statusText: response.statusText,
-          responseTime 
+          responseTime,
         });
       } else {
-        logger.info(`API Success: ${response.status} ${response.statusText}`, { 
-          url, 
-          responseTime 
+        logger.info(`API Success: ${response.status} ${response.statusText}`, {
+          url,
+          responseTime,
         });
       }
 
       return result;
     } catch (err: any) {
       const responseTime = Date.now() - startTime;
-      
+
       if (err.name === 'AbortError') {
         logger.error(`Request timeout for ${url}`, { responseTime });
         throw new Error(`Request timeout after ${options.timeout || 30000}ms`);
       }
-      
-      logger.error(`Request failed for ${url}`, { error: err.message, responseTime });
+
+      logger.error(`Request failed for ${url}`, {
+        error: err.message,
+        responseTime,
+      });
       throw err;
     }
   }
 
-  async getJson(url: string, headers?: Record<string, string>, timeout?: number): Promise<ApiResponse> {
+  async getJson(
+    url: string,
+    headers?: Record<string, string>,
+    timeout?: number
+  ): Promise<ApiResponse> {
     return this.request(url, { method: 'GET', headers, timeout });
   }
 
-  async postJson(url: string, data: any, headers?: Record<string, string>, timeout?: number): Promise<ApiResponse> {
-    return this.request(url, { method: 'POST', body: data, headers, isJson: true, timeout });
+  async postJson(
+    url: string,
+    data: any,
+    headers?: Record<string, string>,
+    timeout?: number
+  ): Promise<ApiResponse> {
+    return this.request(url, {
+      method: 'POST',
+      body: data,
+      headers,
+      isJson: true,
+      timeout,
+    });
   }
 
-  async putJson(url: string, data: any, headers?: Record<string, string>, timeout?: number): Promise<ApiResponse> {
-    return this.request(url, { method: 'PUT', body: data, headers, isJson: true, timeout });
+  async putJson(
+    url: string,
+    data: any,
+    headers?: Record<string, string>,
+    timeout?: number
+  ): Promise<ApiResponse> {
+    return this.request(url, {
+      method: 'PUT',
+      body: data,
+      headers,
+      isJson: true,
+      timeout,
+    });
   }
 
-  async patchJson(url: string, data: any, headers?: Record<string, string>, timeout?: number): Promise<ApiResponse> {
-    return this.request(url, { method: 'PATCH', body: data, headers, isJson: true, timeout });
+  async patchJson(
+    url: string,
+    data: any,
+    headers?: Record<string, string>,
+    timeout?: number
+  ): Promise<ApiResponse> {
+    return this.request(url, {
+      method: 'PATCH',
+      body: data,
+      headers,
+      isJson: true,
+      timeout,
+    });
   }
 
-  async deleteJson(url: string, headers?: Record<string, string>, timeout?: number): Promise<ApiResponse> {
+  async deleteJson(
+    url: string,
+    headers?: Record<string, string>,
+    timeout?: number
+  ): Promise<ApiResponse> {
     return this.request(url, { method: 'DELETE', headers, timeout });
   }
 
-  async headJson(url: string, headers?: Record<string, string>, timeout?: number): Promise<ApiResponse> {
+  async headJson(
+    url: string,
+    headers?: Record<string, string>,
+    timeout?: number
+  ): Promise<ApiResponse> {
     return this.request(url, { method: 'HEAD', headers, timeout });
   }
 
-  async optionsJson(url: string, headers?: Record<string, string>, timeout?: number): Promise<ApiResponse> {
+  async optionsJson(
+    url: string,
+    headers?: Record<string, string>,
+    timeout?: number
+  ): Promise<ApiResponse> {
     return this.request(url, { method: 'OPTIONS', headers, timeout });
   }
 
-  async postForm(url: string, formData: URLSearchParams, headers?: Record<string, string>, timeout?: number): Promise<ApiResponse> {
-    return this.request(url, { method: 'POST', body: formData, headers, timeout });
+  async postForm(
+    url: string,
+    formData: URLSearchParams,
+    headers?: Record<string, string>,
+    timeout?: number
+  ): Promise<ApiResponse> {
+    return this.request(url, {
+      method: 'POST',
+      body: formData,
+      headers,
+      timeout,
+    });
   }
 
-  async downloadFile(url: string, headers?: Record<string, string>, timeout?: number): Promise<Buffer | null> {
+  async downloadFile(
+    url: string,
+    headers?: Record<string, string>,
+    timeout?: number
+  ): Promise<Buffer | null> {
     try {
-      const response = await this.request(url, { method: 'GET', headers, timeout });
+      const response = await this.request(url, {
+        method: 'GET',
+        headers,
+        timeout,
+      });
       if (response.body && typeof response.body === 'string') {
         return Buffer.from(response.body, 'base64');
       }
@@ -155,7 +231,10 @@ export class ApiService {
 
   async testConnection(url: string, timeout?: number): Promise<boolean> {
     try {
-      const response = await this.request(url, { method: 'GET', timeout: timeout || 5000 });
+      const response = await this.request(url, {
+        method: 'GET',
+        timeout: timeout || 5000,
+      });
       return response.status < 500;
     } catch {
       return false;

@@ -2,7 +2,13 @@ import { X } from 'lucide-react';
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from './button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from './card';
 
 export interface DialogProps {
   open: boolean;
@@ -63,16 +69,14 @@ export function Dialog({
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog p-4"
       onClick={handleBackdropClick}
     >
-      <Card className={`w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-hidden flex flex-col ${className}`}>
+      <Card
+        className={`w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-hidden flex flex-col ${className}`}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex-1">
-            <CardTitle className="text-xl">
-              {title}
-            </CardTitle>
+            <CardTitle className="text-xl">{title}</CardTitle>
             {description && (
-              <CardDescription className="mt-1">
-                {description}
-              </CardDescription>
+              <CardDescription className="mt-1">{description}</CardDescription>
             )}
           </div>
           {showCloseButton && (
@@ -97,4 +101,3 @@ export function Dialog({
   // Render dialog in a portal to ensure it's at the document root level, outside any form elements
   return createPortal(dialogContent, document.body);
 }
-

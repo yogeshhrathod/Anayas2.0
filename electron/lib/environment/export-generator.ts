@@ -61,7 +61,7 @@ export class EnvironmentExportGenerator {
       return JSON.stringify(this.sanitizeForExport(environments[0]), null, 2);
     }
     return JSON.stringify(
-      environments.map((env) => this.sanitizeForExport(env)),
+      environments.map(env => this.sanitizeForExport(env)),
       null,
       2
     );
@@ -94,7 +94,9 @@ export class EnvironmentExportGenerator {
     // If multiple environments, add comment
     if (environments.length > 1) {
       lines.push('');
-      lines.push(`# Note: Only exported first environment. Total: ${environments.length}`);
+      lines.push(
+        `# Note: Only exported first environment. Total: ${environments.length}`
+      );
     }
 
     return lines.join('\n');
@@ -109,7 +111,7 @@ export class EnvironmentExportGenerator {
     }
 
     // Convert environments to Postman format
-    const postmanEnvs = environments.map((env) => ({
+    const postmanEnvs = environments.map(env => ({
       id: this.generateUuid(),
       name: env.displayName,
       values: Object.entries(env.variables || {}).map(([key, value]) => ({
@@ -160,11 +162,10 @@ export class EnvironmentExportGenerator {
    * Generate a simple UUID-like string
    */
   private generateUuid(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
       const r = (Math.random() * 16) | 0;
       const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
   }
 }
-

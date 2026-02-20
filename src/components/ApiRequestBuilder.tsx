@@ -337,7 +337,9 @@ export function ApiRequestBuilder() {
             setSplitRatio={requestState.setSplitViewRatio}
             requestMethod={requestState.requestData.method}
             requestUrl={requestState.requestData.url}
-            requestId={requestState.requestData.id || activeUnsavedRequestId || undefined}
+            requestId={
+              requestState.requestData.id || activeUnsavedRequestId || undefined
+            }
           />
         );
       default:

@@ -238,7 +238,7 @@ Behavior:
   - Updates the navigation sidebar content accordingly.
 - Badges:
   - Small, colored dots or counts for alerts (e.g., failed monitors, unread logs).
-A
+    A
 
 ### 5.2 Tree Views & Lists
 
@@ -617,5 +617,3 @@ As the app evolves, update this document when:
 - New UX patterns become common (e.g., collaboration, realtime cursors).
 - Existing patterns are refined (new layout modes, better navigation).
 - Major architectural changes occur (new persistence, sync models).
-
-

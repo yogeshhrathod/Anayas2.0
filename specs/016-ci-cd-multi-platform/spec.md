@@ -84,10 +84,7 @@ Configure electron-builder for multi-platform builds (macOS, Windows, Linux) to 
       "output": "release",
       "buildResources": "build"
     },
-    "files": [
-      "dist/**/*",
-      "dist-electron/**/*"
-    ],
+    "files": ["dist/**/*", "dist-electron/**/*"],
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "build/icons/icon.png",
@@ -132,6 +129,7 @@ Configure electron-builder for multi-platform builds (macOS, Windows, Linux) to 
 **Location**: `release/`
 
 Generated artifacts:
+
 - macOS: `Anayas-1.0.0.dmg`, `Anayas-1.0.0-mac.zip`
 - Windows: `Anayas Setup 1.0.0.exe`, `Anayas-1.0.0-win.zip`
 - Linux: `Anayas-1.0.0.AppImage`, `anayas_1.0.0_amd64.deb`

@@ -1,12 +1,12 @@
 /**
  * useEntityCRUD - Generic create, read, update, delete operations hook
- * 
+ *
  * Provides a standardized interface for CRUD operations with:
  * - Loading states
  * - Error handling
  * - Success notifications
  * - Optimistic updates
- * 
+ *
  * @example
  * ```tsx
  * const {
@@ -58,97 +58,112 @@ export function useEntityCRUD<CreateData, UpdateData>(
     error: null,
     isCreating: false,
     isUpdating: false,
-    isDeleting: false
+    isDeleting: false,
   });
 
   const { toast } = useToast();
 
-  const handleError = useCallback((action: string, error: any) => {
-    const errorMessage = error?.message || `Failed to ${action}`;
-    setState(prev => ({
-      ...prev,
-      isLoading: false,
-      isCreating: false,
-      isUpdating: false,
-      isDeleting: false,
-      error: errorMessage
-    }));
-    
-    toast({
-      title: `${action} Failed`,
-      description: errorMessage,
-      variant: 'destructive'
-    });
-    
-    config.onError?.(action, error);
-  }, [config, toast]);
+  const handleError = useCallback(
+    (action: string, error: any) => {
+      const errorMessage = error?.message || `Failed to ${action}`;
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        isCreating: false,
+        isUpdating: false,
+        isDeleting: false,
+        error: errorMessage,
+      }));
 
-  const handleSuccess = useCallback((action: string, data?: any) => {
-    setState(prev => ({
-      ...prev,
-      isLoading: false,
-      isCreating: false,
-      isUpdating: false,
-      isDeleting: false,
-      error: null
-    }));
-    
-    config.onSuccess?.(action, data);
-  }, [config]);
+      toast({
+        title: `${action} Failed`,
+        description: errorMessage,
+        variant: 'destructive',
+      });
 
-  const create = useCallback(async (data: CreateData) => {
-    setState(prev => ({
-      ...prev,
-      isLoading: true,
-      isCreating: true,
-      error: null
-    }));
+      config.onError?.(action, error);
+    },
+    [config, toast]
+  );
 
-    try {
-      const result = await config.createFn(data);
-      handleSuccess('Create', result);
-      return result;
-    } catch (error) {
-      handleError('create', error);
-      throw error;
-    }
-  }, [config, handleSuccess, handleError]);
+  const handleSuccess = useCallback(
+    (action: string, data?: any) => {
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        isCreating: false,
+        isUpdating: false,
+        isDeleting: false,
+        error: null,
+      }));
 
-  const update = useCallback(async (data: UpdateData) => {
-    setState(prev => ({
-      ...prev,
-      isLoading: true,
-      isUpdating: true,
-      error: null
-    }));
+      config.onSuccess?.(action, data);
+    },
+    [config]
+  );
 
-    try {
-      const result = await config.updateFn(data);
-      handleSuccess('Update', result);
-      return result;
-    } catch (error) {
-      handleError('update', error);
-      throw error;
-    }
-  }, [config, handleSuccess, handleError]);
+  const create = useCallback(
+    async (data: CreateData) => {
+      setState(prev => ({
+        ...prev,
+        isLoading: true,
+        isCreating: true,
+        error: null,
+      }));
 
-  const remove = useCallback(async (id: number) => {
-    setState(prev => ({
-      ...prev,
-      isLoading: true,
-      isDeleting: true,
-      error: null
-    }));
+      try {
+        const result = await config.createFn(data);
+        handleSuccess('Create', result);
+        return result;
+      } catch (error) {
+        handleError('create', error);
+        throw error;
+      }
+    },
+    [config, handleSuccess, handleError]
+  );
 
-    try {
-      const result = await config.deleteFn(id);
-      handleSuccess('Delete', result);
-      return result;
-    } catch (error) {
-      handleError('delete', error);
-      throw error;
-    }
-  }, [config, handleSuccess, handleError]);
+  const update = useCallback(
+    async (data: UpdateData) => {
+      setState(prev => ({
+        ...prev,
+        isLoading: true,
+        isUpdating: true,
+        error: null,
+      }));
+
+      try {
+        const result = await config.updateFn(data);
+        handleSuccess('Update', result);
+        return result;
+      } catch (error) {
+        handleError('update', error);
+        throw error;
+      }
+    },
+    [config, handleSuccess, handleError]
+  );
+
+  const remove = useCallback(
+    async (id: number) => {
+      setState(prev => ({
+        ...prev,
+        isLoading: true,
+        isDeleting: true,
+        error: null,
+      }));
+
+      try {
+        const result = await config.deleteFn(id);
+        handleSuccess('Delete', result);
+        return result;
+      } catch (error) {
+        handleError('delete', error);
+        throw error;
+      }
+    },
+    [config, handleSuccess, handleError]
+  );
 
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
@@ -159,6 +174,6 @@ export function useEntityCRUD<CreateData, UpdateData>(
     create,
     update,
     remove,
-    clearError
+    clearError,
   };
 }

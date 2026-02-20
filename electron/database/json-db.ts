@@ -91,39 +91,47 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
     try {
       const data = fs.readFileSync(dbPath, 'utf-8');
       db = JSON.parse(data);
-      
+
       // Migration: Add folders table if it doesn't exist
       if (!db.folders) {
         db.folders = [];
         logger.info('Migrated database: Added folders table');
       }
-      
+
       // Migration: Add unsaved_requests table if it doesn't exist
       if (!db.unsaved_requests) {
         db.unsaved_requests = [];
         logger.info('Migrated database: Added unsaved_requests table');
       }
-      
+
       // Migration: Add presets table if it doesn't exist
       if (!db.presets) {
         db.presets = [];
         logger.info('Migrated database: Added presets table');
       }
-      
+
       // Migration: Convert collection.variables to collection.environments
       // Also ensure all collections have environments[] array (even if empty)
       let needsMigration = false;
       for (const collection of db.collections) {
         // Migrate old variables to environments if they exist
-        if (!collection.environments && collection.variables && Object.keys(collection.variables).length > 0) {
-          collection.environments = [{
-            id: generateUniqueId(),
-            name: 'Default',
-            variables: collection.variables
-          }];
+        if (
+          !collection.environments &&
+          collection.variables &&
+          Object.keys(collection.variables).length > 0
+        ) {
+          collection.environments = [
+            {
+              id: generateUniqueId(),
+              name: 'Default',
+              variables: collection.variables,
+            },
+          ];
           collection.activeEnvironmentId = collection.environments[0].id;
           needsMigration = true;
-          logger.info(`Migrated collection ${collection.id}: Converted variables to environments`);
+          logger.info(
+            `Migrated collection ${collection.id}: Converted variables to environments`
+          );
         }
         // Ensure all collections have environments[] array (initialize if missing)
         if (!collection.environments) {
@@ -131,8 +139,13 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
           needsMigration = true;
         }
       }
-      
-      if (!db.folders || !db.unsaved_requests || !db.presets || needsMigration) {
+
+      if (
+        !db.folders ||
+        !db.unsaved_requests ||
+        !db.presets ||
+        needsMigration
+      ) {
         saveDatabase();
       }
     } catch (error) {
@@ -167,7 +180,7 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
     saveDatabase();
   }
   ensureFontSettingsDefaults();
-  
+
   // Add new settings if they don't exist (for existing databases)
   if (!db.settings.defaultResponseSubTab) {
     db.settings.defaultResponseSubTab = 'headers';
@@ -182,7 +195,7 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
       displayName: 'Demo Environment',
       variables: {
         base_url: 'https://jsonplaceholder.typicode.com',
-        post_id: '1'
+        post_id: '1',
       },
       isDefault: 1,
     });
@@ -190,10 +203,11 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
     // Demo Collection with 4 essential API examples
     const collectionId = addCollection({
       name: 'Sample API Collection',
-      description: 'Demo collection with example requests using JSONPlaceholder API',
+      description:
+        'Demo collection with example requests using JSONPlaceholder API',
       variables: {
         base_url: 'https://jsonplaceholder.typicode.com',
-        post_id: '1'
+        post_id: '1',
       },
       isFavorite: 1,
     });
@@ -204,12 +218,10 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
       method: 'GET',
       url: '{{base_url}}/posts',
       headers: {
-        'Accept': 'application/json'
+        Accept: 'application/json',
       },
       body: '',
-      queryParams: [
-        { key: '_limit', value: '5', enabled: true }
-      ],
+      queryParams: [{ key: '_limit', value: '5', enabled: true }],
       auth: { type: 'none' },
       collectionId: collectionId,
       isFavorite: 0,
@@ -221,7 +233,7 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
       method: 'GET',
       url: '{{base_url}}/posts/{{post_id}}',
       headers: {
-        'Accept': 'application/json'
+        Accept: 'application/json',
       },
       body: '',
       queryParams: [],
@@ -237,13 +249,17 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
       url: '{{base_url}}/posts',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json',
       },
-      body: JSON.stringify({
-        title: 'New Post Title',
-        body: 'This is the post content.',
-        userId: 1
-      }, null, 2),
+      body: JSON.stringify(
+        {
+          title: 'New Post Title',
+          body: 'This is the post content.',
+          userId: 1,
+        },
+        null,
+        2
+      ),
       queryParams: [],
       auth: { type: 'none' },
       collectionId: collectionId,
@@ -256,7 +272,7 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
       method: 'DELETE',
       url: '{{base_url}}/posts/{{post_id}}',
       headers: {
-        'Accept': 'application/json'
+        Accept: 'application/json',
       },
       body: '',
       queryParams: [],
@@ -290,7 +306,7 @@ export function addEnvironment(env: any): number {
 }
 
 export function updateEnvironment(id: number, env: any): void {
-  const index = db.environments.findIndex((e) => e.id === id);
+  const index = db.environments.findIndex(e => e.id === id);
   if (index !== -1) {
     db.environments[index] = { ...db.environments[index], ...env, id };
     saveDatabase();
@@ -298,19 +314,23 @@ export function updateEnvironment(id: number, env: any): void {
 }
 
 export function deleteEnvironment(id: number): void {
-  db.environments = db.environments.filter((e) => e.id !== id);
+  db.environments = db.environments.filter(e => e.id !== id);
   saveDatabase();
 }
 
 export function addCollection(collection: any): number {
   const id = generateUniqueId();
-  db.collections.push({ ...collection, id, createdAt: new Date().toISOString() });
+  db.collections.push({
+    ...collection,
+    id,
+    createdAt: new Date().toISOString(),
+  });
   saveDatabase();
   return id;
 }
 
 export function updateCollection(id: number, collection: any): void {
-  const index = db.collections.findIndex((c) => c.id === id);
+  const index = db.collections.findIndex(c => c.id === id);
   if (index !== -1) {
     db.collections[index] = { ...db.collections[index], ...collection, id };
     saveDatabase();
@@ -318,17 +338,17 @@ export function updateCollection(id: number, collection: any): void {
 }
 
 export function deleteCollection(id: number): void {
-  db.collections = db.collections.filter((c) => c.id !== id);
+  db.collections = db.collections.filter(c => c.id !== id);
   // Also delete all folders and requests in this collection
-  db.folders = db.folders.filter((f) => f.collectionId !== id);
-  db.requests = db.requests.filter((r) => r.collectionId !== id);
+  db.folders = db.folders.filter(f => f.collectionId !== id);
+  db.requests = db.requests.filter(r => r.collectionId !== id);
   saveDatabase();
 }
 
 // Folder CRUD operations
 export function addFolder(folder: any): number {
   const id = generateUniqueId();
-  
+
   // Generate order value - if not provided, use a large number to append to end
   let order = folder.order;
   if (order === undefined) {
@@ -336,8 +356,13 @@ export function addFolder(folder: any): number {
     const maxOrder = Math.max(...db.folders.map(f => f.order || 0), 0);
     order = maxOrder + 1000; // Add 1000 to ensure it goes to the end
   }
-  
-  db.folders.push({ ...folder, id, order, createdAt: new Date().toISOString() });
+
+  db.folders.push({
+    ...folder,
+    id,
+    order,
+    createdAt: new Date().toISOString(),
+  });
   saveDatabase();
   return id;
 }
@@ -345,21 +370,21 @@ export function addFolder(folder: any): number {
 export function addFolderAfter(folder: any, afterFolderId: number): number {
   const id = generateUniqueId();
   const db = getDatabase();
-  
+
   // Find the folder to insert after
   const afterFolder = db.folders.find(f => f.id === afterFolderId);
   if (!afterFolder) {
     // Fallback to regular addFolder if afterFolder not found
     return addFolder(folder);
   }
-  
+
   // Calculate order value - insert between afterFolder and the next folder
   const afterOrder = afterFolder.order || 0;
   const nextFolder = db.folders
     .filter(f => f.collectionId === afterFolder.collectionId)
     .sort((a, b) => (a.order || 0) - (b.order || 0))
     .find(f => (f.order || 0) > afterOrder);
-  
+
   let order;
   if (nextFolder) {
     // Insert between afterFolder and nextFolder
@@ -371,21 +396,21 @@ export function addFolderAfter(folder: any, afterFolderId: number): number {
     // Insert after afterFolder
     order = afterOrder + 1000;
   }
-  
-  const newFolder = { 
-    ...folder, 
-    id, 
+
+  const newFolder = {
+    ...folder,
+    id,
     order,
-    createdAt: new Date().toISOString() 
+    createdAt: new Date().toISOString(),
   };
-  
+
   db.folders.push(newFolder);
   saveDatabase();
   return id;
 }
 
 export function updateFolder(id: number, folder: any): void {
-  const index = db.folders.findIndex((f) => f.id === id);
+  const index = db.folders.findIndex(f => f.id === id);
   if (index !== -1) {
     db.folders[index] = { ...db.folders[index], ...folder, id };
     saveDatabase();
@@ -393,7 +418,7 @@ export function updateFolder(id: number, folder: any): void {
 }
 
 export function reorderFolder(id: number, newOrder: number): void {
-  const index = db.folders.findIndex((f) => f.id === id);
+  const index = db.folders.findIndex(f => f.id === id);
   if (index !== -1) {
     db.folders[index].order = newOrder;
     saveDatabase();
@@ -401,7 +426,7 @@ export function reorderFolder(id: number, newOrder: number): void {
 }
 
 export function reorderRequest(id: number, newOrder: number): void {
-  const index = db.requests.findIndex((r) => r.id === id);
+  const index = db.requests.findIndex(r => r.id === id);
   if (index !== -1) {
     db.requests[index].order = newOrder;
     saveDatabase();
@@ -409,15 +434,15 @@ export function reorderRequest(id: number, newOrder: number): void {
 }
 
 export function deleteFolder(id: number): void {
-  db.folders = db.folders.filter((f) => f.id !== id);
+  db.folders = db.folders.filter(f => f.id !== id);
   // Also delete all requests in this folder
-  db.requests = db.requests.filter((r) => r.folderId !== id);
+  db.requests = db.requests.filter(r => r.folderId !== id);
   saveDatabase();
 }
 
 export function addRequest(request: any): number {
   const id = generateUniqueId();
-  
+
   // Generate order value - if not provided, use a large number to append to end
   let order = request.order;
   if (order === undefined) {
@@ -425,13 +450,13 @@ export function addRequest(request: any): number {
     const maxOrder = Math.max(...db.requests.map(r => r.order || 0), 0);
     order = maxOrder + 1000; // Add 1000 to ensure it goes to the end
   }
-  
-  db.requests.push({ 
-    ...request, 
-    id, 
+
+  db.requests.push({
+    ...request,
+    id,
     order,
     queryParams: request.queryParams || [],
-    createdAt: new Date().toISOString() 
+    createdAt: new Date().toISOString(),
   });
   saveDatabase();
   return id;
@@ -440,25 +465,30 @@ export function addRequest(request: any): number {
 export function addRequestAfter(request: any, afterRequestId: number): number {
   const id = generateUniqueId();
   const db = getDatabase();
-  
+
   // Find the request to insert after
   const afterRequest = db.requests.find(r => r.id === afterRequestId);
   if (!afterRequest) {
     // Fallback to regular addRequest if afterRequest not found
     return addRequest(request);
   }
-  
+
   // Calculate order value - insert between afterRequest and the next request
   const afterOrder = afterRequest.order || 0;
   const nextRequest = db.requests
-    .filter(r => r.collectionId === afterRequest.collectionId && r.folderId === afterRequest.folderId)
+    .filter(
+      r =>
+        r.collectionId === afterRequest.collectionId &&
+        r.folderId === afterRequest.folderId
+    )
     .sort((a, b) => (a.order || 0) - (b.order || 0))
     .find(r => (r.order || 0) > afterOrder);
-  
+
   let order;
   if (nextRequest) {
     // Insert between afterRequest and nextRequest
-    order = afterOrder + Math.floor(((nextRequest.order || 0) - afterOrder) / 2);
+    order =
+      afterOrder + Math.floor(((nextRequest.order || 0) - afterOrder) / 2);
     if (order === afterOrder) {
       order = afterOrder + 1;
     }
@@ -466,47 +496,51 @@ export function addRequestAfter(request: any, afterRequestId: number): number {
     // Insert after afterRequest
     order = afterOrder + 1000;
   }
-  
-  const newRequest = { 
-    ...request, 
-    id, 
+
+  const newRequest = {
+    ...request,
+    id,
     order,
     queryParams: request.queryParams || [],
-    createdAt: new Date().toISOString() 
+    createdAt: new Date().toISOString(),
   };
-  
+
   db.requests.push(newRequest);
   saveDatabase();
   return id;
 }
 
 export function updateRequest(id: number, request: any): void {
-  const index = db.requests.findIndex((r) => r.id === id);
+  const index = db.requests.findIndex(r => r.id === id);
   if (index !== -1) {
-    db.requests[index] = { 
-      ...db.requests[index], 
-      ...request, 
+    db.requests[index] = {
+      ...db.requests[index],
+      ...request,
       id,
-      queryParams: request.queryParams || db.requests[index].queryParams || []
+      queryParams: request.queryParams || db.requests[index].queryParams || [],
     };
     saveDatabase();
   }
 }
 
 export function deleteRequest(id: number): void {
-  db.requests = db.requests.filter((r) => r.id !== id);
+  db.requests = db.requests.filter(r => r.id !== id);
   saveDatabase();
 }
 
 export function addRequestHistory(history: any): number {
   const id = generateUniqueId();
-  db.request_history.push({ ...history, id, createdAt: new Date().toISOString() });
+  db.request_history.push({
+    ...history,
+    id,
+    createdAt: new Date().toISOString(),
+  });
   saveDatabase();
   return id;
 }
 
 export function deleteRequestHistory(id: number): void {
-  db.request_history = db.request_history.filter((h) => h.id !== id);
+  db.request_history = db.request_history.filter(h => h.id !== id);
   saveDatabase();
 }
 
@@ -551,32 +585,37 @@ export function resetSettings(): void {
 }
 
 // Unsaved Request CRUD operations
-export function addUnsavedRequest(request: Omit<UnsavedRequest, 'id' | 'createdAt'>): string {
+export function addUnsavedRequest(
+  request: Omit<UnsavedRequest, 'id' | 'createdAt'>
+): string {
   const id = `unsaved-${generateUniqueId()}`;
-  db.unsaved_requests.push({ 
-    ...request, 
-    id, 
-    createdAt: new Date().toISOString() 
+  db.unsaved_requests.push({
+    ...request,
+    id,
+    createdAt: new Date().toISOString(),
   });
   saveDatabase();
   return id;
 }
 
-export function updateUnsavedRequest(id: string, request: Partial<UnsavedRequest>): void {
-  const index = db.unsaved_requests.findIndex((r) => r.id === id);
+export function updateUnsavedRequest(
+  id: string,
+  request: Partial<UnsavedRequest>
+): void {
+  const index = db.unsaved_requests.findIndex(r => r.id === id);
   if (index !== -1) {
-    db.unsaved_requests[index] = { 
-      ...db.unsaved_requests[index], 
-      ...request, 
+    db.unsaved_requests[index] = {
+      ...db.unsaved_requests[index],
+      ...request,
       id,
-      lastModified: new Date().toISOString()
+      lastModified: new Date().toISOString(),
     };
     saveDatabase();
   }
 }
 
 export function deleteUnsavedRequest(id: string): void {
-  db.unsaved_requests = db.unsaved_requests.filter((r) => r.id !== id);
+  db.unsaved_requests = db.unsaved_requests.filter(r => r.id !== id);
   saveDatabase();
 }
 
@@ -595,7 +634,7 @@ export function promoteUnsavedRequest(id: string, requestData: any): number {
   if (!unsaved) {
     throw new Error('Unsaved request not found');
   }
-  
+
   // Create saved request
   const savedId = addRequest({
     name: requestData.name || unsaved.name,
@@ -609,33 +648,33 @@ export function promoteUnsavedRequest(id: string, requestData: any): number {
     folderId: requestData.folderId,
     isFavorite: requestData.isFavorite ? 1 : 0,
   });
-  
+
   // Delete unsaved request
   deleteUnsavedRequest(id);
-  
+
   return savedId;
 }
 
 // Preset CRUD operations
 export function addPreset(preset: any): string {
   const id = preset.id || `preset-${Date.now()}`;
-  const existingIndex = db.presets.findIndex((p) => p.id === id);
-  
+  const existingIndex = db.presets.findIndex(p => p.id === id);
+
   if (existingIndex !== -1) {
     // Update existing preset
-    db.presets[existingIndex] = { 
-      ...preset, 
+    db.presets[existingIndex] = {
+      ...preset,
       id,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
     saveDatabase();
     return id;
   } else {
     // Add new preset
-    db.presets.push({ 
-      ...preset, 
-      id, 
-      createdAt: new Date().toISOString() 
+    db.presets.push({
+      ...preset,
+      id,
+      createdAt: new Date().toISOString(),
     });
     saveDatabase();
     return id;
@@ -650,6 +689,6 @@ export function getAllPresets(requestId?: number): any[] {
 }
 
 export function deletePreset(id: string): void {
-  db.presets = db.presets.filter((p) => p.id !== id);
+  db.presets = db.presets.filter(p => p.id !== id);
   saveDatabase();
 }

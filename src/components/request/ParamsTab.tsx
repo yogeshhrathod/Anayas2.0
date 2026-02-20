@@ -1,12 +1,12 @@
 /**
  * ParamsTab - Query parameters with table/JSON toggle
- * 
+ *
  * Handles query parameters configuration with:
  * - Table view for key-value editing
  * - JSON view for bulk editing
  * - Add/remove parameter functionality
  * - View mode toggle
- * 
+ *
  * @example
  * ```tsx
  * <ParamsTab
@@ -32,7 +32,9 @@ import { useToastNotifications } from '../../hooks/useToastNotifications';
 
 export interface ParamsTabProps {
   requestData: RequestFormData;
-  setRequestData: (data: RequestFormData | ((prev: RequestFormData) => RequestFormData)) => void;
+  setRequestData: (
+    data: RequestFormData | ((prev: RequestFormData) => RequestFormData)
+  ) => void;
   paramsViewMode: 'table' | 'json';
   setParamsViewMode: (mode: 'table' | 'json') => void;
   bulkEditJson: string;
@@ -45,18 +47,21 @@ export const ParamsTab: React.FC<ParamsTabProps> = ({
   paramsViewMode,
   setParamsViewMode,
   bulkEditJson,
-  setBulkEditJson
+  setBulkEditJson,
 }) => {
   const { showError } = useToastNotifications();
 
   const toggleParamsView = () => {
     if (paramsViewMode === 'table') {
-      const jsonData = requestData.queryParams.reduce((acc, param) => {
-        if (param.key && param.value) {
-          acc[param.key] = param.value;
-        }
-        return acc;
-      }, {} as Record<string, string>);
+      const jsonData = requestData.queryParams.reduce(
+        (acc, param) => {
+          if (param.key && param.value) {
+            acc[param.key] = param.value;
+          }
+          return acc;
+        },
+        {} as Record<string, string>
+      );
       setBulkEditJson(JSON.stringify(jsonData, null, 2));
     } else {
       try {
@@ -64,11 +69,14 @@ export const ParamsTab: React.FC<ParamsTabProps> = ({
         const newParams = Object.entries(parsed).map(([key, value]) => ({
           key,
           value: String(value),
-          enabled: true
+          enabled: true,
         }));
         setRequestData({ ...requestData, queryParams: newParams });
       } catch (e: any) {
-        showError('Invalid JSON', 'Please fix JSON syntax errors before switching to table view');
+        showError(
+          'Invalid JSON',
+          'Please fix JSON syntax errors before switching to table view'
+        );
         return;
       }
     }
@@ -92,7 +100,10 @@ export const ParamsTab: React.FC<ParamsTabProps> = ({
             variant="outline"
             size="sm"
             onClick={() => {
-              const newParams = [...requestData.queryParams, { key: '', value: '', enabled: true }];
+              const newParams = [
+                ...requestData.queryParams,
+                { key: '', value: '', enabled: true },
+              ];
               setRequestData({ ...requestData, queryParams: newParams });
             }}
             className="h-7 w-7 p-0"
@@ -106,13 +117,15 @@ export const ParamsTab: React.FC<ParamsTabProps> = ({
           />
         </div>
       </div>
-      
+
       <div className="border rounded-md bg-card">
         {paramsViewMode === 'table' ? (
           <div className="p-3">
             <KeyValueEditor
               items={requestData.queryParams}
-              onChange={(items) => setRequestData({ ...requestData, queryParams: items })}
+              onChange={items =>
+                setRequestData({ ...requestData, queryParams: items })
+              }
               placeholder={{ key: 'Parameter name', value: 'Parameter value' }}
               showEnabled={true}
             />
@@ -120,7 +133,7 @@ export const ParamsTab: React.FC<ParamsTabProps> = ({
         ) : (
           <MonacoEditor
             value={bulkEditJson}
-            onChange={(value) => setBulkEditJson(value)}
+            onChange={value => setBulkEditJson(value)}
             language="json"
             placeholder='{"key": "value"}'
             title=""

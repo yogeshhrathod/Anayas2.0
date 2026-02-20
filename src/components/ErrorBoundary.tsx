@@ -18,7 +18,7 @@ export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
-    errorInfo: null
+    errorInfo: null,
   };
 
   public static getDerivedStateFromError(error: Error): State {
@@ -28,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
     this.setState({ errorInfo });
-    
+
     // Report to Sentry with component stack trace
     captureReactError(error, {
       componentStack: errorInfo.componentStack ?? undefined,
@@ -53,11 +53,14 @@ export class ErrorBoundary extends Component<Props, State> {
                 <AlertTriangle className="h-12 w-12 text-destructive" />
               </div>
             </div>
-            
+
             <div className="space-y-2">
-              <h1 className="text-2xl font-bold tracking-tight">Something went wrong</h1>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Something went wrong
+              </h1>
               <p className="text-muted-foreground">
-                An unexpected error occurred. The application has been paused to prevent further issues.
+                An unexpected error occurred. The application has been paused to
+                prevent further issues.
               </p>
             </div>
 
