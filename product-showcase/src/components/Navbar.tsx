@@ -17,6 +17,7 @@ export function Navbar() {
   });
 
   const links: { name: string; href: string; external: boolean }[] = [
+    { name: 'About', href: '/about', external: false },
     // { name: 'Docs', href: '/docs', external: false },
   ];
 
