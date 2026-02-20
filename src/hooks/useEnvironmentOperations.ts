@@ -22,11 +22,12 @@
  * ```
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useStore } from '../store/useStore';
 import { Environment } from '../types/entities';
 import { EnvironmentFormData } from '../types/forms';
-import { useToastNotifications } from './useToastNotifications';
 import { useDebounce } from './useDebounce';
+import { useToastNotifications } from './useToastNotifications';
 
 export function useEnvironmentOperations() {
   const [environments, setEnvironments] = useState<Environment[]>([]);
@@ -41,6 +42,8 @@ export function useEnvironmentOperations() {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const { showSuccess, showError } = useToastNotifications();
+  // Keep Zustand store in sync so EnvironmentSelector always reflects latest data
+  const { setEnvironments: setStoreEnvironments, setCurrentEnvironment } = useStore();
 
   // Load environments
   const loadEnvironments = useCallback(async () => {
@@ -48,12 +51,17 @@ export function useEnvironmentOperations() {
       setIsLoading(true);
       const environmentsData = await window.electronAPI.env.list();
       setEnvironments(environmentsData);
+      // Sync to global store so EnvironmentSelector dropdown updates
+      setStoreEnvironments(environmentsData);
+      // Also refresh currentEnvironment in case it was updated
+      const currentEnv = await window.electronAPI.env.getCurrent();
+      setCurrentEnvironment(currentEnv);
     } catch (error: any) {
       showError('Failed to load environments', error.message);
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [showError, setStoreEnvironments, setCurrentEnvironment]);
 
   // Search and filter environments
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useStore } from '../store/useStore';
 import { Collection } from '../types/entities';
 import { useToastNotifications } from './useToastNotifications';
 
@@ -14,6 +15,23 @@ export function useCollectionEnvironmentOperations(
   const { showSuccess, showError } = useToastNotifications();
   const [isLoading, setIsLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  // Keep Zustand store in sync so EnvironmentSelector immediately reflects changes
+  const { setCollections, collections } = useStore();
+
+  /**
+   * Syncs updated collection data back to the Zustand store so the
+   * EnvironmentSelector dropdown (and variable resolution) are up-to-date
+   * without requiring a full page refresh.
+   */
+  const syncCollectionToStore = useCallback(
+    (updatedCollection: Collection) => {
+      const updatedCollections = collections.map(c =>
+        c.id === updatedCollection.id ? updatedCollection : c
+      );
+      setCollections(updatedCollections);
+    },
+    [collections, setCollections]
+  );
 
   const createEnvironment = useCallback(
     async (data: CollectionEnvironmentFormData) => {
@@ -27,9 +45,12 @@ export function useCollectionEnvironmentOperations(
           showSuccess('Environment created', {
             description: `${data.name} has been created`,
           });
-          // Reload collection if callback provided
-          if (onUpdate && result.collection) {
-            onUpdate(result.collection);
+          if (result.collection) {
+            // Sync to Zustand store immediately
+            syncCollectionToStore(result.collection);
+            if (onUpdate) {
+              onUpdate(result.collection);
+            }
           }
           return result;
         }
@@ -43,7 +64,7 @@ export function useCollectionEnvironmentOperations(
         setIsLoading(false);
       }
     },
-    [collectionId, onUpdate, showSuccess, showError]
+    [collectionId, onUpdate, showSuccess, showError, syncCollectionToStore]
   );
 
   const updateEnvironment = useCallback(
@@ -59,9 +80,12 @@ export function useCollectionEnvironmentOperations(
           showSuccess('Environment updated', {
             description: `${data.name} has been updated`,
           });
-          // Reload collection if callback provided
-          if (onUpdate && result.collection) {
-            onUpdate(result.collection);
+          if (result.collection) {
+            // Sync to Zustand store immediately
+            syncCollectionToStore(result.collection);
+            if (onUpdate) {
+              onUpdate(result.collection);
+            }
           }
           return result;
         }
@@ -75,7 +99,7 @@ export function useCollectionEnvironmentOperations(
         setIsLoading(false);
       }
     },
-    [collectionId, onUpdate, showSuccess, showError]
+    [collectionId, onUpdate, showSuccess, showError, syncCollectionToStore]
   );
 
   const deleteEnvironment = useCallback(
@@ -90,9 +114,12 @@ export function useCollectionEnvironmentOperations(
           showSuccess('Environment deleted', {
             description: 'Environment has been deleted',
           });
-          // Reload collection if callback provided
-          if (onUpdate && result.collection) {
-            onUpdate(result.collection);
+          if (result.collection) {
+            // Sync to Zustand store immediately
+            syncCollectionToStore(result.collection);
+            if (onUpdate) {
+              onUpdate(result.collection);
+            }
           }
           return result;
         }
@@ -106,7 +133,7 @@ export function useCollectionEnvironmentOperations(
         setDeletingId(null);
       }
     },
-    [collectionId, onUpdate, showSuccess, showError]
+    [collectionId, onUpdate, showSuccess, showError, syncCollectionToStore]
   );
 
   const setActiveEnvironment = useCallback(
@@ -120,9 +147,12 @@ export function useCollectionEnvironmentOperations(
           showSuccess('Environment activated', {
             description: 'Active environment has been updated',
           });
-          // Reload collection if callback provided
-          if (onUpdate && result.collection) {
-            onUpdate(result.collection);
+          if (result.collection) {
+            // Sync to Zustand store immediately
+            syncCollectionToStore(result.collection);
+            if (onUpdate) {
+              onUpdate(result.collection);
+            }
           }
           return result;
         }
@@ -134,7 +164,7 @@ export function useCollectionEnvironmentOperations(
         throw error;
       }
     },
-    [collectionId, onUpdate, showSuccess, showError]
+    [collectionId, onUpdate, showSuccess, showError, syncCollectionToStore]
   );
 
   return {

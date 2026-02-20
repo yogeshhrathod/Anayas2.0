@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react';
-import { useStore } from '../store/useStore';
-import { Globe, Check, ChevronDown, Building2 } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { Building2, Check, ChevronDown, Globe } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useClickOutside } from '../hooks/useClickOutside';
+import { cn } from '../lib/utils';
+import { useStore } from '../store/useStore';
 
 interface EnvironmentSelectorProps {
   className?: string;
@@ -18,13 +18,19 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
     collections,
     setCollections,
     selectedRequest,
+    selectedCollectionForNewRequest,
     setCollectionEnvironmentSelection,
     triggerSidebarRefresh,
   } = useStore();
 
-  // Determine which environments to show based on current request
-  const currentCollection = selectedRequest?.collectionId
-    ? collections.find(c => c.id === selectedRequest.collectionId)
+  // Determine which environments to show:
+  // Priority 1: collection of the currently-loaded saved request
+  // Priority 2: collection selected for a new request (sidebar selection)
+  const currentCollectionId =
+    selectedRequest?.collectionId ?? selectedCollectionForNewRequest;
+  // Always read from the store so edits are immediately reflected
+  const currentCollection = currentCollectionId
+    ? collections.find(c => c.id === currentCollectionId)
     : null;
 
   const collectionEnvironments = currentCollection?.environments || [];
