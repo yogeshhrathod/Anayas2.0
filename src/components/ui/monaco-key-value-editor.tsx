@@ -1,13 +1,22 @@
-import { useState, useEffect, useRef } from 'react';
 import { Editor } from '@monaco-editor/react';
+import {
+    AlertCircle,
+    CheckCircle,
+    Copy,
+    FileText,
+    Maximize2,
+    Minimize2,
+    Plus,
+    Trash2,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { DEFAULT_CODE_FONT_STACK } from '../../constants/fonts';
+import { resolveTheme } from '../../lib/themes';
 import { useStore } from '../../store/useStore';
-import { getThemeById } from '../../lib/themes';
+import { Alert, AlertDescription } from './alert';
 import { Button } from './button';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
-import { Alert, AlertDescription } from './alert';
-import { CheckCircle, AlertCircle, Copy, Maximize2, Minimize2, Plus, Trash2, FileText } from 'lucide-react';
 import { useToast } from './use-toast';
-import { DEFAULT_CODE_FONT_STACK } from '../../constants/fonts';
 
 interface KeyValuePair {
   key: string;
@@ -44,7 +53,7 @@ export function MonacoKeyValueEditor({
   fontSize = 14,
   keyPlaceholder = 'Key',
   valuePlaceholder = 'Value',
-  allowBulkEdit = true
+  allowBulkEdit = true,
 }: MonacoKeyValueEditorProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [jsonValue, setJsonValue] = useState('');
@@ -55,29 +64,30 @@ export function MonacoKeyValueEditor({
   const { success, error: showError } = useToast();
   const { themeMode, currentThemeId, customThemes, settings } = useStore();
   // Get code font from settings, fallback to default
-  const codeFontFamily = (settings.codeFontFamily && 
-    typeof settings.codeFontFamily === 'string' && 
-    settings.codeFontFamily.trim().length > 0)
-    ? settings.codeFontFamily.trim()
-    : DEFAULT_CODE_FONT_STACK;
+  const codeFontFamily =
+    settings.codeFontFamily &&
+    typeof settings.codeFontFamily === 'string' &&
+    settings.codeFontFamily.trim().length > 0
+      ? settings.codeFontFamily.trim()
+      : DEFAULT_CODE_FONT_STACK;
 
-  // Get current theme and determine Monaco theme
-  const currentTheme = getThemeById(currentThemeId, customThemes);
-  const isDarkMode = themeMode === 'dark' || 
-    (themeMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ||
-    (currentTheme && currentTheme.type === 'dark');
-
+  // Resolve which theme should be applied
+  const currentTheme = resolveTheme(themeMode, currentThemeId, customThemes);
+  const isDarkMode = currentTheme.type === 'dark';
   const monacoTheme = isDarkMode ? 'vs-dark' : 'vs';
 
   // Convert data to JSON string for bulk editing
   useEffect(() => {
     const jsonString = JSON.stringify(
-      data.reduce((acc, item) => {
-        if (item.key && item.value) {
-          acc[item.key] = item.value;
-        }
-        return acc;
-      }, {} as Record<string, string>),
+      data.reduce(
+        (acc, item) => {
+          if (item.key && item.value) {
+            acc[item.key] = item.value;
+          }
+          return acc;
+        },
+        {} as Record<string, string>
+      ),
       null,
       2
     );
@@ -105,7 +115,7 @@ export function MonacoKeyValueEditor({
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.updateOptions({
-        fontFamily: codeFontFamily
+        fontFamily: codeFontFamily,
       });
     }
   }, [codeFontFamily]);
@@ -113,7 +123,7 @@ export function MonacoKeyValueEditor({
   // Handle editor mount
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
-    
+
     // Configure editor options
     editor.updateOptions({
       fontFamily: codeFontFamily,
@@ -199,7 +209,10 @@ export function MonacoKeyValueEditor({
 
   const handleApplyJson = () => {
     if (!isValid) {
-      showError('Invalid JSON', 'Please fix JSON syntax errors before applying');
+      showError(
+        'Invalid JSON',
+        'Please fix JSON syntax errors before applying'
+      );
       return;
     }
 
@@ -208,7 +221,7 @@ export function MonacoKeyValueEditor({
       const newData = Object.entries(parsed).map(([key, value]) => ({
         key,
         value: String(value),
-        enabled: true
+        enabled: true,
       }));
       onChange(newData);
       setShowJsonEditor(false);
@@ -223,7 +236,11 @@ export function MonacoKeyValueEditor({
     onChange(newData);
   };
 
-  const updateItem = (index: number, field: 'key' | 'value', newValue: string) => {
+  const updateItem = (
+    index: number,
+    field: 'key' | 'value',
+    newValue: string
+  ) => {
     const newData = [...data];
     newData[index] = { ...newData[index], [field]: newValue };
     onChange(newData);
@@ -244,7 +261,9 @@ export function MonacoKeyValueEditor({
   const editorHeight = isFullscreen ? 'calc(100vh - 120px)' : height;
 
   return (
-    <Card className={`${className} ${isFullscreen ? 'fixed inset-4 z-modal' : ''}`}>
+    <Card
+      className={`${className} ${isFullscreen ? 'fixed inset-4 z-modal' : ''}`}
+    >
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -254,9 +273,9 @@ export function MonacoKeyValueEditor({
           {showActions && (
             <div className="flex gap-2">
               {allowBulkEdit && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setShowJsonEditor(!showJsonEditor)}
                 >
                   <FileText className="h-4 w-4 mr-1" />
@@ -282,7 +301,7 @@ export function MonacoKeyValueEditor({
         {showJsonEditor ? (
           // JSON Editor View
           <div className="space-y-2">
-            <div 
+            <div
               className={`border rounded-md overflow-hidden ${
                 !isValid ? 'border-red-500' : 'border-border'
               }`}
@@ -330,7 +349,7 @@ export function MonacoKeyValueEditor({
                 }}
               />
             </div>
-            
+
             {/* Validation Messages */}
             {!isValid && error && (
               <Alert variant="destructive">
@@ -357,7 +376,10 @@ export function MonacoKeyValueEditor({
                 <Copy className="h-4 w-4 mr-1" />
                 Copy
               </Button>
-              <Button onClick={handleApplyJson} disabled={!isValid || !jsonValue.trim()}>
+              <Button
+                onClick={handleApplyJson}
+                disabled={!isValid || !jsonValue.trim()}
+              >
                 Apply JSON
               </Button>
             </div>
@@ -367,7 +389,10 @@ export function MonacoKeyValueEditor({
           <div className="space-y-2">
             {data.length > 0 ? (
               data.map((item, index) => (
-                <div key={`${item.key}-${item.value}-${index}`} className="flex gap-2 items-center flex-wrap">
+                <div
+                  key={`${item.key}-${item.value}-${index}`}
+                  className="flex gap-2 items-center flex-wrap"
+                >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <input
                       type="checkbox"
@@ -378,14 +403,14 @@ export function MonacoKeyValueEditor({
                     <input
                       type="text"
                       value={item.key}
-                      onChange={(e) => updateItem(index, 'key', e.target.value)}
+                      onChange={e => updateItem(index, 'key', e.target.value)}
                       placeholder={keyPlaceholder}
                       className="flex-1 min-w-0 px-3 py-2 border border-input rounded-md bg-background text-sm"
                     />
                     <input
                       type="text"
                       value={item.value}
-                      onChange={(e) => updateItem(index, 'value', e.target.value)}
+                      onChange={e => updateItem(index, 'value', e.target.value)}
                       placeholder={valuePlaceholder}
                       className="flex-1 min-w-0 px-3 py-2 border border-input rounded-md bg-background text-sm"
                     />

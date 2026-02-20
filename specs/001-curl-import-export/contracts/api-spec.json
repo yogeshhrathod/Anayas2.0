@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "featureId": "001-curl-import-export",
   "lastUpdated": "2025-11-13",
-  
+
   "endpoints": [
     {
       "name": "[Endpoint Name]",
@@ -60,7 +60,7 @@
       }
     }
   ],
-  
+
   "ipcHandlers": [
     {
       "name": "handler:name",
@@ -76,7 +76,7 @@
       }
     }
   ],
-  
+
   "dataModels": [
     {
       "name": "[Model Name]",
@@ -93,4 +93,3 @@
     }
   ]
 }
-

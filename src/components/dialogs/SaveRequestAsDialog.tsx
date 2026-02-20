@@ -7,11 +7,11 @@ import { Dialog } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '../ui/select';
 
 interface SaveRequestAsDialogProps {
@@ -77,7 +77,8 @@ export function SaveRequestAsDialog({
         ...request,
         name: data.name,
         collectionId: parseInt(data.collectionId),
-        folderId: data.folderId === 'none' ? undefined : parseInt(data.folderId),
+        folderId:
+          data.folderId === 'none' ? undefined : parseInt(data.folderId),
         id: undefined, // Clear ID to create new
       };
 
@@ -118,14 +119,14 @@ export function SaveRequestAsDialog({
         <div className="space-y-2">
           <Label htmlFor="collection">Collection</Label>
           <Select
-            onValueChange={(val) => setValue('collectionId', val)}
+            onValueChange={val => setValue('collectionId', val)}
             value={watch('collectionId')}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select a collection" />
             </SelectTrigger>
             <SelectContent>
-              {collections.map((col) => (
+              {collections.map(col => (
                 <SelectItem key={col.id} value={col.id!.toString()}>
                   {col.name}
                 </SelectItem>
@@ -137,7 +138,7 @@ export function SaveRequestAsDialog({
         <div className="space-y-2">
           <Label htmlFor="folder">Folder (Optional)</Label>
           <Select
-            onValueChange={(val) => setValue('folderId', val)}
+            onValueChange={val => setValue('folderId', val)}
             value={watch('folderId')}
             disabled={!selectedCollectionId}
           >
@@ -146,7 +147,7 @@ export function SaveRequestAsDialog({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">No Folder (Root)</SelectItem>
-              {folders.map((folder) => (
+              {folders.map(folder => (
                 <SelectItem key={folder.id} value={folder.id.toString()}>
                   {folder.name}
                 </SelectItem>
@@ -163,7 +164,10 @@ export function SaveRequestAsDialog({
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting || !selectedCollectionId}>
+          <Button
+            type="submit"
+            disabled={isSubmitting || !selectedCollectionId}
+          >
             {isSubmitting ? 'Saving...' : 'Save'}
           </Button>
         </div>

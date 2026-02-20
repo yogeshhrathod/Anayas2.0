@@ -1,11 +1,11 @@
 /**
  * useRequestState - Custom hook for request state management
- * 
+ *
  * Manages the complex state of API requests including:
  * - Request data (method, URL, headers, body, etc.)
  * - UI state (active tabs, view modes, etc.)
  * - Save status and auto-save functionality
- * 
+ *
  * @example
  * ```tsx
  * const {
@@ -19,11 +19,11 @@
  * ```
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { RequestFormData } from '../types/forms';
-import { Request } from '../types/entities';
-import { useStore } from '../store/useStore';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { generateDraftName } from '../lib/draftNaming';
+import { useStore } from '../store/useStore';
+import { Request } from '../types/entities';
+import { RequestFormData } from '../types/forms';
 
 export interface RequestState {
   requestData: RequestFormData;
@@ -44,7 +44,9 @@ export interface RequestState {
 }
 
 export interface RequestStateActions {
-  setRequestData: (data: RequestFormData | ((prev: RequestFormData) => RequestFormData)) => void;
+  setRequestData: (
+    data: RequestFormData | ((prev: RequestFormData) => RequestFormData)
+  ) => void;
   setActiveTab: (tab: RequestState['activeTab']) => void;
   setBodyType: (type: RequestState['bodyType']) => void;
   setBodyContentType: (type: RequestState['bodyContentType']) => void;
@@ -69,12 +71,12 @@ const defaultRequestData: RequestFormData = {
   method: 'GET',
   url: '',
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
   body: '',
   queryParams: [],
   auth: {
-    type: 'none'
+    type: 'none',
   },
   collectionId: undefined,
   folderId: undefined,
@@ -82,34 +84,98 @@ const defaultRequestData: RequestFormData = {
 };
 
 export function useRequestState(selectedRequest: Request | null) {
-  const { settings, triggerSidebarRefresh, setUnsavedRequests, activeUnsavedRequestId, setActiveUnsavedRequestId } = useStore();
+  // Individual selectors for better performance and stability
+  const settings = useStore(state => state.settings);
+  const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
+  const setUnsavedRequests = useStore(state => state.setUnsavedRequests);
+  const activeUnsavedRequestId = useStore(
+    state => state.activeUnsavedRequestId
+  );
+  const setActiveUnsavedRequestId = useStore(
+    state => state.setActiveUnsavedRequestId
+  );
+  const setSelectedRequest = useStore(state => state.setSelectedRequest);
+
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const unsavedSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInternalUpdateRef = useRef<boolean>(false);
 
   // Load default responseSubTab from settings (defaults to 'headers' if not set)
-  const defaultResponseSubTab = (settings.defaultResponseSubTab as 'headers' | 'body' | 'both') || 'headers';
+  const defaultResponseSubTab =
+    (settings?.defaultResponseSubTab as 'headers' | 'body' | 'both') ||
+    'headers';
 
-  const [state, setState] = useState<RequestState>({
-    requestData: defaultRequestData,
-    activeTab: 'params',
-    bodyType: 'raw',
-    bodyContentType: 'json',
-    bodyViewMode: 'table',
-    bodyFormData: [],
-    paramsViewMode: 'table',
-    headersViewMode: 'table',
-    bulkEditJson: '',
-    responseSubTab: defaultResponseSubTab,
-    splitViewRatio: 50,
-    isSaved: false,
-    lastSavedAt: null,
-    isEditingName: false,
-    tempName: '',
+  const [state, setState] = useState<RequestState>(() => {
+    const initialRequestData = selectedRequest
+      ? {
+          id: selectedRequest.id,
+          name: selectedRequest.name,
+          method: selectedRequest.method as RequestFormData['method'],
+          url: selectedRequest.url,
+          headers: selectedRequest.headers || {},
+          body: selectedRequest.body || '',
+          queryParams: selectedRequest.queryParams || [],
+          auth: selectedRequest.auth || { type: 'none' },
+          collectionId: selectedRequest.collectionId,
+          folderId: selectedRequest.folderId,
+          isFavorite: Boolean(selectedRequest.isFavorite),
+        }
+      : defaultRequestData;
+
+    return {
+      requestData: initialRequestData,
+      activeTab: 'params',
+      bodyType: 'raw',
+      bodyContentType: 'json',
+      bodyViewMode: 'table',
+      bodyFormData: [],
+      paramsViewMode: 'table',
+      headersViewMode: 'table',
+      bulkEditJson: '',
+      responseSubTab: defaultResponseSubTab,
+      splitViewRatio: 50,
+      isSaved: !!selectedRequest,
+      lastSavedAt: selectedRequest ? new Date() : null,
+      isEditingName: false,
+      tempName: '',
+    };
   });
 
-  // Load selected request when it changes
+  // Load selected request when it changes from outside
   useEffect(() => {
-    if (selectedRequest) {
+    if (isInternalUpdateRef.current) {
+      isInternalUpdateRef.current = false;
+      return;
+    }
+
+    if (!selectedRequest) {
+      // Only reset if we're not already at default
+      if (state.requestData.url !== '' || state.requestData.body !== '') {
+        setState(prev => ({
+          ...prev,
+          requestData: defaultRequestData,
+          isSaved: false,
+          lastSavedAt: null,
+        }));
+      }
+      return;
+    }
+
+    // Deep check to avoid redundant updates if we already have this request loaded
+    const isSameRequest =
+      state.requestData.id === selectedRequest.id &&
+      state.requestData.name === selectedRequest.name &&
+      state.requestData.method === selectedRequest.method &&
+      state.requestData.url === selectedRequest.url &&
+      state.requestData.body === selectedRequest.body &&
+      JSON.stringify(state.requestData.headers) ===
+        JSON.stringify(selectedRequest.headers || {}) &&
+      JSON.stringify(state.requestData.queryParams) ===
+        JSON.stringify(selectedRequest.queryParams || []) &&
+      JSON.stringify(state.requestData.auth) ===
+        JSON.stringify(selectedRequest.auth || { type: 'none' });
+
+    if (!isSameRequest) {
       setState(prev => ({
         ...prev,
         requestData: {
@@ -128,19 +194,52 @@ export function useRequestState(selectedRequest: Request | null) {
         isSaved: true,
         lastSavedAt: new Date(),
       }));
-    } else {
-      setState(prev => ({
-        ...prev,
-        requestData: defaultRequestData,
-        isSaved: false,
-        lastSavedAt: null,
-      }));
     }
   }, [selectedRequest]);
 
+  // Synchronize local changes back to the global store
+  useEffect(() => {
+    // IMPORTANT: Never sync if there's no selected request.
+    // This prevents the infinite loop when selectedRequest is cleared (null).
+    if (!selectedRequest || !state.requestData) return;
+
+    // Check if there are actual data changes to avoid redundant updates
+    // Use a helper for shallow object comparison to avoid order-related issues with JSON.stringify
+    const areObjectsEqual = (a: any, b: any) => {
+      const keysA = Object.keys(a || {}).sort();
+      const keysB = Object.keys(b || {}).sort();
+      if (keysA.length !== keysB.length) return false;
+      return keysA.every(key => a[key] === b[key]);
+    };
+
+    const isDifferent =
+      state.requestData.id !== selectedRequest.id ||
+      state.requestData.name !== selectedRequest.name ||
+      state.requestData.method !== selectedRequest.method ||
+      state.requestData.url !== selectedRequest.url ||
+      state.requestData.body !== selectedRequest.body ||
+      !areObjectsEqual(state.requestData.headers, selectedRequest.headers) ||
+      !areObjectsEqual(state.requestData.auth, selectedRequest.auth) ||
+      JSON.stringify(state.requestData.queryParams || []) !==
+        JSON.stringify(selectedRequest.queryParams || []);
+
+    if (isDifferent) {
+      isInternalUpdateRef.current = true;
+      setSelectedRequest({
+        ...selectedRequest,
+        ...state.requestData,
+        isFavorite: state.requestData.isFavorite ? 1 : 0,
+      } as Request);
+    }
+  }, [state.requestData, setSelectedRequest, selectedRequest]);
+
   // Auto-save functionality for saved requests
   const autoSave = useCallback(async () => {
-    if (!settings.autoSaveRequests || !state.requestData.name.trim() || !state.requestData.collectionId) {
+    if (
+      !settings.autoSaveRequests ||
+      !state.requestData.name.trim() ||
+      !state.requestData.collectionId
+    ) {
       return;
     }
 
@@ -156,9 +255,9 @@ export function useRequestState(selectedRequest: Request | null) {
         auth: state.requestData.auth,
         collectionId: state.requestData.collectionId,
         folderId: state.requestData.folderId,
-        isFavorite: state.requestData.isFavorite,
+        isFavorite: state.requestData.isFavorite ? 1 : 0,
       });
-      
+
       setState(prev => ({
         ...prev,
         isSaved: true,
@@ -177,13 +276,19 @@ export function useRequestState(selectedRequest: Request | null) {
     }
 
     // Don't save completely empty requests
-    if (!state.requestData.url && !state.requestData.body && state.requestData.queryParams.length === 0) {
+    if (
+      !state.requestData.url &&
+      !state.requestData.body &&
+      state.requestData.queryParams.length === 0
+    ) {
       return;
     }
 
     try {
-      const draftName = state.requestData.name || generateDraftName(state.requestData.method, state.requestData.url);
-      
+      const draftName =
+        state.requestData.name ||
+        generateDraftName(state.requestData.method, state.requestData.url);
+
       const result = await window.electronAPI.unsavedRequest.save({
         id: activeUnsavedRequestId || undefined,
         name: draftName,
@@ -193,20 +298,26 @@ export function useRequestState(selectedRequest: Request | null) {
         body: state.requestData.body || '',
         queryParams: state.requestData.queryParams,
         auth: state.requestData.auth,
+        lastResponse: selectedRequest?.lastResponse,
       });
-      
+
       // Update active unsaved request ID only if it was newly created
       if (!activeUnsavedRequestId && result.id) {
         setActiveUnsavedRequestId(result.id);
       }
-      
+
       // Reload unsaved requests
       const allUnsaved = await window.electronAPI.unsavedRequest.getAll();
       setUnsavedRequests(allUnsaved);
     } catch (e: any) {
       console.error('Auto-save unsaved request failed:', e);
     }
-  }, [state.requestData, activeUnsavedRequestId, setActiveUnsavedRequestId, setUnsavedRequests]);
+  }, [
+    state.requestData,
+    activeUnsavedRequestId,
+    setActiveUnsavedRequestId,
+    setUnsavedRequests,
+  ]);
 
   // Debounced auto-save for saved requests
   useEffect(() => {
@@ -214,7 +325,11 @@ export function useRequestState(selectedRequest: Request | null) {
       clearTimeout(autoSaveTimeoutRef.current);
     }
 
-    if (settings.autoSaveRequests && state.requestData.name.trim() && state.requestData.collectionId) {
+    if (
+      settings.autoSaveRequests &&
+      state.requestData.name.trim() &&
+      state.requestData.collectionId
+    ) {
       autoSaveTimeoutRef.current = setTimeout(() => {
         autoSave();
       }, 2000); // Auto-save after 2 seconds of inactivity
@@ -246,34 +361,44 @@ export function useRequestState(selectedRequest: Request | null) {
   }, [state.requestData, autoSaveUnsaved]);
 
   const actions: RequestStateActions = {
-    setRequestData: (data) => {
+    setRequestData: data => {
       setState(prev => ({
         ...prev,
         requestData: typeof data === 'function' ? data(prev.requestData) : data,
         isSaved: false,
       }));
     },
-    setActiveTab: (tab) => setState(prev => ({ ...prev, activeTab: tab })),
-    setBodyType: (type) => setState(prev => ({ ...prev, bodyType: type })),
-    setBodyContentType: (type) => setState(prev => ({ ...prev, bodyContentType: type })),
-    setBodyViewMode: (mode) => setState(prev => ({ ...prev, bodyViewMode: mode })),
-    setBodyFormData: (data) => setState(prev => ({ ...prev, bodyFormData: data })),
-    setParamsViewMode: (mode) => setState(prev => ({ ...prev, paramsViewMode: mode })),
-    setHeadersViewMode: (mode) => setState(prev => ({ ...prev, headersViewMode: mode })),
-    setBulkEditJson: (json) => setState(prev => ({ ...prev, bulkEditJson: json })),
-    setResponseSubTab: (tab) => {
+    setActiveTab: tab => setState(prev => ({ ...prev, activeTab: tab })),
+    setBodyType: type => setState(prev => ({ ...prev, bodyType: type })),
+    setBodyContentType: type =>
+      setState(prev => ({ ...prev, bodyContentType: type })),
+    setBodyViewMode: mode =>
+      setState(prev => ({ ...prev, bodyViewMode: mode })),
+    setBodyFormData: data =>
+      setState(prev => ({ ...prev, bodyFormData: data })),
+    setParamsViewMode: mode =>
+      setState(prev => ({ ...prev, paramsViewMode: mode })),
+    setHeadersViewMode: mode =>
+      setState(prev => ({ ...prev, headersViewMode: mode })),
+    setBulkEditJson: json =>
+      setState(prev => ({ ...prev, bulkEditJson: json })),
+    setResponseSubTab: tab => {
       setState(prev => ({ ...prev, responseSubTab: tab }));
       // Save preference to settings
-      window.electronAPI.settings.set('defaultResponseSubTab', tab).catch((err: any) => {
-        console.error('Failed to save response sub-tab preference:', err);
-      });
+      window.electronAPI.settings
+        .set('defaultResponseSubTab', tab)
+        .catch((err: any) => {
+          console.error('Failed to save response sub-tab preference:', err);
+        });
     },
-    setSplitViewRatio: (ratio) => setState(prev => ({ ...prev, splitViewRatio: ratio })),
-    setIsSaved: (saved) => setState(prev => ({ ...prev, isSaved: saved })),
-    setLastSavedAt: (date) => setState(prev => ({ ...prev, lastSavedAt: date })),
-    setIsEditingName: (editing) => setState(prev => ({ ...prev, isEditingName: editing })),
-    setTempName: (name) => setState(prev => ({ ...prev, tempName: name })),
-    
+    setSplitViewRatio: ratio =>
+      setState(prev => ({ ...prev, splitViewRatio: ratio })),
+    setIsSaved: saved => setState(prev => ({ ...prev, isSaved: saved })),
+    setLastSavedAt: date => setState(prev => ({ ...prev, lastSavedAt: date })),
+    setIsEditingName: editing =>
+      setState(prev => ({ ...prev, isEditingName: editing })),
+    setTempName: name => setState(prev => ({ ...prev, tempName: name })),
+
     startNameEdit: () => {
       setState(prev => ({
         ...prev,
@@ -281,7 +406,7 @@ export function useRequestState(selectedRequest: Request | null) {
         tempName: prev.requestData.name,
       }));
     },
-    
+
     cancelNameEdit: () => {
       setState(prev => ({
         ...prev,
@@ -289,7 +414,7 @@ export function useRequestState(selectedRequest: Request | null) {
         tempName: prev.requestData.name,
       }));
     },
-    
+
     saveNameEdit: async () => {
       if (!state.tempName.trim()) {
         actions.cancelNameEdit();
@@ -303,8 +428,9 @@ export function useRequestState(selectedRequest: Request | null) {
 
       try {
         // Check if this is an unsaved request (no id and no collectionId)
-        const isUnsaved = !state.requestData.id && !state.requestData.collectionId;
-        
+        const isUnsaved =
+          !state.requestData.id && !state.requestData.collectionId;
+
         if (isUnsaved) {
           // Update unsaved request name
           const result = await window.electronAPI.unsavedRequest.save({
@@ -316,13 +442,14 @@ export function useRequestState(selectedRequest: Request | null) {
             body: state.requestData.body || '',
             queryParams: state.requestData.queryParams,
             auth: state.requestData.auth,
+            lastResponse: selectedRequest?.lastResponse,
           });
-          
+
           // Update active unsaved request ID if it was newly created
           if (!activeUnsavedRequestId && result.id) {
             setActiveUnsavedRequestId(result.id);
           }
-          
+
           // Reload unsaved requests to update sidebar
           const allUnsaved = await window.electronAPI.unsavedRequest.getAll();
           setUnsavedRequests(allUnsaved);
@@ -339,13 +466,13 @@ export function useRequestState(selectedRequest: Request | null) {
             auth: state.requestData.auth,
             collectionId: state.requestData.collectionId,
             folderId: state.requestData.folderId,
-            isFavorite: state.requestData.isFavorite,
+            isFavorite: state.requestData.isFavorite ? 1 : 0,
           });
-          
+
           // Trigger sidebar refresh for real-time updates
           triggerSidebarRefresh();
         }
-        
+
         setState(prev => ({
           ...prev,
           requestData: { ...prev.requestData, name: prev.tempName.trim() },

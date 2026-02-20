@@ -14,24 +14,28 @@ Redesign the sidebar to work like VS Code's collapsible sections (EXPLORER, OUTL
 ## Goal Alignment Summary
 
 **How this feature supports the performance-first project goal:**
+
 - **Better Memory Management**: Only render expanded sections, reducing DOM nodes and memory usage
 - **Improved Developer Experience**: Familiar VS Code-style interface with better space management
 - **Lazy Rendering**: Collapsed sections don't render their children, saving memory and render time
 - **Cleaner UI**: More organized, focused interface without cluttering the sidebar
 
 **Success Criteria:**
+
 - Memory: <5MB memory impact (minimal DOM changes)
 - Load time: <50ms (lightweight UI reorganization)
 - Improved UX: Sidebar space is efficiently utilized
 - Familiar: Developers instantly recognize VS Code-style interface
 
 **Constraints:**
+
 - Performance budget: Memory <5MB, load <50ms (very lightweight UI change)
 - Must maintain existing functionality (collections, unsaved requests)
 - Must preserve existing drag-and-drop functionality
 - Must be accessible (keyboard navigation, screen readers)
 
 **Decisions (Confirmed):**
+
 - ✅ Multiple sections can be expanded simultaneously (not accordion mode)
 - ✅ Section collapse state persists across app restarts
 - ✅ Future sections planned (Favorites, Recent) - design for extensibility
@@ -40,32 +44,38 @@ Redesign the sidebar to work like VS Code's collapsible sections (EXPLORER, OUTL
 ## Performance Impact Analysis (MANDATORY)
 
 ### Memory Impact (PRIMARY)
+
 - **Estimated Memory Footprint**: <5MB (minimal DOM changes)
 - **Memory Budget**: Sidebar UI: <5MB additional
-- **Memory Cleanup Strategy**: 
+- **Memory Cleanup Strategy**:
   - Collapsed sections don't render children (reduces DOM nodes)
   - Unmount collapsed section content completely
   - Only active section maintains its tree in memory
 
 ### Load Time Impact (PRIMARY)
+
 - **Estimated Load Time**: <50ms (lightweight UI reorganization)
 - **Initialization Strategy**: Synchronous (no async operations needed)
 - **Performance Tracking**: Track render time before/after change
 
 ### Lazy Loading Strategy (REQUIRED)
+
 - **How feature loads on-demand**: Sections load their content only when expanded
 - **Code Splitting Plan**: No separate bundle needed (lightweight UI component)
 - **Trigger**: User clicks section header to expand
 
 ### Bundle Size Impact (INFORMATIONAL - Not Primary)
+
 - **Estimated Bundle Size**: <10KB (simple accordion component)
 
 ### Performance Monitoring (PRIMARY)
+
 - [x] Memory usage will be tracked (DOM node count before/after)
 - [x] Render time will be measured and logged
 - [x] Performance metrics will be logged to monitoring system
 
 **Optional/Informational:**
+
 - [x] Bundle size will be tracked in build (for awareness)
 
 ## Goals
@@ -83,6 +93,7 @@ Redesign the sidebar to work like VS Code's collapsible sections (EXPLORER, OUTL
 ### As a developer, I want collapsible sidebar sections so that I can manage space efficiently
 
 **Acceptance Criteria:**
+
 - [ ] Sidebar has distinct sections: "Unsaved Requests" and "Collections"
 - [ ] Each section has a header with title and expand/collapse icon
 - [ ] Clicking section header toggles expand/collapse
@@ -98,6 +109,7 @@ Redesign the sidebar to work like VS Code's collapsible sections (EXPLORER, OUTL
 ### As a developer, I want the sidebar to feel like VS Code so that it's immediately familiar
 
 **Acceptance Criteria:**
+
 - [ ] Section headers look like VS Code (same visual style)
 - [ ] Section icons match VS Code patterns (chevron right/down)
 - [ ] Expand/collapse animations feel smooth and natural
@@ -111,6 +123,7 @@ Redesign the sidebar to work like VS Code's collapsible sections (EXPLORER, OUTL
 ### As a developer, I want the collapsed sections to save space so that I can focus on what matters
 
 **Acceptance Criteria:**
+
 - [ ] Collapsed sections only show header (≈32px height)
 - [ ] Expanded section takes remaining space (flex-1)
 - [ ] No wasted space in sidebar
@@ -124,6 +137,7 @@ Redesign the sidebar to work like VS Code's collapsible sections (EXPLORER, OUTL
 ## Technical Requirements
 
 ### Existing Code to Leverage
+
 - [ ] Component: `src/components/CollectionHierarchy.tsx` - Will be wrapped in collapsible section
 - [ ] Component: `src/components/UnsavedRequestsSection.tsx` - Will be wrapped in collapsible section
 - [ ] Component: `src/App.tsx` - Current sidebar layout (lines 446-558) will be refactored
@@ -131,14 +145,16 @@ Redesign the sidebar to work like VS Code's collapsible sections (EXPLORER, OUTL
 - [ ] Store: `src/store/useStore.ts` - Will store section expand/collapse state
 
 ### Integration Points
+
 - **Where to add**: `src/App.tsx` sidebar section (lines 494-554)
-- **How to integrate**: 
+- **How to integrate**:
   - Create new `CollapsibleSection` component
   - Wrap existing `UnsavedRequestsSection` and `CollectionHierarchy` in sections
   - Replace current vertical resize logic with accordion logic
 - **Existing patterns to follow**: shadcn/ui Collapsible component, accordion patterns
 
 ### Architecture Decisions
+
 - **Decision 1**: Use shadcn/ui Collapsible/Accordion components as base
   - Rationale: Maintains consistency with existing UI library
   - Alternative: Custom implementation (more control but more code)
@@ -150,15 +166,17 @@ Redesign the sidebar to work like VS Code's collapsible sections (EXPLORER, OUTL
   - Store in settings table as JSON: `{ "sidebar": { "expandedSections": ["collections"] } }`
 
 ### Dependencies
-- Internal: 
+
+- Internal:
   - `src/components/CollectionHierarchy.tsx`
   - `src/components/UnsavedRequestsSection.tsx`
   - `src/store/useStore.ts`
-- External: 
+- External:
   - `@radix-ui/react-collapsible` (if not already included in shadcn/ui)
   - `lucide-react` (icons)
 
 ### File Structure Changes
+
 ```
 src/
 ├── components/
@@ -175,11 +193,12 @@ src/
 ### Data Model Changes
 
 **Zustand Store (`useStore.ts`):**
+
 ```typescript
 // Add to store
 interface AppState {
   // ... existing state
-  
+
   // NEW: Sidebar section state (synced with database)
   expandedSidebarSections: Set<string>; // e.g., Set(['unsaved', 'collections'])
   toggleSidebarSection: (section: string) => void;
@@ -190,6 +209,7 @@ interface AppState {
 
 **Database Schema Changes:**
 Add to settings table or create new sidebar_state entry:
+
 ```json
 {
   "sidebar": {
@@ -202,6 +222,7 @@ Add to settings table or create new sidebar_state entry:
 ### API Changes
 
 **IPC Handlers (Settings):**
+
 ```typescript
 // Add to electron/ipc/handlers.ts
 ipcMain.handle('settings:getSidebarState', async () => {
@@ -214,6 +235,7 @@ ipcMain.handle('settings:setSidebarState', async (event, state) => {
 ```
 
 **Preload API:**
+
 ```typescript
 // Add to electron/preload.ts
 sidebar: {
@@ -225,6 +247,7 @@ sidebar: {
 ## Acceptance Criteria
 
 ### Functional Requirements
+
 - [ ] Sidebar displays two sections: "Unsaved Requests" and "Collections"
 - [ ] Each section has a clickable header with title and chevron icon
 - [ ] Clicking header toggles section expand/collapse
@@ -241,21 +264,22 @@ sidebar: {
 - [ ] Sidebar resize still works
 
 ### Non-Functional Requirements
-- [ ] **Performance (PRIMARY)**: 
+
+- [ ] **Performance (PRIMARY)**:
   - Memory: <5MB impact (fewer DOM nodes with collapsed sections)
   - Render time: <50ms for expand/collapse
   - No lazy loading needed (already part of App.tsx)
   - Cleanup: Collapsed sections unmount children
   - Bundle size: <10KB additional (tracked for awareness)
-- [ ] **Accessibility**: 
+- [ ] **Accessibility**:
   - Keyboard navigation (Tab, Enter, Arrow keys)
   - ARIA labels for sections
   - Screen reader friendly
-- [ ] **Usability**: 
+- [ ] **Usability**:
   - Smooth animations (not jarring)
   - Clear visual feedback (hover, active states)
   - Familiar VS Code-style appearance
-- [ ] **Testing**: 
+- [ ] **Testing**:
   - Unit tests for CollapsibleSection component
   - Integration tests for sidebar interactions
   - Accessibility tests (keyboard navigation)
@@ -277,12 +301,12 @@ sidebar: {
 
 ## Risks & Mitigation
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|------------|------------|
-| Breaking existing drag-drop | High | Low | Test thoroughly, maintain existing structure |
-| Animation performance issues | Medium | Low | Use CSS transitions, hardware acceleration |
-| Accessibility problems | Medium | Medium | Follow ARIA best practices, test with screen readers |
-| User confusion (different from current) | Low | Medium | Make it look like VS Code (familiar) |
+| Risk                                    | Impact | Probability | Mitigation                                           |
+| --------------------------------------- | ------ | ----------- | ---------------------------------------------------- |
+| Breaking existing drag-drop             | High   | Low         | Test thoroughly, maintain existing structure         |
+| Animation performance issues            | Medium | Low         | Use CSS transitions, hardware acceleration           |
+| Accessibility problems                  | Medium | Medium      | Follow ARIA best practices, test with screen readers |
+| User confusion (different from current) | Low    | Medium      | Make it look like VS Code (familiar)                 |
 
 ## References
 
@@ -296,18 +320,21 @@ sidebar: {
 ### Design Decisions
 
 **Multi-Expand Mode:**
+
 - ✅ Multiple sections can be expanded (user confirmed)
 - More flexible than accordion mode
 - Users can collapse sections when they need space
 - Better for power users who want to see everything
 
 **Section State Persistence:**
+
 - ✅ State persists across app restarts (user confirmed)
 - Stored in database settings table
 - Default: "Collections" section expanded
 - Future: Can add section ordering, custom sections
 
 **Animation Strategy:**
+
 - CSS transitions for smooth animations
 - 200ms duration (feels natural, not too slow)
 - Hardware accelerated (transform, opacity)
@@ -315,20 +342,21 @@ sidebar: {
 ### Implementation Notes
 
 **Component Structure:**
+
 ```tsx
 <SidebarSections>
-  <CollapsibleSection 
+  <CollapsibleSection
     id="unsaved"
-    title="Unsaved Requests" 
+    title="Unsaved Requests"
     isExpanded={expandedSections.has('unsaved')}
     onToggle={() => toggleSection('unsaved')}
   >
     <UnsavedRequestsSection />
   </CollapsibleSection>
-  
-  <CollapsibleSection 
+
+  <CollapsibleSection
     id="collections"
-    title="Collections" 
+    title="Collections"
     isExpanded={expandedSections.has('collections')} // Default: true
     onToggle={() => toggleSection('collections')}
   >
@@ -338,10 +366,10 @@ sidebar: {
 ```
 
 **Key CSS:**
+
 - Use flexbox for layout
 - Collapsed: `height: auto` (just header ~32px)
 - Expanded: `flex: 1` (shares remaining space with other expanded sections)
 - Multiple expanded: Space distributed evenly or with custom ratios
 - Transitions: `transition: all 200ms ease-in-out`
 - Overflow: Each section scrolls independently
-

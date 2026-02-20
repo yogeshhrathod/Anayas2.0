@@ -1,12 +1,12 @@
 /**
  * useFormValidation - Form validation logic with error handling
- * 
+ *
  * Provides a standardized form validation system with:
  * - Field-level validation
  * - Form-level validation
  * - Error state management
  * - Custom validation rules
- * 
+ *
  * @example
  * ```tsx
  * const {
@@ -43,74 +43,98 @@ export interface FormValidationActions {
 export function useFormValidation(schema: ValidationSchema) {
   const [state, setState] = useState<FormValidationState>({
     errors: {},
-    touched: {}
+    touched: {},
   });
 
-  const validateField = useCallback((field: string, value: any): string | undefined => {
-    const rules = schema[field];
-    if (!rules) return undefined;
+  const validateField = useCallback(
+    (field: string, value: any): string | undefined => {
+      const rules = schema[field];
+      if (!rules) return undefined;
 
-    // Required validation
-    if (rules.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
-      return `${field} is required`;
-    }
-
-    // Skip other validations if value is empty and not required
-    if (!value || (typeof value === 'string' && value.trim() === '')) {
-      return undefined;
-    }
-
-    // Min length validation
-    if (rules.minLength && typeof value === 'string' && value.length < rules.minLength) {
-      return `${field} must be at least ${rules.minLength} characters`;
-    }
-
-    // Max length validation
-    if (rules.maxLength && typeof value === 'string' && value.length > rules.maxLength) {
-      return `${field} cannot exceed ${rules.maxLength} characters`;
-    }
-
-    // Pattern validation
-    if (rules.pattern && typeof value === 'string' && !rules.pattern.test(value)) {
-      return `${field} format is invalid`;
-    }
-
-    // Custom validation
-    if (rules.custom) {
-      return rules.custom(value);
-    }
-
-    return undefined;
-  }, [schema]);
-
-  const validateForm = useCallback((data: Record<string, any>): boolean => {
-    const errors: Record<string, string> = {};
-    let isValid = true;
-
-    Object.keys(schema).forEach(field => {
-      const error = validateField(field, data[field]);
-      if (error) {
-        errors[field] = error;
-        isValid = false;
+      // Required validation
+      if (
+        rules.required &&
+        (!value || (typeof value === 'string' && value.trim() === ''))
+      ) {
+        return `${field} is required`;
       }
-    });
 
-    setState(prev => ({
-      ...prev,
-      errors,
-      touched: Object.keys(schema).reduce((acc, field) => {
-        acc[field] = true;
-        return acc;
-      }, {} as Record<string, boolean>)
-    }));
+      // Skip other validations if value is empty and not required
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        return undefined;
+      }
 
-    return isValid;
-  }, [schema, validateField]);
+      // Min length validation
+      if (
+        rules.minLength &&
+        typeof value === 'string' &&
+        value.length < rules.minLength
+      ) {
+        return `${field} must be at least ${rules.minLength} characters`;
+      }
+
+      // Max length validation
+      if (
+        rules.maxLength &&
+        typeof value === 'string' &&
+        value.length > rules.maxLength
+      ) {
+        return `${field} cannot exceed ${rules.maxLength} characters`;
+      }
+
+      // Pattern validation
+      if (
+        rules.pattern &&
+        typeof value === 'string' &&
+        !rules.pattern.test(value)
+      ) {
+        return `${field} format is invalid`;
+      }
+
+      // Custom validation
+      if (rules.custom) {
+        return rules.custom(value);
+      }
+
+      return undefined;
+    },
+    [schema]
+  );
+
+  const validateForm = useCallback(
+    (data: Record<string, any>): boolean => {
+      const errors: Record<string, string> = {};
+      let isValid = true;
+
+      Object.keys(schema).forEach(field => {
+        const error = validateField(field, data[field]);
+        if (error) {
+          errors[field] = error;
+          isValid = false;
+        }
+      });
+
+      setState(prev => ({
+        ...prev,
+        errors,
+        touched: Object.keys(schema).reduce(
+          (acc, field) => {
+            acc[field] = true;
+            return acc;
+          },
+          {} as Record<string, boolean>
+        ),
+      }));
+
+      return isValid;
+    },
+    [schema, validateField]
+  );
 
   const setFieldError = useCallback((field: string, error: string) => {
     setState(prev => ({
       ...prev,
-      errors: { ...prev.errors, [field]: error }
+      errors: { ...prev.errors, [field]: error },
     }));
   }, []);
 
@@ -120,7 +144,7 @@ export function useFormValidation(schema: ValidationSchema) {
       delete newErrors[field];
       return {
         ...prev,
-        errors: newErrors
+        errors: newErrors,
       };
     });
   }, []);
@@ -128,26 +152,29 @@ export function useFormValidation(schema: ValidationSchema) {
   const clearAllErrors = useCallback(() => {
     setState(prev => ({
       ...prev,
-      errors: {}
+      errors: {},
     }));
   }, []);
 
   const touchField = useCallback((field: string) => {
     setState(prev => ({
       ...prev,
-      touched: { ...prev.touched, [field]: true }
+      touched: { ...prev.touched, [field]: true },
     }));
   }, []);
 
   const touchAllFields = useCallback(() => {
-    const touched = Object.keys(schema).reduce((acc, field) => {
-      acc[field] = true;
-      return acc;
-    }, {} as Record<string, boolean>);
+    const touched = Object.keys(schema).reduce(
+      (acc, field) => {
+        acc[field] = true;
+        return acc;
+      },
+      {} as Record<string, boolean>
+    );
 
     setState(prev => ({
       ...prev,
-      touched
+      touched,
     }));
   }, [schema]);
 
@@ -170,6 +197,6 @@ export function useFormValidation(schema: ValidationSchema) {
     clearFieldError,
     clearAllErrors,
     touchField,
-    touchAllFields
+    touchAllFields,
   };
 }

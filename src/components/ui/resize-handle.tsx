@@ -9,7 +9,13 @@ interface ResizeHandleProps {
   disabled?: boolean;
 }
 
-export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, disabled = false }: ResizeHandleProps) {
+export function ResizeHandle({
+  onResize,
+  onResizeStart,
+  onResizeEnd,
+  className,
+  disabled = false,
+}: ResizeHandleProps) {
   const isDragging = useRef(false);
   const startX = useRef(0);
   const onResizeRef = useRef(onResize);
@@ -17,29 +23,32 @@ export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, 
   // Keep the ref updated
   onResizeRef.current = onResize;
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (disabled) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    isDragging.current = true;
-    startX.current = e.clientX;
-    
-    // Call resize start callback
-    onResizeStart?.();
-    
-    // Add global event listeners
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    
-    // Change cursor globally
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  }, [disabled, onResizeStart]);
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (disabled) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      isDragging.current = true;
+      startX.current = e.clientX;
+
+      // Call resize start callback
+      onResizeStart?.();
+
+      // Add global event listeners
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+
+      // Change cursor globally
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    },
+    [disabled, onResizeStart]
+  );
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging.current) return;
-    
+
     e.preventDefault();
     const deltaX = e.clientX - startX.current;
     // Use deltaX directly - dragging left (negative) shrinks, dragging right (positive) expands
@@ -49,16 +58,16 @@ export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, 
 
   const handleMouseUp = useCallback(() => {
     if (!isDragging.current) return;
-    
+
     isDragging.current = false;
-    
+
     // Call resize end callback
     onResizeEnd?.();
-    
+
     // Remove global event listeners
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
-    
+
     // Reset cursor
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
@@ -72,9 +81,9 @@ export function ResizeHandle({ onResize, onResizeStart, onResizeEnd, className, 
   return (
     <div
       className={cn(
-        "w-1 bg-transparent hover:bg-primary/20 transition-colors cursor-col-resize group z-50",
-        "relative",
-        disabled && "cursor-default hover:bg-transparent",
+        'w-1 bg-transparent hover:bg-primary/20 transition-colors cursor-col-resize group z-50',
+        'relative',
+        disabled && 'cursor-default hover:bg-transparent',
         className
       )}
       onMouseDown={handleMouseDown}

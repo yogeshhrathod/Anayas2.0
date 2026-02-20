@@ -1,6 +1,6 @@
 /**
  * cURL Generator (Main Process)
- * 
+ *
  * Generates cURL command strings from Request objects.
  * This is a copy of the renderer version for use in the main process.
  */
@@ -51,14 +51,17 @@ export function generateCurlCommand(request: Request): string {
   return formatMultiLine(parts);
 }
 
-function buildUrl(baseUrl: string, queryParams: Array<{ key: string; value: string; enabled: boolean }>): string {
+function buildUrl(
+  baseUrl: string,
+  queryParams: Array<{ key: string; value: string; enabled: boolean }>
+): string {
   if (!queryParams || queryParams.length === 0) {
     return baseUrl;
   }
 
   try {
     const url = new URL(baseUrl);
-    
+
     queryParams
       .filter(param => param.enabled && param.key)
       .forEach(param => {
@@ -67,13 +70,18 @@ function buildUrl(baseUrl: string, queryParams: Array<{ key: string; value: stri
 
     return url.toString();
   } catch (e) {
-    const enabledParams = queryParams.filter(param => param.enabled && param.key);
+    const enabledParams = queryParams.filter(
+      param => param.enabled && param.key
+    );
     if (enabledParams.length === 0) {
       return baseUrl;
     }
 
     const queryString = enabledParams
-      .map(param => `${encodeURIComponent(param.key)}=${encodeURIComponent(param.value || '')}`)
+      .map(
+        param =>
+          `${encodeURIComponent(param.key)}=${encodeURIComponent(param.value || '')}`
+      )
       .join('&');
 
     const separator = baseUrl.includes('?') ? '&' : '?';
@@ -91,13 +99,16 @@ function generateAuthFlags(auth: Request['auth']): string[] {
   switch (auth.type) {
     case 'bearer':
       if (auth.token) {
-        flags.push('-H', escapeShellString(`Authorization: Bearer ${auth.token}`));
+        flags.push(
+          '-H',
+          escapeShellString(`Authorization: Bearer ${auth.token}`)
+        );
       }
       break;
 
     case 'basic':
       if (auth.username) {
-        const credentials = auth.password 
+        const credentials = auth.password
           ? `${auth.username}:${auth.password}`
           : auth.username;
         flags.push('-u', escapeShellString(credentials));
@@ -106,7 +117,10 @@ function generateAuthFlags(auth: Request['auth']): string[] {
 
     case 'apikey':
       if (auth.apiKey && auth.apiKeyHeader) {
-        flags.push('-H', escapeShellString(`${auth.apiKeyHeader}: ${auth.apiKey}`));
+        flags.push(
+          '-H',
+          escapeShellString(`${auth.apiKeyHeader}: ${auth.apiKey}`)
+        );
       }
       break;
   }
@@ -129,15 +143,24 @@ function getAuthHeaders(auth: Request['auth']): string[] {
   }
 }
 
-function generateBodyFlags(body: string, headers: Record<string, string>): string[] {
+function generateBodyFlags(
+  body: string,
+  headers: Record<string, string>
+): string[] {
   return ['--data-raw', escapeShellString(body)];
 }
 
 function escapeShellString(str: string): string {
-  if (str.includes(' ') || str.includes("'") || str.includes('"') || str.includes('$') || str.includes('\\')) {
+  if (
+    str.includes(' ') ||
+    str.includes("'") ||
+    str.includes('"') ||
+    str.includes('$') ||
+    str.includes('\\')
+  ) {
     return `'${str.replace(/'/g, "'\\''")}'`;
   }
-  
+
   return str;
 }
 
@@ -151,9 +174,9 @@ function formatMultiLine(parts: string[]): string {
 
   for (let i = 1; i < parts.length; i++) {
     const part = parts[i];
-    
+
     const estimatedLength = currentLine.length + part.length + 1;
-    
+
     if (estimatedLength > 80 && currentLine !== 'curl') {
       lines.push(currentLine + ' \\');
       currentLine = '  ' + part;
@@ -168,4 +191,3 @@ function formatMultiLine(parts: string[]): string {
 
   return lines.join('\n');
 }
-

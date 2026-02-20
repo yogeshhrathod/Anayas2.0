@@ -1,22 +1,43 @@
-import { ArrowRight, Bookmark, ChevronLeft, Command, Folder, Import, Layers, Rocket, X } from 'lucide-react';
+import {
+  ArrowRight,
+  Bookmark,
+  ChevronLeft,
+  Command,
+  Folder,
+  Import,
+  Layers,
+  Rocket,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
-import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from 'react-joyride';
+import Joyride, {
+  CallBackProps,
+  STATUS,
+  Step,
+  TooltipRenderProps,
+} from 'react-joyride';
 import { cn } from '../lib/utils';
 
 // Step indicator component
-const StepIndicator = ({ current, total }: { current: number; total: number }) => {
+const StepIndicator = ({
+  current,
+  total,
+}: {
+  current: number;
+  total: number;
+}) => {
   return (
     <div className="flex items-center gap-1.5">
       {Array.from({ length: total }).map((_, i) => (
         <div
           key={i}
           className={cn(
-            "h-1.5 rounded-full transition-all duration-300",
-            i === current 
-              ? "w-6 bg-primary" 
-              : i < current 
-                ? "w-1.5 bg-primary/50" 
-                : "w-1.5 bg-muted-foreground/20"
+            'h-1.5 rounded-full transition-all duration-300',
+            i === current
+              ? 'w-6 bg-primary'
+              : i < current
+                ? 'w-1.5 bg-primary/50'
+                : 'w-1.5 bg-muted-foreground/20'
           )}
         />
       ))}
@@ -40,15 +61,15 @@ const CustomTooltip = ({
     <div
       {...tooltipProps}
       className={cn(
-        "relative bg-popover text-popover-foreground rounded-2xl shadow-xl",
-        "border border-border/50 backdrop-blur-xl",
-        "w-[340px] overflow-hidden",
-        "animate-in fade-in-0 zoom-in-95 duration-200"
+        'relative bg-popover text-popover-foreground rounded-2xl shadow-xl',
+        'border border-border/50 backdrop-blur-xl',
+        'w-[340px] overflow-hidden',
+        'animate-in fade-in-0 zoom-in-95 duration-200'
       )}
     >
       {/* Subtle corner accent */}
       <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-[100px] pointer-events-none" />
-      
+
       {/* Close button */}
       <button
         {...closeProps}
@@ -64,7 +85,9 @@ const CustomTooltip = ({
         {step.title && (
           <div className="flex items-start gap-3 mb-3">
             <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              {(step as any).icon || <Rocket className="w-5 h-5 text-primary" />}
+              {(step as any).icon || (
+                <Rocket className="w-5 h-5 text-primary" />
+              )}
             </div>
             <div className="flex-1 pt-1">
               <h3 className="text-base font-semibold text-foreground leading-tight">
@@ -73,7 +96,7 @@ const CustomTooltip = ({
             </div>
           </div>
         )}
-        
+
         {/* Description */}
         <div className="text-sm text-muted-foreground leading-relaxed pl-[52px]">
           {step.content}
@@ -99,12 +122,12 @@ const CustomTooltip = ({
           <button
             {...primaryProps}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-              "bg-primary text-primary-foreground hover:bg-primary/90",
-              "shadow-sm hover:shadow-md"
+              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+              'bg-primary text-primary-foreground hover:bg-primary/90',
+              'shadow-sm hover:shadow-md'
             )}
           >
-            {isLastStep ? "Get Started" : "Continue"}
+            {isLastStep ? 'Get Started' : 'Continue'}
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -131,8 +154,12 @@ export function ProductTour() {
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, action } = data;
-    
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any) || action === 'close' || action === 'skip') {
+
+    if (
+      [STATUS.FINISHED, STATUS.SKIPPED].includes(status as any) ||
+      action === 'close' ||
+      action === 'skip'
+    ) {
       setRun(false);
       localStorage.setItem('luna_intro_seen', 'true');
     }
@@ -141,7 +168,7 @@ export function ProductTour() {
   const steps: Step[] = [
     {
       target: 'body',
-      title: "Welcome to Luna",
+      title: 'Welcome to Luna',
       content: (
         <div className="space-y-2">
           <p>Your professional workspace for API development and testing.</p>
@@ -158,10 +185,14 @@ export function ProductTour() {
     },
     {
       target: '[data-testid="primary-navigation"]',
-      title: "Navigation",
+      title: 'Navigation',
       content: (
         <p>
-          Switch between <span className="text-foreground font-medium">Home</span>, <span className="text-foreground font-medium">Collections</span>, and <span className="text-foreground font-medium">Environments</span> from here.
+          Switch between{' '}
+          <span className="text-foreground font-medium">Home</span>,{' '}
+          <span className="text-foreground font-medium">Collections</span>, and{' '}
+          <span className="text-foreground font-medium">Environments</span> from
+          here.
         </p>
       ),
       placement: 'bottom',
@@ -171,10 +202,11 @@ export function ProductTour() {
     },
     {
       target: '[data-testid="nav-new-request-btn"]',
-      title: "Create Requests",
+      title: 'Create Requests',
       content: (
         <p>
-          Click here to create a new API request. Supports all HTTP methods with a powerful request builder.
+          Click here to create a new API request. Supports all HTTP methods with
+          a powerful request builder.
         </p>
       ),
       data: {
@@ -183,10 +215,11 @@ export function ProductTour() {
     },
     {
       target: '[data-testid="nav-import-btn"]',
-      title: "Import Your Work",
+      title: 'Import Your Work',
       content: (
         <p>
-          Migrate from Postman or paste cURL commands. Your existing workflows transfer in seconds.
+          Migrate from Postman or paste cURL commands. Your existing workflows
+          transfer in seconds.
         </p>
       ),
       data: {
@@ -195,10 +228,11 @@ export function ProductTour() {
     },
     {
       target: '[data-testid="app-sidebar"]',
-      title: "Your Workspace",
+      title: 'Your Workspace',
       content: (
         <p>
-          Access your collections, history, and saved requests. Everything organized in one place.
+          Access your collections, history, and saved requests. Everything
+          organized in one place.
         </p>
       ),
       placement: 'right',
@@ -208,10 +242,11 @@ export function ProductTour() {
     },
     {
       target: '[data-testid="nav-environments"]',
-      title: "Environment Variables",
+      title: 'Environment Variables',
       content: (
         <p>
-          Manage variables for different environments. Switch between dev, staging, and production effortlessly.
+          Manage variables for different environments. Switch between dev,
+          staging, and production effortlessly.
         </p>
       ),
       data: {
@@ -220,14 +255,16 @@ export function ProductTour() {
     },
     {
       target: '[data-testid="request-scenarios-toggle"]',
-      title: "Request Scenarios",
+      title: 'Request Scenarios',
       content: (
         <div className="space-y-2">
           <p>
-            Save different configurations of the same request as <span className="text-foreground font-medium">scenarios</span>.
+            Save different configurations of the same request as{' '}
+            <span className="text-foreground font-medium">scenarios</span>.
           </p>
           <p className="text-xs text-muted-foreground">
-            Perfect for testing success cases, error cases, or different parameter combinations.
+            Perfect for testing success cases, error cases, or different
+            parameter combinations.
           </p>
         </div>
       ),

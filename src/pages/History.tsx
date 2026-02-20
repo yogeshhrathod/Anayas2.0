@@ -1,18 +1,51 @@
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Clock, Copy, Eye, Filter, Group, Play, Search, Trash2, XCircle } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Copy,
+  Eye,
+  Filter,
+  Group,
+  Play,
+  Search,
+  Trash2,
+  XCircle,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/card';
 import { Dialog } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import { useToast } from '../components/ui/use-toast';
 import { useStore } from '../store/useStore';
-import { Request } from '../types/entities';
+import { EntityId, Request } from '../types/entities';
 
 export function History() {
-  const { requestHistory, setRequestHistory, currentEnvironment, setSelectedRequest, setCurrentPage, historyFilter, setHistoryFilter } = useStore();
+  const {
+    requestHistory,
+    setRequestHistory,
+    currentEnvironment,
+    setSelectedRequest,
+    setCurrentPage,
+    historyFilter,
+    setHistoryFilter,
+  } = useStore();
   const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -21,9 +54,23 @@ export function History() {
   const [groupByRequest, setGroupByRequest] = useState(false);
   const [selectedRequest, setSelectedRequestDetail] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [activeDetailTab, setActiveDetailTab] = useState<'request' | 'response' | 'headers'>('request');
-  const [rerunningRequest, setRerunningRequest] = useState<number | null>(null);
+  const [activeDetailTab, setActiveDetailTab] = useState<
+    'request' | 'response' | 'headers'
+  >('request');
+  const [rerunningRequest, setRerunningRequest] = useState<EntityId | null>(
+    null
+  );
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const clearAllFilters = () => {
+    setHistoryFilter(null);
+    setSearchTerm('');
+    setFilterStatus('all');
+    setFilterMethod('all');
+    setFilterDate('all');
+    setGroupByRequest(false);
+    success('Filters cleared', 'Showing all request history');
+  };
 
   // Load history on mount and when navigating to this page
   useEffect(() => {
@@ -42,7 +89,11 @@ export function History() {
   // Listen for history updates
   useEffect(() => {
     const api: any = window.electronAPI;
-    if (!api || !api.request || typeof api.request.onHistoryUpdated !== 'function') {
+    if (
+      !api ||
+      !api.request ||
+      typeof api.request.onHistoryUpdated !== 'function'
+    ) {
       return;
     }
 
@@ -70,9 +121,13 @@ export function History() {
         setFilterMethod('all');
       } else if (historyFilter.method && historyFilter.url) {
         // For unsaved requests, filter by method and URL
-        setSearchTerm(historyFilter.url);
+        // We don't set searchTerm here anymore as it interferes with matchesHistoryFilter
+        setSearchTerm('');
         setFilterMethod(historyFilter.method);
       }
+
+      // Auto-enable grouping for a cleaner view when looking at request history
+      setGroupByRequest(true);
     }
   }, [historyFilter]);
 
@@ -81,27 +136,42 @@ export function History() {
     let matchesHistoryFilter = true;
     if (historyFilter) {
       if (historyFilter.requestId) {
-        matchesHistoryFilter = request.requestId === historyFilter.requestId;
+        // Use loose equality to handle string vs number comparison
+        matchesHistoryFilter =
+          String(request.requestId) === String(historyFilter.requestId);
       } else if (historyFilter.method && historyFilter.url) {
-        matchesHistoryFilter = 
+        // Normalization for better matching
+        const normalizeUrl = (u: string) =>
+          u.trim().replace(/\/+$/, '').toLowerCase();
+
+        matchesHistoryFilter =
           request.method.toLowerCase() === historyFilter.method.toLowerCase() &&
-          request.url === historyFilter.url;
+          (normalizeUrl(request.url).includes(
+            normalizeUrl(historyFilter.url)
+          ) ||
+            normalizeUrl(historyFilter.url).includes(
+              normalizeUrl(request.url)
+            ));
       }
     }
 
-    const matchesSearch = request.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.method.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || 
-                         (filterStatus === 'success' && request.status === 200) ||
-                         (filterStatus === 'error' && request.status !== 200);
-    const matchesMethod = filterMethod === 'all' || request.method.toLowerCase() === filterMethod.toLowerCase();
-    
+    const matchesSearch =
+      request.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.method.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      filterStatus === 'all' ||
+      (filterStatus === 'success' && request.status === 200) ||
+      (filterStatus === 'error' && request.status !== 200);
+    const matchesMethod =
+      filterMethod === 'all' ||
+      request.method.toLowerCase() === filterMethod.toLowerCase();
+
     // Date filtering
     let matchesDate = true;
     if (filterDate !== 'all') {
       const requestDate = new Date(request.createdAt);
       const now = new Date();
-      
+
       switch (filterDate) {
         case 'today':
           matchesDate = requestDate.toDateString() === now.toDateString();
@@ -116,8 +186,14 @@ export function History() {
           break;
       }
     }
-    
-    return matchesHistoryFilter && matchesSearch && matchesStatus && matchesMethod && matchesDate;
+
+    return (
+      matchesHistoryFilter &&
+      matchesSearch &&
+      matchesStatus &&
+      matchesMethod &&
+      matchesDate
+    );
   });
 
   // Group history by request (saved or unsaved)
@@ -127,14 +203,14 @@ export function History() {
     }
 
     const groups: Record<string, any[]> = {};
-    
+
     filteredHistory.forEach((item: any) => {
       // Group by requestId if available (saved request)
       // Otherwise group by URL + method (unsaved requests)
-      const key = item.requestId 
-        ? `saved-${item.requestId}` 
+      const key = item.requestId
+        ? `saved-${item.requestId}`
         : `unsaved-${item.method}-${item.url}`;
-      
+
       if (!groups[key]) {
         groups[key] = [];
       }
@@ -154,7 +230,8 @@ export function History() {
   }, [filteredHistory, groupByRequest]);
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this request from history?')) return;
+    if (!confirm('Are you sure you want to delete this request from history?'))
+      return;
 
     try {
       await window.electronAPI.request.deleteHistory(id);
@@ -170,12 +247,15 @@ export function History() {
   const handleRerun = async (request: any) => {
     setRerunningRequest(request.id);
     try {
-      const headers = typeof request.headers === 'string' 
-        ? JSON.parse(request.headers) 
-        : (request.headers || {});
-      
-      const body = request.requestBody 
-        ? (typeof request.requestBody === 'string' ? request.requestBody : JSON.stringify(request.requestBody))
+      const headers =
+        typeof request.headers === 'string'
+          ? JSON.parse(request.headers)
+          : request.headers || {};
+
+      const body = request.requestBody
+        ? typeof request.requestBody === 'string'
+          ? request.requestBody
+          : JSON.stringify(request.requestBody)
         : '';
 
       const result = await window.electronAPI.request.send({
@@ -187,13 +267,16 @@ export function History() {
         auth: request.auth || { type: 'none' },
         requestId: request.requestId,
         collectionId: request.collectionId,
-        environmentId: currentEnvironment?.id
+        environmentId: currentEnvironment?.id,
       });
 
       if (result.success) {
         const updatedHistory = await window.electronAPI.request.history(100);
         setRequestHistory(updatedHistory);
-        success('Request Rerun', `Request completed in ${result.responseTime}ms`);
+        success(
+          'Request Rerun',
+          `Request completed in ${result.responseTime}ms`
+        );
       } else {
         error('Rerun Failed', result.error || 'Request failed');
       }
@@ -215,7 +298,9 @@ export function History() {
     try {
       // If requestId exists, try to load the saved request
       if (request.requestId) {
-        const savedRequest = await window.electronAPI.request.get(request.requestId);
+        const savedRequest = await window.electronAPI.request.get(
+          request.requestId
+        );
         if (savedRequest) {
           setSelectedRequest(savedRequest as Request);
           setCurrentPage('home');
@@ -230,9 +315,10 @@ export function History() {
         name: request.requestId ? 'Request from History' : 'Unsaved Request',
         method: request.method as Request['method'],
         url: request.url,
-        headers: typeof request.headers === 'string' 
-          ? JSON.parse(request.headers) 
-          : (request.headers || {}),
+        headers:
+          typeof request.headers === 'string'
+            ? JSON.parse(request.headers)
+            : request.headers || {},
         body: request.requestBody || '',
         queryParams: request.queryParams || [],
         auth: request.auth || { type: 'none' },
@@ -252,12 +338,15 @@ export function History() {
 
   const handleCopyCurl = async (request: any) => {
     try {
-      const headers = typeof request.headers === 'string' 
-        ? JSON.parse(request.headers) 
-        : (request.headers || {});
-      
-      const body = request.requestBody 
-        ? (typeof request.requestBody === 'string' ? request.requestBody : JSON.stringify(request.requestBody))
+      const headers =
+        typeof request.headers === 'string'
+          ? JSON.parse(request.headers)
+          : request.headers || {};
+
+      const body = request.requestBody
+        ? typeof request.requestBody === 'string'
+          ? request.requestBody
+          : JSON.stringify(request.requestBody)
         : '';
 
       const result = await window.electronAPI.curl.generate({
@@ -285,10 +374,11 @@ export function History() {
 
   const handleCopyRequestData = async (request: any) => {
     try {
-      const headers = typeof request.headers === 'string' 
-        ? JSON.parse(request.headers) 
-        : (request.headers || {});
-      
+      const headers =
+        typeof request.headers === 'string'
+          ? JSON.parse(request.headers)
+          : request.headers || {};
+
       const requestData = {
         method: request.method,
         url: request.url,
@@ -354,7 +444,10 @@ export function History() {
   };
 
   const renderHistoryItem = (request: any) => (
-    <div key={request.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
+    <div
+      key={request.id}
+      className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow"
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           {request.requestName && (
@@ -376,7 +469,9 @@ export function History() {
               </Badge>
             )}
           </div>
-          <p className={`text-sm mb-1 break-all ${request.requestName ? 'text-muted-foreground' : 'font-medium'}`}>
+          <p
+            className={`text-sm mb-1 break-all ${request.requestName ? 'text-muted-foreground' : 'font-medium'}`}
+          >
             {request.url}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -450,30 +545,57 @@ export function History() {
             View and manage your API request history
           </p>
         </div>
-        {historyFilter && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setHistoryFilter(null);
-                    setCurrentPage('home');
-                  }}
-                  className="p-2"
-                  title="Back to Request"
-                >
-                  <ArrowLeft className="h-4 w-4 text-primary" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                Back to Request
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
       </div>
+
+      {/* Active Filter Banner */}
+      {historyFilter && (
+        <div className="bg-muted/40 border border-border/50 rounded-xl p-3 px-4 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-3">
+            <div className="bg-background p-2 rounded-full border border-border/50 shadow-sm">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-foreground">
+                  Active Filter
+                </span>
+                <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+                <span className="text-xs text-muted-foreground font-mono">
+                  {historyFilter.requestId
+                    ? `ID: ${historyFilter.requestId}`
+                    : `${historyFilter.method} ${historyFilter.url}`}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground/80 mt-0.5">
+                {historyFilter.requestId
+                  ? `Showing results for: ${filteredHistory[0]?.requestName || 'Saved Request'}`
+                  : `Showing results for specific URL matches`}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearAllFilters}
+              className="h-8 text-xs gap-2 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
+            >
+              <XCircle className="h-3.5 w-3.5" />
+              Clear All
+            </Button>
+            <div className="w-px h-4 bg-border/50 mx-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentPage('home')}
+              className="h-8 text-xs gap-2 hover:bg-primary/10 hover:text-primary transition-all"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <Card className="border-2">
@@ -484,7 +606,9 @@ export function History() {
             </div>
             <div>
               <CardTitle>Filters</CardTitle>
-              <CardDescription>Search and filter your request history</CardDescription>
+              <CardDescription>
+                Search and filter your request history
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -495,7 +619,7 @@ export function History() {
               <Input
                 placeholder="Search by URL or method..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -515,7 +639,7 @@ export function History() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Methods</SelectItem>
-                {getUniqueMethods().map((method) => (
+                {getUniqueMethods().map(method => (
                   <SelectItem key={method} value={method}>
                     {method}
                   </SelectItem>
@@ -534,7 +658,7 @@ export function History() {
               </SelectContent>
             </Select>
             <Button
-              variant={groupByRequest ? "default" : "outline"}
+              variant={groupByRequest ? 'default' : 'outline'}
               onClick={() => setGroupByRequest(!groupByRequest)}
               className="flex items-center gap-2"
             >
@@ -558,7 +682,8 @@ export function History() {
                 <CardDescription>
                   {historyFilter ? (
                     <>
-                      Showing history for this request ({filteredHistory.length} of {requestHistory.length} total)
+                      Showing history for this request ({filteredHistory.length}{' '}
+                      of {requestHistory.length} total)
                       <Button
                         variant="ghost"
                         size="sm"
@@ -593,10 +718,9 @@ export function History() {
               <Clock className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-bold mb-2">No requests found</h3>
               <p className="text-muted-foreground">
-                {requestHistory.length === 0 
+                {requestHistory.length === 0
                   ? "You haven't made any requests yet. Start by sending your first API request."
-                  : "Try adjusting your search or filter criteria."
-                }
+                  : 'Try adjusting your search or filter criteria.'}
               </p>
             </div>
           ) : groupByRequest ? (
@@ -605,12 +729,11 @@ export function History() {
                 <div key={key} className="space-y-3">
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-semibold text-sm text-muted-foreground">
-                      {key.startsWith('saved-') 
-                        ? items[0].requestName 
+                      {key.startsWith('saved-')
+                        ? items[0].requestName
                           ? `${items[0].requestName} (${items.length} execution${items.length > 1 ? 's' : ''})`
                           : `Saved Request (${items.length} execution${items.length > 1 ? 's' : ''})`
-                        : `Unsaved Request: ${items[0].method} ${items[0].url.substring(0, 50)}${items[0].url.length > 50 ? '...' : ''} (${items.length} execution${items.length > 1 ? 's' : ''})`
-                      }
+                        : `Unsaved Request: ${items[0].method} ${items[0].url.substring(0, 50)}${items[0].url.length > 50 ? '...' : ''} (${items.length} execution${items.length > 1 ? 's' : ''})`}
                     </h3>
                   </div>
                   {items.map((item: any) => renderHistoryItem(item))}
@@ -619,12 +742,14 @@ export function History() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredHistory.map((request: any) => renderHistoryItem(request))}
+              {filteredHistory.map((request: any) =>
+                renderHistoryItem(request)
+              )}
             </div>
           )}
         </CardContent>
       </Card>
-      
+
       {/* Request Details Modal */}
       {selectedRequest && (
         <Dialog
@@ -722,28 +847,42 @@ export function History() {
                       <div>
                         <span className="text-sm font-medium">Body:</span>
                         <pre className="mt-1 bg-muted p-3 rounded text-xs overflow-auto max-h-96">
-                          {typeof selectedRequest.requestBody === 'string' 
-                            ? selectedRequest.requestBody 
-                            : JSON.stringify(selectedRequest.requestBody, null, 2)}
+                          {typeof selectedRequest.requestBody === 'string'
+                            ? selectedRequest.requestBody
+                            : JSON.stringify(
+                                selectedRequest.requestBody,
+                                null,
+                                2
+                              )}
                         </pre>
                       </div>
                     )}
-                    {selectedRequest.queryParams && selectedRequest.queryParams.length > 0 && (
-                      <div>
-                        <span className="text-sm font-medium">Query Parameters:</span>
-                        <pre className="mt-1 bg-muted p-3 rounded text-xs overflow-auto">
-                          {JSON.stringify(selectedRequest.queryParams, null, 2)}
-                        </pre>
-                      </div>
-                    )}
-                    {selectedRequest.auth && selectedRequest.auth.type !== 'none' && (
-                      <div>
-                        <span className="text-sm font-medium">Authentication:</span>
-                        <pre className="mt-1 bg-muted p-3 rounded text-xs overflow-auto">
-                          {JSON.stringify(selectedRequest.auth, null, 2)}
-                        </pre>
-                      </div>
-                    )}
+                    {selectedRequest.queryParams &&
+                      selectedRequest.queryParams.length > 0 && (
+                        <div>
+                          <span className="text-sm font-medium">
+                            Query Parameters:
+                          </span>
+                          <pre className="mt-1 bg-muted p-3 rounded text-xs overflow-auto">
+                            {JSON.stringify(
+                              selectedRequest.queryParams,
+                              null,
+                              2
+                            )}
+                          </pre>
+                        </div>
+                      )}
+                    {selectedRequest.auth &&
+                      selectedRequest.auth.type !== 'none' && (
+                        <div>
+                          <span className="text-sm font-medium">
+                            Authentication:
+                          </span>
+                          <pre className="mt-1 bg-muted p-3 rounded text-xs overflow-auto">
+                            {JSON.stringify(selectedRequest.auth, null, 2)}
+                          </pre>
+                        </div>
+                      )}
                   </div>
                 </div>
               )}
@@ -756,10 +895,13 @@ export function History() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        const headers = typeof selectedRequest.headers === 'string' 
-                          ? JSON.parse(selectedRequest.headers) 
-                          : (selectedRequest.headers || {});
-                        navigator.clipboard.writeText(JSON.stringify(headers, null, 2));
+                        const headers =
+                          typeof selectedRequest.headers === 'string'
+                            ? JSON.parse(selectedRequest.headers)
+                            : selectedRequest.headers || {};
+                        navigator.clipboard.writeText(
+                          JSON.stringify(headers, null, 2)
+                        );
                         success('Copied', 'Headers copied to clipboard');
                       }}
                     >
@@ -768,14 +910,14 @@ export function History() {
                     </Button>
                   </div>
                   <pre className="bg-muted p-3 rounded text-xs overflow-auto max-h-[50vh]">
-                    {selectedRequest.headers 
+                    {selectedRequest.headers
                       ? JSON.stringify(
-                          typeof selectedRequest.headers === 'string' 
-                            ? JSON.parse(selectedRequest.headers) 
-                            : selectedRequest.headers, 
-                          null, 
+                          typeof selectedRequest.headers === 'string'
+                            ? JSON.parse(selectedRequest.headers)
+                            : selectedRequest.headers,
+                          null,
                           2
-                        ) 
+                        )
                       : 'No headers'}
                   </pre>
                 </div>
@@ -797,16 +939,20 @@ export function History() {
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="font-medium">Status:</span> {selectedRequest.status}
+                        <span className="font-medium">Status:</span>{' '}
+                        {selectedRequest.status}
                       </div>
                       <div>
-                        <span className="font-medium">Response Time:</span> {selectedRequest.responseTime}ms
+                        <span className="font-medium">Response Time:</span>{' '}
+                        {selectedRequest.responseTime}ms
                       </div>
                       <div>
-                        <span className="font-medium">Method:</span> {selectedRequest.method}
+                        <span className="font-medium">Method:</span>{' '}
+                        {selectedRequest.method}
                       </div>
                       <div>
-                        <span className="font-medium">Date:</span> {new Date(selectedRequest.createdAt).toLocaleString()}
+                        <span className="font-medium">Date:</span>{' '}
+                        {new Date(selectedRequest.createdAt).toLocaleString()}
                       </div>
                     </div>
                     <pre className="bg-muted p-3 rounded text-xs overflow-auto max-h-[50vh] whitespace-pre-wrap break-words">
@@ -832,13 +978,16 @@ export function History() {
           <div className="flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
             <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
             <div className="flex-1">
-              <h4 className="font-semibold text-destructive mb-1">Warning: Destructive Action</h4>
+              <h4 className="font-semibold text-destructive mb-1">
+                Warning: Destructive Action
+              </h4>
               <p className="text-sm text-muted-foreground">
-                You are about to delete all {requestHistory.length} request history entries. This action cannot be undone.
+                You are about to delete all {requestHistory.length} request
+                history entries. This action cannot be undone.
               </p>
             </div>
           </div>
-          
+
           <div className="bg-muted/50 p-3 rounded text-sm">
             <p className="font-medium mb-1">This will permanently delete:</p>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">

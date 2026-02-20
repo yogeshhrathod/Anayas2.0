@@ -1,6 +1,6 @@
 /**
  * VariableDefinitionDialog - Dialog for viewing variable definition details
- * 
+ *
  * Shows variable name, value, scope (global/collection/dynamic), and environment info
  */
 
@@ -22,8 +22,12 @@ export function VariableDefinitionDialog({
   variableName,
 }: VariableDefinitionDialogProps) {
   // Hooks must be called unconditionally - before any early returns
-  const { variables } = useVariableResolution(variableName ? `{{${variableName}}}` : '');
-  const variable = variableName ? variables.find(v => v.name === variableName) : undefined;
+  const { variables } = useVariableResolution(
+    variableName ? `{{${variableName}}}` : ''
+  );
+  const variable = variableName
+    ? variables.find(v => v.name === variableName)
+    : undefined;
   const [copied, setCopied] = useState(false);
 
   // Don't render if dialog is closed or no variable name
@@ -36,7 +40,7 @@ export function VariableDefinitionDialog({
     name: variableName,
     value: '',
     scope: 'global' as const,
-    originalText: `{{${variableName}}}`
+    originalText: `{{${variableName}}}`,
   };
 
   const handleCopyValue = async () => {
@@ -80,79 +84,85 @@ export function VariableDefinitionDialog({
       title="Variable Definition"
       description={
         <span>
-          View details for the variable <code className="text-xs bg-muted px-1 py-0.5 rounded">{`{{${variableName}}}`}</code>
+          View details for the variable{' '}
+          <code className="text-xs bg-muted px-1 py-0.5 rounded">{`{{${variableName}}}`}</code>
         </span>
       }
       maxWidth="md"
     >
       <div className="space-y-4 py-4">
-          {/* Variable Name */}
-          <div>
-            <label className="text-sm font-medium text-muted-foreground">Variable Name</label>
-            <div className="mt-1 p-2 bg-muted rounded-md font-mono text-sm">
-              {variableName}
-            </div>
+        {/* Variable Name */}
+        <div>
+          <label className="text-sm font-medium text-muted-foreground">
+            Variable Name
+          </label>
+          <div className="mt-1 p-2 bg-muted rounded-md font-mono text-sm">
+            {variableName}
           </div>
-
-          {/* Scope */}
-          <div>
-            <label className="text-sm font-medium text-muted-foreground">Scope</label>
-            <div className="mt-1">
-              <Badge className={getScopeColor()}>
-                {getScopeLabel()}
-              </Badge>
-            </div>
-          </div>
-
-          {/* Value */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-sm font-medium text-muted-foreground">Value</label>
-              {displayVariable.value && (
-                <button
-                  onClick={handleCopyValue}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="h-3 w-3" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3 w-3" />
-                      Copy
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-            <div className="mt-1 p-2 bg-muted rounded-md font-mono text-sm break-all">
-              {displayVariable.value || (
-                <span className="text-muted-foreground italic">No value set</span>
-              )}
-            </div>
-          </div>
-
-          {/* Dynamic Variable Info */}
-          {displayVariable.scope === 'dynamic' && (
-            <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-md">
-              <p className="text-xs text-muted-foreground">
-                Dynamic variables are system-generated and cannot be edited. They are resolved at request time.
-              </p>
-            </div>
-          )}
-
-          {/* Unresolved Variable Warning */}
-          {!displayVariable.value && displayVariable.scope !== 'dynamic' && (
-            <div className="p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-md">
-              <p className="text-xs text-yellow-700 dark:text-yellow-300">
-                This variable is not defined. Please add it to your environment variables.
-              </p>
-            </div>
-          )}
         </div>
+
+        {/* Scope */}
+        <div>
+          <label className="text-sm font-medium text-muted-foreground">
+            Scope
+          </label>
+          <div className="mt-1">
+            <Badge className={getScopeColor()}>{getScopeLabel()}</Badge>
+          </div>
+        </div>
+
+        {/* Value */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-sm font-medium text-muted-foreground">
+              Value
+            </label>
+            {displayVariable.value && (
+              <button
+                onClick={handleCopyValue}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-3 w-3" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3 w-3" />
+                    Copy
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+          <div className="mt-1 p-2 bg-muted rounded-md font-mono text-sm break-all">
+            {displayVariable.value || (
+              <span className="text-muted-foreground italic">No value set</span>
+            )}
+          </div>
+        </div>
+
+        {/* Dynamic Variable Info */}
+        {displayVariable.scope === 'dynamic' && (
+          <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-md">
+            <p className="text-xs text-muted-foreground">
+              Dynamic variables are system-generated and cannot be edited. They
+              are resolved at request time.
+            </p>
+          </div>
+        )}
+
+        {/* Unresolved Variable Warning */}
+        {!displayVariable.value && displayVariable.scope !== 'dynamic' && (
+          <div className="p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-md">
+            <p className="text-xs text-yellow-700 dark:text-yellow-300">
+              This variable is not defined. Please add it to your environment
+              variables.
+            </p>
+          </div>
+        )}
+      </div>
     </Dialog>
   );
 }
-

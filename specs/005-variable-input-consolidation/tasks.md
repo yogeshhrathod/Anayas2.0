@@ -247,7 +247,7 @@ Tasks organized by implementation phase.
 
 ### Task 4.2: Add Deprecation Warnings
 
-- **Files**: 
+- **Files**:
   - `src/components/ui/variable-input.tsx`
   - `src/components/ui/highlighted-variable-input.tsx`
   - `src/components/ui/overlay-variable-input.tsx`
@@ -340,4 +340,3 @@ Tasks organized by implementation phase.
 - Maintainability greatly improved
 - Future features can be added in one place
 - Old components kept for temporary backward compatibility
-

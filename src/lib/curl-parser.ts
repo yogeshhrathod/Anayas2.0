@@ -1,6 +1,6 @@
 /**
  * cURL Parser
- * 
+ *
  * Parses cURL command strings into Request objects compatible with Luna.
  * Supports common cURL flags and options.
  */
@@ -46,7 +46,7 @@ export function parseCurlCommand(curlCommand: string): Request {
 
   // Parse arguments
   const args = parseArguments(command);
-  
+
   const result: ParseResult = {
     method: 'GET',
     url: '',
@@ -168,7 +168,15 @@ function parseMethod(args: string[]): string {
     if (arg === '-X' || arg === '--request') {
       if (i + 1 < args.length) {
         const method = args[i + 1].toUpperCase();
-        const validMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+        const validMethods = [
+          'GET',
+          'POST',
+          'PUT',
+          'PATCH',
+          'DELETE',
+          'HEAD',
+          'OPTIONS',
+        ];
         if (validMethods.includes(method)) {
           return method;
         }
@@ -184,7 +192,7 @@ function parseMethod(args: string[]): string {
 function parseUrl(args: string[]): string {
   // URL is typically the last non-flag argument
   // But it could also be after --url or -u (if not used for auth)
-  
+
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === '--url') {
@@ -200,7 +208,7 @@ function parseUrl(args: string[]): string {
     if (arg.startsWith('-')) {
       continue;
     }
-    
+
     // Check if it's a URL
     if (arg.startsWith('http://') || arg.startsWith('https://')) {
       return arg;
@@ -242,7 +250,7 @@ function parseData(args: string[]): string | undefined {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    
+
     if (arg === '-d' || arg === '--data' || arg === '--data-raw') {
       if (i + 1 < args.length) {
         data = args[i + 1];
@@ -316,7 +324,13 @@ function parseAuth(
   }
 
   // Check for API key in headers (common patterns)
-  const apiKeyHeaders = ['X-API-Key', 'X-Api-Key', 'API-Key', 'apikey', 'x-api-key'];
+  const apiKeyHeaders = [
+    'X-API-Key',
+    'X-Api-Key',
+    'API-Key',
+    'apikey',
+    'x-api-key',
+  ];
   for (const key of apiKeyHeaders) {
     if (headers[key] || headers[key.toLowerCase()]) {
       const value = headers[key] || headers[key.toLowerCase()];
@@ -334,7 +348,9 @@ function parseAuth(
 /**
  * Extract query parameters from URL
  */
-function parseQueryParams(url: string): Array<{ key: string; value: string; enabled: boolean }> {
+function parseQueryParams(
+  url: string
+): Array<{ key: string; value: string; enabled: boolean }> {
   try {
     const urlObj = new URL(url);
     const params: Array<{ key: string; value: string; enabled: boolean }> = [];
@@ -370,7 +386,9 @@ function generateRequestName(method: string, url: string): string {
 /**
  * Parse multiple cURL commands (for bulk import)
  */
-export function parseCurlCommands(commands: string[]): Array<{ success: boolean; request?: Request; error?: string }> {
+export function parseCurlCommands(
+  commands: string[]
+): Array<{ success: boolean; request?: Request; error?: string }> {
   return commands.map((command, index) => {
     try {
       const request = parseCurlCommand(command);
@@ -383,4 +401,3 @@ export function parseCurlCommands(commands: string[]): Array<{ success: boolean;
     }
   });
 }
-

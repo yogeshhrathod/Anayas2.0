@@ -21,6 +21,7 @@ This project has a comprehensive test suite with **223+ tests** covering IPC han
 **Purpose**: Test each IPC handler individually with success and error cases
 
 **Files**:
+
 - `env-handlers.spec.ts` - Environment handlers (7 handlers)
 - `collection-handlers.spec.ts` - Collection handlers (9 handlers)
 - `request-handlers.spec.ts` - Request handlers (7 handlers)
@@ -35,17 +36,21 @@ This project has a comprehensive test suite with **223+ tests** covering IPC han
 - `app-handlers.spec.ts` - App handlers (2 handlers)
 
 **Pattern to Follow**:
+
 ```typescript
 import { test, expect } from '../../helpers/electron-fixtures';
 import { assertDataPersisted } from '../../helpers/assertions';
 
 test.describe('Category IPC Handlers', () => {
-  test('handler:action - should [expected behavior]', async ({ electronPage, testDbPath }) => {
+  test('handler:action - should [expected behavior]', async ({
+    electronPage,
+    testDbPath,
+  }) => {
     // GIVEN: Setup
     const data = await electronPage.evaluate(async () => {
       return await window.electronAPI.handler.action(/* params */);
     });
-    
+
     // THEN: Verify
     expect(data.success).toBe(true);
     assertDataPersisted(data, testDbPath, 'collection');
@@ -58,26 +63,35 @@ test.describe('Category IPC Handlers', () => {
 **Purpose**: Test React components with IPC integration
 
 **Files**:
+
 - `collection-hierarchy.spec.ts` - CollectionHierarchy component (5 tests)
 - `request-builder.spec.ts` - RequestBuilder component (5 tests)
 - `environment-switcher.spec.ts` - EnvironmentSwitcher component (5 tests)
 - `sidebar.spec.ts` - Sidebar component (6 tests)
 
 **Pattern to Follow**:
+
 ```typescript
 test.describe('Component Integration', () => {
-  test('should render component with data', async ({ electronPage, testDbPath }) => {
+  test('should render component with data', async ({
+    electronPage,
+    testDbPath,
+  }) => {
     // GIVEN: Setup data
     await electronPage.evaluate(async () => {
-      await window.electronAPI.collection.save({ /* ... */ });
+      await window.electronAPI.collection.save({
+        /* ... */
+      });
     });
-    
+
     // WHEN: Navigate to component
     await electronPage.goto('/');
     await electronPage.click('text=Collections');
-    
+
     // THEN: Verify component renders
-    const componentVisible = await electronPage.locator('text=Collection').isVisible();
+    const componentVisible = await electronPage
+      .locator('text=Collection')
+      .isVisible();
     expect(componentVisible).toBe(true);
   });
 });
@@ -88,6 +102,7 @@ test.describe('Component Integration', () => {
 **Purpose**: Verify complete data flow from UI to database and back
 
 **Files**:
+
 - `ipc-to-db.spec.ts` - IPC → Database flow
 - `db-to-ui.spec.ts` - Database → UI flow
 - `ui-to-ipc.spec.ts` - UI → IPC flow
@@ -98,6 +113,7 @@ test.describe('Component Integration', () => {
 **Purpose**: Verify UI components render and update correctly
 
 **Files**:
+
 - `component-rendering.spec.ts` - Component rendering
 - `state-updates.spec.ts` - State updates
 - `loading-states.spec.ts` - Loading states
@@ -108,6 +124,7 @@ test.describe('Component Integration', () => {
 **Purpose**: Test performance with large datasets and concurrent operations
 
 **Files**:
+
 - `large-datasets.spec.ts` - 1000+ items (4 tests)
 - `concurrent-ops.spec.ts` - Concurrent operations (5 tests)
 - `memory-leaks.spec.ts` - Memory leak detection (5 tests)
@@ -120,6 +137,7 @@ When writing feature specs, format acceptance criteria as BDD scenarios:
 
 ```markdown
 ### Scenario: User creates a new collection
+
 **Given** I am on the Collections page
 **When** I click "New Collection" button
 **And** I fill in the collection name "My API Collection"
@@ -134,36 +152,45 @@ When writing feature specs, format acceptance criteria as BDD scenarios:
 Each BDD scenario becomes a test case:
 
 ```typescript
-test('should create new collection when form is submitted', async ({ electronPage, testDbPath }) => {
+test('should create new collection when form is submitted', async ({
+  electronPage,
+  testDbPath,
+}) => {
   // GIVEN: I am on the Collections page
   await electronPage.goto('/');
   await electronPage.click('text=Collections');
   await electronPage.waitForLoadState('networkidle');
-  
+
   // WHEN: I click "New Collection" button
   await electronPage.click('button:has-text("New Collection")');
   await electronPage.waitForTimeout(500);
-  
+
   // AND: I fill in the collection name
   await electronPage.fill('input#name', 'My API Collection');
-  
+
   // AND: I click "Save"
   await electronPage.click('button:has-text("Save")');
   await electronPage.waitForTimeout(1000);
-  
+
   // THEN: the collection should be created
-  const collectionVisible = await electronPage.locator('text=My API Collection').isVisible();
+  const collectionVisible = await electronPage
+    .locator('text=My API Collection')
+    .isVisible();
   expect(collectionVisible).toBe(true);
-  
+
   // AND: it should appear in the collection list
   const collections = await electronPage.evaluate(async () => {
     return await window.electronAPI.collection.list();
   });
-  expect(collections.some((c: any) => c.name === 'My API Collection')).toBe(true);
-  
+  expect(collections.some((c: any) => c.name === 'My API Collection')).toBe(
+    true
+  );
+
   // AND: it should be persisted to the database
   const dbContents = getDatabaseContents(testDbPath);
-  const collection = dbContents.collections.find((c: any) => c.name === 'My API Collection');
+  const collection = dbContents.collections.find(
+    (c: any) => c.name === 'My API Collection'
+  );
   expect(collection).toBeDefined();
 });
 ```
@@ -173,17 +200,21 @@ test('should create new collection when form is submitted', async ({ electronPag
 ### Red-Green-Refactor Cycle
 
 1. **RED**: Write failing test first
+
    ```typescript
    test('should create new feature', async ({ electronPage, testDbPath }) => {
      // Test for feature that doesn't exist yet
      const result = await electronPage.evaluate(async () => {
-       return await window.electronAPI.newFeature.create({ /* ... */ });
+       return await window.electronAPI.newFeature.create({
+         /* ... */
+       });
      });
      expect(result.success).toBe(true);
    });
    ```
 
 2. **GREEN**: Implement feature to make test pass
+
    ```typescript
    // Implement the feature
    ipcMain.handle('new-feature:create', async (_, data) => {
@@ -222,6 +253,7 @@ test('should create new collection when form is submitted', async ({ electronPag
 ### Step 3: During IMPLEMENT Phase
 
 1. **Write tests FIRST** (TDD):
+
    ```typescript
    // Create test file before implementation
    // Write test for new handler/component
@@ -229,12 +261,14 @@ test('should create new collection when form is submitted', async ({ electronPag
    ```
 
 2. **Implement feature**:
+
    ```typescript
    // Implement handler/component
    // Run test - should pass (GREEN)
    ```
 
 3. **Refactor**:
+
    ```typescript
    // Improve code
    // Run test - should still pass
@@ -259,6 +293,7 @@ test('should create new collection when form is submitted', async ({ electronPag
 ### electron-fixtures.ts
 
 Provides test fixtures:
+
 - `electronPage`: Playwright page with mocked electronAPI
 - `testDbPath`: Isolated test database path
 
@@ -272,13 +307,17 @@ test('should test feature', async ({ electronPage, testDbPath }) => {
 ### assertions.ts
 
 Custom assertions:
+
 - `assertRendered(page, selector)` - Verify element rendered
 - `assertDataPersisted(data, dbPath, collection)` - Verify data persisted
 - `assertUIUpdated(page, selector, expectedText)` - Verify UI updated
 - `assertDatabaseCount(dbPath, collection, expectedCount)` - Verify count
 
 ```typescript
-import { assertDataPersisted, assertDatabaseCount } from '../../helpers/assertions';
+import {
+  assertDataPersisted,
+  assertDatabaseCount,
+} from '../../helpers/assertions';
 
 assertDataPersisted(collection, testDbPath, 'collections');
 assertDatabaseCount(testDbPath, 'collections', 1);
@@ -287,20 +326,30 @@ assertDatabaseCount(testDbPath, 'collections', 1);
 ### debug-helpers.ts
 
 Debugging utilities:
+
 - `captureConsoleLogs(page)` - Capture console output
 - `captureNetworkActivity(page)` - Track network requests
 - `captureZustandState(page)` - Get Zustand store state
 - `generateErrorReport(error, context, testName, artifactsDir)` - Generate error report
 
 ```typescript
-import { captureDebugInfo, generateErrorReport } from '../../helpers/debug-helpers';
+import {
+  captureDebugInfo,
+  generateErrorReport,
+} from '../../helpers/debug-helpers';
 
-const debugInfo = await captureDebugInfo(electronPage, testDbPath, 'step-name', 'artifacts-dir');
+const debugInfo = await captureDebugInfo(
+  electronPage,
+  testDbPath,
+  'step-name',
+  'artifacts-dir'
+);
 ```
 
 ### test-db.ts
 
 Test database utilities:
+
 - `createTestDatabase(options)` - Create isolated test database
 - `getDatabaseContents(dbPath)` - Read database contents
 - `cleanTestDatabase(dbPath)` - Clean up test database
@@ -315,6 +364,7 @@ const collection = dbContents.collections.find((c: any) => c.id === id);
 ### logger.ts
 
 Test logging:
+
 - `logger.init(testName, artifactsDir)` - Initialize logger
 - `logger.info(message, metadata)` - Log info
 - `logger.logPerformance(operation, duration)` - Log performance
@@ -334,29 +384,41 @@ logger.logMemory('After operation');
 
 ```typescript
 test.describe('NewCategory IPC Handlers', () => {
-  test('new-category:action - should perform action', async ({ electronPage, testDbPath }) => {
+  test('new-category:action - should perform action', async ({
+    electronPage,
+    testDbPath,
+  }) => {
     // GIVEN: Setup
     const setup = await electronPage.evaluate(async () => {
-      return await window.electronAPI.setup.create({ /* ... */ });
+      return await window.electronAPI.setup.create({
+        /* ... */
+      });
     });
-    
+
     // WHEN: Perform action
-    const result = await electronPage.evaluate(async (id) => {
-      return await window.electronAPI.newCategory.action(id, { /* ... */ });
+    const result = await electronPage.evaluate(async id => {
+      return await window.electronAPI.newCategory.action(id, {
+        /* ... */
+      });
     }, setup.id);
-    
+
     // THEN: Verify
     expect(result.success).toBe(true);
     assertDataPersisted(result, testDbPath, 'collection');
   });
-  
-  test('new-category:action - should handle error', async ({ electronPage, testDbPath }) => {
+
+  test('new-category:action - should handle error', async ({
+    electronPage,
+    testDbPath,
+  }) => {
     // GIVEN: Invalid input
     // WHEN: Perform action
     const result = await electronPage.evaluate(async () => {
-      return await window.electronAPI.newCategory.action(null, { /* invalid */ });
+      return await window.electronAPI.newCategory.action(null, {
+        /* invalid */
+      });
     });
-    
+
     // THEN: Should return error
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
@@ -368,31 +430,39 @@ test.describe('NewCategory IPC Handlers', () => {
 
 ```typescript
 test.describe('NewComponent Component Integration', () => {
-  test('should render component with data', async ({ electronPage, testDbPath }) => {
+  test('should render component with data', async ({
+    electronPage,
+    testDbPath,
+  }) => {
     // GIVEN: Setup data
     await electronPage.evaluate(async () => {
-      await window.electronAPI.data.create({ /* ... */ });
+      await window.electronAPI.data.create({
+        /* ... */
+      });
     });
-    
+
     // WHEN: Navigate to component
     await electronPage.goto('/');
     await electronPage.click('text=Page');
     await electronPage.waitForLoadState('networkidle');
-    
+
     // THEN: Component should render
     const component = electronPage.locator('[data-testid="new-component"]');
     await component.waitFor({ state: 'visible', timeout: 5000 });
     expect(await component.isVisible()).toBe(true);
   });
-  
-  test('should handle user interaction', async ({ electronPage, testDbPath }) => {
+
+  test('should handle user interaction', async ({
+    electronPage,
+    testDbPath,
+  }) => {
     // GIVEN: Component is rendered
     // ... setup ...
-    
+
     // WHEN: User interacts
     await electronPage.click('button:has-text("Action")');
     await electronPage.waitForTimeout(500);
-    
+
     // THEN: Component should update
     const updated = await electronPage.locator('text=Updated').isVisible();
     expect(updated).toBe(true);
@@ -404,23 +474,28 @@ test.describe('NewComponent Component Integration', () => {
 
 ```typescript
 test.describe('Data Flow: New Feature', () => {
-  test('should complete full cycle: UI → IPC → DB → UI', async ({ electronPage, testDbPath }) => {
+  test('should complete full cycle: UI → IPC → DB → UI', async ({
+    electronPage,
+    testDbPath,
+  }) => {
     // GIVEN: Initial state
     await electronPage.goto('/');
-    
+
     // WHEN: UI action triggers IPC
     await electronPage.click('button:has-text("Create")');
     await electronPage.fill('input#name', 'Test Item');
     await electronPage.click('button:has-text("Save")');
     await electronPage.waitForTimeout(1000);
-    
+
     // THEN: Data persisted to DB
     const dbContents = getDatabaseContents(testDbPath);
     const item = dbContents.items.find((i: any) => i.name === 'Test Item');
     expect(item).toBeDefined();
-    
+
     // AND: UI updated
-    const itemVisible = await electronPage.locator('text=Test Item').isVisible();
+    const itemVisible = await electronPage
+      .locator('text=Test Item')
+      .isVisible();
     expect(itemVisible).toBe(true);
   });
 });
@@ -430,25 +505,33 @@ test.describe('Data Flow: New Feature', () => {
 
 ```typescript
 test.describe('Performance: New Feature', () => {
-  test('should handle large dataset efficiently', async ({ electronPage, testDbPath }) => {
+  test('should handle large dataset efficiently', async ({
+    electronPage,
+    testDbPath,
+  }) => {
     const startTime = Date.now();
     const startMemory = process.memoryUsage().heapUsed;
     logger.logMemory('Initial state');
-    
+
     // GIVEN: Create large dataset
     await electronPage.evaluate(async () => {
       const promises = [];
       for (let i = 0; i < 1000; i++) {
-        promises.push(window.electronAPI.feature.create({ /* ... */ }));
+        promises.push(
+          window.electronAPI.feature.create({
+            /* ... */
+          })
+        );
       }
       await Promise.all(promises);
     });
-    
+
     const duration = Date.now() - startTime;
-    const memoryDelta = (process.memoryUsage().heapUsed - startMemory) / 1024 / 1024;
+    const memoryDelta =
+      (process.memoryUsage().heapUsed - startMemory) / 1024 / 1024;
     logger.logPerformance('Create 1000 items', duration);
     logger.logMemory('After operation');
-    
+
     // THEN: Should complete in reasonable time
     expect(duration).toBeLessThan(30000); // <30s
     expect(memoryDelta).toBeLessThan(500); // <500MB
@@ -459,11 +542,13 @@ test.describe('Performance: New Feature', () => {
 ## Test Execution Commands
 
 ### Run All Tests
+
 ```bash
 npm run test:electron -- tests/integration/
 ```
 
 ### Run Specific Category
+
 ```bash
 # IPC handlers
 npm run test:electron -- tests/integration/ipc-handlers/
@@ -476,16 +561,19 @@ npm run test:electron -- tests/integration/performance/
 ```
 
 ### Run Specific Test File
+
 ```bash
 npm run test:electron -- tests/integration/ipc-handlers/env-handlers.spec.ts
 ```
 
 ### Run Single Test
+
 ```bash
 npm run test:electron -- tests/integration/ipc-handlers/env-handlers.spec.ts --grep "env:save"
 ```
 
 ### Debug Mode
+
 ```bash
 # Headed mode (see browser)
 npm run test:electron -- tests/integration/ipc-handlers/env-handlers.spec.ts --headed
@@ -500,26 +588,33 @@ npm run test:electron:debug -- tests/integration/ipc-handlers/env-handlers.spec.
 ### Viewing Test Artifacts
 
 #### Screenshots
+
 Screenshots are automatically saved in `test-artifacts/` directory for failed tests:
+
 - `test-failed-1.png` - Screenshot at failure point
 - `diagnostics-screenshot.png` - Additional diagnostic screenshot
 - Test-specific screenshots in subdirectories
 
 View screenshots:
+
 ```bash
 open test-artifacts/*.png
 ```
 
 #### Videos
+
 Videos are recorded for failed tests and saved as `video.webm` files in test artifact directories. These show the full test execution leading to the failure.
 
 #### HTML Report
+
 After running tests, view the comprehensive HTML report:
+
 ```bash
 npx playwright show-report
 ```
 
 The report shows:
+
 - Test results summary
 - Pass/fail status
 - Execution time
@@ -527,6 +622,7 @@ The report shows:
 - Error messages and stack traces
 
 #### Test Artifacts Directory Structure
+
 ```
 test-artifacts/
 ├── [test-name]-[hash]-electron/
@@ -543,16 +639,19 @@ test-artifacts/
 ### Debugging Tips
 
 1. **Check Screenshots**: View screenshots to see what the UI looked like when the test failed
+
    ```bash
    open test-artifacts/*.png
    ```
 
 2. **Run with Slower Actions**: Add `--slow-mo=1000` to slow down actions and see each step
+
    ```bash
    npm run test:electron -- tests/integration/ui-interactions.spec.ts --headed --slow-mo=1000
    ```
 
 3. **Use Playwright Inspector**: Step through the test execution
+
    ```bash
    npm run test:electron:debug -- tests/integration/ui-interactions.spec.ts
    ```
@@ -564,6 +663,7 @@ test-artifacts/
 ### Test Independence
 
 Every test is designed to be independent:
+
 - ✅ Has its own isolated test database
 - ✅ Sets up its own state
 - ✅ Cleans up after itself
@@ -587,6 +687,7 @@ Before marking ANY task or feature as `completed`:
 5. **MANDATORY**: Fix any failing tests - do not mark complete until fixed
 
 **Completion Checklist (ALL must be checked):**
+
 - [ ] All tests written for the feature/task
 - [ ] All tests passing: `npm run test:electron -- tests/integration/`
 - [ ] No test regressions (existing tests still pass)
@@ -596,6 +697,7 @@ Before marking ANY task or feature as `completed`:
 - [ ] Only then mark task/feature as `completed`
 
 **If tests fail:**
+
 - **DO NOT** mark as complete
 - **DO NOT** update status to `completed`
 - **FIX THE TESTS** or fix the implementation
@@ -603,6 +705,7 @@ Before marking ANY task or feature as `completed`:
 - **THEN** mark as complete
 
 **If tests are not written:**
+
 - **DO NOT** mark as complete
 - **WRITE THE TESTS FIRST**
 - **RUN THE TESTS**
@@ -632,4 +735,3 @@ Before marking ANY task or feature as `completed`:
 - Cursor Rules: `.cursor/rules/test-driven-development.mdc`
 - Test Review: `tests/INTEGRATION_TEST_REVIEW.md` - Known issues, fixes, and missing coverage
 - Performance Testing: `specs/003-performance-optimization-lazy-loading/TESTING_GUIDE.md` - Performance-specific testing guide
-

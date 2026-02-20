@@ -1,12 +1,12 @@
 /**
  * EmptyState - Consistent empty state with icon, message, and CTA
- * 
+ *
  * Provides a standardized empty state with:
  * - Large icon display
  * - Title and description
  * - Optional call-to-action button
  * - Consistent styling and spacing
- * 
+ *
  * @example
  * ```tsx
  * <EmptyState
@@ -18,9 +18,10 @@
  * ```
  */
 
+import { motion } from 'framer-motion';
 import React from 'react';
-import { Card, CardContent } from '../ui/card';
 import { cn } from '../../lib/utils';
+import { Card, CardContent } from '../ui/card';
 
 export interface EmptyStateProps {
   icon: React.ReactNode;
@@ -37,40 +38,33 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   description,
   action,
   className = '',
-  variant = 'card'
+  variant = 'card',
 }) => {
   const content = (
-    <div className="flex flex-col items-center justify-center py-12">
-      <div className="text-muted-foreground mb-4">
-        {icon}
-      </div>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="flex flex-col items-center justify-center py-12"
+    >
+      <div className="text-muted-foreground mb-4">{icon}</div>
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
       {description && (
         <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
           {description}
         </p>
       )}
-      {action && (
-        <div className="mt-4">
-          {action}
-        </div>
-      )}
-    </div>
+      {action && <div className="mt-4">{action}</div>}
+    </motion.div>
   );
 
   if (variant === 'minimal') {
-    return (
-      <div className={cn('', className)}>
-        {content}
-      </div>
-    );
+    return <div className={cn('', className)}>{content}</div>;
   }
 
   return (
     <Card className={cn('', className)}>
-      <CardContent>
-        {content}
-      </CardContent>
+      <CardContent>{content}</CardContent>
     </Card>
   );
 };

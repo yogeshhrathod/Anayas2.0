@@ -77,13 +77,20 @@ class ExecutionTracer {
   /**
    * Get trace summary
    */
-  getSummary(): { totalSteps: number; totalDuration: number; steps: Array<{ step: string; duration: number }> } {
+  getSummary(): {
+    totalSteps: number;
+    totalDuration: number;
+    steps: Array<{ step: string; duration: number }>;
+  } {
     const stepsWithDuration = this.traces
       .filter(t => t.duration)
       .map(t => ({ step: t.step, duration: t.duration! }));
-    
-    const totalDuration = stepsWithDuration.reduce((sum, s) => sum + s.duration, 0);
-    
+
+    const totalDuration = stepsWithDuration.reduce(
+      (sum, s) => sum + s.duration,
+      0
+    );
+
     return {
       totalSteps: this.traces.length,
       totalDuration,
@@ -94,4 +101,3 @@ class ExecutionTracer {
 
 // Export singleton instance
 export const tracer = new ExecutionTracer();
-

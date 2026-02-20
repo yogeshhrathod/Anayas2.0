@@ -35,7 +35,7 @@ export function EnvironmentExportDialog({
   // Select all by default when dialog opens
   useEffect(() => {
     if (open && environments.length > 0) {
-      setSelectedIds(new Set(environments.map((e) => e.id!).filter(Boolean)));
+      setSelectedIds(new Set(environments.map(e => e.id!).filter(Boolean)));
     }
   }, [open, environments]);
 
@@ -43,28 +43,28 @@ export function EnvironmentExportDialog({
     if (selectedIds.size === environments.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(environments.map((e) => e.id!).filter(Boolean)));
+      setSelectedIds(new Set(environments.map(e => e.id!).filter(Boolean)));
     }
   }, [selectedIds, environments]);
 
-  const handleToggleEnvironment = useCallback(
-    (id: number) => {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        if (next.has(id)) {
-          next.delete(id);
-        } else {
-          next.add(id);
-        }
-        return next;
-      });
-    },
-    []
-  );
+  const handleToggleEnvironment = useCallback((id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
 
   const handleExport = useCallback(async () => {
     if (selectedIds.size === 0) {
-      showError('No environments selected', 'Please select at least one environment to export');
+      showError(
+        'No environments selected',
+        'Please select at least one environment to export'
+      );
       return;
     }
 
@@ -76,13 +76,19 @@ export function EnvironmentExportDialog({
       );
 
       if (!result.success) {
-        showError('Export failed', result.error || 'Failed to export environments');
+        showError(
+          'Export failed',
+          result.error || 'Failed to export environments'
+        );
         return;
       }
 
       // Create download
       const blob = new Blob([result.content], {
-        type: format === 'json' || format === 'postman' ? 'application/json' : 'text/plain',
+        type:
+          format === 'json' || format === 'postman'
+            ? 'application/json'
+            : 'text/plain',
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -100,13 +106,17 @@ export function EnvironmentExportDialog({
       onOpenChange(false);
     } catch (error: any) {
       console.error('Failed to export environments:', error);
-      showError('Export failed', error.message || 'Failed to export environments');
+      showError(
+        'Export failed',
+        error.message || 'Failed to export environments'
+      );
     } finally {
       setIsExporting(false);
     }
   }, [selectedIds, format, showSuccess, showError, onOpenChange]);
 
-  const allSelected = selectedIds.size === environments.length && environments.length > 0;
+  const allSelected =
+    selectedIds.size === environments.length && environments.length > 0;
 
   return (
     <Dialog
@@ -144,9 +154,11 @@ export function EnvironmentExportDialog({
                     No environments to export
                   </p>
                 ) : (
-                  environments.map((env) => {
+                  environments.map(env => {
                     const isSelected = selectedIds.has(env.id!);
-                    const variableCount = Object.keys(env.variables || {}).length;
+                    const variableCount = Object.keys(
+                      env.variables || {}
+                    ).length;
                     return (
                       <div
                         key={env.id || `env-${env.name}`}
@@ -157,7 +169,9 @@ export function EnvironmentExportDialog({
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleToggleEnvironment(env.id!)}
-                          onClick={(e: React.MouseEvent<HTMLInputElement>) => e.stopPropagation()}
+                          onClick={(e: React.MouseEvent<HTMLInputElement>) =>
+                            e.stopPropagation()
+                          }
                           className="mt-1 h-4 w-4 rounded border-gray-300"
                         />
                         <div className="flex-1 min-w-0">
@@ -172,7 +186,8 @@ export function EnvironmentExportDialog({
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {variableCount} variable{variableCount !== 1 ? 's' : ''}
+                            {variableCount} variable
+                            {variableCount !== 1 ? 's' : ''}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             Name: {env.name}
@@ -219,4 +234,3 @@ export function EnvironmentExportDialog({
     </Dialog>
   );
 }
-

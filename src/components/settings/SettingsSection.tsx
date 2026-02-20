@@ -1,5 +1,11 @@
 import { ReactNode } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../ui/card';
 
 interface SettingsSectionProps {
   title: string;
@@ -10,16 +16,18 @@ interface SettingsSectionProps {
 /**
  * Reusable settings section component for consistent layout
  */
-export function SettingsSection({ title, description, children }: SettingsSectionProps) {
+export function SettingsSection({
+  title,
+  description,
+  children,
+}: SettingsSectionProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {children}
-      </CardContent>
+      <CardContent className="space-y-4">{children}</CardContent>
     </Card>
   );
 }

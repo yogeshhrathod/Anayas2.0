@@ -1,12 +1,12 @@
 /**
  * EnvironmentGrid - Grid layout component for displaying environments
- * 
+ *
  * Features:
  * - Responsive grid layout
  * - Empty state handling
  * - Loading state support
  * - Current environment highlighting
- * 
+ *
  * @example
  * ```tsx
  * <EnvironmentGrid
@@ -49,7 +49,7 @@ export const EnvironmentGrid: React.FC<EnvironmentGridProps> = ({
   onDelete,
   onDuplicate,
   onSetDefault,
-  onTest
+  onTest,
 }) => {
   if (isLoading) {
     return (
@@ -69,14 +69,18 @@ export const EnvironmentGrid: React.FC<EnvironmentGridProps> = ({
         icon={<span className="text-6xl">🌍</span>}
         title="No Environments"
         description="Create your first environment to manage API configurations"
-        action={<Button onClick={() => onEdit({} as Environment)}>Create Environment</Button>}
+        action={
+          <Button onClick={() => onEdit({} as Environment)}>
+            Create Environment
+          </Button>
+        }
       />
     );
   }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {environments.map((environment) => (
+      {environments.map(environment => (
         <EnvironmentCard
           key={environment.id}
           environment={environment}

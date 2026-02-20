@@ -43,21 +43,29 @@ export function useLatestRelease() {
   useEffect(() => {
     const fetchLatestRelease = async () => {
       try {
-        const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=1`);
+        const response = await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=1`
+        );
         if (!response.ok) {
           throw new Error('Failed to fetch releases');
         }
-        
+
         const releases: Release[] = await response.json();
         const latestRelease = releases[0];
 
         if (latestRelease) {
           const assets = latestRelease.assets;
-          
+
           // Find assets using case-insensitive partial matching
-          const macAsset = assets.find(a => a.name.endsWith('.dmg') && !a.name.includes('blockmap'));
-          const winAsset = assets.find(a => a.name.endsWith('.exe') && !a.name.includes('blockmap'));
-          const linuxAsset = assets.find(a => a.name.endsWith('.AppImage') && !a.name.includes('blockmap'));
+          const macAsset = assets.find(
+            a => a.name.endsWith('.dmg') && !a.name.includes('blockmap')
+          );
+          const winAsset = assets.find(
+            a => a.name.endsWith('.exe') && !a.name.includes('blockmap')
+          );
+          const linuxAsset = assets.find(
+            a => a.name.endsWith('.AppImage') && !a.name.includes('blockmap')
+          );
 
           setData({
             mac: macAsset?.browser_download_url || DEFAULT_URLS.mac,
@@ -69,7 +77,7 @@ export function useLatestRelease() {
             error: null,
           });
         } else {
-            setData(prev => ({ ...prev, loading: false }));
+          setData(prev => ({ ...prev, loading: false }));
         }
       } catch (err) {
         console.error('Error fetching latest release:', err);

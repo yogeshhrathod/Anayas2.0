@@ -1,7 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Theme } from '../lib/themes';
-import { Collection, Environment, Request, RequestHistory } from '../types/entities';
+import {
+  Collection,
+  EntityId,
+  Environment,
+  Request,
+  RequestHistory,
+  ResponseData,
+} from '../types/entities';
 
 export interface UnsavedRequest {
   id: string;
@@ -12,6 +19,7 @@ export interface UnsavedRequest {
   body: string;
   queryParams: Array<{ key: string; value: string; enabled: boolean }>;
   auth: any;
+  lastResponse?: ResponseData;
   lastModified: string;
   createdAt: string;
 }
@@ -31,24 +39,30 @@ interface AppState {
   currentEnvironment: Environment | null;
   setEnvironments: (environments: Environment[]) => void;
   setCurrentEnvironment: (env: Environment | null) => void;
-  
+
   // Collection-Environment selection (stores which env is selected per collection)
   collectionEnvironmentSelection: Record<number, number>;
-  setCollectionEnvironmentSelection: (collectionId: number, environmentId: number) => void;
+  setCollectionEnvironmentSelection: (
+    collectionId: number,
+    environmentId: number
+  ) => void;
 
   // Collections
   collections: Collection[];
   setCollections: (collections: Collection[]) => void;
-  
+
   // Collection to edit (triggered from variable context menu)
   collectionToEditId: number | null;
   setCollectionToEditId: (id: number | null) => void;
-  
+
   // Environment to edit (triggered from variable context menu)
   environmentToEditId: number | null;
   variableToFocus: string | null;
-  setEnvironmentToEdit: (environmentId: number | null, variableName?: string | null) => void;
-  
+  setEnvironmentToEdit: (
+    environmentId: number | null,
+    variableName?: string | null
+  ) => void;
+
   // Collection Hierarchy State
   expandedCollections: Set<number>;
   setExpandedCollections: (expanded: Set<number>) => void;
@@ -64,10 +78,14 @@ interface AppState {
   // Selected Item for keyboard shortcuts
   selectedItem: {
     type: 'collection' | 'request' | 'folder' | null;
-    id: number | null;
+    id: EntityId | null;
     data: any;
   };
-  setSelectedItem: (item: { type: 'collection' | 'request' | 'folder' | null; id: number | null; data: any }) => void;
+  setSelectedItem: (item: {
+    type: 'collection' | 'request' | 'folder' | null;
+    id: EntityId | null;
+    data: any;
+  }) => void;
 
   // Enhanced context tracking for shortcuts
   focusedContext: 'sidebar' | 'editor' | 'page' | null;
@@ -76,8 +94,10 @@ interface AppState {
   // Request History
   requestHistory: RequestHistory[];
   setRequestHistory: (history: RequestHistory[]) => void;
-  historyFilter: { requestId?: number; method?: string; url?: string } | null;
-  setHistoryFilter: (filter: { requestId?: number; method?: string; url?: string } | null) => void;
+  historyFilter: { requestId?: EntityId; method?: string; url?: string } | null;
+  setHistoryFilter: (
+    filter: { requestId?: EntityId; method?: string; url?: string } | null
+  ) => void;
 
   // Request Progress
   requestProgress: RequestProgress | null;
@@ -103,19 +123,33 @@ interface AppState {
   addCustomTheme: (theme: Theme) => void;
   removeCustomTheme: (themeId: string) => void;
   updateCustomTheme: (themeId: string, theme: Theme) => void;
-  
+
   // Navigation
-  currentPage: 'home' | 'collections' | 'environments' | 'history' | 'settings' | 'privacy';
-  setCurrentPage: (page: 'home' | 'collections' | 'environments' | 'history' | 'settings' | 'privacy') => void;
-  
+  currentPage:
+    | 'home'
+    | 'collections'
+    | 'environments'
+    | 'history'
+    | 'settings'
+    | 'privacy';
+  setCurrentPage: (
+    page:
+      | 'home'
+      | 'collections'
+      | 'environments'
+      | 'history'
+      | 'settings'
+      | 'privacy'
+  ) => void;
+
   // Sidebar refresh trigger
   sidebarRefreshTrigger: number;
   triggerSidebarRefresh: () => void;
-  
+
   // Sidebar width state
   sidebarWidth: number;
   setSidebarWidth: (width: number) => void;
-  
+
   // Unsaved section height state for vertical resizing
   unsavedSectionHeight: number;
   setUnsavedSectionHeight: (height: number) => void;
@@ -129,7 +163,7 @@ interface AppState {
   // Presets sidebar state
   presetsExpanded: boolean;
   setPresetsExpanded: (expanded: boolean) => void;
-  
+
   // Split view state for editor
   splitViewEnabled: boolean;
   setSplitViewEnabled: (enabled: boolean) => void;
@@ -137,146 +171,167 @@ interface AppState {
   // Legacy theme support (for backward compatibility)
   theme: 'light' | 'dark' | 'system';
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
+
+  // App Version
+  appVersion: string;
+  setAppVersion: (version: string) => void;
 }
 
 export const useStore = create<AppState>()(
   persist(
-    (set) => ({
+    set => ({
       // Environment
       environments: [],
       currentEnvironment: null,
-      setEnvironments: (environments) => set({ environments }),
-      setCurrentEnvironment: (currentEnvironment) => set({ currentEnvironment }),
-      
+      setEnvironments: environments => set({ environments }),
+      setCurrentEnvironment: currentEnvironment => set({ currentEnvironment }),
+
       // Collection-Environment selection
       collectionEnvironmentSelection: {},
-      setCollectionEnvironmentSelection: (collectionId, environmentId) => set((state) => ({
-        collectionEnvironmentSelection: {
-          ...state.collectionEnvironmentSelection,
-          [collectionId]: environmentId
-        }
-      })),
+      setCollectionEnvironmentSelection: (collectionId, environmentId) =>
+        set(state => ({
+          collectionEnvironmentSelection: {
+            ...state.collectionEnvironmentSelection,
+            [collectionId]: environmentId,
+          },
+        })),
 
       // Collections
       collections: [],
-      setCollections: (collections) => set({ collections }),
-      
+      setCollections: collections => set({ collections }),
+
       // Collection to edit (triggered from variable context menu)
       collectionToEditId: null,
-      setCollectionToEditId: (collectionToEditId) => set({ collectionToEditId }),
-      
+      setCollectionToEditId: collectionToEditId => set({ collectionToEditId }),
+
       // Environment to edit (triggered from variable context menu)
       environmentToEditId: null,
       variableToFocus: null,
       setEnvironmentToEdit: (environmentId, variableName) => {
-        console.log('[Store] setEnvironmentToEdit called with:', { environmentId, variableName });
-        set({ 
-          environmentToEditId: environmentId, 
-          variableToFocus: variableName || null 
+        console.log('[Store] setEnvironmentToEdit called with:', {
+          environmentId,
+          variableName,
+        });
+        set({
+          environmentToEditId: environmentId,
+          variableToFocus: variableName || null,
         });
         console.log('[Store] environmentToEditId set to:', environmentId);
       },
-      
+
       // Collection Hierarchy State
       expandedCollections: new Set<number>(),
-      setExpandedCollections: (expandedCollections) => set({ expandedCollections }),
+      setExpandedCollections: expandedCollections =>
+        set({ expandedCollections }),
 
       // Selected Request
       selectedRequest: null,
-      setSelectedRequest: (selectedRequest) => set({ selectedRequest }),
+      setSelectedRequest: selectedRequest => set({ selectedRequest }),
 
       // Selected Collection for new requests
       selectedCollectionForNewRequest: null,
-      setSelectedCollectionForNewRequest: (selectedCollectionForNewRequest) => set({ selectedCollectionForNewRequest }),
+      setSelectedCollectionForNewRequest: selectedCollectionForNewRequest =>
+        set({ selectedCollectionForNewRequest }),
 
       // Selected Item for keyboard shortcuts
       selectedItem: { type: null, id: null, data: null },
-      setSelectedItem: (selectedItem) => {
+      setSelectedItem: selectedItem => {
         set({ selectedItem });
       },
 
       // Enhanced context tracking for shortcuts
       focusedContext: null,
-      setFocusedContext: (focusedContext) => set({ focusedContext }),
+      setFocusedContext: focusedContext => set({ focusedContext }),
 
       // Request History
       requestHistory: [],
-      setRequestHistory: (requestHistory) => set({ requestHistory }),
+      setRequestHistory: requestHistory => set({ requestHistory }),
       historyFilter: null,
-      setHistoryFilter: (historyFilter) => set({ historyFilter }),
+      setHistoryFilter: historyFilter => set({ historyFilter }),
 
       // Request Progress
       requestProgress: null,
-      setRequestProgress: (requestProgress) => set({ requestProgress }),
+      setRequestProgress: requestProgress => set({ requestProgress }),
 
       // Settings
       settings: {},
-      setSettings: (settings) => set({ settings }),
+      setSettings: settings => set({ settings }),
 
       // Unsaved Requests
       unsavedRequests: [],
-      setUnsavedRequests: (unsavedRequests) => set({ unsavedRequests }),
+      setUnsavedRequests: unsavedRequests => set({ unsavedRequests }),
       activeUnsavedRequestId: null,
-      setActiveUnsavedRequestId: (activeUnsavedRequestId) => set({ activeUnsavedRequestId }),
+      setActiveUnsavedRequestId: activeUnsavedRequestId =>
+        set({ activeUnsavedRequestId }),
 
       // UI State - Theme Management
       themeMode: 'system',
-      setThemeMode: (themeMode) => set({ themeMode, theme: themeMode }),
+      setThemeMode: themeMode => set({ themeMode, theme: themeMode }),
       currentThemeId: 'light',
-      setCurrentThemeId: (currentThemeId) => set({ currentThemeId }),
+      setCurrentThemeId: currentThemeId => set({ currentThemeId }),
       customThemes: [],
-      setCustomThemes: (customThemes) => set({ customThemes }),
-      addCustomTheme: (theme) => set((state) => ({ 
-        customThemes: [...state.customThemes, theme] 
-      })),
-      removeCustomTheme: (themeId) => set((state) => ({ 
-        customThemes: state.customThemes.filter(t => t.id !== themeId) 
-      })),
-      updateCustomTheme: (themeId, theme) => set((state) => ({ 
-        customThemes: state.customThemes.map(t => t.id === themeId ? theme : t) 
-      })),
+      setCustomThemes: customThemes => set({ customThemes }),
+      addCustomTheme: theme =>
+        set(state => ({
+          customThemes: [...state.customThemes, theme],
+        })),
+      removeCustomTheme: themeId =>
+        set(state => ({
+          customThemes: state.customThemes.filter(t => t.id !== themeId),
+        })),
+      updateCustomTheme: (themeId, theme) =>
+        set(state => ({
+          customThemes: state.customThemes.map(t =>
+            t.id === themeId ? theme : t
+          ),
+        })),
 
       // Navigation
       currentPage: 'home',
-      setCurrentPage: (currentPage) => set({ currentPage }),
+      setCurrentPage: currentPage => set({ currentPage }),
 
       // Sidebar refresh trigger
       sidebarRefreshTrigger: 0,
-      triggerSidebarRefresh: () => set((state) => ({ 
-        sidebarRefreshTrigger: state.sidebarRefreshTrigger + 1 
-      })),
+      triggerSidebarRefresh: () =>
+        set(state => ({
+          sidebarRefreshTrigger: state.sidebarRefreshTrigger + 1,
+        })),
 
       // Sidebar width state
       sidebarWidth: 200, // Default width (reduced from 256px)
-      setSidebarWidth: (sidebarWidth) => set({ sidebarWidth }),
+      setSidebarWidth: sidebarWidth => set({ sidebarWidth }),
 
       // Unsaved section height state for vertical resizing
       unsavedSectionHeight: 200,
-      setUnsavedSectionHeight: (unsavedSectionHeight) => set({ unsavedSectionHeight }),
+      setUnsavedSectionHeight: unsavedSectionHeight =>
+        set({ unsavedSectionHeight }),
 
       // Sidebar section state (VS Code-style collapsible sections)
       expandedSidebarSections: new Set<string>(['collections']), // Default: Collections expanded
-      toggleSidebarSection: (section: string) => set((state) => {
-        const newExpanded = new Set(state.expandedSidebarSections);
-        if (newExpanded.has(section)) {
-          newExpanded.delete(section);
-        } else {
-          newExpanded.add(section);
-        }
-        // Save to database after updating
-        setTimeout(() => {
-          window.electronAPI.sidebar.setState({
-            expandedSections: Array.from(newExpanded),
-            sectionOrder: ['unsaved', 'collections'],
-          });
-        }, 0);
-        return { expandedSidebarSections: newExpanded };
-      }),
+      toggleSidebarSection: (section: string) =>
+        set(state => {
+          const newExpanded = new Set(state.expandedSidebarSections);
+          if (newExpanded.has(section)) {
+            newExpanded.delete(section);
+          } else {
+            newExpanded.add(section);
+          }
+          // Save to database after updating
+          setTimeout(() => {
+            window.electronAPI.sidebar.setState({
+              expandedSections: Array.from(newExpanded),
+              sectionOrder: ['unsaved', 'collections'],
+            });
+          }, 0);
+          return { expandedSidebarSections: newExpanded };
+        }),
       loadSidebarState: async () => {
         try {
           const sidebarState = await window.electronAPI.sidebar.getState();
-          set({ 
-            expandedSidebarSections: new Set(sidebarState.expandedSections || ['collections'])
+          set({
+            expandedSidebarSections: new Set(
+              sidebarState.expandedSections || ['collections']
+            ),
           });
         } catch (error) {
           console.error('Failed to load sidebar state:', error);
@@ -286,29 +341,35 @@ export const useStore = create<AppState>()(
       },
       saveSidebarState: () => {
         const state = useStore.getState();
-        window.electronAPI.sidebar.setState({
-          expandedSections: Array.from(state.expandedSidebarSections),
-          sectionOrder: ['unsaved', 'collections'],
-        }).catch((error: unknown) => {
-          console.error('Failed to save sidebar state:', error);
-        });
+        window.electronAPI.sidebar
+          .setState({
+            expandedSections: Array.from(state.expandedSidebarSections),
+            sectionOrder: ['unsaved', 'collections'],
+          })
+          .catch((error: unknown) => {
+            console.error('Failed to save sidebar state:', error);
+          });
       },
 
       // Presets sidebar state
       presetsExpanded: false,
-      setPresetsExpanded: (presetsExpanded) => set({ presetsExpanded }),
-      
+      setPresetsExpanded: presetsExpanded => set({ presetsExpanded }),
+
       // Split view state for editor
       splitViewEnabled: true, // Default enabled
-      setSplitViewEnabled: (splitViewEnabled) => set({ splitViewEnabled }),
+      setSplitViewEnabled: splitViewEnabled => set({ splitViewEnabled }),
 
       // Legacy theme support (for backward compatibility)
       theme: 'system',
-      setTheme: (theme) => set({ theme, themeMode: theme }),
+      setTheme: theme => set({ theme, themeMode: theme }),
+
+      // App Version
+      appVersion: '',
+      setAppVersion: appVersion => set({ appVersion }),
     }),
     {
       name: 'luna-store',
-      partialize: (state) => ({
+      partialize: state => ({
         expandedCollections: Array.from(state.expandedCollections),
         settings: state.settings,
         themeMode: state.themeMode,
@@ -317,11 +378,16 @@ export const useStore = create<AppState>()(
         sidebarWidth: state.sidebarWidth,
         unsavedSectionHeight: state.unsavedSectionHeight,
         presetsExpanded: state.presetsExpanded,
+        selectedRequest: state.selectedRequest,
+        activeUnsavedRequestId: state.activeUnsavedRequestId,
+        currentPage: state.currentPage,
       }),
-      onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: () => state => {
         if (state) {
           // Convert array back to Set
-          state.expandedCollections = new Set(state.expandedCollections as unknown as number[]);
+          state.expandedCollections = new Set(
+            state.expandedCollections as unknown as number[]
+          );
           // Note: Settings will be loaded from DB in App.tsx loadData()
           // Don't override DB settings with cached localStorage settings
         }

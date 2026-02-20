@@ -49,8 +49,11 @@ test.describe('Font Settings UI', () => {
     await electronPage.click('button[data-testid="nav-settings"]');
     await electronPage.waitForSelector('input#uiFontFamily');
 
-    await expect.poll(async () => electronPage.inputValue('input#uiFontFamily')).toBe('TestUIFont');
-    await expect.poll(async () => electronPage.inputValue('input#codeFontFamily')).toBe('TestCodeFont');
+    await expect
+      .poll(async () => electronPage.inputValue('input#uiFontFamily'))
+      .toBe('TestUIFont');
+    await expect
+      .poll(async () => electronPage.inputValue('input#codeFontFamily'))
+      .toBe('TestCodeFont');
   });
 });
-

@@ -20,7 +20,13 @@ import {
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
 import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 
@@ -43,9 +49,9 @@ export function ThemeCustomizer() {
   const [selectedBaseTheme, setSelectedBaseTheme] = useState<string>('light');
 
   const allThemes = [...builtInThemes, ...customThemes];
-  
+
   // Filter themes based on current theme mode
-  const filteredThemes = allThemes.filter((theme) => {
+  const filteredThemes = allThemes.filter(theme => {
     if (themeMode === 'system') {
       // When system mode, show all themes
       return true;
@@ -60,7 +66,7 @@ export function ThemeCustomizer() {
       return;
     }
 
-    const baseTheme = allThemes.find((t) => t.id === selectedBaseTheme);
+    const baseTheme = allThemes.find(t => t.id === selectedBaseTheme);
     const newTheme = createCustomTheme(newThemeName, newThemeType, baseTheme);
     addCustomTheme(newTheme);
     setCurrentThemeId(newTheme.id);
@@ -92,12 +98,12 @@ export function ThemeCustomizer() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
-    input.onchange = (e) => {
+    input.onchange = e => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         try {
           const json = e.target?.result as string;
           const theme = importTheme(json);
@@ -150,11 +156,13 @@ export function ThemeCustomizer() {
             <Palette className="h-5 w-5" />
             Theme Mode
           </CardTitle>
-          <CardDescription>Choose between light, dark, or system theme</CardDescription>
+          <CardDescription>
+            Choose between light, dark, or system theme
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
-            {(['light', 'dark', 'system'] as const).map((mode) => (
+            {(['light', 'dark', 'system'] as const).map(mode => (
               <Button
                 key={mode}
                 variant={themeMode === mode ? 'default' : 'outline'}
@@ -170,21 +178,23 @@ export function ThemeCustomizer() {
       </Card>
 
       {/* Theme Selection */}
-      <Card className={cn(themeMode === 'system' && "opacity-60")}>
+      <Card className={cn(themeMode === 'system' && 'opacity-60')}>
         <CardHeader>
           <CardTitle>Select Theme</CardTitle>
           <CardDescription>
-            {themeMode === 'system' 
-              ? "Theme selection is disabled while using System mode" 
-              : "Choose from built-in or custom themes"}
+            {themeMode === 'system'
+              ? 'Theme selection is disabled while using System mode'
+              : 'Choose from built-in or custom themes'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className={cn(
-            "grid gap-3 sm:grid-cols-2 lg:grid-cols-3",
-            themeMode === 'system' && "pointer-events-none grayscale"
-          )}>
-            {filteredThemes.map((theme) => (
+          <div
+            className={cn(
+              'grid gap-3 sm:grid-cols-2 lg:grid-cols-3',
+              themeMode === 'system' && 'pointer-events-none grayscale'
+            )}
+          >
+            {filteredThemes.map(theme => (
               <div
                 key={theme.id}
                 className={cn(
@@ -229,7 +239,7 @@ export function ThemeCustomizer() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         handleEditTheme(theme);
                       }}
@@ -239,7 +249,7 @@ export function ThemeCustomizer() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         handleExportTheme(theme);
                       }}
@@ -249,7 +259,7 @@ export function ThemeCustomizer() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         handleDeleteTheme(theme.id);
                       }}
@@ -265,7 +275,11 @@ export function ThemeCustomizer() {
       </Card>
 
       {/* Create Custom Theme */}
-      <Card className={cn(themeMode === 'system' && "opacity-60 pointer-events-none")}>
+      <Card
+        className={cn(
+          themeMode === 'system' && 'opacity-60 pointer-events-none'
+        )}
+      >
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
@@ -292,7 +306,7 @@ export function ThemeCustomizer() {
                 <Input
                   id="themeName"
                   value={newThemeName}
-                  onChange={(e) => setNewThemeName(e.target.value)}
+                  onChange={e => setNewThemeName(e.target.value)}
                   placeholder="My Custom Theme"
                 />
               </div>
@@ -303,7 +317,9 @@ export function ThemeCustomizer() {
                   id="themeType"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={newThemeType}
-                  onChange={(e) => setNewThemeType(e.target.value as 'light' | 'dark')}
+                  onChange={e =>
+                    setNewThemeType(e.target.value as 'light' | 'dark')
+                  }
                 >
                   <option value="light">Light</option>
                   <option value="dark">Dark</option>
@@ -316,11 +332,11 @@ export function ThemeCustomizer() {
                   id="baseTheme"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={selectedBaseTheme}
-                  onChange={(e) => setSelectedBaseTheme(e.target.value)}
+                  onChange={e => setSelectedBaseTheme(e.target.value)}
                 >
                   {builtInThemes
-                    .filter((t) => t.type === newThemeType)
-                    .map((theme) => (
+                    .filter(t => t.type === newThemeType)
+                    .map(theme => (
                       <option key={theme.id} value={theme.id}>
                         {theme.name}
                       </option>
@@ -353,7 +369,9 @@ export function ThemeCustomizer() {
           <Card className="max-h-[80vh] w-full max-w-2xl overflow-auto">
             <CardHeader>
               <CardTitle>Edit Theme: {editingTheme.name}</CardTitle>
-              <CardDescription>Customize theme colors (HSL format)</CardDescription>
+              <CardDescription>
+                Customize theme colors (HSL format)
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -366,8 +384,11 @@ export function ThemeCustomizer() {
                       <Input
                         id={key}
                         value={value}
-                        onChange={(e) =>
-                          updateEditingColor(key as keyof ThemeColors, e.target.value)
+                        onChange={e =>
+                          updateEditingColor(
+                            key as keyof ThemeColors,
+                            e.target.value
+                          )
                         }
                         placeholder="0 0% 100%"
                       />

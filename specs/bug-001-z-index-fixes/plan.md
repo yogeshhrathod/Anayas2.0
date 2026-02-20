@@ -38,6 +38,7 @@ Create a centralized z-index utility and refactor all hardcoded z-index values t
 ### Affected Components
 
 **Home Page & Request Builder (Primary Focus)**:
+
 - `src/pages/Homepage.tsx` - Status bar with `z-0`
 - `src/components/ApiRequestBuilder.tsx` - Contains dialogs and dropdowns
 - `src/components/ui/save-request-dialog.tsx` - Dialog with `z-[9999]`
@@ -45,6 +46,7 @@ Create a centralized z-index utility and refactor all hardcoded z-index values t
 - `src/components/GlobalSearch.tsx` - Search results with `z-[99999]`
 
 **All UI Components**:
+
 - `src/components/ui/dropdown-menu.tsx` - `z-[9999]`
 - `src/components/ui/select.tsx` - `z-[10000]`
 - `src/components/ui/context-menu.tsx` - `z-50` (too low)
@@ -68,14 +70,17 @@ Create a centralized z-index utility and refactor all hardcoded z-index values t
 ## Goal Alignment Check
 
 **Does this plan support the long-term project goal? (Performance-first, low memory)**
+
 - ✅ Yes - This is a code quality and maintainability improvement. Creating a centralized z-index utility is a constant-time operation with zero runtime performance impact. Refactoring hardcoded values improves maintainability without affecting performance.
 
 **Are there more reusable or cleaner ways to achieve the same?**
+
 - ✅ Creating a centralized utility is the standard approach for managing z-index values
 - ✅ Using a TypeScript enum/object ensures type safety and prevents typos
 - ✅ Uses Tailwind's native configuration system (more idiomatic than separate utility file)
 
 **Architecture Compliance:**
+
 - ✅ No performance impact (constants only)
 - ✅ Centralizes z-index values in Tailwind config (standard Tailwind pattern)
 - ✅ Improves code maintainability and consistency
@@ -94,32 +99,32 @@ module.exports = {
     extend: {
       zIndex: {
         // Base content layers (0-100)
-        'base': '0',
-        'content': '10',
-        'sticky': '100',
-        
+        base: '0',
+        content: '10',
+        sticky: '100',
+
         // Interactive elements (1000-2000)
-        'dropdown': '1000',
-        'popover': '1500',
+        dropdown: '1000',
+        popover: '1500',
         'context-menu': '2000',
-        
+
         // Overlays (3000-4000)
         'modal-backdrop': '3000',
-        'modal': '3500',
-        'dialog': '3500',
-        
+        modal: '3500',
+        dialog: '3500',
+
         // Floating UI (5000-6000)
-        'tooltip': '5000',
-        
+        tooltip: '5000',
+
         // Global features (7000-8000)
         'global-search': '7000',
-        
+
         // Notifications (9000-10000)
-        'toast': '9000',
-      }
-    }
-  }
-}
+        toast: '9000',
+      },
+    },
+  },
+};
 ```
 
 ### Usage in Components
@@ -167,10 +172,12 @@ Use semantic Tailwind classes instead of hardcoded values:
 ## Files to Modify/Create (with WHY)
 
 ### New Files
+
 - `tailwind.config.js` (modify) - **WHY**: Add z-index values to `theme.extend.zIndex` for centralized, semantic z-index classes
 
 ### Modified Files
-- `src/pages/Homepage.tsx` - **WHY**: 
+
+- `src/pages/Homepage.tsx` - **WHY**:
   - Remove `overflow-hidden` from line 8 (creates conflicting stacking context)
   - ApiRequestBuilder already handles overflow internally (line 294)
   - This aligns home page structure with Collections/Environments pages
@@ -203,14 +210,17 @@ Use semantic Tailwind classes instead of hardcoded values:
 ## Architecture Decisions
 
 ### Decision 1: Z-Index Hierarchy Design
+
 **Context**: Need to establish a clear hierarchy for all UI elements  
 **Options Considered**:
+
 - Option A: Use increments of 100 (100, 200, 300, etc.) - Simple but may be too granular
 - Option B: Use semantic ranges (0-100 base, 1000-2000 interactive, etc.) - More maintainable, allows for future additions
 - Option C: Use very high values (10000+) - Current approach, causes conflicts
 
 **Decision**: Option B - Semantic ranges  
-**Rationale**: 
+**Rationale**:
+
 - More maintainable and self-documenting
 - Allows for future additions within ranges
 - Prevents conflicts by using distinct ranges
@@ -219,14 +229,17 @@ Use semantic Tailwind classes instead of hardcoded values:
 **Trade-offs**: Slightly more complex than simple increments, but much clearer
 
 ### Decision 2: SelectContent in Dialogs
+
 **Context**: Select dropdowns need to appear above dialog content but within dialog context  
 **Options Considered**:
+
 - Option A: Use `z-dialog-dropdown` (value: 3501) - Appears above dialog, clear relationship, semantic name
 - Option B: Use `z-dropdown` - May conflict if dropdown is higher than dialog
 - Option C: Use arbitrary value `z-[3501]` - Works but not semantic
 
 **Decision**: Option A - `z-dialog-dropdown`  
-**Rationale**: 
+**Rationale**:
+
 - Clear semantic relationship to dialog z-index
 - Ensures dropdown appears above dialog content
 - Semantic class name makes intent clear
@@ -237,10 +250,12 @@ Use semantic Tailwind classes instead of hardcoded values:
 ## Implementation Phases
 
 ### Phase 1: Configure Tailwind Z-Index
+
 **Goal**: Add z-index values to Tailwind config for semantic class names  
 **Duration**: 15 minutes
 
 **Tasks**:
+
 - [ ] Update `tailwind.config.js` to add z-index values to `theme.extend.zIndex`
 - [ ] Add all semantic z-index classes (base, content, sticky, dropdown, popover, context-menu, modal-backdrop, modal, dialog, tooltip, global-search, toast)
 - [ ] Add special case: `dialog-dropdown` for dropdowns in dialogs (value: 3501)
@@ -250,10 +265,12 @@ Use semantic Tailwind classes instead of hardcoded values:
 **Deliverables**: Updated `tailwind.config.js` with z-index extension
 
 ### Phase 2: Fix Home Page & Request Builder (Primary Focus)
+
 **Goal**: Fix z-index issues in home page and request builder components  
 **Duration**: 30 minutes
 
 **Tasks**:
+
 - [ ] Fix `src/pages/Homepage.tsx` status bar
 - [ ] Fix `src/components/ui/save-request-dialog.tsx`
 - [ ] Fix `src/components/ui/promote-request-dialog.tsx`
@@ -265,10 +282,12 @@ Use semantic Tailwind classes instead of hardcoded values:
 **Deliverables**: Fixed z-index in home page and request builder
 
 ### Phase 3: Fix All Other Components
+
 **Goal**: Fix z-index in all remaining components  
 **Duration**: 45 minutes
 
 **Tasks**:
+
 - [ ] Fix all dialog components
 - [ ] Fix all dropdown/popover components
 - [ ] Fix context menu components
@@ -283,10 +302,12 @@ Use semantic Tailwind classes instead of hardcoded values:
 **Deliverables**: All components using centralized z-index
 
 ### Phase 4: Verification & Testing
+
 **Goal**: Verify all z-index fixes work correctly  
 **Duration**: 30 minutes
 
 **Tasks**:
+
 - [ ] Test dialogs appear above content
 - [ ] Test dropdowns in dialogs appear correctly
 - [ ] Test GlobalSearch appears above dialogs
@@ -301,6 +322,7 @@ Use semantic Tailwind classes instead of hardcoded values:
 ## File Structure
 
 ### Modified Config Files
+
 ```
 tailwind.config.js
   - Add zIndex to theme.extend
@@ -308,6 +330,7 @@ tailwind.config.js
 ```
 
 ### Modified Files
+
 ```
 src/pages/Homepage.tsx
   - Remove overflow-hidden from line 8 (fixes stacking context conflict)
@@ -342,14 +365,17 @@ src/pages/History.tsx
 ## Implementation Details
 
 ### Tailwind Config: `tailwind.config.js`
+
 **Purpose**: Centralized z-index values in Tailwind theme  
 **Key Features**:
+
 - Semantic class names (e.g., `z-dialog`, `z-dropdown`)
 - Type-safe via Tailwind IntelliSense
 - No runtime overhead
 - Consistent with Tailwind patterns
 
 **Usage Example**:
+
 ```tsx
 // In component - use semantic Tailwind classes
 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-dialog">
@@ -368,49 +394,64 @@ src/pages/History.tsx
 ```
 
 ### Home Page Structure Fix: `src/pages/Homepage.tsx`
+
 **Purpose**: Remove conflicting stacking context  
 **Key Changes**:
+
 - Remove `overflow-hidden` from wrapper div (line 8)
 - ApiRequestBuilder already handles overflow internally (line 294)
 - Aligns structure with Collections/Environments pages
 
 **Before**:
+
 ```tsx
-<div className="flex-1 overflow-hidden">  {/* Creates stacking context */}
+<div className="flex-1 overflow-hidden">
+  {' '}
+  {/* Creates stacking context */}
   <ApiRequestBuilder />
 </div>
 ```
 
 **After**:
+
 ```tsx
-<div className="flex-1">  {/* No stacking context conflict */}
+<div className="flex-1">
+  {' '}
+  {/* No stacking context conflict */}
   <ApiRequestBuilder />
 </div>
 ```
 
 **Why This Works**:
+
 - ApiRequestBuilder has `overflow-hidden` internally (line 294), so wrapper is redundant
 - Removes conflicting stacking context that was causing dropdown to go behind content
 - Matches pattern used in Collections/Environments pages (no overflow at page level)
 
 ### NavigationBar Fix: `src/components/NavigationBar.tsx`
+
 **Purpose**: Ensure NavigationBar stays above page content  
 **Key Changes**:
+
 - Add `z-sticky` or `z-navigation` class to NavigationBar container
 - Ensures NavigationBar and its dropdowns stay above page content
 
 **Before**:
+
 ```tsx
 <div className="flex h-11 items-center border-b border-border/50 bg-card/80 backdrop-blur-md px-4 select-none">
 ```
 
 **After**:
+
 ```tsx
 <div className="flex h-11 items-center border-b border-border/50 bg-card/80 backdrop-blur-md px-4 select-none z-sticky">
 ```
 
 ### Component Updates
+
 All components will:
+
 1. Replace hardcoded z-index values with semantic Tailwind classes
 2. Use classes like `z-dialog`, `z-dropdown`, `z-tooltip`, etc.
 3. No imports needed - classes are available globally via Tailwind
@@ -419,6 +460,7 @@ All components will:
 ## Testing Strategy
 
 ### Manual Testing Checklist
+
 - [ ] **CRITICAL**: Open home page - verify environment dropdown appears above content (not behind)
 - [ ] Open home page - verify status bar appears correctly
 - [ ] Open request builder - verify no z-index conflicts
@@ -434,6 +476,7 @@ All components will:
 - [ ] **CRITICAL**: Compare home page vs Collections/Environments - verify environment dropdown works consistently
 
 ### Visual Regression Testing
+
 - [ ] Compare screenshots before/after fix
 - [ ] Verify no UI elements are hidden incorrectly
 - [ ] Verify all dialogs are accessible
@@ -442,12 +485,14 @@ All components will:
 ## Performance Considerations
 
 ### Performance Impact
+
 - **Memory**: No impact (constants only)
 - **Load Time**: No impact (constants only)
 - **Bundle Size**: Minimal increase (~1KB for utility file)
 - **Runtime Performance**: Zero impact
 
 ### Performance Monitoring
+
 - No performance monitoring needed (constants only)
 - No memory tracking needed
 - No load time tracking needed
@@ -465,6 +510,7 @@ All components will:
 ## Rollback Plan
 
 If issues arise:
+
 1. Revert changes to specific components
 2. Keep Tailwind config z-index values (they don't affect existing code)
 3. Gradually re-apply fixes after identifying issues

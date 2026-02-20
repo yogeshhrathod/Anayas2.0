@@ -6,7 +6,7 @@ import { cn } from '../../lib/utils';
 // Actually, safely we can just use HTMLMotionProps<"button"> which includes most things.
 // But we want to preserve our variant props.
 
-export interface ButtonProps extends HTMLMotionProps<"button"> {
+export interface ButtonProps extends HTMLMotionProps<'button'> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
 }
@@ -14,10 +14,12 @@ export interface ButtonProps extends HTMLMotionProps<"button"> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', ...props }, ref) => {
     const variants = {
-      primary: 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20',
+      primary:
+        'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20',
       secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
       ghost: 'hover:bg-accent hover:text-accent-foreground',
-      outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+      outline:
+        'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
     };
 
     const sizes = {

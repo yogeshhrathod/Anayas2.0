@@ -8,6 +8,7 @@
 ## Overview
 
 Add support for configuring application fonts via Settings. Users should be able to customize:
+
 1. **UI Font**: The font used for the general application interface.
 2. **Code Font**: The font used in the Monaco Editor and other code views.
 
@@ -26,18 +27,21 @@ Add support for configuring application fonts via Settings. Users should be able
 ## Acceptance Criteria
 
 ### UI Font Setting
+
 - [x] A new setting "UI Font Family" is available in the Settings page.
 - [x] The setting accepts a font family string (e.g., "Inter, sans-serif").
 - [x] Changing this setting updates the application's font immediately (or after save).
 - [x] Default value matches the current system default (system-ui, sans-serif).
 
 ### Code Font Setting
+
 - [x] A new setting "Code Font Family" is available in the Settings page.
 - [x] The setting accepts a font family string (e.g., "'Fira Code', monospace").
 - [x] Changing this setting updates all Monaco Editor instances.
 - [x] Default value matches the current default ('Menlo', 'Monaco', 'Courier New', monospace).
 
 ### Persistence
+
 - [x] Font settings are saved to the configuration file.
 - [x] Font settings are restored on application restart.
 
@@ -45,8 +49,8 @@ Add support for configuring application fonts via Settings. Users should be able
 
 - **Storage**: Store `uiFontFamily` and `codeFontFamily` in the existing JSON-based settings store.
 - **Application**:
-    - Use CSS variables or dynamic style injection for the UI font.
-    - Pass the code font to `MonacoEditor` components via props or a context/store.
+  - Use CSS variables or dynamic style injection for the UI font.
+  - Pass the code font to `MonacoEditor` components via props or a context/store.
 - **Performance**: Changing fonts should not require a reload.
 
 ## Design

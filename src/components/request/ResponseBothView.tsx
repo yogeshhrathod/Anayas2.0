@@ -40,7 +40,12 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { MonacoEditor } from '../ui/monaco-editor';
 import { ResizableSplitView } from '../ui/resizable-split-view';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '../ui/tooltip';
 
 export interface ResponseBothViewProps {
   response: ResponseData | null;
@@ -48,6 +53,7 @@ export interface ResponseBothViewProps {
   onDownload?: () => void;
   splitRatio: number; // Current split ratio (0-100)
   onSplitRatioChange: (ratio: number) => void; // Ratio change handler
+  showActions?: boolean; // Optional prop to show/hide the top header
 }
 
 export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
@@ -56,6 +62,7 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
   onDownload,
   splitRatio,
   onSplitRatioChange,
+  showActions = true,
 }) => {
   const [copiedHeaderKey, setCopiedHeaderKey] = useState<string | null>(null);
 
@@ -162,49 +169,61 @@ export const ResponseBothView: React.FC<ResponseBothViewProps> = ({
     <TooltipProvider>
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* Header with Status and Actions - Fixed height */}
-        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
-          <div className="flex items-center gap-4">
-            <h3 className="text-sm font-semibold">Response</h3>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant={getStatusVariant(response.status)}
-                className="text-xs"
-              >
-                {getStatusDisplay(response.status)}{' '}
-                {response.statusText ?? 'Unknown'}
-              </Badge>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                {formatResponseTime(response.time)}
+        {showActions && (
+          <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <div className="flex items-center gap-4">
+              <h3 className="text-sm font-semibold">Response</h3>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={getStatusVariant(response.status)}
+                  className="text-xs"
+                >
+                  {getStatusDisplay(response.status)}{' '}
+                  {response.statusText ?? 'Unknown'}
+                </Badge>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {formatResponseTime(response.time)}
+                </div>
               </div>
             </div>
+
+            {(onCopy || onDownload) && (
+              <div className="flex gap-2">
+                {onCopy && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onCopy}
+                        className="px-2"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Copy response</TooltipContent>
+                  </Tooltip>
+                )}
+                {onDownload && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onDownload}
+                        className="px-2"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Download response</TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            )}
           </div>
-          
-          {(onCopy || onDownload) && (
-            <div className="flex gap-2">
-              {onCopy && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" onClick={onCopy} className="px-2">
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copy response</TooltipContent>
-                </Tooltip>
-              )}
-              {onDownload && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" onClick={onDownload} className="px-2">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Download response</TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Split View: Headers (left) | Body (right) - Fills remaining space */}
         <div className="flex-1 min-h-0 overflow-hidden">

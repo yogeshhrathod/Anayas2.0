@@ -7,12 +7,14 @@
 
 ### 1. ✅ Removed Duplicate "Unsaved Request" Header
 
-**Problem**: 
+**Problem**:
+
 - The `UnsavedRequestsSection` component had its own internal header with collapse functionality
 - When wrapped in `CollapsibleSection`, this created a duplicate header
 - Users saw two "Unsaved" headers stacked on top of each other
 
 **Solution**:
+
 - Removed the internal header from `UnsavedRequestsSection` (lines 107-122)
 - Removed internal `isExpanded` state that was no longer needed
 - Removed unused icon imports (`ChevronDown`, `ChevronRight`, `FileText`)
@@ -20,11 +22,13 @@
 - The `CollapsibleSection` wrapper now provides the header and collapse functionality
 
 **Files Modified**:
+
 - `src/components/collection/UnsavedRequestsSection.tsx`
 
 ### 2. ✅ Removed Unwanted Code and Logs
 
 **Removed Code**:
+
 - ❌ Removed `VerticalResizeHandle` import from `src/App.tsx` (no longer used)
 - ❌ Removed `handleVerticalResize` function from `src/App.tsx` (replaced by CollapsibleSection)
 - ❌ Removed `unsavedSectionHeight` usage from App.tsx (kept in store for backward compat)
@@ -32,11 +36,13 @@
 - ❌ Removed internal collapse state from `UnsavedRequestsSection`
 
 **Kept Code** (intentional):
+
 - ✅ Kept `console.error` in App.tsx for error handling
 - ✅ Kept `console.error` in useStore.ts for error handling
 - ✅ Kept `unsavedSectionHeight` in store (backward compatibility)
 
 **Files Modified**:
+
 - `src/App.tsx`
 - `src/components/sidebar/CollapsibleSection.tsx`
 - `src/components/collection/UnsavedRequestsSection.tsx`
@@ -44,6 +50,7 @@
 ## Before vs After
 
 ### Before:
+
 ```
 Sidebar
 ├── UNSAVED REQUESTS (CollapsibleSection header)
@@ -57,6 +64,7 @@ Sidebar
 ```
 
 ### After:
+
 ```
 Sidebar
 ├── UNSAVED REQUESTS (CollapsibleSection header) ✅ CLEAN
@@ -94,5 +102,3 @@ Sidebar
 ---
 
 **Result**: ✅ Clean, maintainable implementation with no duplicate headers!
-
-

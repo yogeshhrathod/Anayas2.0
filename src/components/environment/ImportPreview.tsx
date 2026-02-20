@@ -33,12 +33,14 @@ export function ImportPreview({
   conflictResolutions,
   onConflictResolution,
 }: ImportPreviewProps) {
-  const getConflictResolution = (envName: string): ConflictResolution | null => {
+  const getConflictResolution = (
+    envName: string
+  ): ConflictResolution | null => {
     return conflictResolutions.get(envName) || null;
   };
 
   const hasConflict = (envName: string): boolean => {
-    return conflicts.some((c) => c.environmentName === envName);
+    return conflicts.some(c => c.environmentName === envName);
   };
 
   const getVariableCount = (env: Environment): number => {
@@ -49,7 +51,8 @@ export function ImportPreview({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">
-          Preview ({environments.length} environment{environments.length !== 1 ? 's' : ''})
+          Preview ({environments.length} environment
+          {environments.length !== 1 ? 's' : ''})
         </h3>
         {conflicts.length > 0 && (
           <Badge variant="destructive" className="text-xs">
@@ -62,7 +65,9 @@ export function ImportPreview({
         <div className="p-4 space-y-3">
           {environments.map((env, index) => {
             const conflict = hasConflict(env.name);
-            const resolution = conflict ? getConflictResolution(env.name) : null;
+            const resolution = conflict
+              ? getConflictResolution(env.name)
+              : null;
 
             return (
               <div
@@ -91,7 +96,8 @@ export function ImportPreview({
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {getVariableCount(env)} variable{getVariableCount(env) !== 1 ? 's' : ''}
+                      {getVariableCount(env)} variable
+                      {getVariableCount(env) !== 1 ? 's' : ''}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Name: {env.name}
@@ -128,9 +134,7 @@ export function ImportPreview({
                       </Button>
                     </div>
                   )}
-                  {!conflict && (
-                    <Check className="h-4 w-4 text-green-600" />
-                  )}
+                  {!conflict && <Check className="h-4 w-4 text-green-600" />}
                 </div>
               </div>
             );
@@ -153,4 +157,3 @@ export function ImportPreview({
     </div>
   );
 }
-

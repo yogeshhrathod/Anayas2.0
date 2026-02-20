@@ -18,17 +18,17 @@ export interface DebugContext {
  */
 export async function captureConsoleLogs(page: Page): Promise<string[]> {
   const logs: string[] = [];
-  
-  page.on('console', (msg) => {
+
+  page.on('console', msg => {
     const text = `${msg.type()}: ${msg.text()}`;
     logs.push(text);
   });
-  
+
   // Also capture existing console logs
   const existingLogs = await page.evaluate(() => {
     return (window as any).__consoleLogs || [];
   });
-  
+
   return [...existingLogs, ...logs];
 }
 
@@ -37,8 +37,8 @@ export async function captureConsoleLogs(page: Page): Promise<string[]> {
  */
 export async function captureNetworkActivity(page: Page): Promise<any[]> {
   const networkLogs: any[] = [];
-  
-  page.on('request', (request) => {
+
+  page.on('request', request => {
     networkLogs.push({
       type: 'request',
       url: request.url(),
@@ -47,8 +47,8 @@ export async function captureNetworkActivity(page: Page): Promise<any[]> {
       timestamp: Date.now(),
     });
   });
-  
-  page.on('response', (response) => {
+
+  page.on('response', response => {
     networkLogs.push({
       type: 'response',
       url: response.url(),
@@ -57,22 +57,25 @@ export async function captureNetworkActivity(page: Page): Promise<any[]> {
       timestamp: Date.now(),
     });
   });
-  
+
   return networkLogs;
 }
 
 /**
  * Capture React component state
  */
-export async function captureReactState(page: Page, componentName?: string): Promise<any> {
+export async function captureReactState(
+  page: Page,
+  componentName?: string
+): Promise<any> {
   try {
-    const state = await page.evaluate((name) => {
+    const state = await page.evaluate(name => {
       // Try to access React DevTools if available
       const reactFiber = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
       if (reactFiber) {
         return reactFiber.renderers.get(1)?.current?.memoizedState;
       }
-      
+
       // Fallback: try to get state from component props
       if (name) {
         const element = document.querySelector(`[data-testid="${name}"]`);
@@ -80,10 +83,10 @@ export async function captureReactState(page: Page, componentName?: string): Pro
           return (element as any).__reactInternalInstance?.memoizedState;
         }
       }
-      
+
       return null;
     }, componentName);
-    
+
     return state;
   } catch (error) {
     return { error: (error as Error).message };
@@ -101,16 +104,16 @@ export async function captureZustandState(page: Page): Promise<any> {
       if (store) {
         return store.getState();
       }
-      
+
       // Try to get from window.electronAPI context
       const electronAPI = (window as any).electronAPI;
       if (electronAPI) {
         return { electronAPI: 'available' };
       }
-      
+
       return null;
     });
-    
+
     return state;
   } catch (error) {
     return { error: (error as Error).message };
@@ -153,16 +156,16 @@ export function generateErrorReport(
     rootCauseAnalysis: analyzeRootCause(error, context),
     suggestedFixes: suggestFixes(error, context),
   };
-  
+
   const reportPath = path.join(testArtifactsDir, 'error-report.json');
   fs.mkdirSync(testArtifactsDir, { recursive: true });
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-  
+
   // Also generate markdown report
   const markdownReport = generateMarkdownReport(report);
   const markdownPath = path.join(testArtifactsDir, 'error-report.md');
   fs.writeFileSync(markdownPath, markdownReport);
-  
+
   return markdownPath;
 }
 
@@ -233,28 +236,35 @@ ${report.suggestedFixes}
 function analyzeRootCause(error: Error, context: DebugContext): string {
   const errorMsg = error.message.toLowerCase();
   const suggestions: string[] = [];
-  
+
   if (errorMsg.includes('not found') || errorMsg.includes('undefined')) {
     suggestions.push('Possible missing data or uninitialized state');
   }
-  
+
   if (errorMsg.includes('timeout') || errorMsg.includes('wait')) {
-    suggestions.push('Possible timing issue - check if async operations completed');
+    suggestions.push(
+      'Possible timing issue - check if async operations completed'
+    );
   }
-  
+
   if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
     suggestions.push('Possible network issue - check if API is available');
   }
-  
-  if (context.databaseState && Object.keys(context.databaseState).length === 0) {
+
+  if (
+    context.databaseState &&
+    Object.keys(context.databaseState).length === 0
+  ) {
     suggestions.push('Database appears empty - check if data was persisted');
   }
-  
+
   if (context.consoleLogs.some(log => log.includes('error'))) {
-    suggestions.push('Console errors detected - check browser console for details');
+    suggestions.push(
+      'Console errors detected - check browser console for details'
+    );
   }
-  
-  return suggestions.length > 0 
+
+  return suggestions.length > 0
     ? suggestions.join('\n- ')
     : 'Unable to determine root cause automatically';
 }
@@ -265,26 +275,26 @@ function analyzeRootCause(error: Error, context: DebugContext): string {
 function suggestFixes(error: Error, context: DebugContext): string {
   const errorMsg = error.message.toLowerCase();
   const fixes: string[] = [];
-  
+
   if (errorMsg.includes('not found')) {
     fixes.push('1. Verify data exists in database before accessing');
     fixes.push('2. Check if IDs are correct');
     fixes.push('3. Ensure data was created before querying');
   }
-  
+
   if (errorMsg.includes('timeout')) {
     fixes.push('1. Increase timeout in test');
     fixes.push('2. Add explicit waits for async operations');
     fixes.push('3. Check if operations are completing');
   }
-  
+
   if (errorMsg.includes('network')) {
     fixes.push('1. Verify network connectivity');
     fixes.push('2. Check if API endpoints are correct');
     fixes.push('3. Verify request format');
   }
-  
-  return fixes.length > 0 
+
+  return fixes.length > 0
     ? fixes.join('\n')
     : 'Review error message and stack trace for specific guidance';
 }
@@ -292,7 +302,10 @@ function suggestFixes(error: Error, context: DebugContext): string {
 /**
  * Trace execution steps
  */
-export function traceExecution(step: string, data?: any): { step: string; data?: any; timestamp: number } {
+export function traceExecution(
+  step: string,
+  data?: any
+): { step: string; data?: any; timestamp: number } {
   return {
     step,
     data,
@@ -303,20 +316,23 @@ export function traceExecution(step: string, data?: any): { step: string; data?:
 /**
  * Compare states before and after operation
  */
-export function compareStates(before: any, after: any): { changed: boolean; changes: any } {
+export function compareStates(
+  before: any,
+  after: any
+): { changed: boolean; changes: any } {
   const changes: any = {};
   let changed = false;
-  
+
   // Simple deep comparison
   function compare(obj1: any, obj2: any, path = ''): void {
     if (obj1 === obj2) return;
-    
+
     if (typeof obj1 !== typeof obj2) {
       changes[path] = { before: obj1, after: obj2 };
       changed = true;
       return;
     }
-    
+
     if (typeof obj1 === 'object' && obj1 !== null && obj2 !== null) {
       const keys = new Set([...Object.keys(obj1), ...Object.keys(obj2)]);
       keys.forEach(key => {
@@ -327,9 +343,9 @@ export function compareStates(before: any, after: any): { changed: boolean; chan
       changed = true;
     }
   }
-  
+
   compare(before, after);
-  
+
   return { changed, changes };
 }
 
@@ -342,15 +358,16 @@ export async function captureDebugInfo(
   stepName: string,
   testArtifactsDir: string
 ): Promise<DebugContext> {
-  const [consoleLogs, networkActivity, reactState, zustandState] = await Promise.all([
-    captureConsoleLogs(page),
-    captureNetworkActivity(page),
-    captureReactState(page),
-    captureZustandState(page),
-  ]);
-  
+  const [consoleLogs, networkActivity, reactState, zustandState] =
+    await Promise.all([
+      captureConsoleLogs(page),
+      captureNetworkActivity(page),
+      captureReactState(page),
+      captureZustandState(page),
+    ]);
+
   const databaseState = captureDatabaseState(testDbPath);
-  
+
   return {
     consoleLogs,
     networkActivity,
@@ -361,4 +378,3 @@ export async function captureDebugInfo(
     screenshots: [],
   };
 }
-

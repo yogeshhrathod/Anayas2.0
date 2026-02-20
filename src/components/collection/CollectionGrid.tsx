@@ -1,11 +1,11 @@
 /**
  * CollectionGrid - Grid layout component for displaying collections
- * 
+ *
  * Features:
  * - Responsive grid layout
  * - Empty state handling
  * - Loading state support
- * 
+ *
  * @example
  * ```tsx
  * <CollectionGrid
@@ -48,7 +48,7 @@ export const CollectionGrid: React.FC<CollectionGridProps> = ({
   onToggleFavorite,
   onExport,
   onImport,
-  onRun
+  onRun,
 }) => {
   if (isLoading) {
     return (
@@ -68,14 +68,18 @@ export const CollectionGrid: React.FC<CollectionGridProps> = ({
         icon={<span className="text-6xl">📁</span>}
         title="No Collections"
         description="Create your first collection to organize your API requests"
-        action={<Button onClick={() => onEdit({} as Collection)}>Create Collection</Button>}
+        action={
+          <Button onClick={() => onEdit({} as Collection)}>
+            Create Collection
+          </Button>
+        }
       />
     );
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {collections.map((collection) => (
+      {collections.map(collection => (
         <CollectionCard
           key={collection.id}
           collection={collection}

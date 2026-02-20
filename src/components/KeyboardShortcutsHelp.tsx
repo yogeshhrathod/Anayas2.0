@@ -12,7 +12,12 @@ import { Kbd } from './ui/kbd';
 export function KeyboardShortcutsHelp() {
   const [open, setOpen] = useState(false);
   const platform = getPlatform();
-  const platformName = platform === 'darwin' ? 'macOS' : platform === 'win32' ? 'Windows' : 'Linux';
+  const platformName =
+    platform === 'darwin'
+      ? 'macOS'
+      : platform === 'win32'
+        ? 'Windows'
+        : 'Linux';
 
   // Group shortcuts by category
   const shortcutCategories = [
@@ -82,8 +87,8 @@ export function KeyboardShortcutsHelp() {
         <Command className="h-4 w-4" />
       </Button>
 
-      <Dialog 
-        open={open} 
+      <Dialog
+        open={open}
         onOpenChange={setOpen}
         title="Keyboard Shortcuts"
         description={
@@ -97,7 +102,7 @@ export function KeyboardShortcutsHelp() {
         maxWidth="4xl"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {shortcutCategories.map((category) => (
+          {shortcutCategories.map(category => (
             <div key={category.title} className="space-y-3">
               <h3 className="text-sm font-semibold text-foreground border-b border-border pb-2">
                 {category.title}
@@ -135,7 +140,8 @@ export function KeyboardShortcutsHelp() {
 
         <div className="mt-6 pt-4 border-t border-border">
           <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
-            Press <Kbd className="h-4 min-w-[16px] px-1 text-[9px]">Esc</Kbd> to close this dialog
+            Press <Kbd className="h-4 min-w-[16px] px-1 text-[9px]">Esc</Kbd> to
+            close this dialog
           </p>
         </div>
       </Dialog>

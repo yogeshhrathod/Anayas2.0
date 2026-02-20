@@ -8,6 +8,7 @@
 ## Overview
 
 Align the live UI with the documented design system by:
+
 - Standardizing the **shell layout** (title bar, navigation, sidebar, main stage, response stage).
 - Upgrading **request/response views** to follow the response visualization and request builder patterns.
 - Introducing a **command palette** and tightening **keyboard-first** workflows.
@@ -20,59 +21,67 @@ This is an umbrella plan; individual phases can ship incrementally and are heavi
 > This section maps the design-system areas to current code we’ll reuse/extend.
 
 ### Similar Features to Reference
+
 - [ ] `specs/003-performance-optimization-lazy-loading/` – patterns for lazy loading and performance tracking.
 - [ ] `specs/009-response-view-redesign/` and `specs/011-response-tab-redesign/` – response pane & tab patterns we must keep aligned with.
 - [ ] `specs/010-vscode-style-sidebar/` – sidebar layout and density that should be reconciled with the design system shell.
 
 ### Components to Reuse / Extend
-- [ ] `src/App.tsx`  
+
+- [ ] `src/App.tsx`
   - **WHY**: Main shell (title bar, navigation bar, sidebar, main content). We’ll adjust layout semantics (shell regions, pane behavior, transitions) to better match §4 of the design system while preserving lazy-loaded pages.
-- [ ] `src/components/TitleBar.tsx`  
+- [ ] `src/components/TitleBar.tsx`
   - **WHY**: Window chrome integration; align with frameless, editor-style header guidance.
-- [ ] `src/components/NavigationBar.tsx`  
+- [ ] `src/components/NavigationBar.tsx`
   - **WHY**: Currently serves as top navigation; will either be evolved into an “activity bar” concept or coordinated with a left activity strip.
-- [ ] `src/components/CollectionHierarchy.tsx` and related sidebar components  
+- [ ] `src/components/CollectionHierarchy.tsx` and related sidebar components
   - **WHY**: Tree/list behavior should be aligned with §5.2 (selection, hover, drag & drop, context menus).
-- [ ] `src/components/ApiRequestBuilder.tsx` + `src/components/request/*`  
+- [ ] `src/components/ApiRequestBuilder.tsx` + `src/components/request/*`
   - **WHY**: Already structured like the request builder described in §7; we’ll refine URL strip, tabs, smart inputs, and density.
-- [ ] `src/components/request/ResponseTab.tsx` and `Response*View.tsx`  
+- [ ] `src/components/request/ResponseTab.tsx` and `Response*View.tsx`
   - **WHY**: Entry point for response visualization; must be adjusted to match response stage + status/metrics bar + tab patterns, and to plug in a virtualized JSON viewer.
-- [ ] `src/components/GlobalSearch.tsx` (if present)  
+- [ ] `src/components/GlobalSearch.tsx` (if present)
   - **WHY**: Potentially reused or replaced as the base for the command palette.
 
 ### Hooks to Reuse
-- [ ] `src/hooks/useShortcuts.ts`  
+
+- [ ] `src/hooks/useShortcuts.ts`
   - **WHY**: Centralized shortcut handling; extended to drive command palette and layout modes (normal / write / debug).
-- [ ] `src/hooks/useRequestState.ts` and `src/hooks/useRequestActions.ts`  
+- [ ] `src/hooks/useRequestState.ts` and `src/hooks/useRequestActions.ts`
   - **WHY**: State/action orchestration for request builder and response tab, reused when introducing new layout behaviors or response pane positioning.
-- [ ] `src/hooks/useSessionRecovery.ts`  
+- [ ] `src/hooks/useSessionRecovery.ts`
   - **WHY**: Ensure any shell/layout changes still preserve recovery behavior on startup.
 
 ### Utilities to Reuse
+
 - [ ] `src/lib/utils.ts (cn)` – class merging for new shell/pane/command palette components.
 - [ ] `src/lib/keymap.ts` – existing keymap definitions for expanding keyboard-first flows and mapping commands.
 - [ ] `src/lib/performance.ts (trackFeatureLoad)` – used for tracking load/memory of new/adjusted features (command palette, response stage, JSON viewer).
 
 ### Types / State to Extend
-- [ ] `src/types/entities.ts` and `src/types/forms.ts`  
+
+- [ ] `src/types/entities.ts` and `src/types/forms.ts`
   - **WHY**: If response visualization gains additional metadata (e.g., search highlights, virtualized tree nodes) we may add lightweight types without touching persistence.
-- [ ] `src/store/useStore.ts`  
+- [ ] `src/store/useStore.ts`
   - **WHY**: Add shell layout mode (normal/write/debug), pane sizes, and command-palette state in a way that respects existing store patterns and performance constraints.
 
 ### Services / IPC to Reuse
+
 - No new IPC is required for the design-system alignment itself; we will:
   - Reuse existing request/response IPC.
   - Potentially log performance metrics via existing logging/performance utilities in the renderer.
 
 ## Goal Alignment Check
 
-**Does this plan support the long-term project goal? (Performance-first, low memory)**  
+**Does this plan support the long-term project goal? (Performance-first, low memory)**
+
 - [x] Yes – core points:
   - Aligning to a **data-forward, dense, keyboard-first shell** reduces UI bloat and encourages workflows that avoid heavy, unnecessary components.
   - Introducing **virtualized viewers** and **lazy-loaded tooling (command palette, heavy response views)** keeps memory under control, especially for large responses.
   - Performance tracking hooks (load time + memory) are wired directly into new/changed surfaces to guard against regressions.
 
 **Architecture Compliance**
+
 - [x] Follows `architecture.md`:
   - Pages remain lazy-loaded (`App.tsx` already uses `lazy` + `Suspense`).
   - New heavy features (e.g., virtualized JSON viewer, command palette) are code-split and only mounted on demand.
@@ -173,6 +182,7 @@ This is an umbrella plan; individual phases can ship incrementally and are heavi
 **Key Files**: `src/App.tsx`, `TitleBar`, `NavigationBar`, `CollectionHierarchy`, `ResizeHandle`.
 
 **Tasks (high level)**:
+
 - Define/confirm layout modes in `useStore` (`normal`, `write`, `debug`) and wire basic toggles (shortcuts only; no UI yet).
 - Adjust `App.tsx` structure and Tailwind classes to clearly separate panes and apply consistent density, borders, and transitions.
 - Ensure pane resize animations and state persistence follow design guidance (e.g., 150–200ms, `ease-in-out`).
@@ -183,6 +193,7 @@ This is an umbrella plan; individual phases can ship incrementally and are heavi
 **Key Files**: `ApiRequestBuilder`, `RequestTabs`, `ResponseTab`, `Response*View` components, `useRequestState`, `useRequestActions`.
 
 **Tasks**:
+
 - Tighten URL bar + method selector layout, ensuring keyboard focus and validation states match the design system.
 - Introduce/standardize status bar in the response area (status badge, time, size, content-type, progress indicator).
 - If needed, refactor where the response is rendered so that “debug mode” visibly emphasizes the response pane (width/height changes, not new logic).
@@ -193,6 +204,7 @@ This is an umbrella plan; individual phases can ship incrementally and are heavi
 **Key Files**: new `ResponseJsonVirtualizedView`, wiring inside `ResponseBodyView` / `ResponseTab`.
 
 **Tasks**:
+
 - Choose a stable virtualization library already used or recommended (`example-quality.md` uses `@tanstack/react-virtual` as an example) to avoid custom heavy code.
 - Implement a minimal JSON tree/line viewer that:
   - Virtualizes rows.
@@ -206,6 +218,7 @@ This is an umbrella plan; individual phases can ship incrementally and are heavi
 **Key Files**: new `CommandPalette`, `useShortcuts`, `keymap`, `NavigationBar`, `ApiRequestBuilder`.
 
 **Tasks**:
+
 - Implement a lazily loaded command palette component, using `shadcn/ui` + `cmdk` style patterns if available.
 - Wire shortcuts (`Cmd/Ctrl+K` / `Cmd/Ctrl+P`) to open it and focus the search input.
 - Add core command sets:
@@ -220,6 +233,7 @@ This is an umbrella plan; individual phases can ship incrementally and are heavi
 **Key Files**: Shell components, request/response components, command palette.
 
 **Tasks**:
+
 - Audit focus order and ARIA attributes for:
   - NavigationBar buttons.
   - Sidebar tree items.
@@ -253,4 +267,3 @@ This is an umbrella plan; individual phases can ship incrementally and are heavi
 - For each major user-facing behavior (e.g., “Open command palette and send request”, “Inspect large JSON response with search”), define tests using Given-When-Then in line with `test-suite-guide.md` and existing examples (`collection-hierarchy.spec.ts`, `env-handlers.spec.ts`, etc.).
 
 All new tests must be written **before** implementation of their corresponding behavior and must be included in the `tests/integration/` suite so that `npm run test:electron -- tests/integration/` covers this feature end-to-end.
-

@@ -21,7 +21,7 @@ fs.mkdirSync(logsDir, { recursive: true });
 export function createLogger(module: string) {
   // Use 'debug' in development, 'info' in production
   const logLevel = process.env.NODE_ENV === 'development' ? 'debug' : 'info';
-  
+
   return winston.createLogger({
     level: logLevel,
     format: winston.format.combine(
@@ -45,14 +45,16 @@ export function createLogger(module: string) {
         tailable: true,
       }),
       // Only log to console in development
-      ...(process.env.NODE_ENV === 'development' ? [
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.colorize(),
-            winston.format.simple()
-          ),
-        })
-      ] : []),
+      ...(process.env.NODE_ENV === 'development'
+        ? [
+            new winston.transports.Console({
+              format: winston.format.combine(
+                winston.format.colorize(),
+                winston.format.simple()
+              ),
+            }),
+          ]
+        : []),
     ],
   });
 }

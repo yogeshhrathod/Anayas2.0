@@ -1,13 +1,13 @@
 /**
  * ActionMenu - Dropdown menu pattern used across collection/request items
- * 
+ *
  * Provides a consistent action menu with:
  * - Trigger button with icon
  * - Dropdown menu with actions and keyboard shortcuts
  * - Consistent styling and behavior
  * - Support for destructive actions
  * - shadcn-style layout with shortcuts on the right
- * 
+ *
  * @example
  * ```tsx
  * <ActionMenu
@@ -23,7 +23,7 @@
 
 import React from 'react';
 import { Button } from '../ui/button';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -61,12 +61,12 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
   trigger,
   align = 'end',
   className = '',
-  size = 'sm'
+  size = 'sm',
 }) => {
   const sizeClasses = {
     sm: 'h-6 w-6 p-0',
     md: 'h-8 w-8 p-0',
-    lg: 'h-10 w-10 p-0'
+    lg: 'h-10 w-10 p-0',
   };
 
   const defaultTrigger = (

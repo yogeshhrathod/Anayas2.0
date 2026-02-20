@@ -2,7 +2,10 @@ import { test, expect } from '../../helpers/electron-fixtures';
 import { getDatabaseContents } from '../../helpers/test-db';
 
 test.describe('Full Cycle: UI → IPC → DB → UI', () => {
-  test('should complete full cycle for collection', async ({ electronPage, testDbPath }) => {
+  test('should complete full cycle for collection', async ({
+    electronPage,
+    testDbPath,
+  }) => {
     // Step 1: UI Action - Create collection (simulated via IPC call)
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -14,27 +17,29 @@ test.describe('Full Cycle: UI → IPC → DB → UI', () => {
         isFavorite: false,
       });
     });
-    
+
     expect(createResult.success).toBe(true);
     const collectionId = createResult.id;
-    
+
     // Step 2: Verify IPC → DB (data persisted)
     const dbContents1 = getDatabaseContents(testDbPath);
-    const dbCollection = dbContents1?.collections?.find((c: any) => c.id === collectionId);
+    const dbCollection = dbContents1?.collections?.find(
+      (c: any) => c.id === collectionId
+    );
     expect(dbCollection).toBeDefined();
     expect(dbCollection?.name).toBe('Full Cycle Collection');
-    
+
     // Step 3: DB → UI (retrieve via IPC, UI would read this)
-    const retrieved = await electronPage.evaluate(async (id) => {
+    const retrieved = await electronPage.evaluate(async id => {
       const collections = await window.electronAPI.collection.list();
       return collections.find((c: any) => c.id === id);
     }, collectionId);
-    
+
     expect(retrieved).toBeDefined();
     expect(retrieved?.name).toBe('Full Cycle Collection');
-    
+
     // Step 4: UI Action - Update collection
-    const updateResult = await electronPage.evaluate(async (id) => {
+    const updateResult = await electronPage.evaluate(async id => {
       return await window.electronAPI.collection.save({
         id,
         name: 'Updated Full Cycle',
@@ -45,24 +50,29 @@ test.describe('Full Cycle: UI → IPC → DB → UI', () => {
         isFavorite: false,
       });
     }, collectionId);
-    
+
     expect(updateResult.success).toBe(true);
-    
+
     // Step 5: Verify update persisted
     const dbContents2 = getDatabaseContents(testDbPath);
-    const updatedDb = dbContents2?.collections?.find((c: any) => c.id === collectionId);
+    const updatedDb = dbContents2?.collections?.find(
+      (c: any) => c.id === collectionId
+    );
     expect(updatedDb?.name).toBe('Updated Full Cycle');
-    
+
     // Step 6: DB → UI (retrieve updated)
-    const updatedRetrieved = await electronPage.evaluate(async (id) => {
+    const updatedRetrieved = await electronPage.evaluate(async id => {
       const collections = await window.electronAPI.collection.list();
       return collections.find((c: any) => c.id === id);
     }, collectionId);
-    
+
     expect(updatedRetrieved?.name).toBe('Updated Full Cycle');
   });
 
-  test('should complete full cycle for environment', async ({ electronPage, testDbPath }) => {
+  test('should complete full cycle for environment', async ({
+    electronPage,
+    testDbPath,
+  }) => {
     // UI → IPC → DB
     const createResult = await electronPage.evaluate(async () => {
       return await window.electronAPI.env.save({
@@ -72,25 +82,30 @@ test.describe('Full Cycle: UI → IPC → DB → UI', () => {
         isDefault: false,
       });
     });
-    
+
     expect(createResult.success).toBe(true);
-    
+
     // Verify DB
     const dbContents = getDatabaseContents(testDbPath);
-    const dbEnv = dbContents?.environments?.find((e: any) => e.id === createResult.id);
+    const dbEnv = dbContents?.environments?.find(
+      (e: any) => e.id === createResult.id
+    );
     expect(dbEnv).toBeDefined();
-    
+
     // DB → UI
-    const retrieved = await electronPage.evaluate(async (id) => {
+    const retrieved = await electronPage.evaluate(async id => {
       const envs = await window.electronAPI.env.list();
       return envs.find((e: any) => e.id === id);
     }, createResult.id);
-    
+
     expect(retrieved).toBeDefined();
     expect(retrieved?.name).toBe('full-cycle-env');
   });
 
-  test('should complete full cycle for request', async ({ electronPage, testDbPath }) => {
+  test('should complete full cycle for request', async ({
+    electronPage,
+    testDbPath,
+  }) => {
     // Create collection first
     const collection = await electronPage.evaluate(async () => {
       return await window.electronAPI.collection.save({
@@ -102,9 +117,9 @@ test.describe('Full Cycle: UI → IPC → DB → UI', () => {
         isFavorite: false,
       });
     });
-    
+
     // UI → IPC → DB
-    const createResult = await electronPage.evaluate(async (collectionId) => {
+    const createResult = await electronPage.evaluate(async collectionId => {
       return await window.electronAPI.request.save({
         name: 'Full Cycle Request',
         method: 'GET',
@@ -119,22 +134,26 @@ test.describe('Full Cycle: UI → IPC → DB → UI', () => {
         order: 0,
       });
     }, collection.id);
-    
+
     expect(createResult.success).toBe(true);
-    
+
     // Verify DB
     const dbContents = getDatabaseContents(testDbPath);
-    const dbRequest = dbContents?.requests?.find((r: any) => r.id === createResult.id);
+    const dbRequest = dbContents?.requests?.find(
+      (r: any) => r.id === createResult.id
+    );
     expect(dbRequest).toBeDefined();
-    
+
     // DB → UI
-    const retrieved = await electronPage.evaluate(async ({ collectionId, requestId }) => {
-      const requests = await window.electronAPI.request.list(collectionId);
-      return requests.find((r: any) => r.id === requestId);
-    }, { collectionId: collection.id, requestId: createResult.id });
-    
+    const retrieved = await electronPage.evaluate(
+      async ({ collectionId, requestId }) => {
+        const requests = await window.electronAPI.request.list(collectionId);
+        return requests.find((r: any) => r.id === requestId);
+      },
+      { collectionId: collection.id, requestId: createResult.id }
+    );
+
     expect(retrieved).toBeDefined();
     expect(retrieved?.name).toBe('Full Cycle Request');
   });
 });
-

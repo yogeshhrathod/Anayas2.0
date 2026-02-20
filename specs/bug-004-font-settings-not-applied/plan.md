@@ -21,6 +21,7 @@ Font settings were not being applied properly due to multiple issues:
 **Goal**: Make FontProvider robust and reactive
 
 **Changes Needed**:
+
 - Add proper empty string/undefined/null handling
 - Add value trimming and validation
 - Add CSS variable updates to document root
@@ -34,6 +35,7 @@ Font settings were not being applied properly due to multiple issues:
 **Goal**: Update fonts immediately when user changes settings
 
 **Changes Needed**:
+
 - Update Zustand store immediately on input change
 - Keep local state for form management
 - Debounce database saves
@@ -46,6 +48,7 @@ Font settings were not being applied properly due to multiple issues:
 **Goal**: Ensure fonts always have valid values
 
 **Changes Needed**:
+
 - Create `ensureFontSettingsDefaults()` function
 - Call on database initialization
 - Set defaults if values missing
@@ -57,6 +60,7 @@ Font settings were not being applied properly due to multiple issues:
 **Goal**: Make code editor fonts update automatically
 
 **Changes Needed**:
+
 - Listen to settings changes
 - Update editor font option
 - Refresh editor display
@@ -68,6 +72,7 @@ Font settings were not being applied properly due to multiple issues:
 **Goal**: Centralize font defaults
 
 **Changes Needed**:
+
 - Create `src/constants/fonts.ts`
 - Export DEFAULT_UI_FONT_STACK
 - Export DEFAULT_CODE_FONT_STACK
@@ -79,11 +84,13 @@ Font settings were not being applied properly due to multiple issues:
 ### Approach 1: Fix FontProvider First ✅
 
 **Pros**:
+
 - Fixes core issue immediately
 - Other fixes build on this
 - Can test incrementally
 
 **Cons**:
+
 - Users still need to reload for changes
 
 **Decision**: Start with this - it's the foundation.
@@ -91,11 +98,13 @@ Font settings were not being applied properly due to multiple issues:
 ### Approach 2: Add Live Preview ✅
 
 **Pros**:
+
 - Better UX
 - Encourages users to experiment with fonts
 - Modern app behavior
 
 **Cons**:
+
 - Slightly more complex state management
 
 **Decision**: Implement this - significantly improves UX.
@@ -103,11 +112,13 @@ Font settings were not being applied properly due to multiple issues:
 ### Approach 3: Add Database Defaults ✅
 
 **Pros**:
+
 - Prevents future issues
 - Clean initialization
 - Consistent state
 
 **Cons**:
+
 - None significant
 
 **Decision**: Implement this - prevents edge cases.
@@ -121,6 +132,7 @@ Font settings were not being applied properly due to multiple issues:
 **Why**: Core font application logic lives here
 
 **Changes**:
+
 - Add robust value validation
 - Add CSS variable updates
 - Add dynamic style injection
@@ -133,6 +145,7 @@ Font settings were not being applied properly due to multiple issues:
 **Why**: Where users change font settings
 
 **Changes**:
+
 - Update store immediately for live preview
 - Keep local state for form
 - Add proper trimming
@@ -145,6 +158,7 @@ Font settings were not being applied properly due to multiple issues:
 **Why**: Ensure defaults always present
 
 **Changes**:
+
 - Add ensureFontSettingsDefaults()
 - Call on database init
 - Set defaults if missing
@@ -156,6 +170,7 @@ Font settings were not being applied properly due to multiple issues:
 **Why**: Code editor needs explicit font updates
 
 **Changes**:
+
 - Listen to settings changes
 - Update editor options
 - Refresh display
@@ -167,6 +182,7 @@ Font settings were not being applied properly due to multiple issues:
 **Why**: Centralize defaults
 
 **Changes**:
+
 - Export DEFAULT_UI_FONT_STACK
 - Export DEFAULT_CODE_FONT_STACK
 
@@ -230,4 +246,3 @@ If fix causes issues:
 - [specs/013-font-settings/](../013-font-settings/) - Original font settings feature
 - `src/components/providers/FontProvider.tsx` - Fixed implementation
 - `src/pages/Settings.tsx` - Fixed implementation
-

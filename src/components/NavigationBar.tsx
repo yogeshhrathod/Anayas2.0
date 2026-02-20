@@ -1,14 +1,14 @@
 import {
-    ChevronDown,
-    FileJson,
-    FolderPlus,
-    Globe,
-    History as HistoryIcon,
-    Home,
-    Plus,
-    Settings as SettingsIcon,
-    Terminal,
-    Upload
+  ChevronDown,
+  FileJson,
+  FolderPlus,
+  Globe,
+  History as HistoryIcon,
+  Home,
+  Plus,
+  Settings as SettingsIcon,
+  Terminal,
+  Upload,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useToastNotifications } from '../hooks/useToastNotifications';
@@ -21,17 +21,17 @@ import { EnvironmentSelector } from './EnvironmentSelector';
 import { ImportCollectionDialog } from './import';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from './ui/tooltip';
 
 export function NavigationBar() {
@@ -41,6 +41,7 @@ export function NavigationBar() {
     setSelectedRequest,
     setActiveUnsavedRequestId,
     setCollections,
+    setHistoryFilter,
   } = useStore();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [showCurlImport, setShowCurlImport] = useState(false);
@@ -328,7 +329,6 @@ export function NavigationBar() {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-
           </>
         )}
 
@@ -338,7 +338,12 @@ export function NavigationBar() {
           return (
             <button
               key={item.id}
-              onClick={() => setCurrentPage(item.id)}
+              onClick={() => {
+                if (item.id === 'history') {
+                  setHistoryFilter(null);
+                }
+                setCurrentPage(item.id);
+              }}
               className={cn(
                 'h-8 w-8 flex items-center justify-center rounded-full transition-all duration-200',
                 'hover:bg-accent/50 hover:scale-[1.02]',

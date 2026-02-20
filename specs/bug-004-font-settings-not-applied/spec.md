@@ -70,17 +70,20 @@ Font settings (UI font and code font) configured in Settings page were not being
 ### Code Issues
 
 **FontProvider** (`src/components/providers/FontProvider.tsx`):
+
 ```typescript
 // Before fix: No proper handling of empty values
 const uiFontStack = uiFont || DEFAULT_UI_FONT_STACK;
 
 // After fix: Proper handling with trimming and validation
-const uiFontStack = (uiFont && typeof uiFont === 'string' && uiFont.trim().length > 0) 
-  ? uiFont.trim() 
-  : DEFAULT_UI_FONT_STACK;
+const uiFontStack =
+  uiFont && typeof uiFont === 'string' && uiFont.trim().length > 0
+    ? uiFont.trim()
+    : DEFAULT_UI_FONT_STACK;
 ```
 
 **Settings page** (`src/pages/Settings.tsx`):
+
 ```typescript
 // Before fix: Settings updated but not immediately reflected
 updateSetting('uiFontFamily', value);
@@ -88,12 +91,14 @@ updateSetting('uiFontFamily', value);
 // After fix: Update both local state and store for live preview
 if (key === 'uiFontFamily' || key === 'codeFontFamily') {
   const trimmedValue = typeof value === 'string' ? value.trim() : value;
-  const fontValue = (trimmedValue && trimmedValue.length > 0) ? trimmedValue : undefined;
+  const fontValue =
+    trimmedValue && trimmedValue.length > 0 ? trimmedValue : undefined;
   setSettings({ ...currentSettings, [key]: fontValue });
 }
 ```
 
 **Database** (`electron/database/json-db.ts`):
+
 ```typescript
 // Before fix: No default font settings
 // After fix: Ensure defaults on database initialization
@@ -115,6 +120,7 @@ function ensureFontSettingsDefaults(): void {
 **File**: `src/components/providers/FontProvider.tsx`
 
 **Changes**:
+
 - Added proper empty string/undefined/null handling
 - Added trimming for font values
 - Added CSS variable updates to root element
@@ -122,6 +128,7 @@ function ensureFontSettingsDefaults(): void {
 - Proper fallback to system defaults
 
 **Code**:
+
 ```typescript
 export function FontProvider({ children }: { children: React.ReactNode }) {
   const { settings } = useStore();
@@ -130,12 +137,12 @@ export function FontProvider({ children }: { children: React.ReactNode }) {
     // Proper validation and trimming
     const uiFont = settings.uiFontFamily;
     const codeFont = settings.codeFontFamily;
-    
-    const uiFontStack = (uiFont && typeof uiFont === 'string' && uiFont.trim().length > 0) 
-      ? uiFont.trim() 
+
+    const uiFontStack = (uiFont && typeof uiFont === 'string' && uiFont.trim().length > 0)
+      ? uiFont.trim()
       : DEFAULT_UI_FONT_STACK;
-    const codeFontStack = (codeFont && typeof codeFont === 'string' && codeFont.trim().length > 0) 
-      ? codeFont.trim() 
+    const codeFontStack = (codeFont && typeof codeFont === 'string' && codeFont.trim().length > 0)
+      ? codeFont.trim()
       : DEFAULT_CODE_FONT_STACK;
 
     // Apply CSS variables
@@ -174,12 +181,14 @@ export function FontProvider({ children }: { children: React.ReactNode }) {
 **File**: `src/pages/Settings.tsx`
 
 **Changes**:
+
 - Update store immediately for live preview
 - Keep local state for form management
 - Proper save to database on blur/submit
 - Trim values before saving
 
 **Code**:
+
 ```typescript
 const updateSetting = (key: string, value: any) => {
   const newSettings = { ...localSettings, [key]: value };
@@ -188,7 +197,8 @@ const updateSetting = (key: string, value: any) => {
   // For font settings, update store immediately for live preview
   if (key === 'uiFontFamily' || key === 'codeFontFamily') {
     const trimmedValue = typeof value === 'string' ? value.trim() : value;
-    const fontValue = (trimmedValue && trimmedValue.length > 0) ? trimmedValue : undefined;
+    const fontValue =
+      trimmedValue && trimmedValue.length > 0 ? trimmedValue : undefined;
     const currentSettings = useStore.getState().settings;
     setSettings({ ...currentSettings, [key]: fontValue });
   }
@@ -200,11 +210,13 @@ const updateSetting = (key: string, value: any) => {
 **File**: `electron/database/json-db.ts`
 
 **Changes**:
+
 - Added `ensureFontSettingsDefaults()` function
 - Call on database initialization
 - Ensures defaults always present
 
 **Code**:
+
 ```typescript
 function ensureFontSettingsDefaults(): void {
   const db = getDatabase();
@@ -230,6 +242,7 @@ export function getDatabase(): Database {
 **File**: `src/components/ui/monaco-editor.tsx`
 
 **Changes**:
+
 - Listen to settings changes
 - Update editor options when font changes
 
@@ -238,6 +251,7 @@ export function getDatabase(): Database {
 **File**: `src/constants/fonts.ts`
 
 **Changes**:
+
 - Defined DEFAULT_UI_FONT_STACK
 - Defined DEFAULT_CODE_FONT_STACK
 - Centralized font defaults
@@ -337,4 +351,3 @@ export function getDatabase(): Database {
 ## Verified By
 
 Development Team
-

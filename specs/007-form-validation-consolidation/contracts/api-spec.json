@@ -30,9 +30,7 @@
               "description": "[Field description]"
             }
           },
-          "required": [
-            "field1"
-          ]
+          "required": ["field1"]
         }
       },
       "response": {

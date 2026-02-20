@@ -3,7 +3,7 @@ import { AlignLeft, Braces, Check, Copy } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { DEFAULT_CODE_FONT_STACK } from '../../constants/fonts';
 import { useAvailableVariables } from '../../hooks/useVariableResolution';
-import { getThemeById, Theme } from '../../lib/themes';
+import { resolveTheme, Theme } from '../../lib/themes';
 import { cn } from '../../lib/utils';
 import { useStore } from '../../store/useStore';
 import { Button } from './button';
@@ -594,16 +594,12 @@ export function MonacoEditor({
       ? settings.codeFontFamily.trim()
       : DEFAULT_CODE_FONT_STACK;
 
-  // Get current theme and create Monaco theme
-  const currentTheme = getThemeById(currentThemeId, customThemes);
-  const isDarkMode =
-    themeMode === 'dark' ||
-    (themeMode === 'system' &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches) ||
-    (currentTheme && currentTheme.type === 'dark');
+  // Resolve which theme should be applied
+  const currentTheme = resolveTheme(themeMode, currentThemeId, customThemes);
+  const isDarkMode = currentTheme.type === 'dark';
 
-  // Create dynamic Monaco theme name
-  const monacoThemeName = `app-theme-${currentThemeId}`;
+  // Create dynamic Monaco theme name based on the actual applied theme
+  const monacoThemeName = `app-theme-${currentTheme.id}`;
 
   // JSON validation
   useEffect(() => {
@@ -632,7 +628,7 @@ export function MonacoEditor({
         monaco.editor.setTheme(monacoThemeName);
       }
     }
-  }, [currentTheme, monacoThemeName]);
+  }, [currentTheme, monacoThemeName, themeMode]);
 
   // Handle font family changes
   useEffect(() => {

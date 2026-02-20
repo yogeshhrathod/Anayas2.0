@@ -21,7 +21,11 @@ export interface CollectionFormData {
   name: string;
   description: string;
   documentation?: string; // Markdown documentation
-  environments?: Array<{ id?: number; name: string; variables: Record<string, string> }>;
+  environments?: Array<{
+    id?: number;
+    name: string;
+    variables: Record<string, string>;
+  }>;
   isFavorite: boolean;
 }
 
@@ -34,7 +38,7 @@ export interface EnvironmentFormData {
 }
 
 export interface RequestFormData {
-  id?: number;
+  id?: number | string;
   name: string;
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
   url: string;

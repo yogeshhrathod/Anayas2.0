@@ -1,11 +1,11 @@
 /**
  * ResizableSplitView - Reusable side-by-side resizable panel component
- * 
+ *
  * Provides a horizontal split view with draggable divider for adjusting panel sizes.
  * Uses CSS Grid for efficient layout and native mouse events for drag handling.
- * 
+ *
  * Performance: ~2KB, CSS Grid-based, efficient drag handling
- * 
+ *
  * @example
  * ```tsx
  * <ResizableSplitView
@@ -23,13 +23,13 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { cn } from '../../lib/utils';
 
 export interface ResizableSplitViewProps {
-  left: React.ReactNode;           // Left panel content
-  right: React.ReactNode;          // Right panel content
-  initialRatio?: number;           // Initial split ratio (0-100, default 50)
+  left: React.ReactNode; // Left panel content
+  right: React.ReactNode; // Right panel content
+  initialRatio?: number; // Initial split ratio (0-100, default 50)
   onRatioChange?: (ratio: number) => void; // Callback when ratio changes
-  minRatio?: number;               // Min left panel % (default 20)
-  maxRatio?: number;               // Max left panel % (default 80)
-  className?: string;              // Optional container class
+  minRatio?: number; // Min left panel % (default 20)
+  maxRatio?: number; // Max left panel % (default 80)
+  className?: string; // Optional container class
 }
 
 export function ResizableSplitView({
@@ -48,49 +48,58 @@ export function ResizableSplitView({
   const startRatioRef = useRef<number>(initialRatio);
 
   // Calculate new ratio from mouse position
-  const calculateRatio = useCallback((clientX: number): number => {
-    if (!containerRef.current) return ratio;
-    
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const containerWidth = containerRect.width;
-    const relativeX = clientX - containerRect.left;
-    const newRatio = (relativeX / containerWidth) * 100;
-    
-    // Clamp ratio to min/max bounds
-    return Math.max(minRatio, Math.min(maxRatio, newRatio));
-  }, [minRatio, maxRatio, ratio]);
+  const calculateRatio = useCallback(
+    (clientX: number): number => {
+      if (!containerRef.current) return ratio;
+
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const relativeX = clientX - containerRect.left;
+      const newRatio = (relativeX / containerWidth) * 100;
+
+      // Clamp ratio to min/max bounds
+      return Math.max(minRatio, Math.min(maxRatio, newRatio));
+    },
+    [minRatio, maxRatio, ratio]
+  );
 
   // Handle mouse down on divider - start drag
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    startXRef.current = e.clientX;
-    startRatioRef.current = ratio;
-    
-    // Add cursor style to body for smooth drag
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  }, [ratio]);
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      setIsDragging(true);
+      startXRef.current = e.clientX;
+      startRatioRef.current = ratio;
+
+      // Add cursor style to body for smooth drag
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    },
+    [ratio]
+  );
 
   // Handle mouse move - update ratio during drag
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging) return;
-    
-    const newRatio = calculateRatio(e.clientX);
-    setRatio(newRatio);
-    
-    // Notify parent of ratio change
-    if (onRatioChange) {
-      onRatioChange(newRatio);
-    }
-  }, [isDragging, calculateRatio, onRatioChange]);
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isDragging) return;
+
+      const newRatio = calculateRatio(e.clientX);
+      setRatio(newRatio);
+
+      // Notify parent of ratio change
+      if (onRatioChange) {
+        onRatioChange(newRatio);
+      }
+    },
+    [isDragging, calculateRatio, onRatioChange]
+  );
 
   // Handle mouse up - end drag
   const handleMouseUp = useCallback(() => {
     if (!isDragging) return;
-    
+
     setIsDragging(false);
-    
+
     // Remove cursor style from body
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
@@ -101,7 +110,7 @@ export function ResizableSplitView({
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
-      
+
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
@@ -127,9 +136,7 @@ export function ResizableSplitView({
       }}
     >
       {/* Left Panel */}
-      <div className="overflow-auto">
-        {left}
-      </div>
+      <div className="overflow-auto">{left}</div>
 
       {/* Divider */}
       <div
@@ -149,11 +156,7 @@ export function ResizableSplitView({
       </div>
 
       {/* Right Panel */}
-      <div className="overflow-auto">
-        {right}
-      </div>
+      <div className="overflow-auto">{right}</div>
     </div>
   );
 }
-
-

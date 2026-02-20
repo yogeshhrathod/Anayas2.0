@@ -30,10 +30,10 @@ class TestLogger {
     this.startTime = Date.now();
     this.memoryStart = this.getMemoryUsage();
     this.logs = [];
-    
+
     // Ensure directory exists
     fs.mkdirSync(testArtifactsDir, { recursive: true });
-    
+
     this.info(`Test started: ${testName}`);
   }
 
@@ -47,15 +47,18 @@ class TestLogger {
       timestamp: new Date().toISOString(),
       metadata,
     };
-    
+
     this.logs.push(entry);
-    
+
     // Write to console
-    const consoleMethod = level === LogLevel.ERROR ? 'error' : 
-                         level === LogLevel.WARN ? 'warn' : 
-                         'log';
+    const consoleMethod =
+      level === LogLevel.ERROR
+        ? 'error'
+        : level === LogLevel.WARN
+          ? 'warn'
+          : 'log';
     console[consoleMethod](`[${level}] ${message}`, metadata || '');
-    
+
     // Write to file if initialized
     if (this.logFile) {
       this.writeToFile(entry);
@@ -107,7 +110,7 @@ class TestLogger {
   logMemory(operation: string): void {
     const currentMemory = this.getMemoryUsage();
     const delta = currentMemory - this.memoryStart;
-    
+
     this.info(`Memory: ${operation}`, {
       current: currentMemory,
       delta,
@@ -130,11 +133,11 @@ class TestLogger {
    */
   private writeToFile(entry: LogEntry): void {
     if (!this.logFile) return;
-    
+
     const logLine = `[${entry.timestamp}] [${entry.level}] ${entry.message}${
       entry.metadata ? ' ' + JSON.stringify(entry.metadata) : ''
     }\n`;
-    
+
     try {
       fs.appendFileSync(this.logFile, logLine, 'utf-8');
     } catch (error) {
@@ -153,11 +156,13 @@ class TestLogger {
    * Get logs as string
    */
   getLogsAsString(): string {
-    return this.logs.map(entry => {
-      return `[${entry.timestamp}] [${entry.level}] ${entry.message}${
-        entry.metadata ? ' ' + JSON.stringify(entry.metadata) : ''
-      }`;
-    }).join('\n');
+    return this.logs
+      .map(entry => {
+        return `[${entry.timestamp}] [${entry.level}] ${entry.message}${
+          entry.metadata ? ' ' + JSON.stringify(entry.metadata) : ''
+        }`;
+      })
+      .join('\n');
   }
 
   /**
@@ -174,12 +179,12 @@ class TestLogger {
     const duration = this.getDuration();
     const memoryEnd = this.getMemoryUsage();
     const memoryDelta = memoryEnd - this.memoryStart;
-    
+
     this.info(`Test ${success ? 'completed' : 'failed'}: ${testName}`, {
       duration: `${duration}ms`,
       memoryDelta: `${memoryDelta}MB`,
     });
-    
+
     // Write summary
     if (this.logFile) {
       const summary = `
@@ -198,4 +203,3 @@ Total Logs: ${this.logs.length}
 
 // Export singleton instance
 export const logger = new TestLogger();
-

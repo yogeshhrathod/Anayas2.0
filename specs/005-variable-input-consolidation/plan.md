@@ -235,16 +235,16 @@ interface UseVariableInputReturn {
   searchTerm: string;
   showOnlyDynamic: boolean;
   dropdownPosition: { top: number; left: number };
-  
+
   // Refs
   inputRef: RefObject<HTMLInputElement>;
   wrapperRef: RefObject<HTMLDivElement>;
-  
+
   // Handlers
   handleChange: (e: ChangeEvent<HTMLInputElement>) => void;
   handleAutocompleteSelect: (variableName: string) => void;
   handleClose: () => void;
-  
+
   // Data
   variables: Array<{ name: string; value: string }>;
 }
@@ -384,6 +384,7 @@ If consolidation causes issues:
 ### For Developers
 
 **Before**:
+
 ```typescript
 import { OverlayVariableInput } from './overlay-variable-input';
 
@@ -394,6 +395,7 @@ import { OverlayVariableInput } from './overlay-variable-input';
 ```
 
 **After**:
+
 ```typescript
 import { VariableInputUnified } from './variable-input-unified';
 
@@ -409,4 +411,3 @@ import { VariableInputUnified } from './variable-input-unified';
 - [spec.md](./spec.md)
 - [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)
 - [ai-context/common-utils.md](../../ai-context/common-utils.md)
-

@@ -30,7 +30,12 @@ import {
 import { ResponseData } from '../../types/entities';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '../ui/tooltip';
 
 export interface ResponseHeadersViewProps {
   response: ResponseData | null;
@@ -71,31 +76,38 @@ export const ResponseHeadersView: React.FC<ResponseHeadersViewProps> = ({
     <TooltipProvider>
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* Header with Status and Actions - Fixed height */}
-        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
-          <div className="flex items-center gap-4">
-            <h3 className="text-sm font-semibold">Response Headers</h3>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant={getStatusVariant(response.status)}
-                className="text-xs"
-              >
-                {getStatusDisplay(response.status)}{' '}
-                {response.statusText ?? 'Unknown'}
-              </Badge>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                {formatResponseTime(response.time)}
+        {showActions && (
+          <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <div className="flex items-center gap-4">
+              <h3 className="text-sm font-semibold">Response Headers</h3>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={getStatusVariant(response.status)}
+                  className="text-xs"
+                >
+                  {getStatusDisplay(response.status)}{' '}
+                  {response.statusText ?? 'Unknown'}
+                </Badge>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {formatResponseTime(response.time)}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {showActions && (onCopy || onDownload) && (
           <div className="flex gap-2 px-4 py-2 border-b border-border/50">
             {onCopy && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={onCopy} className="px-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onCopy}
+                    className="px-2"
+                  >
                     <Copy className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
@@ -105,7 +117,12 @@ export const ResponseHeadersView: React.FC<ResponseHeadersViewProps> = ({
             {onDownload && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={onDownload} className="px-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onDownload}
+                    className="px-2"
+                  >
                     <Download className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>

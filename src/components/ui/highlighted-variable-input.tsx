@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useClickOutside } from '../../hooks/useClickOutside';
+import { useAvailableVariables } from '../../hooks/useVariableResolution';
+import { cn } from '../../lib/utils';
 import { Input } from './input';
 import { VariableAutocomplete } from './variable-autocomplete';
 import { VariableContextMenu } from './variable-context-menu';
 import { VariableDefinitionDialog } from './variable-definition-dialog';
-import { useAvailableVariables } from '../../hooks/useVariableResolution';
-import { cn } from '../../lib/utils';
-import { useClickOutside } from '../../hooks/useClickOutside';
 
 interface VariableHighlight {
   start: number;
@@ -34,9 +34,13 @@ export function HighlightedVariableInput({
   const [highlights, setHighlights] = useState<VariableHighlight[]>([]);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuVariable, setContextMenuVariable] = useState<string>('');
-  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [contextMenuPosition, setContextMenuPosition] = useState({
+    x: 0,
+    y: 0,
+  });
   const [showDefinitionDialog, setShowDefinitionDialog] = useState(false);
-  const [definitionDialogVariable, setDefinitionDialogVariable] = useState<string>('');
+  const [definitionDialogVariable, setDefinitionDialogVariable] =
+    useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const variables = useAvailableVariables();
@@ -58,17 +62,6 @@ export function HighlightedVariableInput({
     setHighlights(newHighlights);
   }, [value]);
 
-  const updateDropdownPosition = () => {
-    if (inputRef.current) {
-      const rect = inputRef.current.getBoundingClientRect();
-      return {
-        top: rect.bottom + 4,
-        left: rect.left
-      };
-    }
-    return { top: 0, left: 0 };
-  };
-
   // Detect when user types {{ to show autocomplete
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -81,11 +74,14 @@ export function HighlightedVariableInput({
       if (!afterBraces.includes('}}')) {
         // Still typing variable name
         // Check if user typed {{$ (wants dynamic variables)
-        const isDynamicSearch = afterBraces.startsWith('$') && afterBraces.length === 1;
+        const isDynamicSearch =
+          afterBraces.startsWith('$') && afterBraces.length === 1;
         setShowOnlyDynamic(isDynamicSearch);
-        
+
         // Remove $ prefix from search term if present (for dynamic variables)
-        const search = afterBraces.startsWith('$') ? afterBraces.substring(1) : afterBraces;
+        const search = afterBraces.startsWith('$')
+          ? afterBraces.substring(1)
+          : afterBraces;
         setSearchTerm(search);
         setShowAutocomplete(true);
       } else {
@@ -106,12 +102,12 @@ export function HighlightedVariableInput({
     const beforeBraces = value.substring(0, lastBraces);
     // Calculate the actual length of what was typed after {{ (including $ if present)
     const afterBraces = value.substring(lastBraces + 2);
-    const actualTypedLength = afterBraces.includes('}}') 
-      ? afterBraces.indexOf('}}') 
+    const actualTypedLength = afterBraces.includes('}}')
+      ? afterBraces.indexOf('}}')
       : afterBraces.length;
     const afterCurrentVar = value.substring(lastBraces + 2 + actualTypedLength);
     const newValue = beforeBraces + `{{${variableName}}}` + afterCurrentVar;
-    
+
     onChange(newValue);
     setShowAutocomplete(false);
 
@@ -155,10 +151,13 @@ export function HighlightedVariableInput({
     setShowAutocomplete(false);
     setShowContextMenu(false);
   };
-  
-  useClickOutside(wrapperRef, handleCloseAll, showAutocomplete || showContextMenu);
 
-  const position = updateDropdownPosition();
+  useClickOutside(
+    wrapperRef,
+    handleCloseAll,
+    showAutocomplete || showContextMenu
+  );
+
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -177,7 +176,6 @@ export function HighlightedVariableInput({
           searchTerm={searchTerm}
           onSelect={handleAutocompleteSelect}
           onClose={handleClose}
-          position={position}
           showOnlyDynamic={showOnlyDynamic}
         />
       )}
@@ -186,7 +184,7 @@ export function HighlightedVariableInput({
           variableName={contextMenuVariable}
           position={contextMenuPosition}
           onClose={() => setShowContextMenu(false)}
-          onViewDefinition={(varName) => {
+          onViewDefinition={varName => {
             setDefinitionDialogVariable(varName);
             setShowDefinitionDialog(true);
           }}
@@ -200,4 +198,3 @@ export function HighlightedVariableInput({
     </div>
   );
 }
-

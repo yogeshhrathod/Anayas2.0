@@ -4,11 +4,7 @@
  * Factory that manages import strategies and auto-detects format.
  */
 
-import type {
-  Environment,
-  FormatDetectionResult,
-  FormatInfo,
-} from './types';
+import type { Environment, FormatDetectionResult, FormatInfo } from './types';
 import type { EnvironmentImportStrategy } from './import-strategy';
 import { JsonParser } from './json-parser';
 import { EnvFileParser } from './env-file-parser';
@@ -131,9 +127,7 @@ export class EnvironmentImportFactory {
    * Get all supported formats
    */
   getSupportedFormats(): FormatInfo[] {
-    return Array.from(this.strategies.values()).map((s) =>
-      s.getFormatInfo()
-    );
+    return Array.from(this.strategies.values()).map(s => s.getFormatInfo());
   }
 }
 
@@ -149,4 +143,3 @@ export function getEnvironmentImportFactory(): EnvironmentImportFactory {
   }
   return factoryInstance;
 }
-

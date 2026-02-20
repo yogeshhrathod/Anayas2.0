@@ -1,13 +1,13 @@
 /**
  * useEnvironmentOperations - Custom hook for environment CRUD operations
- * 
+ *
  * Features:
  * - Create, update, delete environments
  * - Set default environment
  * - Test environment connections
  * - Search and filtering
  * - Import/export functionality
- * 
+ *
  * @example
  * ```tsx
  * const {
@@ -32,9 +32,13 @@ export function useEnvironmentOperations() {
   const [environments, setEnvironments] = useState<Environment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredEnvironments, setFilteredEnvironments] = useState<Environment[]>([]);
-  const [testingEnvironmentId, setTestingEnvironmentId] = useState<number | null>(null);
-  
+  const [filteredEnvironments, setFilteredEnvironments] = useState<
+    Environment[]
+  >([]);
+  const [testingEnvironmentId, setTestingEnvironmentId] = useState<
+    number | null
+  >(null);
+
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const { showSuccess, showError } = useToastNotifications();
 
@@ -58,11 +62,16 @@ export function useEnvironmentOperations() {
       return;
     }
 
-    const filtered = environments.filter(environment =>
-      environment.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      environment.displayName.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    const filtered = environments.filter(
+      environment =>
+        environment.name
+          .toLowerCase()
+          .includes(debouncedSearchTerm.toLowerCase()) ||
+        environment.displayName
+          .toLowerCase()
+          .includes(debouncedSearchTerm.toLowerCase())
     );
-    
+
     setFilteredEnvironments(filtered);
   }, [environments, debouncedSearchTerm]);
 
@@ -72,133 +81,163 @@ export function useEnvironmentOperations() {
   }, [loadEnvironments]);
 
   // Environment CRUD operations
-  const createEnvironment = useCallback(async (data: EnvironmentFormData) => {
-    try {
-      const envData = {
-        name: data.name,
-        displayName: data.display_name,
-        variables: {
-          ...data.variables,
-          base_url: data.base_url,
-        },
-        isDefault: data.is_default,
-      };
+  const createEnvironment = useCallback(
+    async (data: EnvironmentFormData) => {
+      try {
+        const envData = {
+          name: data.name,
+          displayName: data.display_name,
+          variables: {
+            ...data.variables,
+            base_url: data.base_url,
+          },
+          isDefault: data.is_default,
+        };
 
-      const result = await window.electronAPI.env.save(envData);
+        const result = await window.electronAPI.env.save(envData);
 
-      if (result.success) {
+        if (result.success) {
+          await loadEnvironments();
+          showSuccess('Environment created', {
+            description: `${data.display_name} has been created successfully`,
+          });
+          return result;
+        }
+      } catch (error: any) {
+        showError('Failed to create environment', error.message);
+        throw error;
+      }
+    },
+    [loadEnvironments, showSuccess, showError]
+  );
+
+  const updateEnvironment = useCallback(
+    async (id: number, data: EnvironmentFormData) => {
+      try {
+        const envData = {
+          id,
+          name: data.name,
+          displayName: data.display_name,
+          variables: {
+            ...data.variables,
+            base_url: data.base_url,
+          },
+          isDefault: data.is_default,
+        };
+
+        const result = await window.electronAPI.env.save(envData);
+
+        if (result.success) {
+          await loadEnvironments();
+          showSuccess('Environment updated', {
+            description: `${data.display_name} has been updated successfully`,
+          });
+          return result;
+        }
+      } catch (error: any) {
+        showError('Failed to update environment', error.message);
+        throw error;
+      }
+    },
+    [loadEnvironments, showSuccess, showError]
+  );
+
+  const deleteEnvironment = useCallback(
+    async (id: number) => {
+      try {
+        await window.electronAPI.env.delete(id);
         await loadEnvironments();
-        showSuccess('Environment created', { description: `${data.display_name} has been created successfully` });
-        return result;
-      }
-    } catch (error: any) {
-      showError('Failed to create environment', error.message);
-      throw error;
-    }
-  }, [loadEnvironments, showSuccess, showError]);
-
-  const updateEnvironment = useCallback(async (id: number, data: EnvironmentFormData) => {
-    try {
-      const envData = {
-        id,
-        name: data.name,
-        displayName: data.display_name,
-        variables: {
-          ...data.variables,
-          base_url: data.base_url,
-        },
-        isDefault: data.is_default,
-      };
-
-      const result = await window.electronAPI.env.save(envData);
-
-      if (result.success) {
-        await loadEnvironments();
-        showSuccess('Environment updated', { description: `${data.display_name} has been updated successfully` });
-        return result;
-      }
-    } catch (error: any) {
-      showError('Failed to update environment', error.message);
-      throw error;
-    }
-  }, [loadEnvironments, showSuccess, showError]);
-
-  const deleteEnvironment = useCallback(async (id: number) => {
-    try {
-      await window.electronAPI.env.delete(id);
-      await loadEnvironments();
-      showSuccess('Environment deleted', { description: 'Environment has been deleted successfully' });
-    } catch (error: any) {
-      showError('Failed to delete environment', error.message);
-      throw error;
-    }
-  }, [loadEnvironments, showSuccess, showError]);
-
-  const duplicateEnvironment = useCallback(async (environment: Environment) => {
-    try {
-      const duplicatedData = {
-        name: `${environment.name}_copy`,
-        display_name: `${environment.displayName} (Copy)`,
-        base_url: environment.variables?.base_url || '',
-        variables: environment.variables || {},
-        is_default: false
-      };
-
-      await createEnvironment(duplicatedData);
-    } catch (error: any) {
-      showError('Failed to duplicate environment', error.message);
-      throw error;
-    }
-  }, [createEnvironment, showError]);
-
-  const setDefaultEnvironment = useCallback(async (environment: Environment) => {
-    try {
-      // First, unset all environments as default
-      const updatedEnvs = environments.map(env => ({
-        ...env,
-        isDefault: false
-      }));
-
-      // Then set the selected environment as default
-      const targetEnv = updatedEnvs.find(env => env.id === environment.id);
-      if (targetEnv) {
-        targetEnv.isDefault = true;
-      }
-
-      // Save all environments
-      for (const env of updatedEnvs) {
-        await window.electronAPI.env.save(env);
-      }
-
-      await loadEnvironments();
-      showSuccess('Default environment set', { description: `${environment.displayName} is now the default environment` });
-    } catch (error: any) {
-      showError('Failed to set default environment', error.message);
-      throw error;
-    }
-  }, [environments, loadEnvironments, showSuccess, showError]);
-
-  const testEnvironment = useCallback(async (environment: Environment) => {
-    try {
-      setTestingEnvironmentId(environment.id!);
-      
-      // Test the base URL if it exists
-      if (environment.variables?.base_url) {
-        await fetch(environment.variables.base_url, {
-          method: 'HEAD',
-          mode: 'no-cors'
+        showSuccess('Environment deleted', {
+          description: 'Environment has been deleted successfully',
         });
-        
-        showSuccess('Connection test passed', { description: `${environment.displayName} is reachable` });
-      } else {
-        showSuccess('Environment test completed', { description: `${environment.displayName} configuration is valid` });
+      } catch (error: any) {
+        showError('Failed to delete environment', error.message);
+        throw error;
       }
-    } catch (error: any) {
-      showError('Connection test failed', error.message);
-    } finally {
-      setTestingEnvironmentId(null);
-    }
-  }, [showSuccess, showError]);
+    },
+    [loadEnvironments, showSuccess, showError]
+  );
+
+  const duplicateEnvironment = useCallback(
+    async (environment: Environment) => {
+      try {
+        const duplicatedData = {
+          name: `${environment.name}_copy`,
+          display_name: `${environment.displayName} (Copy)`,
+          base_url: environment.variables?.base_url || '',
+          variables: environment.variables || {},
+          is_default: false,
+        };
+
+        await createEnvironment(duplicatedData);
+      } catch (error: any) {
+        showError('Failed to duplicate environment', error.message);
+        throw error;
+      }
+    },
+    [createEnvironment, showError]
+  );
+
+  const setDefaultEnvironment = useCallback(
+    async (environment: Environment) => {
+      try {
+        // First, unset all environments as default
+        const updatedEnvs = environments.map(env => ({
+          ...env,
+          isDefault: false,
+        }));
+
+        // Then set the selected environment as default
+        const targetEnv = updatedEnvs.find(env => env.id === environment.id);
+        if (targetEnv) {
+          targetEnv.isDefault = true;
+        }
+
+        // Save all environments
+        for (const env of updatedEnvs) {
+          await window.electronAPI.env.save(env);
+        }
+
+        await loadEnvironments();
+        showSuccess('Default environment set', {
+          description: `${environment.displayName} is now the default environment`,
+        });
+      } catch (error: any) {
+        showError('Failed to set default environment', error.message);
+        throw error;
+      }
+    },
+    [environments, loadEnvironments, showSuccess, showError]
+  );
+
+  const testEnvironment = useCallback(
+    async (environment: Environment) => {
+      try {
+        setTestingEnvironmentId(environment.id!);
+
+        // Test the base URL if it exists
+        if (environment.variables?.base_url) {
+          await fetch(environment.variables.base_url, {
+            method: 'HEAD',
+            mode: 'no-cors',
+          });
+
+          showSuccess('Connection test passed', {
+            description: `${environment.displayName} is reachable`,
+          });
+        } else {
+          showSuccess('Environment test completed', {
+            description: `${environment.displayName} configuration is valid`,
+          });
+        }
+      } catch (error: any) {
+        showError('Connection test failed', error.message);
+      } finally {
+        setTestingEnvironmentId(null);
+      }
+    },
+    [showSuccess, showError]
+  );
 
   // Import/Export operations
   const exportEnvironments = useCallback(async () => {
@@ -206,7 +245,7 @@ export function useEnvironmentOperations() {
       const dataStr = JSON.stringify(environments, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(dataBlob);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.download = `environments-${new Date().toISOString().split('T')[0]}.json`;
@@ -214,8 +253,10 @@ export function useEnvironmentOperations() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
-      showSuccess('Export successful', { description: 'Environments have been exported successfully' });
+
+      showSuccess('Export successful', {
+        description: 'Environments have been exported successfully',
+      });
     } catch (error: any) {
       showError('Failed to export environments', error.message);
     }
@@ -226,14 +267,14 @@ export function useEnvironmentOperations() {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.json';
-      
-      input.onchange = async (e) => {
+
+      input.onchange = async e => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (!file) return;
 
         const text = await file.text();
         const importedEnvironments = JSON.parse(text);
-        
+
         if (Array.isArray(importedEnvironments)) {
           for (const environment of importedEnvironments) {
             await createEnvironment({
@@ -241,15 +282,20 @@ export function useEnvironmentOperations() {
               display_name: environment.display_name,
               base_url: environment.variables?.base_url || '',
               variables: environment.variables || {},
-              is_default: false
+              is_default: false,
             });
           }
-          showSuccess('Import successful', { description: `${importedEnvironments.length} environments imported successfully` });
+          showSuccess('Import successful', {
+            description: `${importedEnvironments.length} environments imported successfully`,
+          });
         } else {
-          showError('Invalid file format', 'Please select a valid environments export file');
+          showError(
+            'Invalid file format',
+            'Please select a valid environments export file'
+          );
         }
       };
-      
+
       input.click();
     } catch (error: any) {
       showError('Failed to import environments', error.message);
@@ -271,6 +317,6 @@ export function useEnvironmentOperations() {
     testEnvironment,
     exportEnvironments,
     importEnvironments,
-    refreshEnvironments: loadEnvironments
+    refreshEnvironments: loadEnvironments,
   };
 }

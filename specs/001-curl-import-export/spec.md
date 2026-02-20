@@ -23,6 +23,7 @@ Enable users to import HTTP requests from cURL commands and export requests as c
 ### As a developer, I want to import a cURL command so that I can quickly test an API request without manually recreating it
 
 **Acceptance Criteria:**
+
 - [x] Can paste a cURL command and import it as a request
 - [x] Can import from a file containing cURL commands
 - [x] Parsed request correctly extracts method, URL, headers, body, and auth
@@ -34,6 +35,7 @@ Enable users to import HTTP requests from cURL commands and export requests as c
 ### As a developer, I want to export my request as a cURL command so that I can share it or use it in scripts
 
 **Acceptance Criteria:**
+
 - [x] Can copy request as cURL command to clipboard
 - [x] Generated cURL command is valid and executable
 - [x] All request components (method, headers, body, auth) are included
@@ -45,6 +47,7 @@ Enable users to import HTTP requests from cURL commands and export requests as c
 ### As a developer, I want to bulk import multiple cURL commands so that I can quickly set up a collection from existing scripts
 
 **Acceptance Criteria:**
+
 - [x] Can import multiple cURL commands at once
 - [x] Each command is parsed and saved as a separate request
 - [x] Can specify collection/folder for bulk imports
@@ -64,12 +67,12 @@ Enable users to import HTTP requests from cURL commands and export requests as c
 
 ### Dependencies
 
-- Internal: 
+- Internal:
   - Request entity types (`src/types/entities.ts`)
   - IPC handlers (`electron/ipc/handlers.ts`)
   - Preload API (`electron/preload.ts`)
   - Toast notifications (`src/hooks/useToastNotifications.ts`)
-- External: 
+- External:
   - Potential npm library for cURL parsing (TBD)
   - No additional dependencies if custom parser is used
 
@@ -91,6 +94,7 @@ Modified Files:
 ### Data Model Changes
 
 No database schema changes. Uses existing Request interface:
+
 - `method`: HTTP method
 - `url`: Request URL
 - `headers`: Record<string, string>
@@ -101,11 +105,13 @@ No database schema changes. Uses existing Request interface:
 ### API Changes
 
 New IPC handlers:
+
 - `curl:parse` - Parse cURL command string to Request object
 - `curl:generate` - Generate cURL command from Request object
 - `curl:import-bulk` - Import multiple cURL commands
 
 New preload APIs:
+
 - `electronAPI.curl.parse(command: string)`
 - `electronAPI.curl.generate(request: Request)`
 - `electronAPI.curl.importBulk(commands: string[])`
@@ -145,11 +151,11 @@ New preload APIs:
 
 ## Risks & Mitigation
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|------------|------------|
-| Complex cURL commands fail to parse | Medium | Medium | Implement robust error handling, partial parsing, clear error messages |
-| Generated commands have escaping issues | High | Low | Comprehensive testing with special characters, use proper escaping |
-| Library dependency issues | Low | Low | Prefer custom parser if library is unstable or has compatibility issues |
+| Risk                                    | Impact | Probability | Mitigation                                                              |
+| --------------------------------------- | ------ | ----------- | ----------------------------------------------------------------------- |
+| Complex cURL commands fail to parse     | Medium | Medium      | Implement robust error handling, partial parsing, clear error messages  |
+| Generated commands have escaping issues | High   | Low         | Comprehensive testing with special characters, use proper escaping      |
+| Library dependency issues               | Low    | Low         | Prefer custom parser if library is unstable or has compatibility issues |
 
 ## References
 

@@ -1,14 +1,14 @@
 /**
  * Sentry Error Tracking & Monitoring Configuration
- * 
+ *
  * This module initializes Sentry for comprehensive error tracking, performance
  * monitoring, and usage analytics in the Electron main process.
- * 
+ *
  * Configuration:
  * - In development: Sentry is DISABLED to avoid polluting production data
  * - In production: Sentry is ENABLED using DSN from environment variables
  * - User can disable telemetry in Settings → Privacy & Data
- * 
+ *
  * GitHub Secrets Required:
  * - SENTRY_DSN: Your Sentry DSN (e.g., https://xxx@xxx.ingest.sentry.io/xxx)
  */
@@ -17,9 +17,10 @@ import * as Sentry from '@sentry/electron/main';
 import { app } from 'electron';
 
 // Check if we're in development mode
-const isDev = process.env.NODE_ENV === 'development' || 
-              process.env.VITE_DEV_SERVER_URL !== undefined ||
-              process.env.DEV === 'true';
+const isDev =
+  process.env.NODE_ENV === 'development' ||
+  process.env.VITE_DEV_SERVER_URL !== undefined ||
+  process.env.DEV === 'true';
 
 // Get Sentry DSN from environment variable (set via GitHub secrets in CI/CD)
 const SENTRY_DSN = process.env.SENTRY_DSN;
@@ -36,16 +37,18 @@ async function isTelemetryEnabled(): Promise<boolean> {
     // Dynamically import to avoid circular dependencies
     const { getDatabase } = await import('./database');
     const db = getDatabase();
-    
+
     // Check settings for telemetryEnabled
     if (db.settings && db.settings.telemetryEnabled !== undefined) {
       return db.settings.telemetryEnabled !== false;
     }
-    
+
     // Default to enabled if setting doesn't exist
     return true;
   } catch (error) {
-    console.log('[Sentry] Could not read telemetry setting, defaulting to enabled');
+    console.log(
+      '[Sentry] Could not read telemetry setting, defaulting to enabled'
+    );
     return true;
   }
 }
@@ -63,14 +66,18 @@ export async function initSentry(): Promise<void> {
 
   // Skip if no DSN configured
   if (!SENTRY_DSN) {
-    console.warn('[Sentry] No SENTRY_DSN configured - Sentry tracking disabled');
+    console.warn(
+      '[Sentry] No SENTRY_DSN configured - Sentry tracking disabled'
+    );
     return;
   }
 
   // Check if user has disabled telemetry
   telemetryEnabled = await isTelemetryEnabled();
   if (!telemetryEnabled) {
-    console.log('[Sentry] User has disabled telemetry - Sentry tracking disabled');
+    console.log(
+      '[Sentry] User has disabled telemetry - Sentry tracking disabled'
+    );
     return;
   }
 
@@ -110,11 +117,13 @@ export async function initSentry(): Promise<void> {
 
         // You can filter out certain errors here
         const error = hint.originalException;
-        
+
         // Don't send expected errors (like user cancellations)
         if (error instanceof Error) {
-          if (error.message.includes('cancelled') || 
-              error.message.includes('user abort')) {
+          if (
+            error.message.includes('cancelled') ||
+            error.message.includes('user abort')
+          ) {
             return null; // Don't send this event
           }
         }
@@ -136,13 +145,13 @@ export async function initSentry(): Promise<void> {
       integrations: [
         // Capture unhandled promise rejections
         Sentry.onUnhandledRejectionIntegration(),
-        
+
         // Capture console.error/warn messages
         Sentry.consoleIntegration(),
-        
+
         // Capture HTTP request breadcrumbs
         Sentry.httpIntegration(),
-        
+
         // Capture context (OS, runtime, etc.)
         Sentry.contextLinesIntegration(),
       ],
@@ -172,7 +181,7 @@ export async function initSentry(): Promise<void> {
 export function setTelemetryEnabled(enabled: boolean): void {
   telemetryEnabled = enabled;
   console.log(`[Sentry] Telemetry ${enabled ? 'enabled' : 'disabled'} by user`);
-  
+
   if (!enabled && sentryInitialized) {
     // Close Sentry when user disables telemetry
     Sentry.close();
@@ -197,7 +206,11 @@ function getAnonymousUserId(): string {
     const crypto = require('crypto');
     const os = require('os');
     const machineId = `${os.hostname()}-${os.userInfo().username}-${os.platform()}`;
-    return crypto.createHash('sha256').update(machineId).digest('hex').substring(0, 16);
+    return crypto
+      .createHash('sha256')
+      .update(machineId)
+      .digest('hex')
+      .substring(0, 16);
   } catch {
     // Fallback if anything fails
     return `anon-${Date.now()}`;
@@ -214,13 +227,16 @@ function isSentryActive(): boolean {
 /**
  * Capture a custom error with context
  */
-export function captureError(error: Error, context?: Record<string, unknown>): void {
+export function captureError(
+  error: Error,
+  context?: Record<string, unknown>
+): void {
   if (!isSentryActive()) {
     if (isDev) console.error('[Sentry Dev]', error, context);
     return;
   }
 
-  Sentry.withScope((scope) => {
+  Sentry.withScope(scope => {
     if (context) {
       scope.setExtras(context);
     }
@@ -231,7 +247,10 @@ export function captureError(error: Error, context?: Record<string, unknown>): v
 /**
  * Capture a custom message for tracking
  */
-export function captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info'): void {
+export function captureMessage(
+  message: string,
+  level: 'info' | 'warning' | 'error' = 'info'
+): void {
   if (!isSentryActive()) {
     if (isDev) console.log(`[Sentry Dev ${level}]`, message);
     return;
@@ -244,8 +263,8 @@ export function captureMessage(message: string, level: 'info' | 'warning' | 'err
  * Add breadcrumb for debugging context
  */
 export function addBreadcrumb(
-  category: string, 
-  message: string, 
+  category: string,
+  message: string,
   data?: Record<string, unknown>,
   level: 'info' | 'warning' | 'error' = 'info'
 ): void {
@@ -263,14 +282,21 @@ export function addBreadcrumb(
 /**
  * Track feature usage for analytics
  */
-export function trackFeatureUsage(feature: string, data?: Record<string, unknown>): void {
+export function trackFeatureUsage(
+  feature: string,
+  data?: Record<string, unknown>
+): void {
   addBreadcrumb('feature', `User used: ${feature}`, data);
 }
 
 /**
  * Track performance of an operation
  */
-export function trackPerformance(name: string, durationMs: number, data?: Record<string, unknown>): void {
+export function trackPerformance(
+  name: string,
+  durationMs: number,
+  data?: Record<string, unknown>
+): void {
   if (!isSentryActive()) return;
 
   Sentry.addBreadcrumb({
@@ -287,7 +313,7 @@ export function trackPerformance(name: string, durationMs: number, data?: Record
  */
 export function setUserId(userId: string): void {
   if (!isSentryActive()) return;
-  
+
   Sentry.setUser({ id: userId });
 }
 
@@ -296,6 +322,6 @@ export function setUserId(userId: string): void {
  */
 export async function flushSentry(): Promise<void> {
   if (!isSentryActive()) return;
-  
+
   await Sentry.flush(2000);
 }

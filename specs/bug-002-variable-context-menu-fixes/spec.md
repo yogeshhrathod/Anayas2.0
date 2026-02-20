@@ -25,6 +25,7 @@ Two issues with the variable context menu in the request builder:
 ## Reproduction Steps
 
 ### Issue 1: Context menu doesn't close
+
 1. Open request builder
 2. Navigate to any field that uses variable input (URL, headers, auth fields)
 3. Type a variable like `{{base_url}}`
@@ -35,6 +36,7 @@ Two issues with the variable context menu in the request builder:
 8. **Expected**: Context menu should close
 
 ### Issue 2: Copy value for dynamic variables
+
 1. Open request builder
 2. Navigate to any field that uses variable input
 3. Type a dynamic variable like `{{$timestamp}}` or `{{$randomInt}}`
@@ -99,6 +101,7 @@ See `plan.md` for detailed fix plan.
    - Dynamic variables no longer show "Copy Value" button
 
 ### Files Modified:
+
 - `src/components/ui/variable-input-unified.tsx` - Added context menu ref and `useClickOutside` hook
 - `src/components/ui/variable-context-menu.tsx` - Added `forwardRef` support and dynamic variable check
 

@@ -32,6 +32,7 @@ export function ApiRequestBuilder() {
     triggerSidebarRefresh,
     setSelectedRequest,
     setFocusedContext,
+    activeUnsavedRequestId,
   } = useStore();
 
   // Use custom hooks for state and actions
@@ -238,7 +239,7 @@ export function ApiRequestBuilder() {
         auth: requestState.requestData.auth,
         collectionId: data.collectionId,
         folderId: data.folderId,
-        isFavorite: requestState.requestData.isFavorite,
+        isFavorite: requestState.requestData.isFavorite ? 1 : 0,
       });
 
       // Update the request data with the new ID and collection info
@@ -336,7 +337,9 @@ export function ApiRequestBuilder() {
             setSplitRatio={requestState.setSplitViewRatio}
             requestMethod={requestState.requestData.method}
             requestUrl={requestState.requestData.url}
-            requestId={requestState.requestData.id}
+            requestId={
+              requestState.requestData.id || activeUnsavedRequestId || undefined
+            }
           />
         );
       default:
@@ -371,7 +374,7 @@ export function ApiRequestBuilder() {
       {/* Main Content Area */}
       <div className="flex-1 flex min-h-0 overflow-hidden relative">
         {/* Left Panel - Request Configuration */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
           {/* Tab Navigation */}
           <RequestTabs
             activeTab={requestState.activeTab}
@@ -379,6 +382,7 @@ export function ApiRequestBuilder() {
             requestData={requestState.requestData}
             bodyContentType={requestState.bodyContentType}
             response={requestActions.response}
+            isLoading={requestActions.isLoading}
           />
 
           {/* Tab Content - Fills remaining space */}

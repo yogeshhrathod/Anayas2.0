@@ -6,11 +6,11 @@
 
 import { Label } from '../ui/label';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '../ui/select';
 
 export type Format = 'json' | 'env' | 'postman';
@@ -39,16 +39,12 @@ export function FormatSelector({
   return (
     <div className="space-y-2">
       <Label htmlFor="format-select">{label}</Label>
-      <Select
-        value={value}
-        onValueChange={onValueChange}
-        disabled={disabled}
-      >
+      <Select value={value} onValueChange={onValueChange} disabled={disabled}>
         <SelectTrigger id="format-select">
           <SelectValue placeholder="Select format" />
         </SelectTrigger>
         <SelectContent>
-          {formats.map((format) => (
+          {formats.map(format => (
             <SelectItem key={format} value={format}>
               {formatLabels[format]}
             </SelectItem>
@@ -58,4 +54,3 @@ export function FormatSelector({
     </div>
   );
 }
-
