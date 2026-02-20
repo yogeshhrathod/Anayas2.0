@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
+import { useClickOutside } from '../../hooks/useClickOutside';
+import { useAvailableVariables } from '../../hooks/useVariableResolution';
 import { Input } from './input';
 import { VariableAutocomplete } from './variable-autocomplete';
-import { useAvailableVariables } from '../../hooks/useVariableResolution';
-import { useClickOutside } from '../../hooks/useClickOutside';
 
 export interface VariableInputProps {
   value: string;
@@ -21,20 +21,9 @@ export function VariableInput({
 }: VariableInputProps) {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const variables = useAvailableVariables();
-
-  const updateDropdownPosition = () => {
-    if (inputRef.current) {
-      const rect = inputRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom,
-        left: rect.left,
-      });
-    }
-  };
 
   // Detect when user types {{ to show autocomplete
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,7 +37,6 @@ export function VariableInput({
       if (!afterBraces.includes('}}')) {
         // Still typing variable name
         setSearchTerm(afterBraces);
-        updateDropdownPosition();
         setShowAutocomplete(true);
       } else {
         setShowAutocomplete(false);
@@ -103,7 +91,6 @@ export function VariableInput({
           searchTerm={searchTerm}
           onSelect={handleAutocompleteSelect}
           onClose={handleClose}
-          position={dropdownPosition}
         />
       )}
     </div>

@@ -27,9 +27,9 @@
  * ```
  */
 
-import { useState, useRef, useCallback } from 'react';
-import { useAvailableVariables } from './useVariableResolution';
+import { useCallback, useRef, useState } from 'react';
 import { useClickOutside } from './useClickOutside';
+import { useAvailableVariables } from './useVariableResolution';
 
 export interface UseVariableInputOptions {
   value: string;
@@ -41,7 +41,6 @@ export interface UseVariableInputReturn {
   showAutocomplete: boolean;
   searchTerm: string;
   showOnlyDynamic: boolean;
-  dropdownPosition: { top: number; left: number };
 
   // Refs
   inputRef: React.RefObject<HTMLInputElement>;
@@ -51,7 +50,6 @@ export interface UseVariableInputReturn {
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleAutocompleteSelect: (variableName: string) => void;
   handleClose: () => void;
-  updateDropdownPosition: () => void;
 
   // Data
   variables: Array<{
@@ -68,21 +66,11 @@ export function useVariableInput({
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyDynamic, setShowOnlyDynamic] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const variables = useAvailableVariables();
 
-  const updateDropdownPosition = useCallback(() => {
-    if (inputRef.current) {
-      const rect = inputRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + 4,
-        left: rect.left,
-      });
-    }
-  }, []);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,7 +93,6 @@ export function useVariableInput({
             ? afterBraces.substring(1)
             : afterBraces;
           setSearchTerm(search);
-          updateDropdownPosition();
           setShowAutocomplete(true);
         } else {
           setShowAutocomplete(false);
@@ -116,7 +103,7 @@ export function useVariableInput({
         setShowOnlyDynamic(false);
       }
     },
-    [onChange, updateDropdownPosition]
+    [onChange]
   );
 
   const handleAutocompleteSelect = useCallback(
@@ -164,13 +151,11 @@ export function useVariableInput({
     showAutocomplete,
     searchTerm,
     showOnlyDynamic,
-    dropdownPosition,
     inputRef,
     wrapperRef,
     handleChange,
     handleAutocompleteSelect,
     handleClose,
-    updateDropdownPosition,
     variables,
   };
 }

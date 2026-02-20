@@ -1,11 +1,7 @@
-import { useState, useEffect } from 'react';
+import { Building2, Check, Globe, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { cn } from '../../lib/utils';
-import { Check, Building2, Globe, Sparkles } from 'lucide-react';
 
-export interface AutocompletePosition {
-  top: number;
-  left: number;
-}
 
 interface VariableAutocompleteProps {
   variables: Array<{
@@ -15,7 +11,6 @@ interface VariableAutocompleteProps {
   }>;
   onSelect: (variableName: string) => void;
   onClose: () => void;
-  position: AutocompletePosition;
   searchTerm?: string;
   showOnlyDynamic?: boolean; // When true, show only dynamic variables
 }
@@ -25,7 +20,6 @@ export function VariableAutocomplete({
   searchTerm = '',
   onSelect,
   onClose,
-  position,
   showOnlyDynamic = false,
 }: VariableAutocompleteProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -103,8 +97,7 @@ export function VariableAutocomplete({
   if (allVariables.length === 0) {
     return (
       <div
-        className="fixed z-popover w-80 rounded-md border bg-popover p-2 shadow-lg"
-        style={{ top: `${position.top}px`, left: `${position.left}px` }}
+        className="absolute top-full left-0 mt-1 z-popover w-80 rounded-md border bg-popover p-2 shadow-lg"
       >
         <div className="px-3 py-2 text-sm text-muted-foreground">
           No variables found
@@ -115,8 +108,7 @@ export function VariableAutocomplete({
 
   return (
     <div
-      className="fixed z-popover w-80 rounded-md border bg-popover shadow-lg overflow-hidden"
-      style={{ top: `${position.top}px`, left: `${position.left}px` }}
+      className="absolute top-full left-0 mt-1 z-popover w-80 rounded-md border bg-popover shadow-lg overflow-hidden"
     >
       <div className="max-h-96 overflow-auto">
         {groupedVariables.collection.length > 0 && (

@@ -1,13 +1,13 @@
-import { useState, useRef, useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { useClickOutside } from '../../hooks/useClickOutside';
+import {
+    useAvailableVariables,
+    useVariableResolution,
+} from '../../hooks/useVariableResolution';
+import { cn } from '../../lib/utils';
 import { VariableAutocomplete } from './variable-autocomplete';
 import { VariableContextMenu } from './variable-context-menu';
 import { VariableDefinitionDialog } from './variable-definition-dialog';
-import {
-  useAvailableVariables,
-  useVariableResolution,
-} from '../../hooks/useVariableResolution';
-import { cn } from '../../lib/utils';
-import { useClickOutside } from '../../hooks/useClickOutside';
 
 interface Segment {
   type: 'text' | 'variable';
@@ -102,10 +102,7 @@ export function OverlayVariableInput({
   const [showDefinitionDialog, setShowDefinitionDialog] = useState(false);
   const [definitionDialogVariable, setDefinitionDialogVariable] =
     useState<string>('');
-  const [autocompletePosition, setAutocompletePosition] = useState({
-    top: 0,
-    left: 0,
-  });
+
 
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -120,15 +117,7 @@ export function OverlayVariableInput({
     [value, resolvedVariables]
   );
 
-  const updateAutocompletePosition = () => {
-    if (inputRef.current) {
-      const rect = inputRef.current.getBoundingClientRect();
-      setAutocompletePosition({
-        top: rect.bottom + 4,
-        left: rect.left,
-      });
-    }
-  };
+
 
   // Detect when user types {{ to show autocomplete
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,7 +140,6 @@ export function OverlayVariableInput({
           ? afterBraces.substring(1)
           : afterBraces;
         setSearchTerm(search);
-        updateAutocompletePosition();
         setShowAutocomplete(true);
       } else {
         setShowAutocomplete(false);
@@ -389,7 +377,6 @@ export function OverlayVariableInput({
           searchTerm={searchTerm}
           onSelect={handleAutocompleteSelect}
           onClose={handleClose}
-          position={autocompletePosition}
           showOnlyDynamic={showOnlyDynamic}
         />
       )}

@@ -10,8 +10,8 @@
  * - Children only render when expanded (memory efficient)
  */
 
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import React, { useRef } from 'react';
-import { ChevronRight, ChevronDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export interface CollapsibleSectionProps {
@@ -83,10 +83,9 @@ export function CollapsibleSection({
         aria-controls={`${id}-content`}
         aria-label={`${title} section`}
         className={cn(
-          'flex items-center gap-1 px-3 py-2 cursor-pointer select-none',
-          'hover:bg-accent/50 transition-colors duration-150',
+          'flex items-center gap-2 px-3 py-1.5 mx-1 my-1 cursor-pointer select-none rounded-md',
+          'hover:bg-accent/40 hover:shadow-sm transition-all duration-200 group/header',
           'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
-          'border-b border-border/50',
           'flex-shrink-0' // Header always maintains its size
         )}
         onClick={onToggle}
@@ -107,7 +106,7 @@ export function CollapsibleSection({
         )}
 
         {/* Title */}
-        <span className="text-sm font-medium text-foreground uppercase tracking-wide flex-1">
+        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex-1 group-hover/header:text-foreground transition-colors duration-200">
           {title}
         </span>
 

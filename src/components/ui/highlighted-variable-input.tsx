@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useClickOutside } from '../../hooks/useClickOutside';
+import { useAvailableVariables } from '../../hooks/useVariableResolution';
+import { cn } from '../../lib/utils';
 import { Input } from './input';
 import { VariableAutocomplete } from './variable-autocomplete';
 import { VariableContextMenu } from './variable-context-menu';
 import { VariableDefinitionDialog } from './variable-definition-dialog';
-import { useAvailableVariables } from '../../hooks/useVariableResolution';
-import { cn } from '../../lib/utils';
-import { useClickOutside } from '../../hooks/useClickOutside';
 
 interface VariableHighlight {
   start: number;
@@ -61,17 +61,6 @@ export function HighlightedVariableInput({
 
     setHighlights(newHighlights);
   }, [value]);
-
-  const updateDropdownPosition = () => {
-    if (inputRef.current) {
-      const rect = inputRef.current.getBoundingClientRect();
-      return {
-        top: rect.bottom + 4,
-        left: rect.left,
-      };
-    }
-    return { top: 0, left: 0 };
-  };
 
   // Detect when user types {{ to show autocomplete
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,7 +158,6 @@ export function HighlightedVariableInput({
     showAutocomplete || showContextMenu
   );
 
-  const position = updateDropdownPosition();
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -188,7 +176,6 @@ export function HighlightedVariableInput({
           searchTerm={searchTerm}
           onSelect={handleAutocompleteSelect}
           onClose={handleClose}
-          position={position}
           showOnlyDynamic={showOnlyDynamic}
         />
       )}

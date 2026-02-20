@@ -112,15 +112,17 @@ export function UnsavedRequestsSection() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Unsaved Requests List */}
-      <div className="flex-1 overflow-y-auto space-y-0.5 px-2 py-2 min-h-0">
+      <div className="flex-1 overflow-y-auto space-y-0.5 py-1 min-h-0">
         {unsavedRequests.map(unsaved => {
           const isActive = unsaved.id === activeUnsavedRequestId;
 
           return (
             <div
               key={unsaved.id}
-              className={`group flex items-center gap-2 p-2 hover:bg-muted/50 rounded-md cursor-pointer transition-colors ${
-                isActive ? 'bg-primary/10 border border-primary/20' : ''
+              className={`group flex items-center gap-2.5 px-3 py-2 mx-2 mb-1 rounded-lg cursor-pointer transition-all duration-200 ${
+                isActive 
+                  ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               }`}
               onClick={() => handleSelectUnsaved(unsaved)}
               draggable
@@ -149,7 +151,7 @@ export function UnsavedRequestsSection() {
               {/* Request Name */}
               <div className="flex-1 min-w-0">
                 <div
-                  className={`text-sm font-medium truncate ${isActive ? 'text-primary' : ''}`}
+                  className={`text-sm font-medium truncate transition-colors ${isActive ? 'text-primary drop-shadow-sm' : 'group-hover:text-foreground'}`}
                 >
                   {unsaved.name}
                 </div>

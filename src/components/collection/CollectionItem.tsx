@@ -21,23 +21,23 @@
  * ```
  */
 
-import React from 'react';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
 import {
-  ChevronRight,
-  ChevronDown,
-  Plus,
-  Folder,
-  Edit,
-  Copy,
-  Download,
-  Upload,
-  Trash2,
+    ChevronDown,
+    ChevronRight,
+    Copy,
+    Download,
+    Edit,
+    Folder,
+    Plus,
+    Trash2,
+    Upload,
 } from 'lucide-react';
-import { ActionMenu } from '../shared/ActionMenu';
-import { Collection } from '../../types/entities';
+import React from 'react';
 import { useStore } from '../../store/useStore';
+import { Collection } from '../../types/entities';
+import { ActionMenu } from '../shared/ActionMenu';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 
 export interface CollectionItemProps {
   collection: Collection;
@@ -143,11 +143,13 @@ export const CollectionItem: React.FC<CollectionItemProps> = ({
       )}
 
       <div
-        className={`group flex items-center gap-2 p-2 hover:bg-muted/50 rounded-md transition-all cursor-pointer relative ${
-          isSelected ? 'bg-primary/10 border border-primary/20' : ''
+        className={`group flex items-center gap-2.5 px-3 py-2 mx-1 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative ${
+          isSelected 
+            ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' 
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
         } ${isDragging ? 'opacity-50' : ''} ${
           isDragOver && dropPosition === 'inside'
-            ? 'bg-primary/5 border border-primary/30'
+            ? 'bg-primary/5 ring-1 ring-primary/30'
             : ''
         }`}
         onClick={() => {
@@ -162,7 +164,7 @@ export const CollectionItem: React.FC<CollectionItemProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          className="h-6 w-6 p-0 pointer-events-none"
+          className="h-6 w-6 p-0 hover:bg-transparent -ml-1.5 focus:ring-0 pointer-events-none text-current"
         >
           {isExpanded ? (
             <ChevronDown className="h-4 w-4" />
@@ -181,7 +183,7 @@ export const CollectionItem: React.FC<CollectionItemProps> = ({
         {/* Collection Name */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium truncate">
+            <span className={`text-sm font-medium truncate transition-colors ${isSelected ? 'text-primary drop-shadow-sm' : 'group-hover:text-foreground'}`}>
               {collection.name}
             </span>
             {collection.isFavorite === 1 && (

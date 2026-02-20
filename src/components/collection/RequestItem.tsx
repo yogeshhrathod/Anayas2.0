@@ -21,14 +21,14 @@
  * ```
  */
 
+import { Copy, Download, Edit, Trash2 } from 'lucide-react';
 import React from 'react';
+import { useInlineEdit } from '../../hooks/useInlineEdit';
+import { useStore } from '../../store/useStore';
+import { Request } from '../../types/entities';
+import { ActionMenu } from '../shared/ActionMenu';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
-import { Edit, Copy, Download, Trash2 } from 'lucide-react';
-import { ActionMenu } from '../shared/ActionMenu';
-import { useInlineEdit } from '../../hooks/useInlineEdit';
-import { Request } from '../../types/entities';
-import { useStore } from '../../store/useStore';
 
 export interface RequestItemProps {
   request: Request;
@@ -91,7 +91,7 @@ export const RequestItem: React.FC<RequestItemProps> = ({
           auth: request.auth,
           collectionId: request.collectionId,
           folderId: request.folderId,
-          isFavorite: Boolean(request.isFavorite),
+          isFavorite: request.isFavorite ? 1 : 0,
         });
 
         // Trigger sidebar refresh for real-time updates
@@ -147,11 +147,13 @@ export const RequestItem: React.FC<RequestItemProps> = ({
       )}
 
       <div
-        className={`group flex items-center gap-2 p-2 pl-8 hover:bg-muted/50 rounded-md transition-all cursor-pointer relative ${
-          isSelected ? 'bg-primary/10 border border-primary/20' : ''
+        className={`group flex items-center gap-2.5 px-3 py-2 pl-8 mx-1 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative ${
+          isSelected 
+            ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' 
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
         } ${isDragging ? 'opacity-50' : ''} ${
           isDragOver && dropPosition === 'inside'
-            ? 'bg-primary/5 border border-primary/30'
+            ? 'bg-primary/5 ring-1 ring-primary/30'
             : ''
         }`}
         onClick={() => {
@@ -187,7 +189,7 @@ export const RequestItem: React.FC<RequestItemProps> = ({
             />
           ) : (
             <div
-              className="text-sm font-medium truncate"
+              className={`text-sm font-medium truncate transition-colors ${isSelected ? 'text-primary drop-shadow-sm' : 'group-hover:text-foreground'}`}
               onDoubleClick={inlineEdit.startEdit}
               title="Double-click to edit name"
             >

@@ -116,7 +116,6 @@ export function VariableInputUnified({
     showAutocomplete,
     searchTerm,
     showOnlyDynamic,
-    dropdownPosition,
     inputRef,
     wrapperRef,
     handleChange,
@@ -242,7 +241,6 @@ export function VariableInputUnified({
             searchTerm={searchTerm}
             onSelect={handleAutocompleteSelect}
             onClose={handleClose}
-            position={dropdownPosition}
           />
         )}
       </div>
@@ -268,7 +266,6 @@ export function VariableInputUnified({
             searchTerm={searchTerm}
             onSelect={handleAutocompleteSelect}
             onClose={handleClose}
-            position={dropdownPosition}
             showOnlyDynamic={showOnlyDynamic}
           />
         )}
@@ -453,7 +450,6 @@ export function VariableInputUnified({
           searchTerm={searchTerm}
           onSelect={handleAutocompleteSelect}
           onClose={handleClose}
-          position={dropdownPosition}
           showOnlyDynamic={showOnlyDynamic}
         />
       )}
