@@ -9,9 +9,28 @@ permissions:
   contents: write
 
 jobs:
+  # Step 1: Create the GitHub Release first, before any builds start
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprg/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build:
+    needs: create-release
     runs-on: ${{ matrix.os }}
-    
+
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]

@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { AboutMe } from './components/AboutMe';
 import { Docs } from './components/Docs';
 import { Footer } from './components/Footer';
 import { Hero } from './components/Hero';
@@ -24,6 +25,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/docs" element={<Docs />} />
+          <Route path="/about" element={<AboutMe />} />
         </Routes>
         <Footer />
       </div>
