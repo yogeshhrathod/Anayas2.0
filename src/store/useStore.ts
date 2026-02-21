@@ -172,9 +172,11 @@ interface AppState {
   theme: 'light' | 'dark' | 'system';
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
 
-  // App Version
+  // App State
   appVersion: string;
   setAppVersion: (version: string) => void;
+  isWelcomeDone: boolean;
+  setIsWelcomeDone: (done: boolean) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -363,9 +365,11 @@ export const useStore = create<AppState>()(
       theme: 'system',
       setTheme: theme => set({ theme, themeMode: theme }),
 
-      // App Version
+      // App State
       appVersion: '',
       setAppVersion: appVersion => set({ appVersion }),
+      isWelcomeDone: false,
+      setIsWelcomeDone: isWelcomeDone => set({ isWelcomeDone }),
     }),
     {
       name: 'luna-store',
@@ -381,6 +385,7 @@ export const useStore = create<AppState>()(
         selectedRequest: state.selectedRequest,
         activeUnsavedRequestId: state.activeUnsavedRequestId,
         currentPage: state.currentPage,
+        isWelcomeDone: state.isWelcomeDone,
       }),
       onRehydrateStorage: () => state => {
         if (state) {

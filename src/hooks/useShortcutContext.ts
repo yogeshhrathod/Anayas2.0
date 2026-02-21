@@ -2,13 +2,15 @@
  * Hook to provide current shortcut context
  */
 
-import { useState, useEffect } from 'react';
-import { useStore } from '../store/useStore';
+import { useEffect, useState } from 'react';
 import { ContextState } from '../lib/shortcuts/types';
+import { useStore } from '../store/useStore';
 
 export function useShortcutContext(): ContextState {
-  const { currentPage, selectedItem, selectedRequest, focusedContext } =
-    useStore();
+  const currentPage = useStore(state => state.currentPage);
+  const selectedItem = useStore(state => state.selectedItem);
+  const selectedRequest = useStore(state => state.selectedRequest);
+  const focusedContext = useStore(state => state.focusedContext);
 
   const [focusedElement, setFocusedElement] = useState<Element | null>(null);
 

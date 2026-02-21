@@ -2,8 +2,8 @@
  * Hook to register and handle keyboard shortcuts
  */
 
-import { useEffect, useMemo } from 'react';
-import { ShortcutRegistry, detectContext, SHORTCUTS } from '../lib/shortcuts';
+import { useEffect, useMemo, useRef } from 'react';
+import { detectContext, ShortcutRegistry, SHORTCUTS } from '../lib/shortcuts';
 import { ContextState } from '../lib/shortcuts/types';
 import { useShortcutContext } from './useShortcutContext';
 
@@ -15,16 +15,26 @@ export function useShortcuts(
 ) {
   const contextState = useShortcutContext();
   const registry = useMemo(() => new ShortcutRegistry(), []);
+  const handlersRef = useRef(handlers);
+
+  // Update ref when handlers change
+  useEffect(() => {
+    handlersRef.current = handlers;
+  }, [handlers]);
 
   useEffect(() => {
     // Register all shortcuts with their handlers
     Object.entries(SHORTCUTS).forEach(([id, shortcut]) => {
-      if (handlers[shortcut.action]) {
-        registry.register(id, {
-          ...shortcut,
-          handler: handlers[shortcut.action],
-        });
-      }
+      // Use the latest handler from the ref
+      registry.register(id, {
+        ...shortcut,
+        handler: (event, context) => {
+          const latestHandler = handlersRef.current[shortcut.action];
+          if (latestHandler) {
+            latestHandler(event, context);
+          }
+        },
+      });
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -40,5 +50,5 @@ export function useShortcuts(
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [contextState, handlers, registry]);
+  }, [contextState, registry]); // No longer depends on handlers directly
 }

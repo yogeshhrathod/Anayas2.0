@@ -68,43 +68,39 @@ function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isResizing, setIsResizing] = useState(false);
-  const [isWelcomeDone, setIsWelcomeDone] = useState(
-    () => localStorage.getItem('luna_welcome_seen') === 'true'
-  );
+
   const [_requests, setRequests] = useState<any[]>([]);
   const [isAppReady, setIsAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const {
-    currentPage,
-    setCurrentPage,
-    setEnvironments,
-    setCurrentEnvironment,
-    collections,
-    setCollections,
-    setRequestHistory,
-    selectedRequest,
-    setSelectedRequest,
-    setSettings,
-    setThemeMode,
-    setCurrentThemeId,
-    setCustomThemes,
-    sidebarWidth,
-    setSidebarWidth,
-    unsavedRequests,
-    // @ts-ignore - selectedItem is used in shortcut handlers
-    selectedItem,
-    setSelectedItem,
-    triggerSidebarRefresh,
-    expandedSidebarSections,
-    toggleSidebarSection,
-    loadSidebarState,
-    setUnsavedRequests,
-    setActiveUnsavedRequestId,
-    splitViewEnabled,
-    setSplitViewEnabled,
-    appVersion,
-    setAppVersion,
-  } = useStore();
+  const currentPage = useStore(state => state.currentPage);
+  const setCurrentPage = useStore(state => state.setCurrentPage);
+  const setEnvironments = useStore(state => state.setEnvironments);
+  const setCurrentEnvironment = useStore(state => state.setCurrentEnvironment);
+  const collections = useStore(state => state.collections);
+  const setCollections = useStore(state => state.setCollections);
+  const setRequestHistory = useStore(state => state.setRequestHistory);
+  const selectedRequest = useStore(state => state.selectedRequest);
+  const setSelectedRequest = useStore(state => state.setSelectedRequest);
+  const setSettings = useStore(state => state.setSettings);
+  const setThemeMode = useStore(state => state.setThemeMode);
+  const setCurrentThemeId = useStore(state => state.setCurrentThemeId);
+  const setCustomThemes = useStore(state => state.setCustomThemes);
+  const sidebarWidth = useStore(state => state.sidebarWidth);
+  const setSidebarWidth = useStore(state => state.setSidebarWidth);
+  const unsavedRequests = useStore(state => state.unsavedRequests);
+  const setSelectedItem = useStore(state => state.setSelectedItem);
+  const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
+  const expandedSidebarSections = useStore(state => state.expandedSidebarSections);
+  const toggleSidebarSection = useStore(state => state.toggleSidebarSection);
+  const loadSidebarState = useStore(state => state.loadSidebarState);
+  const setUnsavedRequests = useStore(state => state.setUnsavedRequests);
+  const setActiveUnsavedRequestId = useStore(state => state.setActiveUnsavedRequestId);
+  const splitViewEnabled = useStore(state => state.splitViewEnabled);
+  const setSplitViewEnabled = useStore(state => state.setSplitViewEnabled);
+  const setAppVersion = useStore(state => state.setAppVersion);
+  const appVersion = useStore(state => state.appVersion);
+  const isWelcomeDone = useStore(state => state.isWelcomeDone);
+  const setIsWelcomeDoneStore = useStore(state => state.setIsWelcomeDone);
 
   const { showSuccess, showError } = useToastNotifications();
   const [showClearAllDialog, setShowClearAllDialog] = useState(false);
@@ -652,6 +648,11 @@ function App() {
     );
   };
 
+  const handleSplashFinish = useCallback(() => {
+    console.log('[App] Splash screen finished, transitioning to main UI');
+    setShowSplash(false);
+  }, []);
+
   return (
     <FontProvider>
       {/* Welcome Experience - Lazy loaded so zero impact for existing users */}
@@ -659,18 +660,21 @@ function App() {
         <Suspense fallback={null}>
           <OnboardingFlow
             onDismiss={() => {
-              setIsWelcomeDone(true);
+              console.log('[App] Welcome flow dismissed');
+              setIsWelcomeDoneStore(true);
+              // Explicitly set localStorage here as well for backward compatibility
+              localStorage.setItem('luna_welcome_seen', 'true');
               setShowSplash(false); // Skip splash screen after onboarding to prevent "flash"
             }}
           />
         </Suspense>
       )}
 
-      {/* Splash Screen - Waits for welcome flow if present */}
+      {/* Splash Screen - Waits for welcome flow if present, but also shows once after if needed */}
       {isWelcomeDone && showSplash && (
         <SplashScreen
           isLoading={!isAppReady}
-          onFinish={() => setShowSplash(false)}
+          onFinish={handleSplashFinish}
         />
       )}
       <ThemeManager />

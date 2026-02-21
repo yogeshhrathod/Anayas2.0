@@ -224,6 +224,7 @@ export function useRequestState(selectedRequest: Request | null) {
         JSON.stringify(selectedRequest.queryParams || []);
 
     if (isDifferent) {
+      console.log('[useRequestState] Diff detected, updating global store');
       isInternalUpdateRef.current = true;
       setSelectedRequest({
         ...selectedRequest,
