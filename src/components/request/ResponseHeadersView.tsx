@@ -20,6 +20,7 @@
 
 import { Check, Clock, Copy, Download } from 'lucide-react';
 import React, { useState } from 'react';
+import logger from '../../lib/logger';
 import {
     formatResponseTime,
     getHeaderEntries,
@@ -58,7 +59,7 @@ export const ResponseHeadersView: React.FC<ResponseHeadersViewProps> = ({
       setCopiedHeaderKey(key);
       setTimeout(() => setCopiedHeaderKey(null), 2000);
     } catch (err) {
-      console.error('Failed to copy header:', err);
+      logger.error('Failed to copy response header', { error: err });
     }
   };
 

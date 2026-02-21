@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useCollectionDragDrop } from '../hooks/useCollectionDragDrop';
 import { useToastNotifications } from '../hooks/useToastNotifications';
 import { calculateOrderForPosition } from '../lib/drag-drop-utils';
+import logger from '../lib/logger';
 import { useStore } from '../store/useStore';
 import { EntityId, Folder, Request } from '../types/entities';
 import { CollectionItem } from './collection/CollectionItem';
@@ -65,7 +66,7 @@ export function CollectionHierarchy({
         setRequests(requestsData);
         setFolders(foldersData);
       } catch (error: any) {
-        console.error('Failed to load requests and folders:', error);
+        logger.error('Failed to load requests and folders', { error });
       }
     };
     loadData();
@@ -133,7 +134,7 @@ export function CollectionHierarchy({
         const latestCollections = await api.collection.list();
         setCollections(latestCollections);
       } catch (error) {
-        console.error('Failed to refresh collections:', error);
+        logger.error('Failed to refresh collections', { error });
       }
     };
 
@@ -142,7 +143,7 @@ export function CollectionHierarchy({
         const latestRequests = await api.request.list();
         setRequests(latestRequests);
       } catch (error) {
-        console.error('Failed to refresh requests:', error);
+        logger.error('Failed to refresh requests', { error });
       }
     };
 
@@ -151,7 +152,7 @@ export function CollectionHierarchy({
         const latestFolders = await api.folder.list();
         setFolders(latestFolders);
       } catch (error) {
-        console.error('Failed to refresh folders:', error);
+        logger.error('Failed to refresh folders', { error });
       }
     };
 
@@ -279,7 +280,7 @@ export function CollectionHierarchy({
         // This is expected when dragging regular items - they don't have JSON data
         return;
       }
-      console.error('Drop failed:', error);
+      logger.error('Drop failed', { error });
       showError('Failed to save request', error.message);
     }
   };

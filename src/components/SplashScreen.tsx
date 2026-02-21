@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import logger from '../lib/logger';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
 import { Logo } from './Logo';
@@ -45,7 +46,7 @@ export function SplashScreen({
     // Safety timeout: If for some reason we're stuck in splash more than 5 seconds, clear it
     const safetyTimeout = setTimeout(() => {
       if (isVisible) {
-        console.warn('[SplashScreen] Safety timeout reached, forcing finish');
+        logger.warn('[SplashScreen] Safety timeout reached, forcing finish');
         setIsVisible(false);
         if (onFinish) onFinish();
       }

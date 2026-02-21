@@ -19,6 +19,7 @@ import {
     List,
 } from 'lucide-react';
 import { useEffect } from 'react';
+import logger from '../../lib/logger';
 import {
     formatResponseSize,
     formatResponseTime,
@@ -85,11 +86,7 @@ export function ResponseTab({
       const memoryDelta = (memoryAfter - memoryBefore) / 1024 / 1024;
 
       if (memoryDelta > 20) {
-        console.warn(
-          '[Performance] Response tab exceeded memory budget:',
-          memoryDelta,
-          'MB'
-        );
+        logger.warn('[Performance] Response tab exceeded memory budget', { memoryDelta });
       }
     };
   }, []);
@@ -102,11 +99,7 @@ export function ResponseTab({
       const loadTime = performance.now() - startTime;
 
       if (loadTime > 100) {
-        console.warn(
-          '[Performance] Response tab load time exceeded budget:',
-          loadTime,
-          'ms'
-        );
+        logger.warn('[Performance] Response tab load time exceeded budget', { loadTime });
       }
     });
   }, []);

@@ -17,6 +17,9 @@ import * as Sentry from '@sentry/electron/main';
 import crypto from 'crypto';
 import { app } from 'electron';
 import os from 'os';
+import { createLogger } from './services/logger';
+
+const logger = createLogger('sentry');
 
 // Check if we're in development mode
 const isDev =
@@ -48,9 +51,7 @@ async function isTelemetryEnabled(): Promise<boolean> {
     // Default to enabled if setting doesn't exist
     return true;
   } catch (error) {
-    console.log(
-      '[Sentry] Could not read telemetry setting, defaulting to enabled'
-    );
+    logger.warn('[Sentry] Could not read telemetry setting, defaulting to enabled');
     return true;
   }
 }
@@ -62,24 +63,20 @@ async function isTelemetryEnabled(): Promise<boolean> {
 export async function initSentry(): Promise<void> {
   // Skip Sentry in development mode
   if (isDev) {
-    console.log('[Sentry] Development mode - Sentry tracking disabled');
+    logger.info('[Sentry] Development mode - Sentry tracking disabled');
     return;
   }
 
   // Skip if no DSN configured
   if (!SENTRY_DSN) {
-    console.warn(
-      '[Sentry] No SENTRY_DSN configured - Sentry tracking disabled'
-    );
+    logger.warn('[Sentry] No SENTRY_DSN configured - Sentry tracking disabled');
     return;
   }
 
   // Check if user has disabled telemetry
   telemetryEnabled = await isTelemetryEnabled();
   if (!telemetryEnabled) {
-    console.log(
-      '[Sentry] User has disabled telemetry - Sentry tracking disabled'
-    );
+    logger.info('[Sentry] User has disabled telemetry - Sentry tracking disabled');
     return;
   }
 
@@ -171,9 +168,9 @@ export async function initSentry(): Promise<void> {
     });
 
     sentryInitialized = true;
-    console.log('[Sentry] Initialized successfully for production');
+    logger.info('[Sentry] Initialized successfully for production');
   } catch (error) {
-    console.error('[Sentry] Failed to initialize:', error);
+    logger.error('[Sentry] Failed to initialize:', error);
   }
 }
 
@@ -182,7 +179,7 @@ export async function initSentry(): Promise<void> {
  */
 export function setTelemetryEnabled(enabled: boolean): void {
   telemetryEnabled = enabled;
-  console.log(`[Sentry] Telemetry ${enabled ? 'enabled' : 'disabled'} by user`);
+  logger.info(`[Sentry] Telemetry ${enabled ? 'enabled' : 'disabled'} by user`);
 
   if (!enabled && sentryInitialized) {
     // Close Sentry when user disables telemetry
@@ -204,6 +201,15 @@ export function isTelemetryCurrentlyEnabled(): boolean {
  */
 function getAnonymousUserId(): string {
   try {
+    // Dynamically import to get data from initialized database
+    // This is called after initDatabase in main.ts
+    const { getDatabase } = require('./database');
+    const db = getDatabase();
+    if (db.settings && db.settings.telemetryId) {
+      return db.settings.telemetryId;
+    }
+
+    // Fallback if not found in DB yet
     const machineId = `${os.hostname()}-${os.userInfo().username}-${os.platform()}`;
     return crypto
       .createHash('sha256')
@@ -231,7 +237,7 @@ export function captureError(
   context?: Record<string, unknown>
 ): void {
   if (!isSentryActive()) {
-    if (isDev) console.error('[Sentry Dev]', error, context);
+    if (isDev) logger.error('[Sentry Dev]', { error, context });
     return;
   }
 
@@ -251,7 +257,7 @@ export function captureMessage(
   level: 'info' | 'warning' | 'error' = 'info'
 ): void {
   if (!isSentryActive()) {
-    if (isDev) console.log(`[Sentry Dev ${level}]`, message);
+    if (isDev) logger.info(`[Sentry Dev ${level}]`, message);
     return;
   }
 

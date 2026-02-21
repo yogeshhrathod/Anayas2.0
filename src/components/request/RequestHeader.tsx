@@ -28,6 +28,7 @@ import { Check, Circle, Copy, Loader2, Send } from 'lucide-react';
 import React from 'react';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
 import { KEYMAP, getShortcutDisplay } from '../../lib/keymap';
+import logger from '../../lib/logger';
 import { RequestFormData } from '../../types/forms';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -131,7 +132,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
         showError('Failed to generate cURL', result.error || 'Unknown error');
       }
     } catch (error: any) {
-      console.error('Failed to copy as cURL:', error);
+      logger.error('Failed to copy as cURL', { error });
       showError('Failed to copy as cURL', error.message || 'Unknown error');
     }
   };

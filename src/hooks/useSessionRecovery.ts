@@ -5,6 +5,7 @@
  */
 
 import { useEffect } from 'react';
+import logger from '../lib/logger';
 import { useStore } from '../store/useStore';
 
 export function useSessionRecovery() {
@@ -45,7 +46,7 @@ export function useSessionRecovery() {
           }
         }
       } catch (error) {
-        console.error('Failed to load unsaved requests:', error);
+        logger.error('Failed to load unsaved requests', { error });
       }
     };
 

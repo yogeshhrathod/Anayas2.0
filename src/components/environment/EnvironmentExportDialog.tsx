@@ -9,8 +9,9 @@
 
 import { Download, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import type { Environment } from '../../types/entities';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
+import logger from '../../lib/logger';
+import type { Environment } from '../../types/entities';
 import { Button } from '../ui/button';
 import { Dialog } from '../ui/dialog';
 import { Label } from '../ui/label';
@@ -105,7 +106,7 @@ export function EnvironmentExportDialog({
 
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Failed to export environments:', error);
+      logger.error('Failed to export environments', { error });
       showError(
         'Export failed',
         error.message || 'Failed to export environments'

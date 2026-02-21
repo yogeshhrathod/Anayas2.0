@@ -9,6 +9,7 @@
  */
 
 import * as Sentry from '@sentry/electron/renderer';
+import logger from './logger';
 
 // Check if we're in development mode (Vite injects these at build time)
 const isDev =
@@ -49,24 +50,20 @@ function checkTelemetryEnabled(): boolean {
 export async function initSentryRenderer(): Promise<void> {
   // Skip Sentry in development mode
   if (isDev) {
-    console.log('[Sentry Renderer] Development mode - tracking disabled');
+    logger.info('[Sentry Renderer] Development mode - tracking disabled');
     return;
   }
 
   // Skip if no DSN configured
   if (!SENTRY_DSN) {
-    console.warn(
-      '[Sentry Renderer] No VITE_SENTRY_DSN configured - tracking disabled'
-    );
+    logger.warn('[Sentry Renderer] No VITE_SENTRY_DSN configured - tracking disabled');
     return;
   }
 
   // Check if user has disabled telemetry
   telemetryEnabled = checkTelemetryEnabled();
   if (!telemetryEnabled) {
-    console.log(
-      '[Sentry Renderer] User has disabled telemetry - tracking disabled'
-    );
+    logger.info('[Sentry Renderer] User has disabled telemetry - tracking disabled');
     return;
   }
 
@@ -162,9 +159,9 @@ export async function initSentryRenderer(): Promise<void> {
     });
 
     sentryInitialized = true;
-    console.log('[Sentry Renderer] Initialized successfully for production');
+    logger.info('[Sentry Renderer] Initialized successfully for production');
   } catch (error) {
-    console.error('[Sentry Renderer] Failed to initialize:', error);
+    logger.error('[Sentry Renderer] Failed to initialize', { error });
   }
 }
 
@@ -173,9 +170,7 @@ export async function initSentryRenderer(): Promise<void> {
  */
 export function setRendererTelemetryEnabled(enabled: boolean): void {
   telemetryEnabled = enabled;
-  console.log(
-    `[Sentry Renderer] Telemetry ${enabled ? 'enabled' : 'disabled'} by user`
-  );
+  logger.info(`[Sentry Renderer] Telemetry ${enabled ? 'enabled' : 'disabled'} by user`);
 
   // When disabled, we just set the flag - the beforeSend hook will prevent events from being sent
   // Note: Sentry SDK doesn't have a close() method in renderer, so we rely on beforeSend filtering
@@ -200,7 +195,7 @@ export function captureReactError(
   errorInfo: { componentStack?: string }
 ): void {
   if (!isSentryActive()) {
-    if (isDev) console.error('[Sentry Dev] React Error:', error, errorInfo);
+    if (isDev) logger.error('[Sentry Dev] React Error', { error, errorInfo });
     return;
   }
 
@@ -220,7 +215,7 @@ export function trackUserAction(
   data?: Record<string, unknown>
 ): void {
   if (!isSentryActive()) {
-    if (isDev) console.log(`[Sentry Dev] User action: ${action}`, data);
+    if (isDev) logger.info(`[Sentry Dev] User action: ${action}`, { data });
     return;
   }
 
@@ -272,7 +267,7 @@ export function captureError(
   context?: Record<string, unknown>
 ): void {
   if (!isSentryActive()) {
-    if (isDev) console.error('[Sentry Dev]', error, context);
+    if (isDev) logger.error('[Sentry Dev] Error', { error, context });
     return;
   }
 
@@ -292,7 +287,7 @@ export function captureMessage(
   level: 'info' | 'warning' | 'error' = 'info'
 ): void {
   if (!isSentryActive()) {
-    if (isDev) console.log(`[Sentry Dev ${level}]`, message);
+    if (isDev) logger.info(`[Sentry Dev ${level}] ${message}`);
     return;
   }
 

@@ -21,6 +21,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { generateDraftName } from '../lib/draftNaming';
+import logger from '../lib/logger';
 import { useStore } from '../store/useStore';
 import { EntityId, Request } from '../types/entities';
 import { RequestFormData } from '../types/forms';
@@ -261,7 +262,7 @@ export function useRequestState(selectedRequest: Request | null) {
       // Trigger sidebar refresh so the sidebar doesn't show stale data
       triggerSidebarRefresh();
     } catch (e: any) {
-      console.error('Auto-save failed:', e);
+      logger.error('Auto-save failed', { error: e });
     }
   }, [state.requestData, settings.autoSaveRequests, triggerSidebarRefresh]);
 
@@ -310,7 +311,7 @@ export function useRequestState(selectedRequest: Request | null) {
       // Trigger sidebar refresh for unsaved section
       triggerSidebarRefresh();
     } catch (e: any) {
-      console.error('Auto-save unsaved request failed:', e);
+      logger.error('Auto-save unsaved request failed', { error: e });
     }
   }, [
     state.requestData,
@@ -408,7 +409,7 @@ export function useRequestState(selectedRequest: Request | null) {
       window.electronAPI.settings
         .set('defaultResponseSubTab', tab)
         .catch((err: any) => {
-          console.error('Failed to save response sub-tab preference:', err);
+          logger.error('Failed to save response sub-tab preference', { error: err });
         });
     },
     setSplitViewRatio: ratio =>
@@ -501,7 +502,7 @@ export function useRequestState(selectedRequest: Request | null) {
           isEditingName: false,
         }));
       } catch (e: any) {
-        console.error('Failed to update request name:', e);
+        logger.error('Failed to update request name', { error: e });
         actions.cancelNameEdit();
         throw e;
       }

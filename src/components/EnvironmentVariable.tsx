@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import logger from '../lib/logger';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
 import { HeadersKeyValueEditor } from './ui/headers-key-value-editor';
@@ -44,7 +45,7 @@ export function EnvironmentVariable({
         const parsed = JSON.parse(bulkEditJson);
         onVariablesChange(parsed);
       } catch (e: any) {
-        console.error('Invalid JSON:', e.message);
+        logger.error('Invalid JSON for environment variables', { error: e.message });
         return;
       }
     }

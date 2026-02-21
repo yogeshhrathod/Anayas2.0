@@ -1,16 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import {
-  Search,
-  Clock,
-  Globe,
-  FolderPlus,
-  Zap,
-  ArrowRight,
+    ArrowRight,
+    Clock,
+    FolderPlus,
+    Globe,
+    Search,
+    Zap,
 } from 'lucide-react';
-import { useStore } from '../store/useStore';
-import { cn } from '../lib/utils';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useClickOutside } from '../hooks/useClickOutside';
+import logger from '../lib/logger';
+import { cn } from '../lib/utils';
+import { useStore } from '../store/useStore';
 
 interface SearchResult {
   id: string;
@@ -48,7 +49,7 @@ export function GlobalSearch() {
         const requests = await window.electronAPI.request.list();
         setAllRequests(requests);
       } catch (error) {
-        console.error('Failed to load requests for search:', error);
+        logger.error('Failed to load requests for search', { error });
       }
     };
     loadRequests();

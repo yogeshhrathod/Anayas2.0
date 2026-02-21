@@ -13,21 +13,22 @@
  * ```
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { PageLayout } from '../components/shared/PageLayout';
+import { useEffect, useRef, useState } from 'react';
+import { CollectionActions } from '../components/collection/CollectionActions';
 import { CollectionForm } from '../components/collection/CollectionForm';
 import { CollectionGrid } from '../components/collection/CollectionGrid';
-import { CollectionActions } from '../components/collection/CollectionActions';
 import { CollectionRunner } from '../components/collection/CollectionRunner';
 import { CurlImportDialog } from '../components/curl/CurlImportDialog';
 import { ImportCollectionDialog } from '../components/import';
+import { PageLayout } from '../components/shared/PageLayout';
+import { Button } from '../components/ui/button';
 import { useCollectionOperations } from '../hooks/useCollectionOperations';
 import { useConfirmation } from '../hooks/useConfirmation';
+import { useToastNotifications } from '../hooks/useToastNotifications';
+import logger from '../lib/logger';
 import { useStore } from '../store/useStore';
 import { Collection, Request } from '../types/entities';
 import { CollectionFormData } from '../types/forms';
-import { Button } from '../components/ui/button';
-import { useToastNotifications } from '../hooks/useToastNotifications';
 
 export function Collections() {
   const [isEditing, setIsEditing] = useState(false);
@@ -201,7 +202,7 @@ export function Collections() {
         description: `Imported ${requests.length} request(s)`,
       });
     } catch (error: any) {
-      console.error('Failed to import requests:', error);
+      logger.error('Failed to import requests', { error });
       showError('Import failed', error.message || 'Failed to import requests');
       throw error;
     }

@@ -8,7 +8,7 @@ app.name = 'Luna';
 // Import Sentry functions (initialization happens after database is ready)
 import { addBreadcrumb, flushSentry, initSentry } from './sentry';
 
-import { initDatabase } from './database';
+import { closeDatabase, initDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
 import { createLogger } from './services/logger';
 
@@ -226,6 +226,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', async () => {
   logger.info('Application shutting down');
+  await closeDatabase();
   // Flush any pending Sentry events before quitting
   await flushSentry();
 });

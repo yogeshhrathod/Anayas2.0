@@ -9,22 +9,23 @@
  * - Bulk import multiple commands
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { Button } from '../ui/button';
-import { Label } from '../ui/label';
-import { Input } from '../ui/input';
-import { Textarea } from '../ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
-import { Dialog } from '../ui/dialog';
-import { AlertCircle, FileUp, Loader2, Check, X } from 'lucide-react';
+import { AlertCircle, Check, FileUp, Loader2, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
+import logger from '../../lib/logger';
 import { Request } from '../../types/entities';
+import { Button } from '../ui/button';
+import { Dialog } from '../ui/dialog';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '../ui/select';
+import { Textarea } from '../ui/textarea';
 
 interface Collection {
   id: number;
@@ -97,7 +98,7 @@ export function CurlImportDialog({
       setCollections(collectionsData);
       setFolders(foldersData);
     } catch (e: any) {
-      console.error('Failed to load collections:', e);
+      logger.error('Failed to load collections', { error: e.message });
       showError('Load failed', 'Failed to load collections');
     }
   };
@@ -163,7 +164,7 @@ export function CurlImportDialog({
         }
       }
     } catch (e: any) {
-      console.error('Failed to parse cURL:', e);
+      logger.error('Failed to parse cURL', { error: e.message });
       setError(e.message || 'Failed to parse cURL command');
       setParsedRequests([]);
     } finally {
@@ -185,7 +186,7 @@ export function CurlImportDialog({
         handleParse();
       }, 100);
     } catch (e: any) {
-      console.error('Failed to read file:', e);
+      logger.error('Failed to read file for cURL import', { error: e.message });
       showError('File read failed', 'Failed to read the selected file');
     }
   };
@@ -227,7 +228,7 @@ export function CurlImportDialog({
       });
       onOpenChange(false);
     } catch (e: any) {
-      console.error('Failed to import requests:', e);
+      logger.error('Failed to import requests from cURL', { error: e.message });
       showError('Import failed', e.message || 'Failed to import requests');
     } finally {
       setIsImporting(false);

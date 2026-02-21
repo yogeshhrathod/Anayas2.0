@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import { app } from 'electron';
 import fs from 'fs';
 import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import { createLogger } from '../services/logger';
 
 const logger = createLogger('database');
@@ -207,7 +208,7 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
     }
   }
 
-  if (needsMigration) saveDatabase();
+  if (needsMigration) await saveDatabase();
 
   if (Object.keys(dbMemory.settings).length === 0) {
     dbMemory.settings = {
@@ -220,15 +221,22 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
       maxHistory: 1000,
       debugMode: false,
       defaultResponseSubTab: 'headers',
+      telemetryEnabled: true,
+      telemetryId: uuidv4(),
       ...FONT_SETTING_KEYS,
     };
-    saveDatabase();
+    await saveDatabase();
+  }
+  
+  if (!dbMemory.settings.telemetryId) {
+    dbMemory.settings.telemetryId = uuidv4();
+    await saveDatabase();
   }
   ensureFontSettingsDefaults();
 
   if (!dbMemory.settings.defaultResponseSubTab) {
     dbMemory.settings.defaultResponseSubTab = 'headers';
-    saveDatabase();
+    await saveDatabase();
   }
 
   if (dbMemory.environments.length === 0 && !process.env.TEST_MODE) {
@@ -268,88 +276,94 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
   }
 }
 
-export function saveDatabase(): void {
+export async function saveDatabase(): Promise<void> {
   if (!sqliteDb) return;
-  try {
-    const insertMany = (tableName: string, items: any[], isTextId: boolean = false) => {
-      sqliteDb!.exec(`DELETE FROM ${tableName}`);
-      const insert = sqliteDb!.prepare(`INSERT INTO ${tableName} (id, data) VALUES (?, ?)`);
-      const insertManyTrans = sqliteDb!.transaction((elements) => {
-        for (const el of elements) {
-          insert.run(isTextId ? el.id : Number(el.id), JSON.stringify(el));
-        }
-      });
-      insertManyTrans(items);
-    };
+  // Use a promise to make it "async" as requested, though better-sqlite3 is sync
+  // This allows the caller to not block if we ever move to a worker
+  return new Promise((resolve, reject) => {
+    try {
+      const insertMany = (tableName: string, items: any[], isTextId: boolean = false) => {
+        sqliteDb!.exec(`DELETE FROM ${tableName}`);
+        const insert = sqliteDb!.prepare(`INSERT INTO ${tableName} (id, data) VALUES (?, ?)`);
+        const insertManyTrans = sqliteDb!.transaction((elements) => {
+          for (const el of elements) {
+            insert.run(isTextId ? el.id : Number(el.id), JSON.stringify(el));
+          }
+        });
+        insertManyTrans(items);
+      };
 
-    sqliteDb.transaction(() => {
-      insertMany('environments', dbMemory.environments);
-      insertMany('collections', dbMemory.collections);
-      insertMany('folders', dbMemory.folders);
-      insertMany('requests', dbMemory.requests);
-      insertMany('request_history', dbMemory.request_history);
-      insertMany('unsaved_requests', dbMemory.unsaved_requests, true);
-      insertMany('presets', dbMemory.presets, true);
-      
-      sqliteDb!.exec('DELETE FROM settings');
-      const insertSettings = sqliteDb!.prepare('INSERT INTO settings (key, value) VALUES (?, ?)');
-      for (const [key, val] of Object.entries(dbMemory.settings)) {
-        insertSettings.run(key, JSON.stringify(val));
-      }
-    })();
-  } catch (error) {
-    logger.error('Failed to save sqlite database', { error });
-  }
+      sqliteDb!.transaction(() => {
+        insertMany('environments', dbMemory.environments);
+        insertMany('collections', dbMemory.collections);
+        insertMany('folders', dbMemory.folders);
+        insertMany('requests', dbMemory.requests);
+        insertMany('request_history', dbMemory.request_history);
+        insertMany('unsaved_requests', dbMemory.unsaved_requests, true);
+        insertMany('presets', dbMemory.presets, true);
+        
+        sqliteDb!.exec('DELETE FROM settings');
+        const insertSettings = sqliteDb!.prepare('INSERT INTO settings (key, value) VALUES (?, ?)');
+        for (const [key, val] of Object.entries(dbMemory.settings)) {
+          insertSettings.run(key, JSON.stringify(val));
+        }
+      })();
+      resolve();
+    } catch (error) {
+      logger.error('Failed to save sqlite database', { error });
+      reject(error);
+    }
+  });
 }
 
-export function closeDatabase(): void {
-  saveDatabase();
+export async function closeDatabase(): Promise<void> {
+  await saveDatabase();
   if (sqliteDb) {
     sqliteDb.close();
   }
 }
 
 // ... All remaining CRUD helpers exact same ...
-export function addEnvironment(env: any): number {
+export async function addEnvironment(env: any): Promise<number> {
   const id = generateUniqueId();
   dbMemory.environments.push({ ...env, id, createdAt: new Date().toISOString() });
-  saveDatabase();
+  await saveDatabase();
   return id;
 }
 
-export function updateEnvironment(id: number, env: any): void {
+export async function updateEnvironment(id: number, env: any): Promise<void> {
   const index = dbMemory.environments.findIndex(e => e.id === id);
   if (index !== -1) {
     dbMemory.environments[index] = { ...dbMemory.environments[index], ...env, id };
-    saveDatabase();
+    await saveDatabase();
   }
 }
 
-export function deleteEnvironment(id: number): void {
+export async function deleteEnvironment(id: number): Promise<void> {
   dbMemory.environments = dbMemory.environments.filter(e => e.id !== id);
-  saveDatabase();
+  await saveDatabase();
 }
 
-export function addCollection(collection: any): number {
+export async function addCollection(collection: any): Promise<number> {
   const id = generateUniqueId();
   dbMemory.collections.push({
     ...collection,
     id,
     createdAt: new Date().toISOString(),
   });
-  saveDatabase();
+  await saveDatabase();
   return id;
 }
 
-export function updateCollection(id: number, collection: any): void {
+export async function updateCollection(id: number, collection: any): Promise<void> {
   const index = dbMemory.collections.findIndex(c => c.id === id);
   if (index !== -1) {
     dbMemory.collections[index] = { ...dbMemory.collections[index], ...collection, id };
-    saveDatabase();
+    await saveDatabase();
   }
 }
 
-export function deleteCollection(id: number): void {
+export async function deleteCollection(id: number): Promise<void> {
   const deletedRequestIds = new Set(
     dbMemory.requests.filter(r => r.collectionId === id).map(r => r.id)
   );
@@ -367,10 +381,10 @@ export function deleteCollection(id: number): void {
     );
   }
 
-  saveDatabase();
+  await saveDatabase();
 }
 
-export function addFolder(folder: any): number {
+export async function addFolder(folder: any): Promise<number> {
   const id = generateUniqueId();
   let order = folder.order;
   if (order === undefined) {
@@ -384,11 +398,11 @@ export function addFolder(folder: any): number {
     order,
     createdAt: new Date().toISOString(),
   });
-  saveDatabase();
+  await saveDatabase();
   return id;
 }
 
-export function addFolderAfter(folder: any, afterFolderId: number): number {
+export async function addFolderAfter(folder: any, afterFolderId: number): Promise<number> {
   const id = generateUniqueId();
   const afterFolder = dbMemory.folders.find(f => f.id === afterFolderId);
   if (!afterFolder) return addFolder(folder);
@@ -413,41 +427,41 @@ export function addFolderAfter(folder: any, afterFolderId: number): number {
     order,
     createdAt: new Date().toISOString(),
   });
-  saveDatabase();
+  await saveDatabase();
   return id;
 }
 
-export function updateFolder(id: number, folder: any): void {
+export async function updateFolder(id: number, folder: any): Promise<void> {
   const index = dbMemory.folders.findIndex(f => f.id === id);
   if (index !== -1) {
     dbMemory.folders[index] = { ...dbMemory.folders[index], ...folder, id };
-    saveDatabase();
+    await saveDatabase();
   }
 }
 
-export function reorderFolder(id: number, newOrder: number): void {
+export async function reorderFolder(id: number, newOrder: number): Promise<void> {
   const index = dbMemory.folders.findIndex(f => f.id === id);
   if (index !== -1) {
     dbMemory.folders[index].order = newOrder;
-    saveDatabase();
+    await saveDatabase();
   }
 }
 
-export function reorderRequest(id: number, newOrder: number): void {
+export async function reorderRequest(id: number, newOrder: number): Promise<void> {
   const index = dbMemory.requests.findIndex(r => r.id === id);
   if (index !== -1) {
     dbMemory.requests[index].order = newOrder;
-    saveDatabase();
+    await saveDatabase();
   }
 }
 
-export function deleteFolder(id: number): void {
+export async function deleteFolder(id: number): Promise<void> {
   dbMemory.folders = dbMemory.folders.filter(f => f.id !== id);
   dbMemory.requests = dbMemory.requests.filter(r => r.folderId !== id);
-  saveDatabase();
+  await saveDatabase();
 }
 
-export function addRequest(request: any): number {
+export async function addRequest(request: any): Promise<number> {
   const id = generateUniqueId();
   let order = request.order;
   if (order === undefined) {
@@ -462,14 +476,14 @@ export function addRequest(request: any): number {
     queryParams: request.queryParams || [],
     createdAt: new Date().toISOString(),
   });
-  saveDatabase();
+  await saveDatabase();
   return id;
 }
 
-export function addRequestAfter(request: any, afterRequestId: number): number {
+export async function addRequestAfter(request: any, afterRequestId: number): Promise<number> {
   const id = generateUniqueId();
   const afterRequest = dbMemory.requests.find(r => r.id === afterRequestId);
-  if (!afterRequest) return addRequest(request);
+  if (!afterRequest) return await addRequest(request);
 
   const afterOrder = afterRequest.order || 0;
   const nextRequest = dbMemory.requests
@@ -494,11 +508,11 @@ export function addRequestAfter(request: any, afterRequestId: number): number {
     queryParams: request.queryParams || [],
     createdAt: new Date().toISOString(),
   });
-  saveDatabase();
+  await saveDatabase();
   return id;
 }
 
-export function updateRequest(id: number, request: any): void {
+export async function updateRequest(id: number, request: any): Promise<void> {
   const index = dbMemory.requests.findIndex(r => r.id === id);
   if (index !== -1) {
     dbMemory.requests[index] = {
@@ -507,43 +521,43 @@ export function updateRequest(id: number, request: any): void {
       id,
       queryParams: request.queryParams || dbMemory.requests[index].queryParams || [],
     };
-    saveDatabase();
+    await saveDatabase();
   }
 }
 
-export function deleteRequest(id: number): void {
+export async function deleteRequest(id: number): Promise<void> {
   dbMemory.requests = dbMemory.requests.filter(r => r.id !== id);
-  saveDatabase();
+  await saveDatabase();
 }
 
-export function addRequestHistory(history: any): number {
+export async function addRequestHistory(history: any): Promise<number> {
   const id = generateUniqueId();
   dbMemory.request_history.push({
     ...history,
     id,
     createdAt: new Date().toISOString(),
   });
-  saveDatabase();
+  await saveDatabase();
   return id;
 }
 
-export function deleteRequestHistory(id: number): void {
+export async function deleteRequestHistory(id: number): Promise<void> {
   dbMemory.request_history = dbMemory.request_history.filter(h => h.id !== id);
-  saveDatabase();
+  await saveDatabase();
 }
 
-export function clearAllRequestHistory(): void {
+export async function clearAllRequestHistory(): Promise<void> {
   dbMemory.request_history = [];
-  saveDatabase();
+  await saveDatabase();
 }
 
-export function setSetting(key: string, value: any): void {
+export async function setSetting(key: string, value: any): Promise<void> {
   if (value === undefined || value === null) {
     delete dbMemory.settings[key];
   } else {
     dbMemory.settings[key] = value;
   }
-  saveDatabase();
+  await saveDatabase();
 }
 
 export function getSetting(key: string): any {
@@ -554,7 +568,7 @@ export function getAllSettings(): Record<string, any> {
   return { ...dbMemory.settings };
 }
 
-export function resetSettings(): void {
+export async function resetSettings(): Promise<void> {
   dbMemory.settings = {
     theme: 'system',
     defaultMethod: 'GET',
@@ -566,21 +580,21 @@ export function resetSettings(): void {
     debugMode: false,
     ...FONT_SETTING_KEYS,
   };
-  saveDatabase();
+  await saveDatabase();
 }
 
-export function addUnsavedRequest(request: Omit<UnsavedRequest, 'id' | 'createdAt'>): string {
+export async function addUnsavedRequest(request: Omit<UnsavedRequest, 'id' | 'createdAt'>): Promise<string> {
   const id = `unsaved-${generateUniqueId()}`;
   dbMemory.unsaved_requests.push({
     ...request,
     id,
     createdAt: new Date().toISOString(),
   });
-  saveDatabase();
+  await saveDatabase();
   return id;
 }
 
-export function updateUnsavedRequest(id: string, request: Partial<UnsavedRequest>): void {
+export async function updateUnsavedRequest(id: string, request: Partial<UnsavedRequest>): Promise<void> {
   const index = dbMemory.unsaved_requests.findIndex(r => r.id === id);
   if (index !== -1) {
     dbMemory.unsaved_requests[index] = {
@@ -589,29 +603,29 @@ export function updateUnsavedRequest(id: string, request: Partial<UnsavedRequest
       id,
       lastModified: new Date().toISOString(),
     };
-    saveDatabase();
+    await saveDatabase();
   }
 }
 
-export function deleteUnsavedRequest(id: string): void {
+export async function deleteUnsavedRequest(id: string): Promise<void> {
   dbMemory.unsaved_requests = dbMemory.unsaved_requests.filter(r => r.id !== id);
-  saveDatabase();
+  await saveDatabase();
 }
 
 export function getAllUnsavedRequests(): UnsavedRequest[] {
   return [...dbMemory.unsaved_requests];
 }
 
-export function clearUnsavedRequests(): void {
+export async function clearUnsavedRequests(): Promise<void> {
   dbMemory.unsaved_requests = [];
-  saveDatabase();
+  await saveDatabase();
 }
 
-export function promoteUnsavedRequest(id: string, requestData: any): number {
+export async function promoteUnsavedRequest(id: string, requestData: any): Promise<number> {
   const unsaved = dbMemory.unsaved_requests.find(r => r.id === id);
   if (!unsaved) throw new Error('Unsaved request not found');
 
-  const savedId = addRequest({
+  const savedId = await addRequest({
     name: requestData.name || unsaved.name,
     method: unsaved.method,
     url: unsaved.url,
@@ -624,11 +638,11 @@ export function promoteUnsavedRequest(id: string, requestData: any): number {
     isFavorite: requestData.isFavorite ? 1 : 0,
   });
 
-  deleteUnsavedRequest(id);
+  await deleteUnsavedRequest(id);
   return savedId;
 }
 
-export function addPreset(preset: any): string {
+export async function addPreset(preset: any): Promise<string> {
   const id = preset.id || `preset-${Date.now()}`;
   const existingIndex = dbMemory.presets.findIndex(p => p.id === id);
 
@@ -638,7 +652,7 @@ export function addPreset(preset: any): string {
       id,
       updatedAt: new Date().toISOString(),
     };
-    saveDatabase();
+    await saveDatabase();
     return id;
   } else {
     dbMemory.presets.push({
@@ -646,7 +660,7 @@ export function addPreset(preset: any): string {
       id,
       createdAt: new Date().toISOString(),
     });
-    saveDatabase();
+    await saveDatabase();
     return id;
   }
 }
@@ -656,7 +670,7 @@ export function getAllPresets(requestId?: number): any[] {
   return dbMemory.presets.filter(p => p.requestId === requestId);
 }
 
-export function deletePreset(id: string): void {
+export async function deletePreset(id: string): Promise<void> {
   dbMemory.presets = dbMemory.presets.filter(p => p.id !== id);
-  saveDatabase();
+  await saveDatabase();
 }
