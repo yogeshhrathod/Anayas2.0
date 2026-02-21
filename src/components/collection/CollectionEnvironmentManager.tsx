@@ -272,7 +272,7 @@ export function CollectionEnvironmentManager({
             ? 'Update environment details and variables'
             : 'Create a new collection environment'
         }
-        maxWidth="2xl"
+        maxWidth="4xl"
       >
         <div className="py-4">
           <CollectionEnvironmentForm

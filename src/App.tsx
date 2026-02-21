@@ -68,43 +68,39 @@ function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isResizing, setIsResizing] = useState(false);
-  const [isWelcomeDone, setIsWelcomeDone] = useState(
-    () => localStorage.getItem('luna_welcome_seen') === 'true'
-  );
+
   const [_requests, setRequests] = useState<any[]>([]);
   const [isAppReady, setIsAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const {
-    currentPage,
-    setCurrentPage,
-    setEnvironments,
-    setCurrentEnvironment,
-    collections,
-    setCollections,
-    setRequestHistory,
-    selectedRequest,
-    setSelectedRequest,
-    setSettings,
-    setThemeMode,
-    setCurrentThemeId,
-    setCustomThemes,
-    sidebarWidth,
-    setSidebarWidth,
-    unsavedRequests,
-    // @ts-ignore - selectedItem is used in shortcut handlers
-    selectedItem,
-    setSelectedItem,
-    triggerSidebarRefresh,
-    expandedSidebarSections,
-    toggleSidebarSection,
-    loadSidebarState,
-    setUnsavedRequests,
-    setActiveUnsavedRequestId,
-    splitViewEnabled,
-    setSplitViewEnabled,
-    appVersion,
-    setAppVersion,
-  } = useStore();
+  const currentPage = useStore(state => state.currentPage);
+  const setCurrentPage = useStore(state => state.setCurrentPage);
+  const setEnvironments = useStore(state => state.setEnvironments);
+  const setCurrentEnvironment = useStore(state => state.setCurrentEnvironment);
+  const collections = useStore(state => state.collections);
+  const setCollections = useStore(state => state.setCollections);
+  const setRequestHistory = useStore(state => state.setRequestHistory);
+  const selectedRequest = useStore(state => state.selectedRequest);
+  const setSelectedRequest = useStore(state => state.setSelectedRequest);
+  const setSettings = useStore(state => state.setSettings);
+  const setThemeMode = useStore(state => state.setThemeMode);
+  const setCurrentThemeId = useStore(state => state.setCurrentThemeId);
+  const setCustomThemes = useStore(state => state.setCustomThemes);
+  const sidebarWidth = useStore(state => state.sidebarWidth);
+  const setSidebarWidth = useStore(state => state.setSidebarWidth);
+  const unsavedRequests = useStore(state => state.unsavedRequests);
+  const setSelectedItem = useStore(state => state.setSelectedItem);
+  const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
+  const expandedSidebarSections = useStore(state => state.expandedSidebarSections);
+  const toggleSidebarSection = useStore(state => state.toggleSidebarSection);
+  const loadSidebarState = useStore(state => state.loadSidebarState);
+  const setUnsavedRequests = useStore(state => state.setUnsavedRequests);
+  const setActiveUnsavedRequestId = useStore(state => state.setActiveUnsavedRequestId);
+  const splitViewEnabled = useStore(state => state.splitViewEnabled);
+  const setSplitViewEnabled = useStore(state => state.setSplitViewEnabled);
+  const setAppVersion = useStore(state => state.setAppVersion);
+  const appVersion = useStore(state => state.appVersion);
+  const isWelcomeDone = useStore(state => state.isWelcomeDone);
+  const setIsWelcomeDoneStore = useStore(state => state.setIsWelcomeDone);
 
   const { showSuccess, showError } = useToastNotifications();
   const [showClearAllDialog, setShowClearAllDialog] = useState(false);
@@ -652,6 +648,11 @@ function App() {
     );
   };
 
+  const handleSplashFinish = useCallback(() => {
+    console.log('[App] Splash screen finished, transitioning to main UI');
+    setShowSplash(false);
+  }, []);
+
   return (
     <FontProvider>
       {/* Welcome Experience - Lazy loaded so zero impact for existing users */}
@@ -659,18 +660,21 @@ function App() {
         <Suspense fallback={null}>
           <OnboardingFlow
             onDismiss={() => {
-              setIsWelcomeDone(true);
+              console.log('[App] Welcome flow dismissed');
+              setIsWelcomeDoneStore(true);
+              // Explicitly set localStorage here as well for backward compatibility
+              localStorage.setItem('luna_welcome_seen', 'true');
               setShowSplash(false); // Skip splash screen after onboarding to prevent "flash"
             }}
           />
         </Suspense>
       )}
 
-      {/* Splash Screen - Waits for welcome flow if present */}
+      {/* Splash Screen - Waits for welcome flow if present, but also shows once after if needed */}
       {isWelcomeDone && showSplash && (
         <SplashScreen
           isLoading={!isAppReady}
-          onFinish={() => setShowSplash(false)}
+          onFinish={handleSplashFinish}
         />
       )}
       <ThemeManager />
@@ -783,36 +787,50 @@ function App() {
                     >
                       <CollectionHierarchy
                         onRequestSelect={async (request: Request) => {
+                          const currentSelected = useStore.getState().selectedRequest;
+                          
+                          // If this request is already selected, don't overwrite it with potentially 
+                          // stale data from the sidebar. This preserves unsaved edits in memory.
+                          if (currentSelected && currentSelected.id === request.id) {
+                            setCurrentPage('home');
+                            return;
+                          }
+
                           setCurrentPage('home');
                           // Load request data and set it as selected
                           try {
+                            // First set the existing request data so UI updates immediately
+                            setSelectedRequest(request);
+
+                            // Then try to load full/latest data from DB
+                            // Note: request.collectionId might be missing for some folder requests 
+                            // depending on how they were created/saved
                             const requestData =
                               await window.electronAPI.request.list(
                                 request.collectionId
                               );
-                            const fullRequest = requestData.find(
+                            
+                            let fullRequest = requestData.find(
                               (r: any) => r.id === request.id
                             );
-                            if (fullRequest) {
-                              setSelectedRequest({
-                                id: fullRequest.id,
-                                name: fullRequest.name || '',
-                                method: fullRequest.method,
-                                url: fullRequest.url,
-                                headers:
-                                  typeof fullRequest.headers === 'string'
-                                    ? JSON.parse(fullRequest.headers)
-                                    : fullRequest.headers || {},
-                                body: fullRequest.body || '',
-                                queryParams: [],
-                                auth: { type: 'none' },
-                                collectionId: fullRequest.collectionId,
-                                isFavorite: fullRequest.isFavorite,
-                                lastResponse: fullRequest.lastResponse,
-                              });
+
+                            if (!fullRequest) {
+                              // Fallback: If not found in collection list, try fetching all requests
+                              const allRequests = await window.electronAPI.request.list();
+                              fullRequest = allRequests.find((r: any) => r.id === request.id);
                             }
-                          } catch (e) {
-                            console.error('Failed to load request:', e);
+
+                            if (fullRequest) {
+                              // Only update if it's still the active request OR we haven't changed much
+                              // (Checking if the ID still matches handles the race condition where user clicked another one while loading)
+                              const latestCurrent = useStore.getState().selectedRequest;
+                              if (latestCurrent && latestCurrent.id === fullRequest.id) {
+                                setSelectedRequest(fullRequest);
+                              }
+                            }
+                          } catch (error) {
+                            console.error('Failed to load request:', error);
+                            // Fallback is already handled by the initial setSelectedRequest(request)
                           }
                         }}
                       />

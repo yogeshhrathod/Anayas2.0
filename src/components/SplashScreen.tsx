@@ -19,8 +19,8 @@ export function SplashScreen({
   const { appVersion } = useStore();
 
   useEffect(() => {
-    // Minimum display time of 1.5 seconds to ensure splash is visible
-    const minTimeTimeout = setTimeout(() => setMinTimeElapsed(true), 1500);
+    // Minimum display time of 800ms (reduced from 1500ms) to ensure splash is visible but snappier
+    const minTimeTimeout = setTimeout(() => setMinTimeElapsed(true), 800);
 
     // Simulate progress if isLoading is true
     let progressInterval: NodeJS.Timeout;
@@ -42,6 +42,15 @@ export function SplashScreen({
   }, [isLoading]);
 
   useEffect(() => {
+    // Safety timeout: If for some reason we're stuck in splash more than 5 seconds, clear it
+    const safetyTimeout = setTimeout(() => {
+      if (isVisible) {
+        console.warn('[SplashScreen] Safety timeout reached, forcing finish');
+        setIsVisible(false);
+        if (onFinish) onFinish();
+      }
+    }, 5000);
+
     // Only transition out when BOTH loading is complete AND minimum time has elapsed
     if (!isLoading && progress >= 100 && minTimeElapsed) {
       // Transition out after a small delay to ensure 100% is seen
@@ -52,9 +61,14 @@ export function SplashScreen({
           if (onFinish) onFinish();
         }, 800); // Wait for framer motion exit animation
       }, 400);
-      return () => clearTimeout(timeout);
+      return () => {
+        clearTimeout(timeout);
+        clearTimeout(safetyTimeout);
+      };
     }
-  }, [isLoading, progress, minTimeElapsed, onFinish]);
+
+    return () => clearTimeout(safetyTimeout);
+  }, [isLoading, progress, minTimeElapsed, onFinish, isVisible]);
 
   return (
     <AnimatePresence>

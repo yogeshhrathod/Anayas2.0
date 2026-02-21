@@ -17,7 +17,7 @@
  * ```
  */
 
-import { Loader2 } from 'lucide-react';
+import { Loader2, Tag } from 'lucide-react';
 import {
     forwardRef,
     useCallback,
@@ -130,14 +130,16 @@ export const CollectionEnvironmentForm = forwardRef<
 
     return (
       <div className="w-full">
-        <div className="space-y-5">
-          {/* Name Field */}
-          <div className="rounded-xl border border-border/50 bg-muted/20 p-5 space-y-2 backdrop-blur-sm">
+        <div className="space-y-6">
+          {/* Environment Name Section */}
+          <div className="space-y-2">
             <Label
               htmlFor="name"
               className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
             >
-              <span className="inline-block h-2 w-2 rounded-full bg-primary/80" />
+              <div className="p-1 rounded bg-primary/10">
+                <Tag className="h-3 w-3 text-primary" />
+              </div>
               Environment Name
             </Label>
             <Input
@@ -145,27 +147,38 @@ export const CollectionEnvironmentForm = forwardRef<
               value={formData.name}
               onChange={e => handleInputChange('name', e.target.value)}
               onBlur={() => validateField('name', formData.name)}
-              className={`h-10 bg-background/80 focus:bg-background transition-colors border-border/50 ${errors.name ? 'border-red-500' : ''}`}
+              className={`h-11 bg-background border-border/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all ${errors.name ? 'border-destructive' : ''}`}
               placeholder="e.g., Development, Staging, Production"
               disabled={isLoading}
               onKeyDown={handleKeyDown}
             />
             {errors.name && (
-              <p className="text-xs text-destructive flex items-center gap-1 mt-1">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-destructive" />
+              <p className="text-xs text-destructive flex items-center gap-1.5 mt-1">
+                <span className="h-1 w-1 rounded-full bg-destructive" />
                 {errors.name}
               </p>
             )}
           </div>
 
           {/* Variables Section */}
-          <div className="rounded-xl border border-border/50 bg-muted/20 backdrop-blur-sm overflow-hidden">
-            <EnvironmentVariable
-              variables={formData.variables}
-              onVariablesChange={handleVariableChange}
-              title="Environment Variables"
-              description="Manage key-value pairs for this collection environment"
-            />
+          <div className="pt-4 border-t border-border/40">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2.5 text-sm font-bold uppercase tracking-widest text-muted-foreground/80">
+                <div className="p-1.5 rounded-lg bg-primary/10 shadow-sm">
+                  <Tag className="h-3.5 w-3.5 text-primary" />
+                </div>
+                Environment Variables
+              </div>
+            </div>
+            <div className="rounded-2xl border border-border/50 bg-muted/5 backdrop-blur-sm overflow-hidden min-h-[350px] shadow-inner">
+              <EnvironmentVariable
+                variables={formData.variables}
+                onVariablesChange={handleVariableChange}
+                title=""
+                description=""
+                className="border-0 bg-transparent shadow-none"
+              />
+            </div>
           </div>
 
           {showActions && (

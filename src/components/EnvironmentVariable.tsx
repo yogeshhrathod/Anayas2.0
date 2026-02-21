@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import { cn } from '../lib/utils';
+import { Button } from './ui/button';
 import { HeadersKeyValueEditor } from './ui/headers-key-value-editor';
-import { ViewToggleButton } from './ui/view-toggle-button';
 import { MonacoEditor } from './ui/monaco-editor';
+import { ViewToggleButton } from './ui/view-toggle-button';
 
 interface EnvironmentVariableProps {
   variables: Record<string, string>;
@@ -52,44 +52,44 @@ export function EnvironmentVariable({
   };
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-base">{title}</CardTitle>
-            <p className="text-xs text-muted-foreground">{description}</p>
-          </div>
-          <div className="flex gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              type="button"
-              onClick={() => {
-                const newVariables = { ...variables, '': '' };
-                onVariablesChange(newVariables);
-              }}
-              className="h-7 w-7 p-0"
-              title="Add Variable"
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
-            <ViewToggleButton currentView={viewMode} onToggle={toggleView} />
-          </div>
+    <div className={cn("flex flex-col h-full", className)}>
+      {/* Header with optional title and always-visible controls */}
+      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <div>
+          {title && <h3 className="text-sm font-semibold tracking-tight text-foreground">{title}</h3>}
+          {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
         </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="border rounded-md bg-card">
-          {viewMode === 'table' ? (
-            <div className="p-3">
-              <HeadersKeyValueEditor
-                headers={variables}
-                onChange={onVariablesChange}
-                placeholder={{ key: 'Variable Name', value: 'Variable Value' }}
-                addButtonText="Add Variable"
-                emptyStateText="No variables added yet"
-              />
-            </div>
-          ) : (
+        <div className="flex gap-1.5 ml-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            type="button"
+            onClick={() => {
+              const newVariables = { ...variables, '': '' };
+              onVariablesChange(newVariables);
+            }}
+            className="h-8 w-8 p-0 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10"
+            title="Add Variable"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+          <ViewToggleButton currentView={viewMode} onToggle={toggleView} className="h-8 rounded-lg" />
+        </div>
+      </div>
+
+      <div className="flex-1 relative">
+        {viewMode === 'table' ? (
+          <div className="p-4 pt-0">
+            <HeadersKeyValueEditor
+              headers={variables}
+              onChange={onVariablesChange}
+              placeholder={{ key: 'Variable Name', value: 'Variable Value' }}
+              addButtonText="Add Variable"
+              emptyStateText="No variables added yet"
+            />
+          </div>
+        ) : (
+          <div style={{ height: 350 }}>
             <MonacoEditor
               value={bulkEditJson}
               onChange={value => setBulkEditJson(value)}
@@ -97,17 +97,17 @@ export function EnvironmentVariable({
               placeholder='{"base_url": "https://api.example.com", "api_key": "your-api-key"}'
               title=""
               description=""
-              height={200}
-              showActions={true}
+              height={350}
+              showActions={false}
               validateJson={true}
               readOnly={false}
               minimap={false}
               fontSize={13}
-              className="border-0"
+              className="border-0 bg-transparent"
             />
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
