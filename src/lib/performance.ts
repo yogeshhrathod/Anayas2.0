@@ -12,6 +12,8 @@
  * ```
  */
 
+import logger from './logger';
+
 interface PerformanceMetrics {
   feature: string;
   loadTime: number;
@@ -102,10 +104,8 @@ function logPerformanceMetrics(metrics: PerformanceMetrics): void {
     `Memory delta: ${metrics.memoryDelta}MB | ` +
     `Memory: ${metrics.memoryBefore}MB → ${metrics.memoryAfter}MB`;
 
-  // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log(logMessage);
-  }
+  // Log to console/winston
+  logger.info(logMessage, { metrics });
 
   // TODO: Send to IPC handler to log to Winston logger in main process
   // This would require adding an IPC handler for performance metrics
@@ -138,8 +138,8 @@ function checkPerformanceBudgets(metrics: PerformanceMetrics): void {
   }
 
   if (violations.length > 0) {
-    const warningMessage = `[Performance Warning] ${metrics.feature}:\n${violations.join('\n')}`;
-    console.warn(warningMessage);
+    const warningMessage = `[Performance Warning] ${metrics.feature}: ${violations.join(', ')}`;
+    logger.warn(warningMessage, { metrics, violations });
 
     // TODO: Send to IPC handler to log warning to Winston logger
     // window.electronAPI?.performance?.logWarning(metrics, violations);
@@ -159,14 +159,11 @@ export function trackBundleSize(bundleName: string, sizeBytes: number): void {
   const BUDGET = 500; // KB
 
   const logMessage = `[Performance] Bundle: ${bundleName} | Size: ${sizeKB}KB (${sizeMB}MB)`;
-
-  if (process.env.NODE_ENV === 'development') {
-    console.log(logMessage);
-  }
+  logger.info(logMessage);
 
   if (sizeKB > BUDGET) {
     const warning = `[Performance Warning] Bundle ${bundleName} size ${sizeKB}KB exceeds budget of ${BUDGET}KB`;
-    console.warn(warning);
+    logger.warn(warning);
   }
 
   // TODO: Send to IPC handler to log to Winston logger
@@ -209,7 +206,7 @@ export function measureExecution<T>(fn: () => T, label?: string): T {
   const executionTime = endTime - startTime;
 
   if (label) {
-    console.log(`[Performance] ${label} took ${executionTime.toFixed(2)}ms`);
+    logger.info(`[Performance] ${label} took ${executionTime.toFixed(2)}ms`);
   }
 
   return result;
@@ -238,7 +235,7 @@ export async function measureAsyncExecution<T>(
   const executionTime = endTime - startTime;
 
   if (label) {
-    console.log(`[Performance] ${label} took ${executionTime.toFixed(2)}ms`);
+    logger.info(`[Performance] ${label} took ${executionTime.toFixed(2)}ms`);
   }
 
   return result;

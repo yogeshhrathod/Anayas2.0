@@ -3,19 +3,20 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ThemeCustomizer } from '../components/ThemeCustomizer';
 import { Button } from '../components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useToast } from '../components/ui/use-toast';
 import {
-  DEFAULT_CODE_FONT_STACK,
-  DEFAULT_UI_FONT_STACK,
+    DEFAULT_CODE_FONT_STACK,
+    DEFAULT_UI_FONT_STACK,
 } from '../constants/fonts';
+import logger from '../lib/logger';
 import { useStore } from '../store/useStore';
 
 // Removed Qualys-specific module codes
@@ -187,9 +188,12 @@ export function Settings() {
           success('Settings saved', 'Your changes have been saved');
         }
 
-        return true;
+        if (showToast) {
+          error('Save failed', 'Failed to save settings');
+        }
+        return false;
       } catch (e: any) {
-        console.error('Failed to save settings:', e);
+        logger.error('Failed to save settings', { error: e });
         if (showToast) {
           error('Save failed', 'Failed to save settings');
         }
@@ -221,7 +225,7 @@ export function Settings() {
       setValidationErrors({});
       success('Settings reset', 'All settings restored to defaults');
     } catch (e: any) {
-      console.error('Failed to reset settings:', e);
+      logger.error('Failed to reset settings', { error: e });
       error('Reset failed', 'Failed to reset settings');
     }
   };

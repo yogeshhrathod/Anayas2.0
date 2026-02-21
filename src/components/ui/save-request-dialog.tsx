@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
+import { AlertCircle, FolderPlus, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import logger from '../../lib/logger';
 import { Button } from './button';
+import { Dialog } from './dialog';
 import { Input } from './input';
 import { Label } from './label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from './select';
-import { Dialog } from './dialog';
-import { AlertCircle, FolderPlus, Plus } from 'lucide-react';
 import { useToast } from './use-toast';
 
 interface Collection {
@@ -89,7 +90,7 @@ export function SaveRequestDialog({
       setCollections(collectionsData);
       setFolders(foldersData);
     } catch (e: any) {
-      console.error('Failed to load collections and folders:', e);
+      logger.error('Failed to load collections and folders', { error: e.message });
       error('Load failed', 'Failed to load collections and folders');
     }
   };
@@ -131,7 +132,7 @@ export function SaveRequestDialog({
       });
       onOpenChange(false);
     } catch (e: any) {
-      console.error('Failed to save request:', e);
+      logger.error('Failed to save request', { error: e.message });
       error('Save failed', 'Failed to save request');
     } finally {
       setIsLoading(false);

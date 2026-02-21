@@ -8,14 +8,13 @@ app.name = 'Luna';
 // Import Sentry functions (initialization happens after database is ready)
 import { addBreadcrumb, flushSentry, initSentry } from './sentry';
 
-import { initDatabase } from './database';
+import { closeDatabase, initDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
 import { createLogger } from './services/logger';
 
 const logger = createLogger('main');
 
 let mainWindow: BrowserWindow | null = null;
-let lastGeneratedFilePath: string | null = null;
 
 function createWindow() {
   // Detect system dark mode and set appropriate background
@@ -56,14 +55,15 @@ function createWindow() {
   });
 }
 
+// Initialize Sentry synchronously before app is ready
+initSentry();
+
 app.whenReady().then(async () => {
   try {
     // Support test mode: use custom database path if provided
     const testDbPath = process.env.TEST_DB_PATH;
     await initDatabase(testDbPath);
 
-    // Initialize Sentry after database (so it can check telemetry settings)
-    await initSentry();
     addBreadcrumb('app', 'Application starting', { version: app.getVersion() });
 
     registerIpcHandlers();
@@ -227,6 +227,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', async () => {
   logger.info('Application shutting down');
+  await closeDatabase();
   // Flush any pending Sentry events before quitting
   await flushSentry();
 });

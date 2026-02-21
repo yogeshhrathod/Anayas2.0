@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import logger from '../lib/logger';
 import { Theme } from '../lib/themes';
 import {
   Collection,
@@ -50,6 +51,10 @@ interface AppState {
   // Collections
   collections: Collection[];
   setCollections: (collections: Collection[]) => void;
+
+  // Requests
+  requests: Request[];
+  setRequests: (requests: Request[]) => void;
 
   // Collection to edit (triggered from variable context menu)
   collectionToEditId: number | null;
@@ -202,6 +207,9 @@ export const useStore = create<AppState>()(
       collections: [],
       setCollections: collections => set({ collections }),
 
+      requests: [],
+      setRequests: requests => set({ requests }),
+
       // Collection to edit (triggered from variable context menu)
       collectionToEditId: null,
       setCollectionToEditId: collectionToEditId => set({ collectionToEditId }),
@@ -210,15 +218,10 @@ export const useStore = create<AppState>()(
       environmentToEditId: null,
       variableToFocus: null,
       setEnvironmentToEdit: (environmentId, variableName) => {
-        console.log('[Store] setEnvironmentToEdit called with:', {
-          environmentId,
-          variableName,
-        });
         set({
           environmentToEditId: environmentId,
           variableToFocus: variableName || null,
         });
-        console.log('[Store] environmentToEditId set to:', environmentId);
       },
 
       // Collection Hierarchy State
@@ -336,7 +339,7 @@ export const useStore = create<AppState>()(
             ),
           });
         } catch (error) {
-          console.error('Failed to load sidebar state:', error);
+          logger.error('Failed to load sidebar state', { error });
           // Use default state on error
           set({ expandedSidebarSections: new Set(['collections']) });
         }
@@ -349,7 +352,7 @@ export const useStore = create<AppState>()(
             sectionOrder: ['unsaved', 'collections'],
           })
           .catch((error: unknown) => {
-            console.error('Failed to save sidebar state:', error);
+            logger.error('Failed to save sidebar state', { error });
           });
       },
 
@@ -382,17 +385,25 @@ export const useStore = create<AppState>()(
         sidebarWidth: state.sidebarWidth,
         unsavedSectionHeight: state.unsavedSectionHeight,
         presetsExpanded: state.presetsExpanded,
-        selectedRequest: state.selectedRequest,
+        selectedRequest: state.selectedRequest
+          ? (() => {
+              const { lastResponse, ...rest } = state.selectedRequest;
+              return rest;
+            })()
+          : null,
         activeUnsavedRequestId: state.activeUnsavedRequestId,
         currentPage: state.currentPage,
         isWelcomeDone: state.isWelcomeDone,
       }),
       onRehydrateStorage: () => state => {
         if (state) {
-          // Convert array back to Set
-          state.expandedCollections = new Set(
-            state.expandedCollections as unknown as number[]
-          );
+          // Convert array back to Set safely
+          const expandedCollections = state.expandedCollections as any;
+          if (Array.isArray(expandedCollections)) {
+            state.expandedCollections = new Set(expandedCollections);
+          } else {
+            state.expandedCollections = new Set();
+          }
           // Note: Settings will be loaded from DB in App.tsx loadData()
           // Don't override DB settings with cached localStorage settings
         }

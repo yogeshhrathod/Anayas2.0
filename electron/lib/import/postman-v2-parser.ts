@@ -5,15 +5,18 @@
  * Handles nested folders, all auth types, and environment variables.
  */
 
+import { createLogger } from '../../services/logger';
 import { BaseImportStrategy } from './import-strategy';
 import type {
-  ImportResult,
-  ParsedAuth,
-  ParsedEnvironment,
-  ParsedFolder,
-  ParsedRequest,
-  QueryParam,
+    ImportResult,
+    ParsedAuth,
+    ParsedEnvironment,
+    ParsedFolder,
+    ParsedRequest,
+    QueryParam
 } from './types';
+
+const logger = createLogger('postman-v2-parser');
 
 // ============================================================================
 // Postman v2 Types (for parsing)
@@ -185,7 +188,7 @@ export class PostmanV2Parser extends BaseImportStrategy {
    * Parse Postman v2 collection.
    */
   async parse(content: string): Promise<ImportResult> {
-    console.log('[PostmanV2Parser] Starting parse...');
+    logger.info('[PostmanV2Parser] Starting parse...');
     const data = this.safeParseJson(content) as PostmanV2Collection;
 
     if (!data) {
@@ -196,7 +199,7 @@ export class PostmanV2Parser extends BaseImportStrategy {
       throw new Error('Collection name not found');
     }
 
-    console.log('[PostmanV2Parser] Collection name:', data.info.name);
+    logger.info('[PostmanV2Parser] Collection name:', { name: data.info.name });
     const result = this.createEmptyResult(data.info.name, this.formatName);
 
     // Set source info
@@ -211,7 +214,9 @@ export class PostmanV2Parser extends BaseImportStrategy {
 
     // Parse items (folders and requests)
     if (data.item && Array.isArray(data.item)) {
-      console.log('[PostmanV2Parser] Parsing', data.item.length, 'items...');
+      logger.info('[PostmanV2Parser] Parsing items...', {
+        count: data.item.length,
+      });
       this.parseItems(data.item, result, null, '', 0);
     }
 
@@ -228,13 +233,10 @@ export class PostmanV2Parser extends BaseImportStrategy {
     result.stats.totalFolders = result.folders.length;
     result.stats.totalRequests = result.requests.length;
 
-    console.log(
-      '[PostmanV2Parser] Parse complete:',
-      result.stats.totalRequests,
-      'requests,',
-      result.stats.totalFolders,
-      'folders'
-    );
+    logger.info('[PostmanV2Parser] Parse complete', {
+      totalRequests: result.stats.totalRequests,
+      totalFolders: result.stats.totalFolders,
+    });
 
     return result;
   }

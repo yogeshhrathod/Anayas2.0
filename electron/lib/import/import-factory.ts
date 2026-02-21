@@ -5,8 +5,11 @@
  * Implements the Factory Pattern for creating the right parser.
  */
 
+import { createLogger } from '../../services/logger';
 import type { ImportStrategy } from './import-strategy';
 import type { FormatDetectionResult, FormatInfo, ParseResult } from './types';
+
+const logger = createLogger('import-factory');
 
 /**
  * Factory for managing import strategies.
@@ -101,7 +104,7 @@ export class ImportFactory {
     let bestMatch: ImportStrategy | null = null;
     let bestConfidence = 0;
 
-    for (const strategy of this.strategies.values()) {
+    for (const strategy of Array.from(this.strategies.values())) {
       if (strategy.detect(content)) {
         const confidence = strategy.getConfidence(content);
         if (confidence > bestConfidence) {
@@ -170,12 +173,11 @@ export class ImportFactory {
       }
 
       // Parse the content
-      console.log(
-        '[ImportFactory] Parsing with strategy:',
-        strategy.formatName
-      );
+      logger.info('[ImportFactory] Parsing with strategy:', {
+        strategy: strategy.formatName,
+      });
       const result = await strategy.parse(content);
-      console.log('[ImportFactory] Parse complete, validating...');
+      logger.debug('[ImportFactory] Parse complete, validating...');
 
       // Validate the result
       const validation = strategy.validate(result);
@@ -184,13 +186,13 @@ export class ImportFactory {
       result.warnings.push(...validation.warnings);
       result.errors.push(...validation.errors);
 
-      console.log('[ImportFactory] Validation complete, returning result');
+      logger.debug('[ImportFactory] Validation complete, returning result');
       return {
         success: true,
         result,
       };
     } catch (error: any) {
-      console.error('[ImportFactory] Parse error:', error);
+      logger.error('[ImportFactory] Parse error:', { error: error.message });
       return {
         success: false,
         error: error.message || 'Failed to parse collection',

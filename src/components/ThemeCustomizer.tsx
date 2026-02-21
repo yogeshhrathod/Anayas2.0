@@ -1,31 +1,32 @@
 import {
-  Check,
-  Download,
-  Edit2,
-  Palette,
-  Plus,
-  Trash2,
-  Upload,
+    Check,
+    Download,
+    Edit2,
+    Palette,
+    Plus,
+    Trash2,
+    Upload,
 } from 'lucide-react';
 import { useState } from 'react';
+import logger from '../lib/logger';
 import {
-  Theme,
-  ThemeColors,
-  builtInThemes,
-  createCustomTheme,
-  exportTheme,
-  importTheme,
-  validateThemeColors,
+    Theme,
+    ThemeColors,
+    builtInThemes,
+    createCustomTheme,
+    exportTheme,
+    importTheme,
+    validateThemeColors,
 } from '../lib/themes';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
 import { Button } from './ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -112,7 +113,7 @@ export function ThemeCustomizer() {
           alert('Theme imported successfully!');
         } catch (error) {
           alert('Failed to import theme. Please check the file format.');
-          console.error(error);
+          logger.error('Failed to import theme', { error });
         }
       };
       reader.readAsText(file);

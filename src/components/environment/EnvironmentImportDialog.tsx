@@ -11,15 +11,16 @@
 
 import { AlertCircle, FileText, Loader2, Upload } from 'lucide-react';
 import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
+    lazy,
+    Suspense,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
 } from 'react';
-import type { Environment } from '../../types/entities';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
+import logger from '../../lib/logger';
+import type { Environment } from '../../types/entities';
 import { Button } from '../ui/button';
 import { Dialog } from '../ui/dialog';
 import { FormatSelector, type Format } from './FormatSelector';
@@ -104,7 +105,7 @@ export function EnvironmentImportDialog({
         // Parse immediately
         await handleParse(content, detection.format as Format);
       } catch (error: any) {
-        console.error('Failed to read file:', error);
+        logger.error('Failed to read environment file', { error });
         showError(
           'File read failed',
           error.message || 'Failed to read the selected file'
@@ -132,7 +133,7 @@ export function EnvironmentImportDialog({
           );
         }
       } catch (error: any) {
-        console.error('Failed to parse:', error);
+        logger.error('Failed to parse environment file', { error });
         showError('Parse failed', error.message || 'Failed to parse file');
       }
     },
@@ -224,7 +225,7 @@ export function EnvironmentImportDialog({
       onSuccess?.();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Failed to import environments:', error);
+      logger.error('Failed to import environments', { error });
       showError(
         'Import failed',
         error.message || 'Failed to import environments'

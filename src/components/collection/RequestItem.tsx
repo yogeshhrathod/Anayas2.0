@@ -24,6 +24,7 @@
 import { Copy, Download, Edit, Trash2 } from 'lucide-react';
 import React from 'react';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
+import logger from '../../lib/logger';
 import { useStore } from '../../store/useStore';
 import { Request } from '../../types/entities';
 import { ActionMenu } from '../shared/ActionMenu';
@@ -97,7 +98,7 @@ export const RequestItem: React.FC<RequestItemProps> = ({
         // Trigger sidebar refresh for real-time updates
         triggerSidebarRefresh();
       } catch (error) {
-        console.error('Failed to update request name:', error);
+        logger.error('Failed to update request name', { error });
         throw error; // Re-throw to let useInlineEdit handle the error
       }
     },

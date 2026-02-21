@@ -1,38 +1,39 @@
 import {
-  AlertTriangle,
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Clock,
-  Copy,
-  Eye,
-  Filter,
-  Group,
-  Play,
-  Search,
-  Trash2,
-  XCircle,
+    AlertTriangle,
+    ArrowLeft,
+    ArrowRight,
+    CheckCircle2,
+    Clock,
+    Copy,
+    Eye,
+    Filter,
+    Group,
+    Play,
+    Search,
+    Trash2,
+    XCircle,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '../components/ui/card';
 import { Dialog } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '../components/ui/select';
 import { useToast } from '../components/ui/use-toast';
+import logger from '../lib/logger';
 import { useStore } from '../store/useStore';
 import { EntityId, Request } from '../types/entities';
 
@@ -79,7 +80,7 @@ export function History() {
         const history = await window.electronAPI.request.history(100);
         setRequestHistory(history);
       } catch (error) {
-        console.error('Failed to load history:', error);
+        logger.error('Failed to load history', { error });
       }
     };
 
@@ -102,7 +103,7 @@ export function History() {
         const history = await window.electronAPI.request.history(100);
         setRequestHistory(history);
       } catch (error) {
-        console.error('Failed to refresh history:', error);
+        logger.error('Failed to refresh history', { error });
       }
     };
 
@@ -239,7 +240,7 @@ export function History() {
       setRequestHistory(updatedHistory);
       success('Request deleted', 'The request has been removed from history');
     } catch (e: any) {
-      console.error('Failed to delete request:', e);
+      logger.error('Failed to delete history item', { error: e });
       error('Delete failed', 'Could not delete request from history');
     }
   };
@@ -281,7 +282,7 @@ export function History() {
         error('Rerun Failed', result.error || 'Request failed');
       }
     } catch (e: any) {
-      console.error('Failed to rerun request:', e);
+      logger.error('Failed to rerun request', { error: e });
       error('Rerun Error', e?.message || 'Unknown error');
     } finally {
       setRerunningRequest(null);
@@ -331,7 +332,7 @@ export function History() {
       setCurrentPage('home');
       success('Request loaded', 'Request reconstructed from history');
     } catch (e: any) {
-      console.error('Failed to redirect to request:', e);
+      logger.error('Failed to redirect to request', { error: e });
       error('Redirect failed', e?.message || 'Could not load request');
     }
   };
@@ -367,7 +368,7 @@ export function History() {
         error('Failed to generate cURL', result.error || 'Unknown error');
       }
     } catch (e: any) {
-      console.error('Failed to copy cURL:', e);
+      logger.error('Failed to copy cURL', { error: e });
       error('Copy failed', e?.message || 'Could not copy cURL command');
     }
   };
@@ -391,7 +392,7 @@ export function History() {
       await navigator.clipboard.writeText(JSON.stringify(requestData, null, 2));
       success('Copied', 'Request data copied to clipboard');
     } catch (e: any) {
-      console.error('Failed to copy request data:', e);
+      logger.error('Failed to copy request data', { error: e });
       error('Copy failed', e?.message || 'Could not copy request data');
     }
   };
@@ -402,7 +403,7 @@ export function History() {
       await navigator.clipboard.writeText(responseBody);
       success('Copied', 'Response body copied to clipboard');
     } catch (e: any) {
-      console.error('Failed to copy response:', e);
+      logger.error('Failed to copy response body', { error: e });
       error('Copy failed', e?.message || 'Could not copy response');
     }
   };
@@ -415,7 +416,7 @@ export function History() {
       setShowClearConfirm(false);
       success('History cleared', 'All request history has been deleted');
     } catch (e: any) {
-      console.error('Failed to clear history:', e);
+      logger.error('Failed to clear history', { error: e });
       error('Clear failed', e?.message || 'Could not clear history');
     }
   };

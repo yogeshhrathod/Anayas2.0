@@ -7,6 +7,7 @@
 import { Circle, MoreVertical, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
+import logger from '../../lib/logger';
 import { UnsavedRequest, useStore } from '../../store/useStore';
 import { Request } from '../../types/entities';
 import { Badge } from '../ui/badge';
@@ -87,7 +88,7 @@ export function UnsavedRequestsSection() {
       // Trigger sidebar refresh
       triggerSidebarRefresh();
     } catch (error: any) {
-      console.error('Failed to delete unsaved request:', error);
+      logger.error('Failed to delete unsaved request', { error });
       showError(
         'Failed to delete',
         error.message || 'Failed to delete unsaved request'

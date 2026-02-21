@@ -12,15 +12,16 @@
 import { AlertCircle, Check, FileJson, Globe, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
+import logger from '../../lib/logger';
 import { Button } from '../ui/button';
 import { Dialog } from '../ui/dialog';
 import { Label } from '../ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '../ui/select';
 import { ImportPreview } from './ImportPreview';
 
@@ -183,7 +184,7 @@ export function ImportCollectionDialog({
       setImportResult(parseResult.result);
       setStep('preview');
     } catch (e: any) {
-      console.error('File selection failed:', e);
+      logger.error('File selection or parse failed during import', { error: e });
       setError(e.message || 'Failed to select file');
     } finally {
       setIsLoading(false);
@@ -237,7 +238,7 @@ export function ImportCollectionDialog({
       setImportResult(parseResult.result);
       setStep('preview');
     } catch (e: any) {
-      console.error('Drop handling failed:', e);
+      logger.error('Drop handling or parse failed during import', { error: e });
       setError(e.message || 'Failed to process file');
     } finally {
       setIsLoading(false);
@@ -293,13 +294,13 @@ export function ImportCollectionDialog({
 
       // Show warnings if any
       if (result.warnings && result.warnings.length > 0) {
-        console.warn('Import warnings:', result.warnings);
+        logger.warn('Import completed with warnings', { warnings: result.warnings });
       }
 
       onSuccess?.(result.collectionId);
       onOpenChange(false);
     } catch (e: any) {
-      console.error('Import failed:', e);
+      logger.error('Failed to execute collection import', { error: e });
       setError(e.message || 'Import failed');
       setStep('preview');
     } finally {
