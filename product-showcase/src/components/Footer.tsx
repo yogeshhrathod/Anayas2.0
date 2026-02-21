@@ -11,11 +11,11 @@ export function Footer() {
               alt="Luna Logo"
               className="w-8 h-8 object-contain"
             />
-            <span className="font-bold text-lg text-white">Luna</span>
+            <span className="font-bold text-lg text-white">Luna_</span>
           </div>
 
           <div className="text-sm text-gray-500">
-            © 2026 Luna. All rights reserved.
+            © 2026 Luna_. All rights reserved.
           </div>
 
           <div className="flex gap-6">

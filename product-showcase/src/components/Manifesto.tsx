@@ -25,9 +25,9 @@ export function Manifesto() {
             </span>
           </div>
 
-          <h2 className="text-4xl md:text-7xl font-display font-bold uppercase tracking-tighter leading-none mb-12 mix-blend-exclusion">
+          <h2 className="text-5xl md:text-[5.5rem] font-display font-black tracking-tighter leading-[0.9] mb-12 mix-blend-exclusion">
             The Ultimate <br />
-            <span className="text-primary">REST Client.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Desktop Client.</span>
           </h2>
 
           <div className="grid md:grid-cols-2 gap-12 font-mono text-sm md:text-base text-gray-400 tracking-wide leading-relaxed mb-24">
@@ -39,17 +39,17 @@ export function Manifesto() {
               data. You deserve a tool that owns the machine it runs on.
             </p>
             <p>
-              <strong className="text-white block mb-4 uppercase">
+              <strong className="text-white block mb-4 uppercase text-sm font-bold tracking-widest border-b border-white/10 pb-2">
                 The Architecture
               </strong>
-              A professional Desktop App. Local SQLite Database. Native System
-              Integration. Lightning fast IPC. Luna combines the freedom of the
-              web with the power of the desktop.
+              A native Desktop App. Local JSON Database. React and Electron powered core.
+              Lightning fast IPC. Luna_ combines the flexibility of the
+              web with the raw power of the desktop.
             </p>
           </div>
 
           {/* Scenarios Grid */}
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 relative z-10 perspective-[1000px]">
             {[
               {
                 title: 'DEBUG',
@@ -57,22 +57,31 @@ export function Manifesto() {
               },
               {
                 title: 'TEST',
-                desc: 'Automated test runners built into your workflow. Validate schemas instantly.',
+                desc: 'Write tests with confidence. Validate responses, headers, and schemas quickly.',
               },
               {
                 title: 'ORGANIZE',
                 desc: 'Environment variables, collections, and history synced to your local repo.',
               },
             ].map((item, i) => (
-              <div
+              <motion.div
                 key={i}
-                className="border border-white/10 p-6 hover:bg-white/5 transition-colors group"
+                initial={{ opacity: 0, y: 50, rotateX: -10 }}
+                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6, delay: i * 0.2, ease: "easeOut" }}
+                whileHover={{ scale: 1.05, translateY: -10 }}
+                className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-8 hover:bg-white/[0.05] transition-colors group shadow-2xl backdrop-blur-md"
               >
-                <div className="text-primary font-bold text-xl mb-4 group-hover:translate-x-2 transition-transform">
-                  0{i + 1} // {item.title}
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-purple-500/0 to-cyan-500/0 group-hover:from-indigo-500/10 group-hover:to-cyan-500/10 transition-colors duration-500 z-0" />
+                <div className="relative z-10">
+                  <div className="text-indigo-400 border-b border-white/10 pb-3 font-black text-2xl mb-5 group-hover:translate-x-2 transition-transform tracking-tight flex items-center gap-3">
+                    <span className="text-sm font-mono text-cyan-400/50">0{i + 1}</span>
+                    {item.title}
+                  </div>
+                  <p className="font-sans text-sm md:text-base text-gray-400 leading-relaxed font-medium">{item.desc}</p>
                 </div>
-                <p className="font-mono text-sm text-gray-500">{item.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

@@ -54,24 +54,27 @@ const FeatureCard = ({
   index: number;
 }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay: index * 0.1 }}
-    viewport={{ once: true }}
-    whileHover={{ y: -5 }}
+    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+    whileInView={{ opacity: 1, scale: 1, y: 0 }}
+    transition={{ duration: 0.5, delay: index * 0.1, type: "spring", stiffness: 100 }}
+    viewport={{ once: true, margin: "-50px" }}
+    whileHover={{ y: -8, scale: 1.02 }}
     className={cn(
-      'group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 hover:bg-white/10 transition-colors',
+      'group relative overflow-hidden rounded-[2rem] border border-white/5 bg-gradient-to-br from-white/[0.03] to-white/[0.01] p-8 hover:bg-white/[0.05] transition-all duration-500 backdrop-blur-md shadow-lg hover:shadow-[0_20px_40px_-15px_rgba(99,102,241,0.2)]',
       className
     )}
   >
-    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-      <Icon className="h-6 w-6" />
+    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-purple-500/0 to-cyan-500/0 group-hover:from-indigo-500/10 group-hover:to-purple-500/10 transition-colors duration-500 z-0" />
+    <div className="relative z-10 flex flex-col items-center text-center">
+      <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-indigo-400 group-hover:from-indigo-500 group-hover:to-purple-500 group-hover:text-white transition-all duration-300 ring-1 ring-white/10 group-hover:ring-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.1)] group-hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] group-hover:scale-110">
+        <Icon className="h-7 w-7" />
+      </div>
+      <h3 className="mb-3 text-2xl font-bold text-white tracking-tight">{title}</h3>
+      <p className="text-gray-400 text-sm leading-relaxed font-medium group-hover:text-gray-300 transition-colors">{description}</p>
     </div>
-    <h3 className="mb-2 text-xl font-bold text-white">{title}</h3>
-    <p className="text-muted-foreground">{description}</p>
 
     {/* Decorative gradient blob */}
-    <div className="absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-blue-500/20 blur-3xl group-hover:bg-blue-500/30 transition-colors" />
+    <div className="absolute -right-10 -bottom-10 h-40 w-40 rounded-full bg-indigo-500/10 blur-3xl group-hover:bg-indigo-500/30 transition-all duration-500 ease-out z-0 group-hover:scale-150" />
   </motion.div>
 );
 
@@ -98,9 +101,9 @@ export function Features() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-lg text-muted-foreground"
+            className="text-lg text-gray-400 font-medium"
           >
-            Luna is built to help you move faster, not get in your way.
+            Luna_ is built to help you move faster, not get in your way.
             Experience a developer tool that actually feels like a developer
             tool.
           </motion.p>

@@ -1,47 +1,47 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import fs from 'fs';
 import {
-  addCollection,
-  addEnvironment,
-  addFolder,
-  addFolderAfter,
-  addPreset,
-  addRequest,
-  addRequestAfter,
-  addRequestHistory,
-  addUnsavedRequest,
-  clearAllRequestHistory,
-  clearUnsavedRequests,
-  deleteCollection,
-  deleteEnvironment,
-  deleteFolder,
-  deletePreset,
-  deleteRequest,
-  deleteRequestHistory,
-  deleteUnsavedRequest,
-  generateUniqueId,
-  getAllPresets,
-  getAllSettings,
-  getAllUnsavedRequests,
-  getDatabase,
-  getSetting,
-  promoteUnsavedRequest,
-  reorderFolder,
-  reorderRequest,
-  resetSettings,
-  saveDatabase,
-  setSetting,
-  updateCollection,
-  updateEnvironment,
-  updateFolder,
-  updateRequest,
-  updateUnsavedRequest,
+    addCollection,
+    addEnvironment,
+    addFolder,
+    addFolderAfter,
+    addPreset,
+    addRequest,
+    addRequestAfter,
+    addRequestHistory,
+    addUnsavedRequest,
+    clearAllRequestHistory,
+    clearUnsavedRequests,
+    deleteCollection,
+    deleteEnvironment,
+    deleteFolder,
+    deletePreset,
+    deleteRequest,
+    deleteRequestHistory,
+    deleteUnsavedRequest,
+    generateUniqueId,
+    getAllPresets,
+    getAllSettings,
+    getAllUnsavedRequests,
+    getDatabase,
+    getSetting,
+    promoteUnsavedRequest,
+    reorderFolder,
+    reorderRequest,
+    resetSettings,
+    saveDatabase,
+    setSetting,
+    updateCollection,
+    updateEnvironment,
+    updateFolder,
+    updateRequest,
+    updateUnsavedRequest,
 } from '../database';
 import { generateCurlCommand } from '../lib/curl-generator';
 import { parseCurlCommand, parseCurlCommands } from '../lib/curl-parser';
 import {
-  EnvironmentExportGenerator,
-  getEnvironmentImportFactory,
+    EnvironmentExportGenerator,
+    getEnvironmentImportFactory,
 } from '../lib/environment';
 import type { ImportOptions, ImportResult } from '../lib/import';
 import { getImportFactory } from '../lib/import';
@@ -61,11 +61,11 @@ export function registerIpcHandlers() {
   // Environment operations
   ipcMain.handle('env:list', async () => {
     const db = getDatabase();
-    return db.environments.sort((a, b) => {
+    return JSON.parse(JSON.stringify(db.environments.sort((a, b) => {
       const aTime = a.lastUsed ? new Date(a.lastUsed).getTime() : 0;
       const bTime = b.lastUsed ? new Date(b.lastUsed).getTime() : 0;
       return bTime - aTime;
-    });
+    })));
   });
 
   ipcMain.handle('env:save', async (_, env) => {
@@ -302,11 +302,11 @@ export function registerIpcHandlers() {
   // Collection operations
   ipcMain.handle('collection:list', async () => {
     const db = getDatabase();
-    return db.collections.sort((a, b) => {
+    return JSON.parse(JSON.stringify(db.collections.sort((a, b) => {
       const aTime = a.lastUsed ? new Date(a.lastUsed).getTime() : 0;
       const bTime = b.lastUsed ? new Date(b.lastUsed).getTime() : 0;
       return bTime - aTime;
-    });
+    })));
   });
 
   ipcMain.handle('collection:save', async (_, collection) => {
@@ -471,14 +471,14 @@ export function registerIpcHandlers() {
     );
 
     // Sort by order field, then by id as fallback
-    return filteredFolders.sort((a, b) => {
+    return JSON.parse(JSON.stringify(filteredFolders.sort((a, b) => {
       const orderA = a.order || 0;
       const orderB = b.order || 0;
       if (orderA !== orderB) {
         return orderA - orderB;
       }
       return (a.id || 0) - (b.id || 0);
-    });
+    })));
   });
 
   ipcMain.handle('folder:save', async (_, folder) => {
@@ -535,14 +535,14 @@ export function registerIpcHandlers() {
     });
 
     // Sort by order field, then by id as fallback
-    return filteredRequests.sort((a, b) => {
+    return JSON.parse(JSON.stringify(filteredRequests.sort((a, b) => {
       const orderA = a.order || 0;
       const orderB = b.order || 0;
       if (orderA !== orderB) {
         return orderA - orderB;
       }
       return (a.id || 0) - (b.id || 0);
-    });
+    })));
   });
 
   ipcMain.handle('request:get', async (_, id) => {

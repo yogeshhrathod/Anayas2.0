@@ -17,37 +17,65 @@ export function ProductShot() {
       ref={containerRef}
       className="bg-black py-32 perspective-[2000px] overflow-hidden"
     >
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="flex flex-col items-center mb-16">
-          <h2 className="text-4xl md:text-7xl font-display font-bold uppercase tracking-tighter text-white mb-6 text-center">
-            Command <span className="text-primary">Center.</span>
-          </h2>
-          <p className="font-mono text-gray-500 uppercase tracking-widest text-sm">
-            [ System Interface v0.0.1-alpha ]
-          </p>
+      <div className="container mx-auto px-4 md:px-6 flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center mb-24 max-w-3xl text-center mx-auto">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-semibold mb-6"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            </span>
+            Professional Grade
+          </motion.div>
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl md:text-6xl font-display font-black tracking-tight text-white mb-6"
+          >
+            A workspace that <br/> feels like <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">home.</span>
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-gray-400 text-lg md:text-xl font-medium"
+          >
+            Built from the ground up for speed. An interface designed to get out of your way so you can focus on building.
+          </motion.p>
         </div>
 
         <motion.div
           style={{ scale, opacity, rotateX, transformStyle: 'preserve-3d' }}
-          className="relative mx-auto max-w-6xl"
+          className="relative w-full max-w-6xl mx-auto z-10"
         >
-          {/* Glow Effect */}
-          <div className="absolute -inset-4 bg-primary/20 blur-3xl rounded-[30px] opacity-40" />
+          {/* Main App Window Glow */}
+          <div className="absolute -inset-1 bg-gradient-to-tr from-indigo-500/30 via-purple-500/20 to-blue-500/30 blur-2xl rounded-[32px] opacity-70" />
+          
+          {/* Main App Window Frame */}
+          <div className="relative rounded-2xl overflow-hidden bg-[#0A0A0A] border border-white/10 shadow-2xl ring-1 ring-white/10 mx-auto flex flex-col">
+            
 
-          {/* Mac Window Frame */}
-          <div className="relative aspect-[16/10] bg-black/50 overflow-hidden group">
-            <img
-              src={`${import.meta.env.BASE_URL}product-shot.png`}
-              alt="Luna Interface"
-              className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.01]"
-            />
 
-            {/* Scanline Overlay */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-10 bg-[length:100%_4px,3px_100%] pointer-events-none opacity-20" />
+            {/* App Content Area */}
+            <div className="relative w-full aspect-[16/10] bg-zinc-950 flex items-center justify-center">
+              <img
+                src={`${import.meta.env.BASE_URL}product-shot.png`}
+                alt="Luna Interface"
+                className="w-full h-full object-cover object-top"
+              />
+              <div className="absolute inset-0 ring-1 ring-inset ring-white/5 pointer-events-none" />
+            </div>
           </div>
 
-          {/* Reflection/Grounding Shadow */}
-          <div className="absolute top-full left-0 right-0 h-40 bg-gradient-to-b from-primary/10 to-transparent blur-2xl transform -scale-y-100 opacity-30 pointer-events-none" />
+          {/* Floor Reflection */}
+          <div className="absolute -bottom-12 left-10 right-10 h-32 bg-indigo-500/10 blur-[80px] pointer-events-none" />
         </motion.div>
       </div>
     </section>

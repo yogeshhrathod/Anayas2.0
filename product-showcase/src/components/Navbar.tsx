@@ -76,7 +76,7 @@ export function Navbar() {
           </div>
           <div className="flex items-center gap-6">
             <a
-              href="https://github.com/yogeshhrathod/Anayas2.0"
+              href="https://github.com/yogeshhrathod/Luna2.0"
               target="_blank"
               rel="noreferrer"
               className="text-gray-400 hover:text-white transition-colors"

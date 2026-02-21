@@ -1,17 +1,17 @@
 import { motion, useInView } from 'framer-motion';
 import {
-    ArrowUpRight,
-    Briefcase,
-    Code2,
-    ExternalLink,
-    Github,
-    Linkedin,
-    Mail,
-    MapPin,
-    Package,
-    Star,
-    Terminal,
-    Zap,
+  ArrowUpRight,
+  Briefcase,
+  Code2,
+  ExternalLink,
+  Github,
+  Linkedin,
+  Mail,
+  MapPin,
+  Package,
+  Star,
+  Terminal,
+  Zap,
 } from 'lucide-react';
 import { useRef } from 'react';
 
@@ -30,10 +30,10 @@ const skills = [
 
 const projects = [
   {
-    name: 'Anayas 2.0',
+    name: 'Luna_ 2.0',
     desc: 'A modern, Electron-based REST API client reimagined from the ground up. Built for speed, collections, environments, and developer joy.',
     lang: 'TypeScript',
-    url: 'https://github.com/yogeshhrathod/Anayas2.0',
+    url: 'https://github.com/yogeshhrathod/Luna2.0',
     highlight: true,
   },
   {
@@ -84,7 +84,7 @@ const timeline = [
     year: '2025',
     role: 'Open Source Builder',
     company: 'Self-directed',
-    desc: 'Launched Anayas 2.0, JiraMCP, BitbucketMCP — building tools that make developers\' lives measurably better.',
+    desc: 'Launched Luna_ 2.0, JiraMCP, BitbucketMCP — building tools that make developers\' lives measurably better.',
   },
   {
     year: '2024',
@@ -96,7 +96,7 @@ const timeline = [
     year: '2021',
     role: 'Developer & Creator',
     company: 'Various Projects',
-    desc: 'Built Anayas v1, VS Code themes, express scaffolds, and dived deep into the open-source ecosystem.',
+    desc: 'Built Luna_ v1, VS Code themes, express scaffolds, and dived deep into the open-source ecosystem.',
   },
   {
     year: '2019',
@@ -291,7 +291,7 @@ export function AboutMe() {
               <p>
                 At <strong className="text-white">Qualys</strong>, I work on enterprise security software where
                 reliability, performance, and developer experience are non-negotiable. Outside work, I pour
-                that same energy into open source projects like <strong className="text-primary">Anayas 2.0</strong> —
+                that same energy into open source projects like <strong className="text-primary">Luna_ 2.0</strong> —
                 a full-featured Electron REST client that rivals the best in the space.
               </p>
               <p>
@@ -302,7 +302,7 @@ export function AboutMe() {
             <div className="mt-8 flex items-center gap-3">
               <Zap className="w-5 h-5 text-primary" />
               <span className="text-sm font-mono text-gray-400 normal-case tracking-normal">
-                Currently building: Luna (Anayas 2.0) — an Electron REST client
+                Currently building: Luna_ 2.0 — an Electron REST client
               </span>
             </div>
           </div>

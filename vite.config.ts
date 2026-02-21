@@ -19,6 +19,10 @@ export default defineConfig(({ mode }) => {
             options.startup();
           },
           vite: {
+            define: {
+              'process.env.SENTRY_DSN': JSON.stringify(env.SENTRY_DSN || env.VITE_SENTRY_DSN || process.env.VITE_SENTRY_DSN || process.env.SENTRY_DSN || ''),
+              'process.env.NODE_ENV': JSON.stringify(mode)
+            },
             build: {
               outDir: 'dist-electron',
               sourcemap: true,

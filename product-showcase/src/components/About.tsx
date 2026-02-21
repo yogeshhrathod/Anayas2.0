@@ -16,13 +16,13 @@ export function About() {
             </h2>
             <p className="text-lg text-muted-foreground mb-6">
               We tired of clunky, slow API clients that consume gigabytes of RAM
-              just to send a GET request. We built Luna to be the antithesis of
+              just to send a GET request. We built Luna_ to be the antithesis of
               that.
             </p>
             <p className="text-lg text-muted-foreground mb-8">
               Native performance, minimal footprint, and a UI that stays out of
               your way. Whether you're debugging a local server or testing
-              production endpoints, Luna is your reliable companion.
+              production endpoints, Luna_ is your reliable companion.
             </p>
 
             <div className="grid grid-cols-2 gap-8">

@@ -6,6 +6,7 @@
   "author": "Yogesh Rathod <yrathod33@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "clean": "rm -rf dist dist-electron release node_modules/.vite node_modules/.cache",
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
     "build:mac": "npm run build -- --mac",
