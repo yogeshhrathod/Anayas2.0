@@ -97,7 +97,7 @@ export function Hero() {
         <TunnelText text="OFFLINE FIRST" delay={0} x={-400} y={-200} />
         <TunnelText text="REST CLIENT" delay={2000} x={400} y={200} />
         <TunnelText text="NATIVE DESKTOP" delay={4000} x={-300} y={300} />
-        <TunnelText text="JSON DB" delay={6000} x={300} y={-300} />
+        <TunnelText text="POWERFUL" delay={6000} x={300} y={-300} />
         <TunnelText text="UNLIMITED COLLECTIONS" delay={1000} x={0} y={-400} />
       </div>
 
@@ -220,20 +220,6 @@ export function Hero() {
           )}
         </motion.div>
       </motion.div>
-
-      {/* Bottom Specs */}
-      <div className="hidden sm:flex absolute bottom-6 md:bottom-10 left-0 right-0 px-6 md:px-10 justify-between text-[10px] md:text-xs font-mono text-gray-700 uppercase tracking-widest pointer-events-none">
-        <div>
-          STACK: ELECTRON + REACT
-          <br />
-          STORAGE: JSON DB
-        </div>
-        <div className="text-right">
-          STATUS: ONLINE
-          <br />
-          ENVIRONMENT: LOCAL
-        </div>
-      </div>
     </section>
   );
 }

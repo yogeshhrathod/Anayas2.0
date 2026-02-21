@@ -55,25 +55,13 @@ export function ProductShot() {
           style={{ scale, opacity, rotateX, transformStyle: 'preserve-3d' }}
           className="relative w-full max-w-6xl mx-auto z-10"
         >
-          {/* Main App Window Glow */}
-          <div className="absolute -inset-1 bg-gradient-to-tr from-indigo-500/30 via-purple-500/20 to-blue-500/30 blur-2xl rounded-[32px] opacity-70" />
-          
-          {/* Main App Window Frame */}
-          <div className="relative rounded-2xl overflow-hidden bg-[#0A0A0A] border border-white/10 shadow-2xl ring-1 ring-white/10 mx-auto flex flex-col">
-            
-
-
-            {/* App Content Area */}
-            <div className="relative w-full aspect-[16/10] bg-zinc-950 flex items-center justify-center">
+            <div className="relative w-full flex items-center justify-center">
               <img
                 src={`${import.meta.env.BASE_URL}product-shot.png`}
                 alt="Luna Interface"
                 className="w-full h-full object-cover object-top"
               />
-              <div className="absolute inset-0 ring-1 ring-inset ring-white/5 pointer-events-none" />
             </div>
-          </div>
-
           {/* Floor Reflection */}
           <div className="absolute -bottom-12 left-10 right-10 h-32 bg-indigo-500/10 blur-[80px] pointer-events-none" />
         </motion.div>
