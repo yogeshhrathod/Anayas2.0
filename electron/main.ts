@@ -55,14 +55,15 @@ function createWindow() {
   });
 }
 
+// Initialize Sentry synchronously before app is ready
+initSentry();
+
 app.whenReady().then(async () => {
   try {
     // Support test mode: use custom database path if provided
     const testDbPath = process.env.TEST_DB_PATH;
     await initDatabase(testDbPath);
 
-    // Initialize Sentry after database (so it can check telemetry settings)
-    await initSentry();
     addBreadcrumb('app', 'Application starting', { version: app.getVersion() });
 
     registerIpcHandlers();

@@ -32,35 +32,33 @@ const SENTRY_DSN = process.env.SENTRY_DSN;
 
 // Track if Sentry is initialized and enabled
 let sentryInitialized = false;
-let telemetryEnabled = true; // Default to enabled
+// Globals for telemetry
+let telemetryEnabled = true;
+let hasCheckedTelemetry = false;
 
 /**
- * Check if telemetry is enabled from settings database
+ * Update telemetry state from DB once it's available
  */
-async function isTelemetryEnabled(): Promise<boolean> {
+export async function updateTelemetryState(): Promise<void> {
   try {
-    // Dynamically import to avoid circular dependencies
     const { getDatabase } = await import('./database');
     const db = getDatabase();
-
-    // Check settings for telemetryEnabled
     if (db.settings && db.settings.telemetryEnabled !== undefined) {
-      return db.settings.telemetryEnabled !== false;
+      telemetryEnabled = db.settings.telemetryEnabled !== false;
     }
-
-    // Default to enabled if setting doesn't exist
-    return true;
+    hasCheckedTelemetry = true;
   } catch (error) {
     logger.warn('[Sentry] Could not read telemetry setting, defaulting to enabled');
-    return true;
+    hasCheckedTelemetry = true;
   }
 }
 
 /**
  * Initialize Sentry for the main process
- * Only enables tracking in production builds with valid DSN and user consent
+ * MUST be called SYNCHRONOUSLY before app.whenReady() because @sentry/electron
+ * needs to register the sentry-ipc:// protocol privileges.
  */
-export async function initSentry(): Promise<void> {
+export function initSentry(): void {
   // Skip Sentry in development mode
   if (isDev) {
     logger.info('[Sentry] Development mode - Sentry tracking disabled');
@@ -73,12 +71,8 @@ export async function initSentry(): Promise<void> {
     return;
   }
 
-  // Check if user has disabled telemetry
-  telemetryEnabled = await isTelemetryEnabled();
-  if (!telemetryEnabled) {
-    logger.info('[Sentry] User has disabled telemetry - Sentry tracking disabled');
-    return;
-  }
+  // Kick off asynchronous check, defaults to true while loading
+  updateTelemetryState();
 
   try {
     Sentry.init({
@@ -88,30 +82,21 @@ export async function initSentry(): Promise<void> {
       release: `luna@${app.getVersion()}`,
 
       // Environment tagging
-      environment: isDev ? 'development' : 'production',
+      environment: 'production',
 
       // Enable all performance monitoring features
-      tracesSampleRate: 0.2, // Capture 20% of transactions (reduced from 100% for privacy and billing)
+      tracesSampleRate: 0.2, // Capture 20% of transactions
 
       // Capture breadcrumbs for better context
-      // Records user actions, console logs, network requests leading to an error
       maxBreadcrumbs: 100,
 
-      // Enable sending of default PII (Personally Identifiable Information)
-      // Set to false if you want to strip user data
+      // Enable sending of default PII
       sendDefaultPii: false,
 
-      // Attach stack traces to all messages
-      attachStacktrace: true,
-
-      // Debug mode - enable only for troubleshooting Sentry itself
-      debug: false,
-
-      // Before send hook - allows filtering/modifying events
+      // Drop events if telemetry is disabled by the user
       beforeSend(event, hint) {
-        // Check if telemetry is still enabled (user might have disabled it after init)
-        if (!telemetryEnabled) {
-          return null; // Don't send if user has disabled telemetry
+        if (hasCheckedTelemetry && !telemetryEnabled) {
+          return null;
         }
 
         // You can filter out certain errors here
@@ -137,6 +122,12 @@ export async function initSentry(): Promise<void> {
           chrome_version: process.versions.chrome,
         };
 
+        return event;
+      },
+      beforeSendTransaction(event) {
+        if (hasCheckedTelemetry && !telemetryEnabled) {
+          return null;
+        }
         return event;
       },
 
