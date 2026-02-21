@@ -308,7 +308,7 @@ export function Environments() {
             ? 'Update environment details and variables'
             : 'Create a new environment with variables'
         }
-        maxWidth="2xl"
+        maxWidth="4xl"
       >
         <EnvironmentForm
           ref={formRef}

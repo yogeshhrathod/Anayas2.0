@@ -1,6 +1,6 @@
+import { FileText, Table } from 'lucide-react';
 import React from 'react';
 import { Button } from './button';
-import { Table, FileText } from 'lucide-react';
 
 interface ViewToggleButtonProps {
   currentView: 'table' | 'json';
@@ -17,6 +17,7 @@ export const ViewToggleButton: React.FC<ViewToggleButtonProps> = ({
     <Button
       variant="outline"
       size="sm"
+      type="button"
       onClick={onToggle}
       className={`h-8 w-8 p-0 ${className}`}
       title={currentView === 'table' ? 'Switch to JSON' : 'Switch to Table'}
