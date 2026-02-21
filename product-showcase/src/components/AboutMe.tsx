@@ -1,17 +1,13 @@
 import { motion, useInView } from 'framer-motion';
 import {
-  ArrowUpRight,
-  Briefcase,
   Code2,
-  ExternalLink,
   Github,
   Linkedin,
   Mail,
   MapPin,
   Package,
-  Star,
   Terminal,
-  Zap,
+  Zap
 } from 'lucide-react';
 import { useRef } from 'react';
 
@@ -30,7 +26,7 @@ const skills = [
 
 const projects = [
   {
-    name: 'Luna_ 2.0',
+    name: 'Luna_',
     desc: 'A modern, Electron-based REST API client reimagined from the ground up. Built for speed, collections, environments, and developer joy.',
     lang: 'TypeScript',
     url: 'https://github.com/yogeshhrathod/Anayas2.0',
@@ -84,7 +80,7 @@ const timeline = [
     year: '2025',
     role: 'Open Source Builder',
     company: 'Self-directed',
-    desc: 'Launched Luna_ 2.0, JiraMCP, BitbucketMCP — building tools that make developers\' lives measurably better.',
+    desc: 'Launched Luna_, JiraMCP, BitbucketMCP — building tools that make developers\' lives measurably better.',
   },
   {
     year: '2024',
@@ -175,11 +171,6 @@ export function AboutMe() {
               className="w-full h-full object-cover"
             />
           </div>
-          {/* Available badge */}
-          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black border border-white/10 px-4 py-1.5 text-xs font-mono normal-case tracking-normal whitespace-nowrap shadow-lg">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            Open to opportunities
-          </div>
         </motion.div>
 
         {/* Text */}
@@ -235,7 +226,7 @@ export function AboutMe() {
               LinkedIn
             </a>
             <a
-              href="mailto:yogeshhrathod@gmail.com"
+              href="mailto:yrathod33@gmail.com"
               id="about-email-link"
               className="inline-flex items-center gap-2 border border-white/10 text-gray-400 px-5 py-2.5 text-sm font-bold uppercase tracking-widest hover:border-white/40 hover:text-white transition-all duration-200"
             >
@@ -291,7 +282,7 @@ export function AboutMe() {
               <p>
                 At <strong className="text-white">Qualys</strong>, I work on enterprise security software where
                 reliability, performance, and developer experience are non-negotiable. Outside work, I pour
-                that same energy into open source projects like <strong className="text-primary">Luna_ 2.0</strong> —
+                that same energy into open source projects like <strong className="text-primary">Luna_</strong> —
                 a full-featured Electron REST client that rivals the best in the space.
               </p>
               <p>
@@ -302,154 +293,13 @@ export function AboutMe() {
             <div className="mt-8 flex items-center gap-3">
               <Zap className="w-5 h-5 text-primary" />
               <span className="text-sm font-mono text-gray-400 normal-case tracking-normal">
-                Currently building: Luna_ 2.0 — an Electron REST client
+                Currently building: Luna_ — an Electron REST client
               </span>
             </div>
           </div>
         </FadeIn>
-
-        {/* Skills grid */}
-        <FadeIn delay={0.1}>
-          <div>
-            <SectionLabel>Skills</SectionLabel>
-            <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tighter text-white mb-6">
-              Full-stack <span className="text-primary">toolkit</span>
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {skills.map((group, i) => (
-                <motion.div
-                  key={group.category}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.07, duration: 0.5 }}
-                  className="border border-white/10 p-4 hover:border-primary/40 hover:bg-white/3 transition-all group"
-                >
-                  <p className="text-xs font-mono text-primary uppercase tracking-widest mb-3">{group.category}</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {group.items.map(item => (
-                      <span
-                        key={item}
-                        className="text-xs bg-white/5 border border-white/10 px-2 py-0.5 text-gray-300 normal-case tracking-normal group-hover:border-white/20 transition-colors"
-                      >
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </FadeIn>
       </section>
 
-      {/* ════════ PROJECTS ════════ */}
-      <section className="border-t border-white/10 py-20">
-        <div className="container mx-auto px-4 md:px-6">
-          <FadeIn>
-            <div className="mb-12">
-              <SectionLabel>Open Source</SectionLabel>
-              <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tighter text-white">
-                Things I've <span className="text-primary">shipped</span>
-              </h2>
-            </div>
-          </FadeIn>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map((proj, i) => (
-              <FadeIn key={proj.name} delay={i * 0.07}>
-                <a
-                  href={proj.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  id={`project-${proj.name.toLowerCase().replace(/\s/g, '-')}`}
-                  className={`group flex flex-col h-full border p-6 hover:-translate-y-1 transition-all duration-200 ${
-                    proj.highlight
-                      ? 'border-primary/50 bg-primary/5 hover:bg-primary/10 shadow-[0_0_30px_rgba(255,102,0,0.08)]'
-                      : 'border-white/10 hover:border-white/30 hover:bg-white/3'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {proj.highlight && <Star className="w-4 h-4 text-primary fill-primary" />}
-                      <Code2 className="w-4 h-4 text-gray-500" />
-                    </div>
-                    <ExternalLink className="w-4 h-4 text-gray-600 group-hover:text-primary transition-colors" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white tracking-tight mb-2 group-hover:text-primary transition-colors">
-                    {proj.name}
-                  </h3>
-                  <p className="text-sm text-gray-400 leading-relaxed normal-case tracking-normal flex-1">{proj.desc}</p>
-                  <div className="mt-4 flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-primary/70" />
-                    <span className="text-xs font-mono text-gray-500">{proj.lang}</span>
-                  </div>
-                </a>
-              </FadeIn>
-            ))}
-          </div>
-
-          <FadeIn delay={0.3}>
-            <div className="mt-8 text-center">
-              <a
-                href="https://github.com/yogeshhrathod?tab=repositories"
-                target="_blank"
-                rel="noreferrer"
-                id="view-all-repos"
-                className="inline-flex items-center gap-2 border border-white/20 text-gray-400 px-6 py-3 text-sm font-mono uppercase tracking-widest hover:border-primary hover:text-primary transition-all"
-              >
-                View all 47+ repos
-                <ArrowUpRight className="w-4 h-4" />
-              </a>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* ════════ TIMELINE ════════ */}
-      <section className="border-t border-white/10 py-20">
-        <div className="container mx-auto px-4 md:px-6">
-          <FadeIn>
-            <div className="mb-12">
-              <SectionLabel>Experience</SectionLabel>
-              <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tighter text-white">
-                The <span className="text-primary">journey</span>
-              </h2>
-            </div>
-          </FadeIn>
-
-          <div className="relative max-w-3xl">
-            {/* vertical line */}
-            <div className="absolute left-[2.75rem] top-0 bottom-0 w-px bg-white/10" />
-
-            <div className="space-y-0">
-              {timeline.map((item, i) => (
-                <FadeIn key={i} delay={i * 0.1}>
-                  <div className="flex gap-8 group">
-                    {/* Year bubble */}
-                    <div className="flex-shrink-0 w-22 flex flex-col items-center pt-6">
-                      <div className="w-10 h-10 flex items-center justify-center border border-white/20 bg-black text-xs font-mono text-primary group-hover:border-primary transition-colors z-10">
-                        <Briefcase className="w-4 h-4" />
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 border-b border-white/5 py-6 pr-4">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="text-xs font-mono text-primary">{item.year}</span>
-                        <span className="text-xs text-gray-600">·</span>
-                        <span className="text-xs font-mono text-gray-500 uppercase tracking-widest">{item.company}</span>
-                      </div>
-                      <h3 className="text-base font-bold text-white tracking-tight mb-1">{item.role}</h3>
-                      <p className="text-sm text-gray-400 leading-relaxed normal-case tracking-normal">{item.desc}</p>
-                    </div>
-                  </div>
-                </FadeIn>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ════════ CTA ════════ */}
       <section className="border-t border-white/10">
