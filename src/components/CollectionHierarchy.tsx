@@ -512,15 +512,26 @@ export function CollectionHierarchy({
       });
   };
 
-  const handleAddRequest = (collectionId: number) => {
-    // Set selected collection for keyboard shortcuts
-    const collection = collections.find(c => c.id === collectionId);
-    if (collection) {
-      setSelectedItem({
-        type: 'collection',
-        id: collectionId,
-        data: collection,
-      });
+  const handleAddRequest = (collectionId: number, folderId?: number) => {
+    // Set selected item for keyboard shortcuts
+    if (folderId) {
+      const folder = folders.find(f => f.id === folderId);
+      if (folder) {
+        setSelectedItem({
+          type: 'folder',
+          id: folderId,
+          data: folder,
+        });
+      }
+    } else {
+      const collection = collections.find(c => c.id === collectionId);
+      if (collection) {
+        setSelectedItem({
+          type: 'collection',
+          id: collectionId,
+          data: collection,
+        });
+      }
     }
 
     // Create a new empty request and set it as selected
@@ -533,7 +544,7 @@ export function CollectionHierarchy({
       queryParams: [],
       auth: { type: 'none' },
       collectionId: collectionId,
-      folderId: undefined,
+      folderId: folderId,
       isFavorite: 0,
     };
 
@@ -940,7 +951,7 @@ export function CollectionHierarchy({
                           console.log('Edit folder:', folder.id);
                         }}
                         onDelete={() => handleDeleteFolder(folder.id!)}
-                        onAddRequest={() => handleAddRequest(collection.id!)}
+                        onAddRequest={() => handleAddRequest(collection.id!, folder.id)}
                         dragProps={{
                           draggable: true,
                           onDragStart: e => {

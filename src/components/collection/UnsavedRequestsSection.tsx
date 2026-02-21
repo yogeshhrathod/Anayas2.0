@@ -12,10 +12,10 @@ import { Request } from '../../types/entities';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { PromoteRequestDialog } from '../ui/promote-request-dialog';
 
@@ -35,6 +35,13 @@ export function UnsavedRequestsSection() {
     useState<UnsavedRequest | null>(null);
 
   const handleSelectUnsaved = (unsaved: UnsavedRequest) => {
+    // If this unsaved request is already active, don't re-set it.
+    // This prevents losing in-memory edits before they are auto-saved.
+    if (activeUnsavedRequestId === unsaved.id) {
+      setCurrentPage('home');
+      return;
+    }
+
     const request: Request = {
       id: undefined,
       name: unsaved.name,

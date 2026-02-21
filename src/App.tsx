@@ -787,36 +787,50 @@ function App() {
                     >
                       <CollectionHierarchy
                         onRequestSelect={async (request: Request) => {
+                          const currentSelected = useStore.getState().selectedRequest;
+                          
+                          // If this request is already selected, don't overwrite it with potentially 
+                          // stale data from the sidebar. This preserves unsaved edits in memory.
+                          if (currentSelected && currentSelected.id === request.id) {
+                            setCurrentPage('home');
+                            return;
+                          }
+
                           setCurrentPage('home');
                           // Load request data and set it as selected
                           try {
+                            // First set the existing request data so UI updates immediately
+                            setSelectedRequest(request);
+
+                            // Then try to load full/latest data from DB
+                            // Note: request.collectionId might be missing for some folder requests 
+                            // depending on how they were created/saved
                             const requestData =
                               await window.electronAPI.request.list(
                                 request.collectionId
                               );
-                            const fullRequest = requestData.find(
+                            
+                            let fullRequest = requestData.find(
                               (r: any) => r.id === request.id
                             );
-                            if (fullRequest) {
-                              setSelectedRequest({
-                                id: fullRequest.id,
-                                name: fullRequest.name || '',
-                                method: fullRequest.method,
-                                url: fullRequest.url,
-                                headers:
-                                  typeof fullRequest.headers === 'string'
-                                    ? JSON.parse(fullRequest.headers)
-                                    : fullRequest.headers || {},
-                                body: fullRequest.body || '',
-                                queryParams: [],
-                                auth: { type: 'none' },
-                                collectionId: fullRequest.collectionId,
-                                isFavorite: fullRequest.isFavorite,
-                                lastResponse: fullRequest.lastResponse,
-                              });
+
+                            if (!fullRequest) {
+                              // Fallback: If not found in collection list, try fetching all requests
+                              const allRequests = await window.electronAPI.request.list();
+                              fullRequest = allRequests.find((r: any) => r.id === request.id);
                             }
-                          } catch (e) {
-                            console.error('Failed to load request:', e);
+
+                            if (fullRequest) {
+                              // Only update if it's still the active request OR we haven't changed much
+                              // (Checking if the ID still matches handles the race condition where user clicked another one while loading)
+                              const latestCurrent = useStore.getState().selectedRequest;
+                              if (latestCurrent && latestCurrent.id === fullRequest.id) {
+                                setSelectedRequest(fullRequest);
+                              }
+                            }
+                          } catch (error) {
+                            console.error('Failed to load request:', error);
+                            // Fallback is already handled by the initial setSelectedRequest(request)
                           }
                         }}
                       />

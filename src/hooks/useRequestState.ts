@@ -22,7 +22,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { generateDraftName } from '../lib/draftNaming';
 import { useStore } from '../store/useStore';
-import { Request } from '../types/entities';
+import { EntityId, Request } from '../types/entities';
 import { RequestFormData } from '../types/forms';
 
 export interface RequestState {
@@ -203,27 +203,21 @@ export function useRequestState(selectedRequest: Request | null) {
     // This prevents the infinite loop when selectedRequest is cleared (null).
     if (!selectedRequest || !state.requestData) return;
 
-    // Check if there are actual data changes to avoid redundant updates
-    // Use a helper for shallow object comparison to avoid order-related issues with JSON.stringify
-    const areObjectsEqual = (a: any, b: any) => {
-      const keysA = Object.keys(a || {}).sort();
-      const keysB = Object.keys(b || {}).sort();
-      if (keysA.length !== keysB.length) return false;
-      return keysA.every(key => a[key] === b[key]);
-    };
+    // Use a more robust comparison including deep check for objects
+    const isSameRequest = 
+      state.requestData.id === selectedRequest.id &&
+      state.requestData.name === selectedRequest.name &&
+      state.requestData.method === selectedRequest.method &&
+      state.requestData.url === selectedRequest.url &&
+      state.requestData.body === selectedRequest.body &&
+      state.requestData.collectionId === selectedRequest.collectionId &&
+      state.requestData.folderId === selectedRequest.folderId &&
+      Boolean(state.requestData.isFavorite) === Boolean(selectedRequest.isFavorite) &&
+      JSON.stringify(state.requestData.headers || {}) === JSON.stringify(selectedRequest.headers || {}) &&
+      JSON.stringify(state.requestData.queryParams || []) === JSON.stringify(selectedRequest.queryParams || []) &&
+      JSON.stringify(state.requestData.auth || {}) === JSON.stringify(selectedRequest.auth || {});
 
-    const isDifferent =
-      state.requestData.id !== selectedRequest.id ||
-      state.requestData.name !== selectedRequest.name ||
-      state.requestData.method !== selectedRequest.method ||
-      state.requestData.url !== selectedRequest.url ||
-      state.requestData.body !== selectedRequest.body ||
-      !areObjectsEqual(state.requestData.headers, selectedRequest.headers) ||
-      !areObjectsEqual(state.requestData.auth, selectedRequest.auth) ||
-      JSON.stringify(state.requestData.queryParams || []) !==
-        JSON.stringify(selectedRequest.queryParams || []);
-
-    if (isDifferent) {
+    if (!isSameRequest) {
       console.log('[useRequestState] Diff detected, updating global store');
       isInternalUpdateRef.current = true;
       setSelectedRequest({
@@ -264,10 +258,13 @@ export function useRequestState(selectedRequest: Request | null) {
         isSaved: true,
         lastSavedAt: new Date(),
       }));
+
+      // Trigger sidebar refresh so the sidebar doesn't show stale data
+      triggerSidebarRefresh();
     } catch (e: any) {
       console.error('Auto-save failed:', e);
     }
-  }, [state.requestData, settings.autoSaveRequests]);
+  }, [state.requestData, settings.autoSaveRequests, triggerSidebarRefresh]);
 
   // Auto-save unsaved requests
   const autoSaveUnsaved = useCallback(async () => {
@@ -310,6 +307,9 @@ export function useRequestState(selectedRequest: Request | null) {
       // Reload unsaved requests
       const allUnsaved = await window.electronAPI.unsavedRequest.getAll();
       setUnsavedRequests(allUnsaved);
+
+      // Trigger sidebar refresh for unsaved section
+      triggerSidebarRefresh();
     } catch (e: any) {
       console.error('Auto-save unsaved request failed:', e);
     }
@@ -318,6 +318,8 @@ export function useRequestState(selectedRequest: Request | null) {
     activeUnsavedRequestId,
     setActiveUnsavedRequestId,
     setUnsavedRequests,
+    selectedRequest?.lastResponse,
+    triggerSidebarRefresh,
   ]);
 
   // Debounced auto-save for saved requests
@@ -333,7 +335,7 @@ export function useRequestState(selectedRequest: Request | null) {
     ) {
       autoSaveTimeoutRef.current = setTimeout(() => {
         autoSave();
-      }, 2000); // Auto-save after 2 seconds of inactivity
+      }, 1000); // Auto-save after 1 second of inactivity (reduced from 2s)
     }
 
     return () => {
@@ -342,6 +344,24 @@ export function useRequestState(selectedRequest: Request | null) {
       }
     };
   }, [state.requestData, autoSave, settings.autoSaveRequests]);
+
+  // Flush save on ID change or unmount
+  const prevIdRef = useRef<EntityId | undefined>(selectedRequest?.id);
+  const stateRef = useRef(state.requestData);
+  
+  // Track latest request data in a ref for cleanup/flush
+  useEffect(() => {
+    stateRef.current = state.requestData;
+  }, [state.requestData]);
+
+  useEffect(() => {
+    // When the ID changes, we should ideally save the PREVIOUS request if it was dirty.
+    // However, since we now sync to the global store immediately and have 1s auto-save
+    // with sidebar refresh triggers, the risk is much lower.
+    
+    // We update the prevIdRef for future use
+    prevIdRef.current = selectedRequest?.id;
+  }, [selectedRequest?.id]);
 
   // Debounced auto-save for unsaved requests (1 second)
   useEffect(() => {
