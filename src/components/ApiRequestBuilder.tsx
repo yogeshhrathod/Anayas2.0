@@ -15,6 +15,7 @@ import { useEffect, useRef } from 'react';
 import { useRequestActions } from '../hooks/useRequestActions';
 import { useRequestState } from '../hooks/useRequestState';
 import { KEYMAP, createKeymapHandler } from '../lib/keymap';
+import logger from '../lib/logger';
 import { useStore } from '../store/useStore';
 import { AuthTab } from './request/AuthTab';
 import { BodyTab } from './request/BodyTab';
@@ -275,7 +276,7 @@ export function ApiRequestBuilder() {
         });
       }
     } catch (e: any) {
-      console.error('Failed to save request:', e);
+      logger.error('Failed to save request', { error: e.message });
     }
   };
 

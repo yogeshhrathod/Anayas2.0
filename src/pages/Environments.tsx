@@ -157,100 +157,32 @@ export function Environments() {
     refreshEnvironments();
   };
 
-  // Log dialog state changes
-  useEffect(() => {
-    console.log(
-      '[Environments] Dialog state changed - isEditing:',
-      isEditing,
-      'editingEnvironment:',
-      editingEnvironment?.id
-    );
-  }, [isEditing, editingEnvironment]);
+
 
   // Watch for environmentToEditId from store (triggered from variable context menu)
   useEffect(() => {
-    console.log(
-      '[Environments] useEffect triggered - environmentToEditId:',
-      environmentToEditId
-    );
-    console.log(
-      '[Environments] allEnvironments count:',
-      allEnvironments.length
-    );
-    console.log(
-      '[Environments] storeEnvironments count:',
-      storeEnvironments.length
-    );
-    console.log('[Environments] isLoading:', isLoading);
-    console.log('[Environments] variableToFocus:', variableToFocus);
-    console.log('[Environments] Current isEditing state:', isEditing);
-    console.log(
-      '[Environments] Current editingEnvironment:',
-      editingEnvironment?.id
-    );
-
     if (environmentToEditId) {
-      console.log(
-        '[Environments] Looking for environment with ID:',
-        environmentToEditId
-      );
-
       // Try allEnvironments first (from hook), then fallback to store environments
       let environment = allEnvironments.find(
         env => env.id === environmentToEditId
       );
 
       if (!environment && storeEnvironments.length > 0) {
-        // If not found and store has environments, try store environments
-        console.log(
-          '[Environments] Not found in allEnvironments, checking store environments:',
-          storeEnvironments.length
-        );
         environment = storeEnvironments.find(
           env => env.id === environmentToEditId
         );
       }
 
       if (environment) {
-        console.log(
-          '[Environments] ✓ Found environment:',
-          environment.name,
-          'ID:',
-          environment.id
-        );
-        console.log(
-          '[Environments] Opening edit dialog with variable focus:',
-          variableToFocus
-        );
-        console.log(
-          '[Environments] Setting editingEnvironment and isEditing to true'
-        );
         setEditingEnvironment(environment);
         setIsEditing(true);
-        console.log(
-          '[Environments] ✓ Dialog state set - isEditing should be true now'
-        );
         // Clear the trigger after opening
         setTimeout(() => {
-          console.log('[Environments] Clearing environmentToEditId trigger');
           setEnvironmentToEdit(null, null);
         }, 100);
-      } else {
-        // Environment not found, clear the trigger
-        console.log(
-          '[Environments] ✗ Environment not found with ID:',
-          environmentToEditId
-        );
-        if (isLoading) {
-          console.log(
-            '[Environments] Still loading, will retry when environments are loaded'
-          );
-        } else {
-          console.log(
-            '[Environments] Clearing environmentToEditId trigger (not found)'
-          );
-          setEnvironmentToEdit(null, null);
-        }
+      } else if (!isLoading) {
+        // Environment not found and not loading, clear the trigger
+        setEnvironmentToEdit(null, null);
       }
     }
   }, [
@@ -295,7 +227,6 @@ export function Environments() {
       <Dialog
         open={isEditing}
         onOpenChange={open => {
-          console.log('[Environments] Dialog onOpenChange called with:', open);
           if (!open) {
             handleCancelEdit();
           } else {

@@ -5,7 +5,7 @@ export interface Environment {
   name: string;
   displayName: string;
   variables: Record<string, string>;
-  isDefault?: boolean;
+  isDefault?: number;
   lastUsed?: string;
   createdAt?: string;
 }
@@ -300,10 +300,16 @@ const api = {
     isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
   },
 
-  // Notification operations
-  notification: {
-    show: (options: { title: string; body: string; filePath?: string }) =>
-      ipcRenderer.invoke('notification:show', options),
+  // Logger operations
+  logger: {
+    info: (message: string, ...args: any[]) =>
+      ipcRenderer.invoke('logger:info', message, args),
+    error: (message: string, ...args: any[]) =>
+      ipcRenderer.invoke('logger:error', message, args),
+    warn: (message: string, ...args: any[]) =>
+      ipcRenderer.invoke('logger:warn', message, args),
+    debug: (message: string, ...args: any[]) =>
+      ipcRenderer.invoke('logger:debug', message, args),
   },
 };
 

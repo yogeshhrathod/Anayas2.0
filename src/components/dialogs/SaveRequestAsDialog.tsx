@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
+import logger from '../../lib/logger';
 import { useStore } from '../../store/useStore';
 import { Button } from '../ui/button';
 import { Dialog } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '../ui/select';
 
 interface SaveRequestAsDialogProps {
@@ -53,7 +54,9 @@ export function SaveRequestAsDialog({
       window.electronAPI.folder
         .list(parseInt(selectedCollectionId))
         .then(setFolders)
-        .catch(console.error);
+        .catch((err: any) => {
+          logger.error('Failed to load folders for collection', { error: err });
+        });
     } else {
       setFolders([]);
     }

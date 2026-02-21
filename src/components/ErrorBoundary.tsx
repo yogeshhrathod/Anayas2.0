@@ -1,5 +1,6 @@
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
 import { Component, ErrorInfo, ReactNode } from 'react';
+import logger from '../lib/logger';
 import { captureReactError } from '../lib/sentry-renderer';
 import { Button } from './ui/button';
 
@@ -26,7 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
+    logger.error('Uncaught React component error', { error, errorInfo });
     this.setState({ errorInfo });
 
     // Report to Sentry with component stack trace

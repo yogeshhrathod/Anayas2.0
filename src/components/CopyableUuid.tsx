@@ -1,5 +1,6 @@
+import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
+import logger from '../lib/logger';
 import { cn } from '../lib/utils';
 
 interface CopyableUuidProps {
@@ -25,7 +26,7 @@ export function CopyableUuid({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy UUID:', err);
+      logger.error('Failed to copy UUID', { err });
     }
   };
 

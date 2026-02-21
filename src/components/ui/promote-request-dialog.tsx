@@ -1,18 +1,19 @@
-import { useState, useEffect } from 'react';
+import { AlertCircle, Save } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import logger from '../../lib/logger';
+import { UnsavedRequest, useStore } from '../../store/useStore';
 import { Button } from './button';
+import { Dialog } from './dialog';
 import { Input } from './input';
 import { Label } from './label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from './select';
-import { Dialog } from './dialog';
-import { AlertCircle, Save } from 'lucide-react';
 import { useToast } from './use-toast';
-import { useStore, UnsavedRequest } from '../../store/useStore';
 
 interface Collection {
   id: number;
@@ -79,7 +80,7 @@ export function PromoteRequestDialog({
       setCollections(collectionsData);
       setFolders(foldersData);
     } catch (e: any) {
-      console.error('Failed to load collections and folders:', e);
+      logger.error('Failed to load collections and folders', { error: e.message });
       error('Load failed', 'Failed to load collections and folders');
     }
   };
@@ -163,7 +164,7 @@ export function PromoteRequestDialog({
         throw new Error(result.error || 'Failed to save request');
       }
     } catch (e: any) {
-      console.error('Failed to promote unsaved request:', e);
+      logger.error('Failed to promote unsaved request', { error: e.message });
       error('Save failed', e.message || 'Failed to save request');
     } finally {
       setIsLoading(false);

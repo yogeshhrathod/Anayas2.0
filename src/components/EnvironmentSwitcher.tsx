@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
-import { useStore } from '../store/useStore';
-import { Globe, Check, ChevronDown } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { Check, ChevronDown, Globe } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useClickOutside } from '../hooks/useClickOutside';
+import logger from '../lib/logger';
+import { cn } from '../lib/utils';
+import { useStore } from '../store/useStore';
 
 export function EnvironmentSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,7 +17,7 @@ export function EnvironmentSwitcher() {
       setCurrentEnvironment(env);
       setIsOpen(false);
     } catch (error) {
-      console.error('Failed to switch environment:', error);
+      logger.error('Failed to switch environment', { error });
     }
   };
 

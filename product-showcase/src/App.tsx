@@ -7,11 +7,14 @@ import { Manifesto } from './components/Manifesto';
 import { Navbar } from './components/Navbar';
 import { ProductShot } from './components/ProductShot';
 
+import { Features } from './components/Features';
+
 function LandingPage() {
   return (
     <>
       <Hero />
       <ProductShot />
+      <Features />
       <Manifesto />
     </>
   );

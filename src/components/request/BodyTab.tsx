@@ -63,6 +63,7 @@ export interface BodyTabProps {
 }
 
 import { Ban, Braces, Code, Layers, Sparkles, Table2 } from 'lucide-react';
+import logger from '../../lib/logger';
 import { cn } from '../../lib/utils';
 import {
     Tooltip,
@@ -128,7 +129,7 @@ export const BodyTab: React.FC<BodyTabProps> = ({
         setBodyFormData(newFormData);
         setBodyViewMode('table');
       } catch (e) {
-        console.warn('Failed to parse JSON body for table view:', e);
+        logger.warn('Failed to parse JSON body for table view', { error: e });
         setBodyViewMode('table');
       }
     }

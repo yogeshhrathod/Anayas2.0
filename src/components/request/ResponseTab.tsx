@@ -9,21 +9,22 @@
  */
 
 import {
-  Activity,
-  Clock,
-  Columns,
-  Copy,
-  Download,
-  FileCode,
-  History,
-  List,
+    Activity,
+    Clock,
+    Columns,
+    Copy,
+    Download,
+    FileCode,
+    History,
+    List,
 } from 'lucide-react';
 import { useEffect } from 'react';
+import logger from '../../lib/logger';
 import {
-  formatResponseSize,
-  formatResponseTime,
-  getStatusDisplay,
-  getStatusVariant,
+    formatResponseSize,
+    formatResponseTime,
+    getStatusDisplay,
+    getStatusVariant,
 } from '../../lib/response-utils';
 import { cn } from '../../lib/utils';
 import { useStore } from '../../store/useStore';
@@ -31,10 +32,10 @@ import { ResponseData } from '../../types/entities';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
 } from '../ui/tooltip';
 import { ResponseBodyView } from './ResponseBodyView';
 import { ResponseBothView } from './ResponseBothView';
@@ -83,20 +84,9 @@ export function ResponseTab({
     return () => {
       const memoryAfter = (performance as any).memory?.usedJSHeapSize || 0;
       const memoryDelta = (memoryAfter - memoryBefore) / 1024 / 1024;
-      if (memoryDelta > 0) {
-        console.log(
-          '[Performance] Response tab memory:',
-          memoryDelta.toFixed(2),
-          'MB'
-        );
-      }
 
       if (memoryDelta > 20) {
-        console.warn(
-          '[Performance] Response tab exceeded memory budget:',
-          memoryDelta,
-          'MB'
-        );
+        logger.warn('[Performance] Response tab exceeded memory budget', { memoryDelta });
       }
     };
   }, []);
@@ -105,23 +95,11 @@ export function ResponseTab({
   useEffect(() => {
     const startTime = performance.now();
 
-    // After first render
     requestAnimationFrame(() => {
       const loadTime = performance.now() - startTime;
-      if (loadTime > 10) {
-        console.log(
-          '[Performance] Response tab load time:',
-          loadTime.toFixed(2),
-          'ms'
-        );
-      }
 
       if (loadTime > 100) {
-        console.warn(
-          '[Performance] Response tab load time exceeded budget:',
-          loadTime,
-          'ms'
-        );
+        logger.warn('[Performance] Response tab load time exceeded budget', { loadTime });
       }
     });
   }, []);

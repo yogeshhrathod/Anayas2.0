@@ -77,7 +77,7 @@ export function Hero() {
     mac: { label: 'macOS (DMG)', icon: Apple, url: mac },
     windows: { label: 'Windows (EXE)', icon: Windows, url: windows },
     linux: { label: 'Linux (AppImage)', icon: Linux, url: linux },
-    other: { label: 'Download Luna', icon: Terminal, url: releaseUrl },
+    other: { label: 'Download Luna_', icon: Terminal, url: releaseUrl },
   };
 
   const currentPlatform = platformInfo[platform];
@@ -94,11 +94,11 @@ export function Hero() {
 
       {/* Tunnel Effect */}
       <div className="absolute inset-0 flex items-center justify-center [perspective:1000px] [transform-style:preserve-3d]">
-        <TunnelText text="ZERO LATENCY" delay={0} x={-400} y={-200} />
-        <TunnelText text="PURE FLOW" delay={2000} x={400} y={200} />
-        <TunnelText text="HYPER VELOCITY" delay={4000} x={-300} y={300} />
-        <TunnelText text="NO LIMITS" delay={6000} x={300} y={-300} />
-        <TunnelText text="BUILD FASTER" delay={1000} x={0} y={-400} />
+        <TunnelText text="OFFLINE FIRST" delay={0} x={-400} y={-200} />
+        <TunnelText text="REST CLIENT" delay={2000} x={400} y={200} />
+        <TunnelText text="NATIVE DESKTOP" delay={4000} x={-300} y={300} />
+        <TunnelText text="JSON DB" delay={6000} x={300} y={-300} />
+        <TunnelText text="UNLIMITED COLLECTIONS" delay={1000} x={0} y={-400} />
       </div>
 
       {/* The Pilot (Bike Logo) */}
@@ -112,42 +112,64 @@ export function Hero() {
         className="relative z-10 flex flex-col items-center text-center px-4 w-full max-w-[100vw]"
       >
         {/* Tech Badge */}
-        <div className="mb-8 flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-none transform hover:scale-105 transition-transform duration-300 cursor-cell">
-          <Terminal className="w-3 h-3 text-primary animate-pulse" />
-          <span className="text-primary text-xs font-mono tracking-widest uppercase">
-            System {version || 'v0.0.1-alpha'} // Active
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-8 flex items-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full backdrop-blur-md transform hover:scale-105 transition-transform duration-300 cursor-cell shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500 shadow-[0_0_10px_rgba(34,211,238,0.8)]"></span>
           </span>
-        </div>
+          <span className="text-gray-300 text-xs font-mono tracking-widest uppercase font-bold">
+            System {version || 'v1.0.0-beta'} // Active
+          </span>
+        </motion.div>
 
         {/* Main Headline */}
-        <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold uppercase tracking-tighter text-white mb-4 sm:mb-6 mix-blend-exclusion">
-          Code at the <br className="hidden sm:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-500 to-gray-900 animate-pulse">
-            Speed of Thought
+        <motion.h1 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4 }}
+          className="text-5xl sm:text-7xl md:text-8xl lg:text-[7rem] font-display font-black tracking-tighter text-white mb-6 leading-[0.9]"
+        >
+          The API client
+          <br /> built for{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400 drop-shadow-[0_0_30px_rgba(99,102,241,0.5)]">
+            pure speed.
           </span>
-        </h1>
+        </motion.h1>
 
-        <p className="max-w-xl text-gray-500 font-mono text-xs sm:text-sm md:text-base uppercase tracking-widest mb-8 sm:mb-12 px-2">
-          [ The API Client designed for flow state ]
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.6 }}
+          className="max-w-2xl text-gray-400 font-sans text-sm sm:text-lg md:text-xl font-medium mb-10 px-2 leading-relaxed"
+        >
+          Debug APIs, organize requests, and write tests without leaving your keyboard.
           <br className="hidden sm:block" />
-          <span className="hidden sm:inline">
-            Local First. Privacy Focused. Professional Grade.
+          <span className="text-gray-300 font-bold mt-2 inline-block">
+            Local JSON Database. Powerful Request Builder. Manage environments with ease.
           </span>
-          <span className="sm:hidden block mt-2">
-            Local First. Privacy Focused.
-          </span>
-        </p>
+        </motion.p>
 
-        <div className="flex flex-col items-center gap-4 w-full px-4 sm:px-0">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.8 }}
+          className="flex flex-col items-center gap-4 w-full px-4 sm:px-0"
+        >
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
             <Button
               onClick={() => {
                 window.location.href = currentPlatform.url;
               }}
-              className="w-full sm:w-auto h-14 px-6 sm:px-8 bg-primary rounded-none text-black font-bold uppercase tracking-widest hover:bg-primary/90 transition-all border border-primary hover:shadow-[0_0_30px_rgba(255,100,0,0.3)] flex items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm"
+              className="group relative w-full sm:w-auto h-14 px-8 bg-white rounded-full text-black font-semibold hover:bg-gray-200 transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] flex items-center justify-center gap-3 text-sm md:text-base overflow-hidden"
             >
-              <currentPlatform.icon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-              <span className="truncate">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              <currentPlatform.icon className="w-5 h-5 shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300" />
+              <span className="truncate relative z-10">
                 Download for {platform === 'other' ? 'Desktop' : platform}
               </span>
             </Button>
@@ -155,12 +177,12 @@ export function Hero() {
             <Button
               variant="outline"
               onClick={() => setShowAllDownloads(!showAllDownloads)}
-              className="w-full sm:w-auto h-14 px-6 sm:px-8 rounded-none border-white/20 text-white font-mono hover:bg-white hover:text-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 text-xs sm:text-sm"
+              className="w-full sm:w-auto h-14 px-8 rounded-full border-white/10 bg-white/5 backdrop-blur-md text-white font-medium hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2 text-sm md:text-base"
             >
-              Platforms{' '}
+              Other Platforms{' '}
               <ChevronDown
                 className={cn(
-                  'w-4 h-4 transition-transform',
+                  'w-4 h-4 transition-transform text-gray-400',
                   showAllDownloads && 'rotate-180'
                 )}
               />
@@ -169,9 +191,9 @@ export function Hero() {
 
           {showAllDownloads && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-wrap justify-center gap-4 p-4 bg-white/5 backdrop-blur-md border border-white/10"
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              className="flex flex-wrap justify-center gap-4 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl"
             >
               {Object.entries(platformInfo).map(
                 ([key, info]) =>
@@ -179,9 +201,9 @@ export function Hero() {
                     <a
                       key={key}
                       href={info.url}
-                      className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-gray-400 hover:text-primary transition-colors uppercase border border-transparent hover:border-primary/20"
+                      className="group flex items-center gap-2 px-4 py-2 text-xs font-mono text-gray-400 hover:text-white transition-all duration-300 uppercase border border-transparent hover:border-white/10 rounded-full hover:bg-white/5"
                     >
-                      <info.icon className="w-3 h-3" />
+                      <info.icon className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
                       {info.label}
                     </a>
                   )
@@ -190,26 +212,26 @@ export function Hero() {
                 href={releaseUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-gray-400 hover:text-primary transition-colors uppercase"
+                className="group flex items-center gap-2 px-4 py-2 text-xs font-mono text-gray-400 hover:text-white transition-all duration-300 uppercase hover:bg-white/5 rounded-full"
               >
                 All Releases
               </a>
             </motion.div>
           )}
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* Bottom Specs */}
       <div className="hidden sm:flex absolute bottom-6 md:bottom-10 left-0 right-0 px-6 md:px-10 justify-between text-[10px] md:text-xs font-mono text-gray-700 uppercase tracking-widest pointer-events-none">
         <div>
-          LATENCY: 0.5ms
+          STACK: ELECTRON + REACT
           <br />
-          MEMORY: 40MB
+          STORAGE: JSON DB
         </div>
         <div className="text-right">
           STATUS: ONLINE
           <br />
-          REGION: GLOBAL
+          ENVIRONMENT: LOCAL
         </div>
       </div>
     </section>

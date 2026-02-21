@@ -8,6 +8,7 @@
  */
 
 import { ResponseData } from '../types/entities';
+import logger from './logger';
 
 /**
  * Normalized response data with guaranteed non-null values
@@ -116,7 +117,7 @@ export function safeStringifyBody(data: unknown): string {
     return JSON.stringify(data, null, 2);
   } catch (error) {
     // Handle circular references or other stringify errors
-    console.warn('Failed to stringify response body:', error);
+    logger.warn('Failed to stringify response body', { error });
     return String(data);
   }
 }

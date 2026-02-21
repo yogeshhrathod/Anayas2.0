@@ -21,6 +21,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import logger from '../lib/logger';
 import { safeStringifyBody } from '../lib/response-utils';
 import { useStore } from '../store/useStore';
 import { RequestPreset, ResponseData } from '../types/entities';
@@ -112,7 +113,7 @@ export function useRequestActions(requestData: RequestFormData) {
           };
         });
       } catch (error) {
-        console.error('Failed to load presets:', error);
+        logger.error('Failed to load presets', { error });
       }
     };
     loadPresets();
@@ -176,7 +177,7 @@ export function useRequestActions(requestData: RequestFormData) {
             lastResponse: response,
           });
         } catch (error) {
-          console.error('Failed to save response with request:', error);
+          logger.error('Failed to save response with request', { error });
         }
       } else if (activeUnsavedRequestId) {
         // Save response for unsaved draft requests
@@ -198,7 +199,7 @@ export function useRequestActions(requestData: RequestFormData) {
             await window.electronAPI.unsavedRequest.getAll();
           useStore.getState().setUnsavedRequests(updatedUnsaved);
         } catch (error) {
-          console.error('Failed to save response for unsaved request:', error);
+          logger.error('Failed to save response for unsaved request', { error });
         }
       }
     } catch (err: any) {
@@ -268,7 +269,7 @@ export function useRequestActions(requestData: RequestFormData) {
         });
       }
     } catch (e: any) {
-      console.error('Failed to save request:', e);
+      logger.error('Failed to save request', { error: e });
       showError('Save failed', 'Failed to save request');
     }
   }, [
@@ -369,7 +370,7 @@ export function useRequestActions(requestData: RequestFormData) {
         description: `"${preset.name}" has been saved successfully`,
       });
     } catch (error: any) {
-      console.error('Failed to save preset:', error);
+      logger.error('Failed to save preset', { error });
       showError('Save Failed', 'Failed to save preset to database');
     }
   }, [
@@ -409,7 +410,7 @@ export function useRequestActions(requestData: RequestFormData) {
           description: 'Preset has been removed successfully',
         });
       } catch (error: any) {
-        console.error('Failed to delete preset:', error);
+        logger.error('Failed to delete preset', { error });
         showError('Delete Failed', 'Failed to delete preset from database');
       }
     },

@@ -50,21 +50,6 @@ export const VariableContextMenu = forwardRef<
   };
 
   const handleEdit = () => {
-    console.log(
-      '[VariableContextMenu] handleEdit called for variable:',
-      variableName
-    );
-    console.log('[VariableContextMenu] Variable scope:', variable?.scope);
-    console.log('[VariableContextMenu] Selected request:', selectedRequest);
-    console.log(
-      '[VariableContextMenu] Available environments count:',
-      environments.length
-    );
-    console.log(
-      '[VariableContextMenu] Available collections count:',
-      collections.length
-    );
-
     onClose(); // Close context menu first
 
     // Navigate to appropriate page based on variable scope
@@ -75,72 +60,27 @@ export const VariableContextMenu = forwardRef<
         c => c.id === selectedRequest.collectionId
       );
       if (collection) {
-        // Set the collection ID to trigger edit dialog
-        console.log(
-          '[VariableContextMenu] Editing collection variable, opening collection:',
-          collection.id
-        );
         setCollectionToEditId(collection.id!);
         setCurrentPage('collections');
         return;
-      } else {
-        console.log(
-          '[VariableContextMenu] Collection not found for ID:',
-          selectedRequest.collectionId
-        );
       }
     }
 
     // For global variables, find the environment that contains this variable
-    console.log(
-      '[VariableContextMenu] Searching for global variable in environments...'
-    );
     let environmentToOpen: { id: number; name: string } | null = null;
 
-    // Check if variable exists in any environment
-    console.log(
-      '[VariableContextMenu] Checking',
-      environments.length,
-      'environments for variable:',
-      variableName
-    );
     for (const env of environments) {
-      console.log(
-        '[VariableContextMenu] Checking environment:',
-        env.name,
-        'ID:',
-        env.id,
-        'Variables:',
-        Object.keys(env.variables || {})
-      );
       if (env.variables && variableName in env.variables) {
         environmentToOpen = { id: env.id!, name: env.name };
-        console.log(
-          '[VariableContextMenu] Found variable in environment:',
-          env.name,
-          'ID:',
-          env.id
-        );
         break;
       }
     }
 
     if (environmentToOpen) {
-      // Set the environment ID and variable name to trigger edit dialog
-      console.log(
-        '[VariableContextMenu] Setting environmentToEditId to:',
-        environmentToOpen.id,
-        'for variable:',
-        variableName
-      );
       setEnvironmentToEdit(environmentToOpen.id, variableName);
-      console.log('[VariableContextMenu] Navigating to environments page');
       setCurrentPage('environments');
     } else {
       // Variable not found in any environment, just navigate to environments page
-      console.log(
-        '[VariableContextMenu] Variable not found in any environment, navigating to environments'
-      );
       setCurrentPage('environments');
     }
   };

@@ -27,6 +27,7 @@ import {
 import { useSessionRecovery } from './hooks/useSessionRecovery';
 import { useShortcuts } from './hooks/useShortcuts';
 import { useToastNotifications } from './hooks/useToastNotifications';
+import logger from './lib/logger';
 import { trackFeatureLoad } from './lib/performance';
 import { ContextState } from './lib/shortcuts/types';
 import { cn } from './lib/utils';
@@ -69,7 +70,6 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isResizing, setIsResizing] = useState(false);
 
-  const [_requests, setRequests] = useState<any[]>([]);
   const [isAppReady, setIsAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const currentPage = useStore(state => state.currentPage);
@@ -78,9 +78,10 @@ function App() {
   const setCurrentEnvironment = useStore(state => state.setCurrentEnvironment);
   const collections = useStore(state => state.collections);
   const setCollections = useStore(state => state.setCollections);
-  const setRequestHistory = useStore(state => state.setRequestHistory);
+  const setRequests = useStore(state => state.setRequests);
   const selectedRequest = useStore(state => state.selectedRequest);
   const setSelectedRequest = useStore(state => state.setSelectedRequest);
+  const setRequestHistory = useStore(state => state.setRequestHistory);
   const setSettings = useStore(state => state.setSettings);
   const setThemeMode = useStore(state => state.setThemeMode);
   const setCurrentThemeId = useStore(state => state.setCurrentThemeId);
@@ -162,7 +163,7 @@ function App() {
       // Close dialog
       setShowClearAllDialog(false);
     } catch (error: any) {
-      console.error('Failed to clear unsaved requests:', error);
+      logger.error('Failed to clear unsaved requests', { error });
       showError(
         'Failed to clear',
         error.message || 'Failed to clear unsaved requests'
@@ -173,14 +174,14 @@ function App() {
   useEffect(() => {
     // Load initial data with error handling
     loadData().catch(error => {
-      console.error('[App] Critical error during initialization:', error);
+      logger.error('[App] Critical error during initialization', { error });
     });
   }, []);
 
   // Load sidebar state on mount
   useEffect(() => {
     loadSidebarState().catch(error => {
-      console.error('[App] Failed to load sidebar state:', error);
+      logger.error('[App] Failed to load sidebar state', { error });
     });
   }, [loadSidebarState]);
 
@@ -199,7 +200,6 @@ function App() {
 
     'show-shortcuts': () => {
       // TODO: Implement shortcut help dialog
-      console.log('Show shortcuts help');
     },
 
     'edit-item': (_: KeyboardEvent, context: ContextState) => {
@@ -217,7 +217,6 @@ function App() {
         }
       } else if (context.selectedItem.type === 'folder') {
         // TODO: Implement folder editing
-        console.log('Folder edit not implemented yet');
       }
     },
 
@@ -251,7 +250,7 @@ function App() {
           setCollections(updatedCollections);
           setRequests(updatedRequests);
         } catch (error) {
-          console.error('Failed to duplicate request:', error);
+          logger.error('Failed to duplicate request', { error });
         }
       } else if (context.selectedItem.type === 'collection') {
         try {
@@ -264,7 +263,7 @@ function App() {
 
           const result = await window.electronAPI.collection.save(duplicate);
           if (!result.success) {
-            console.error('Failed to create duplicate collection');
+            logger.error('Failed to create duplicate collection');
             return;
           }
 
@@ -302,7 +301,7 @@ function App() {
           // Trigger sidebar refresh for real-time updates
           triggerSidebarRefresh();
         } catch (error) {
-          console.error('Failed to duplicate collection:', error);
+          logger.error('Failed to duplicate collection', { error });
         }
       }
     },
@@ -320,7 +319,7 @@ function App() {
           // Trigger sidebar refresh for real-time updates
           triggerSidebarRefresh();
         } catch (error) {
-          console.error('Failed to delete request:', error);
+          logger.error('Failed to delete request', { error });
         }
       } else if (context.selectedItem.type === 'collection') {
         try {
@@ -334,7 +333,7 @@ function App() {
           // Trigger sidebar refresh for real-time updates
           triggerSidebarRefresh();
         } catch (error) {
-          console.error('Failed to delete collection:', error);
+          logger.error('Failed to delete collection', { error });
         }
       } else if (context.selectedItem.type === 'folder') {
         try {
@@ -348,19 +347,17 @@ function App() {
           // Trigger sidebar refresh for real-time updates
           triggerSidebarRefresh();
         } catch (error) {
-          console.error('Failed to delete folder:', error);
+          logger.error('Failed to delete folder', { error });
         }
       }
     },
 
     'send-request': () => {
       // TODO: Trigger send request action
-      console.log('Send request');
     },
 
     'save-request': () => {
       // TODO: Trigger save request action
-      console.log('Save request');
     },
 
     'focus-url': () => {
@@ -404,12 +401,10 @@ function App() {
 
     'add-folder': () => {
       // TODO: Implement new folder creation
-      console.log('Add folder');
     },
 
     'new-collection': () => {
       // TODO: Implement new collection creation
-      console.log('New collection');
     },
 
     'export-collection': async (_: KeyboardEvent, context: ContextState) => {
@@ -530,23 +525,15 @@ function App() {
 
   const loadData = async () => {
     try {
-      const [
-        envs,
-        currentEnv,
-        collections,
-        history,
-        settings,
-        requests,
-        version,
-      ] = await Promise.all([
-        window.electronAPI.env.list(),
-        window.electronAPI.env.getCurrent(),
-        window.electronAPI.collection.list(),
-        window.electronAPI.request.history(100),
-        window.electronAPI.settings.getAll(),
-        window.electronAPI.request.list(),
-        window.electronAPI.app.getVersion(),
-      ]);
+      let envs = [], currentEnv = null, collections = [], history = [], settings: any = {}, requests = [], version = 'unknown';
+
+      try { envs = await window.electronAPI.env.list(); } catch(e: any) { logger.error('env.list failed', { e: e.message }); throw e; }
+      try { currentEnv = await window.electronAPI.env.getCurrent(); } catch(e: any) { logger.error('env.getCurrent failed', { e: e.message }); throw e; }
+      try { collections = await window.electronAPI.collection.list(); } catch(e: any) { logger.error('collection.list failed', { e: e.message }); throw e; }
+      try { history = await window.electronAPI.request.history(100); } catch(e: any) { logger.error('request.history failed', { e: e.message }); throw e; }
+      try { settings = await window.electronAPI.settings.getAll(); } catch(e: any) { logger.error('settings.getAll failed', { e: e.message }); throw e; }
+      try { requests = await window.electronAPI.request.list(); } catch(e: any) { logger.error('request.list failed', { e: e.message }); throw e; }
+      try { version = await window.electronAPI.app.getVersion(); } catch(e: any) { logger.error('app.getVersion failed', { e: e.message }); throw e; }
 
       setEnvironments(envs);
       setCurrentEnvironment(currentEnv);
@@ -569,7 +556,7 @@ function App() {
           const themes = JSON.parse(settings.customThemes);
           setCustomThemes(themes);
         } catch (e) {
-          console.error('Failed to parse custom themes:', e);
+          logger.error('Failed to parse custom themes', { error: e });
         }
       }
 
@@ -580,10 +567,10 @@ function App() {
 
       // Mark app as ready once all data is loaded
       setIsAppReady(true);
-    } catch (error) {
-      console.error('Failed to load initial data:', error);
-      // Show user-friendly error - you could add a toast here
-      alert('Failed to load application data. Please restart the application.');
+    } catch (error: any) {
+      console.error('Initial data load error detail:', error);
+      logger.error('Failed to load initial data', { error: error?.message || error });
+      showError('Startup Error', `Failed to load application data: ${error?.message || 'Unknown error'}`);
       setIsAppReady(true); // Still set to ready so user can at least see the app/error
     }
   };
@@ -649,7 +636,6 @@ function App() {
   };
 
   const handleSplashFinish = useCallback(() => {
-    console.log('[App] Splash screen finished, transitioning to main UI');
     setShowSplash(false);
   }, []);
 
@@ -660,7 +646,6 @@ function App() {
         <Suspense fallback={null}>
           <OnboardingFlow
             onDismiss={() => {
-              console.log('[App] Welcome flow dismissed');
               setIsWelcomeDoneStore(true);
               // Explicitly set localStorage here as well for backward compatibility
               localStorage.setItem('luna_welcome_seen', 'true');
@@ -829,7 +814,7 @@ function App() {
                               }
                             }
                           } catch (error) {
-                            console.error('Failed to load request:', error);
+                            logger.error('Failed to load request', { error });
                             // Fallback is already handled by the initial setSelectedRequest(request)
                           }
                         }}

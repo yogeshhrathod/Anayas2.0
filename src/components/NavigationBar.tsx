@@ -1,18 +1,19 @@
 import {
-  ChevronDown,
-  FileJson,
-  FolderPlus,
-  Globe,
-  History as HistoryIcon,
-  Home,
-  Plus,
-  Settings as SettingsIcon,
-  Terminal,
-  Upload,
+    ChevronDown,
+    FileJson,
+    FolderPlus,
+    Globe,
+    History as HistoryIcon,
+    Home,
+    Plus,
+    Settings as SettingsIcon,
+    Terminal,
+    Upload,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useToastNotifications } from '../hooks/useToastNotifications';
 import { getShortcutDisplay, KEYMAP } from '../lib/keymap';
+import logger from '../lib/logger';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
 import { Request } from '../types/entities';
@@ -21,17 +22,17 @@ import { EnvironmentSelector } from './EnvironmentSelector';
 import { ImportCollectionDialog } from './import';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
 } from './ui/tooltip';
 
 export function NavigationBar() {
@@ -201,7 +202,7 @@ export function NavigationBar() {
             : 'Request loaded into builder',
       });
     } catch (error: any) {
-      console.error('Failed to import cURL request:', error);
+      logger.error('Failed to import cURL request', { error });
       showError('Import failed', error.message || 'Failed to import request');
       throw error;
     }

@@ -162,7 +162,7 @@ export function Docs() {
                 <Zap className="text-primary" /> Rapid Implementation
               </h3>
               <p className="text-gray-400 font-mono leading-relaxed mb-8">
-                Luna is designed to be drop-in ready. It parses your existing
+                Luna_ is designed to be drop-in ready. It parses your existing
                 OpenAPI/Swagger definitions and instantly generates a testable
                 collection. No configuration required. Just point to your schema
                 and start sending requests.

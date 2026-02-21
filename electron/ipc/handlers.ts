@@ -1,47 +1,47 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import fs from 'fs';
 import {
-  addCollection,
-  addEnvironment,
-  addFolder,
-  addFolderAfter,
-  addPreset,
-  addRequest,
-  addRequestAfter,
-  addRequestHistory,
-  addUnsavedRequest,
-  clearAllRequestHistory,
-  clearUnsavedRequests,
-  deleteCollection,
-  deleteEnvironment,
-  deleteFolder,
-  deletePreset,
-  deleteRequest,
-  deleteRequestHistory,
-  deleteUnsavedRequest,
-  generateUniqueId,
-  getAllPresets,
-  getAllSettings,
-  getAllUnsavedRequests,
-  getDatabase,
-  getSetting,
-  promoteUnsavedRequest,
-  reorderFolder,
-  reorderRequest,
-  resetSettings,
-  saveDatabase,
-  setSetting,
-  updateCollection,
-  updateEnvironment,
-  updateFolder,
-  updateRequest,
-  updateUnsavedRequest,
+    addCollection,
+    addEnvironment,
+    addFolder,
+    addFolderAfter,
+    addPreset,
+    addRequest,
+    addRequestAfter,
+    addRequestHistory,
+    addUnsavedRequest,
+    clearAllRequestHistory,
+    clearUnsavedRequests,
+    deleteCollection,
+    deleteEnvironment,
+    deleteFolder,
+    deletePreset,
+    deleteRequest,
+    deleteRequestHistory,
+    deleteUnsavedRequest,
+    generateUniqueId,
+    getAllPresets,
+    getAllSettings,
+    getAllUnsavedRequests,
+    getDatabase,
+    getSetting,
+    promoteUnsavedRequest,
+    reorderFolder,
+    reorderRequest,
+    resetSettings,
+    saveDatabase,
+    setSetting,
+    updateCollection,
+    updateEnvironment,
+    updateFolder,
+    updateRequest,
+    updateUnsavedRequest,
 } from '../database';
 import { generateCurlCommand } from '../lib/curl-generator';
 import { parseCurlCommand, parseCurlCommands } from '../lib/curl-parser';
 import {
-  EnvironmentExportGenerator,
-  getEnvironmentImportFactory,
+    EnvironmentExportGenerator,
+    getEnvironmentImportFactory,
 } from '../lib/environment';
 import type { ImportOptions, ImportResult } from '../lib/import';
 import { getImportFactory } from '../lib/import';
@@ -61,16 +61,17 @@ export function registerIpcHandlers() {
   // Environment operations
   ipcMain.handle('env:list', async () => {
     const db = getDatabase();
-    return db.environments.sort((a, b) => {
+    return JSON.parse(JSON.stringify(db.environments.sort((a, b) => {
       const aTime = a.lastUsed ? new Date(a.lastUsed).getTime() : 0;
       const bTime = b.lastUsed ? new Date(b.lastUsed).getTime() : 0;
       return bTime - aTime;
-    });
+    })));
   });
 
   ipcMain.handle('env:save', async (_, env) => {
+    if (!env) throw new Error('Environment data is required');
     if (env.id) {
-      updateEnvironment(env.id, {
+      await updateEnvironment(env.id, {
         name: env.name,
         displayName: env.displayName,
         variables: env.variables || {},
@@ -78,7 +79,7 @@ export function registerIpcHandlers() {
       });
       return { success: true, id: env.id };
     } else {
-      const id = addEnvironment({
+      const id = await addEnvironment({
         name: env.name,
         displayName: env.displayName,
         variables: env.variables || {},
@@ -89,7 +90,8 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('env:delete', async (_, id) => {
-    deleteEnvironment(id);
+    if (id === undefined || id === null) throw new Error('ID is required');
+    await deleteEnvironment(id);
     return { success: true };
   });
 
@@ -250,11 +252,13 @@ export function registerIpcHandlers() {
 
   // Format detection handler
   ipcMain.handle('env:detect-format', async (_, content: string) => {
+    if (!content) return { format: 'unknown', isValid: false, confidence: 0 };
     try {
       const factory = getEnvironmentImportFactory();
       const detection = factory.detectFormat(content);
       return detection;
     } catch (error: any) {
+      logger.error('Format detection failed', { error: error.message });
       return {
         format: 'unknown' as const,
         isValid: false,
@@ -291,23 +295,24 @@ export function registerIpcHandlers() {
         env.lastUsed = new Date().toISOString();
       }
     });
-    saveDatabase();
+    await saveDatabase();
     return { success: true };
   });
 
   // Collection operations
   ipcMain.handle('collection:list', async () => {
     const db = getDatabase();
-    return db.collections.sort((a, b) => {
+    return JSON.parse(JSON.stringify(db.collections.sort((a, b) => {
       const aTime = a.lastUsed ? new Date(a.lastUsed).getTime() : 0;
       const bTime = b.lastUsed ? new Date(b.lastUsed).getTime() : 0;
       return bTime - aTime;
-    });
+    })));
   });
 
   ipcMain.handle('collection:save', async (_, collection) => {
+    if (!collection) throw new Error('Collection data is required');
     if (collection.id) {
-      updateCollection(collection.id, {
+      await updateCollection(collection.id, {
         name: collection.name,
         description: collection.description,
         documentation: collection.documentation || '',
@@ -318,7 +323,7 @@ export function registerIpcHandlers() {
       broadcast('collections:updated');
       return { success: true, id: collection.id };
     } else {
-      const id = addCollection({
+      const id = await addCollection({
         name: collection.name,
         description: collection.description,
         documentation: collection.documentation || '',
@@ -332,7 +337,7 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('collection:delete', async (_, id) => {
-    deleteCollection(id);
+    await deleteCollection(id);
     broadcast('collections:updated');
     broadcast('requests:updated');
     return { success: true };
@@ -343,7 +348,7 @@ export function registerIpcHandlers() {
     const collection = db.collections.find(c => c.id === id);
     if (collection) {
       collection.isFavorite = collection.isFavorite ? 0 : 1;
-      saveDatabase();
+      await saveDatabase();
     }
     broadcast('collections:updated');
     return { success: true };
@@ -375,7 +380,7 @@ export function registerIpcHandlers() {
         collection.activeEnvironmentId = envId;
       }
 
-      saveDatabase();
+      await saveDatabase();
       const updatedCollection = db.collections.find(c => c.id === collectionId);
       broadcast('collections:updated');
       return { success: true, id: envId, collection: updatedCollection };
@@ -397,7 +402,7 @@ export function registerIpcHandlers() {
       }
 
       Object.assign(env, updates);
-      saveDatabase();
+      await saveDatabase();
       const updatedCollection = db.collections.find(c => c.id === collectionId);
       broadcast('collections:updated');
       return { success: true, collection: updatedCollection };
@@ -425,7 +430,7 @@ export function registerIpcHandlers() {
             : undefined;
       }
 
-      saveDatabase();
+      await saveDatabase();
       const updatedCollection = db.collections.find(c => c.id === collectionId);
       broadcast('collections:updated');
       return { success: true, collection: updatedCollection };
@@ -451,7 +456,7 @@ export function registerIpcHandlers() {
       }
 
       collection.activeEnvironmentId = environmentId;
-      saveDatabase();
+      await saveDatabase();
       const updatedCollection = db.collections.find(c => c.id === collectionId);
       broadcast('collections:updated');
       return { success: true, collection: updatedCollection };
@@ -466,14 +471,14 @@ export function registerIpcHandlers() {
     );
 
     // Sort by order field, then by id as fallback
-    return filteredFolders.sort((a, b) => {
+    return JSON.parse(JSON.stringify(filteredFolders.sort((a, b) => {
       const orderA = a.order || 0;
       const orderB = b.order || 0;
       if (orderA !== orderB) {
         return orderA - orderB;
       }
       return (a.id || 0) - (b.id || 0);
-    });
+    })));
   });
 
   ipcMain.handle('folder:save', async (_, folder) => {
@@ -487,7 +492,7 @@ export function registerIpcHandlers() {
       broadcast('folders:updated');
       return { success: true, id: folder.id };
     } else {
-      const id = addFolder({
+      const id = await addFolder({
         name: folder.name,
         description: folder.description,
         collectionId: folder.collectionId,
@@ -499,19 +504,19 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('folder:saveAfter', async (_, folder, afterFolderId) => {
-    const id = addFolderAfter(folder, afterFolderId);
+    const id = await addFolderAfter(folder, afterFolderId);
     broadcast('folders:updated');
     return { success: true, id };
   });
 
   ipcMain.handle('folder:reorder', async (_, folderId, newOrder) => {
-    reorderFolder(folderId, newOrder);
+    await reorderFolder(folderId, newOrder);
     broadcast('folders:updated');
     return { success: true };
   });
 
   ipcMain.handle('folder:delete', async (_, id) => {
-    deleteFolder(id);
+    await deleteFolder(id);
     broadcast('folders:updated');
     return { success: true };
   });
@@ -530,14 +535,14 @@ export function registerIpcHandlers() {
     });
 
     // Sort by order field, then by id as fallback
-    return filteredRequests.sort((a, b) => {
+    return JSON.parse(JSON.stringify(filteredRequests.sort((a, b) => {
       const orderA = a.order || 0;
       const orderB = b.order || 0;
       if (orderA !== orderB) {
         return orderA - orderB;
       }
       return (a.id || 0) - (b.id || 0);
-    });
+    })));
   });
 
   ipcMain.handle('request:get', async (_, id) => {
@@ -546,6 +551,7 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('request:save', async (_, request) => {
+    if (!request) throw new Error('Request data is required');
     if (request.id) {
       updateRequest(request.id, {
         name: request.name,
@@ -564,7 +570,7 @@ export function registerIpcHandlers() {
       broadcast('requests:updated');
       return { success: true, id: request.id };
     } else {
-      const id = addRequest({
+      const id = await addRequest({
         name: request.name,
         method: request.method,
         url: request.url,
@@ -584,7 +590,7 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('request:saveAfter', async (_, request, afterRequestId) => {
-    const id = addRequestAfter(
+    const id = await addRequestAfter(
       {
         name: request.name,
         method: request.method,
@@ -604,13 +610,13 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('request:reorder', async (_, requestId, newOrder) => {
-    reorderRequest(requestId, newOrder);
+    await reorderRequest(requestId, newOrder);
     broadcast('requests:updated');
     return { success: true };
   });
 
   ipcMain.handle('request:delete', async (_, id) => {
-    deleteRequest(id);
+    await deleteRequest(id);
     broadcast('requests:updated');
     return { success: true };
   });
@@ -743,7 +749,7 @@ export function registerIpcHandlers() {
       }
 
       // Save to history with original URL and request metadata for reference
-      addRequestHistory({
+      await addRequestHistory({
         method: method,
         url: resolvedUrl,
         status: result.status,
@@ -932,7 +938,7 @@ export function registerIpcHandlers() {
           }
 
           // Save to history with request metadata
-          addRequestHistory({
+          await addRequestHistory({
             method: request.method,
             url: resolvedUrl,
             status: result.status,
@@ -1031,13 +1037,13 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('request:deleteHistory', async (_, id) => {
-    deleteRequestHistory(id);
+    await deleteRequestHistory(id);
     broadcast('history:updated');
     return { success: true };
   });
 
   ipcMain.handle('request:clearAllHistory', async () => {
-    clearAllRequestHistory();
+    await clearAllRequestHistory();
     broadcast('history:updated');
     return { success: true };
   });
@@ -1048,7 +1054,7 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('settings:set', async (_, key, value) => {
-    setSetting(key, value);
+    await setSetting(key, value);
     return { success: true };
   });
 
@@ -1057,7 +1063,7 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('settings:reset', async () => {
-    resetSettings();
+    await resetSettings();
     return { success: true };
   });
 
@@ -1075,7 +1081,7 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('settings:setSidebarState', async (_, state) => {
-    setSetting('sidebar', state);
+    await setSetting('sidebar', state);
     return { success: true };
   });
 
@@ -1190,7 +1196,7 @@ export function registerIpcHandlers() {
   ipcMain.handle('unsaved-request:save', async (_, request) => {
     try {
       if (request.id) {
-        updateUnsavedRequest(request.id, {
+        await updateUnsavedRequest(request.id, {
           name: request.name,
           method: request.method,
           url: request.url,
@@ -1202,7 +1208,7 @@ export function registerIpcHandlers() {
         });
         return { success: true, id: request.id };
       } else {
-        const id = addUnsavedRequest({
+        const id = await addUnsavedRequest({
           name: request.name,
           method: request.method,
           url: request.url,
@@ -1230,7 +1236,7 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('unsaved-request:delete', async (_, id) => {
     try {
-      deleteUnsavedRequest(id);
+      await deleteUnsavedRequest(id);
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -1239,7 +1245,7 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('unsaved-request:clear', async () => {
     try {
-      clearUnsavedRequests();
+      await clearUnsavedRequests();
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -1248,7 +1254,7 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('unsaved-request:promote', async (_, id, data) => {
     try {
-      const savedId = promoteUnsavedRequest(id, data);
+      const savedId = await promoteUnsavedRequest(id, data);
       return { success: true, id: savedId };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -1260,27 +1266,27 @@ export function registerIpcHandlers() {
     try {
       return getAllPresets(requestId);
     } catch (error: any) {
-      console.error('Failed to list presets:', error);
+      logger.error('Failed to list presets', { error: error.message });
       return [];
     }
   });
 
   ipcMain.handle('preset:save', async (_, preset) => {
     try {
-      const id = addPreset(preset);
+      const id = await addPreset(preset);
       return { success: true, id };
     } catch (error: any) {
-      console.error('Failed to save preset:', error);
+      logger.error('Failed to save preset', { error: error.message });
       return { success: false, error: error.message };
     }
   });
 
   ipcMain.handle('preset:delete', async (_, id) => {
     try {
-      deletePreset(id);
+      await deletePreset(id);
       return { success: true };
     } catch (error: any) {
-      console.error('Failed to delete preset:', error);
+      logger.error('Failed to delete preset', { error: error.message });
       return { success: false, error: error.message };
     }
   });
@@ -1291,7 +1297,7 @@ export function registerIpcHandlers() {
       const request = parseCurlCommand(command);
       return { success: true, request };
     } catch (error: any) {
-      console.error('Failed to parse cURL command:', error);
+      logger.error('Failed to parse cURL command', { error: error.message });
       return { success: false, error: error.message };
     }
   });
@@ -1413,7 +1419,7 @@ export function registerIpcHandlers() {
       const curlCommand = generateCurlCommand(resolvedRequest);
       return { success: true, command: curlCommand };
     } catch (error: any) {
-      console.error('Failed to generate cURL command:', error);
+      logger.error('Failed to generate cURL command', { error: error.message });
       return { success: false, error: error.message };
     }
   });
@@ -1423,7 +1429,7 @@ export function registerIpcHandlers() {
       const results = parseCurlCommands(commands);
       return { success: true, results };
     } catch (error: any) {
-      console.error('Failed to parse bulk cURL commands:', error);
+      logger.error('Failed to parse bulk cURL commands', { error: error.message });
       return { success: false, error: error.message };
     }
   });
@@ -1434,16 +1440,17 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('import:detect-format', async (_, content: string) => {
     try {
-      console.log(
-        '[Import] Detecting format, content length:',
-        content?.length || 0
-      );
+      logger.info('[Import] Detecting format', {
+        contentLength: content?.length || 0,
+      });
       const factory = getImportFactory();
       const result = await factory.detectFormat(content);
-      console.log('[Import] Format detection result:', result);
+      logger.info('[Import] Format detection result', { result });
       return result;
     } catch (error: any) {
-      console.error('[Import] Failed to detect import format:', error);
+      logger.error('[Import] Failed to detect import format', {
+        error: error.message,
+      });
       return {
         format: null,
         isValid: false,
@@ -1457,16 +1464,15 @@ export function registerIpcHandlers() {
     'import:parse',
     async (_, content: string, format?: string) => {
       try {
-        console.log('[Import] Parsing content, format:', format);
+        logger.info('[Import] Parsing content', { format });
         const factory = getImportFactory();
         const result = await factory.parse(content, format);
-        console.log(
-          '[Import] Parse result:',
-          result.success,
-          result.error || ''
-        );
+        logger.info('[Import] Parse result', {
+          success: result.success,
+          error: result.error || '',
+        });
         if (result.success && result.result) {
-          console.log('[Import] Parsed:', {
+          logger.info('[Import] Parsed metadata', {
             collection: result.result.collection.name,
             folders: result.result.folders.length,
             requests: result.result.requests.length,
@@ -1476,7 +1482,9 @@ export function registerIpcHandlers() {
         }
         return result;
       } catch (error: any) {
-        console.error('[Import] Failed to parse import:', error);
+        logger.error('[Import] Failed to parse import', {
+          error: error.message,
+        });
         return { success: false, error: error.message };
       }
     }
@@ -1490,7 +1498,7 @@ export function registerIpcHandlers() {
         const warnings: string[] = [];
 
         // Create the collection first
-        const collectionId = addCollection({
+        const collectionId = await addCollection({
           name: importResult.collection.name,
           description: importResult.collection.description || '',
           documentation: importResult.collection.documentation || '',
@@ -1510,7 +1518,7 @@ export function registerIpcHandlers() {
 
         // Create folders
         for (const folder of sortedFolders) {
-          const folderId = addFolder({
+          const folderId = await addFolder({
             name: folder.name,
             description: folder.description || '',
             collectionId: collectionId,
@@ -1528,7 +1536,7 @@ export function registerIpcHandlers() {
               ? folderIdMap.get(request.folderTempId) || null
               : null;
 
-            addRequest({
+            await addRequest({
               name: request.name,
               method: request.method,
               url: request.url,
@@ -1570,13 +1578,13 @@ export function registerIpcHandlers() {
               if (collection.environments.length > 0) {
                 collection.activeEnvironmentId = collection.environments[0].id;
               }
-              saveDatabase();
+              await saveDatabase();
               environmentCount = importResult.environments.length;
             }
           } else if (options.environmentMode === 'global') {
             // Add as global environments
             for (const env of importResult.environments) {
-              addEnvironment({
+              await addEnvironment({
                 name: env.name,
                 displayName: env.name,
                 variables: env.variables,
@@ -1601,7 +1609,7 @@ export function registerIpcHandlers() {
           warnings,
         };
       } catch (error: any) {
-        console.error('Failed to execute import:', error);
+        logger.error('Failed to execute import', { error });
         return {
           success: false,
           error: error.message,
@@ -1620,8 +1628,25 @@ export function registerIpcHandlers() {
       const formats = await factory.getSupportedFormats();
       return formats;
     } catch (error: any) {
-      console.error('Failed to get supported formats:', error);
+      logger.error('Failed to get supported formats', { error: error.message });
       return [];
     }
+  });
+
+  // Logger operations from renderer
+  ipcMain.handle('logger:info', (_event, message, args) => {
+    logger.info(`[Renderer] ${message}`, { args });
+  });
+
+  ipcMain.handle('logger:error', (_event, message, args) => {
+    logger.error(`[Renderer] ${message}`, { args });
+  });
+
+  ipcMain.handle('logger:warn', (_event, message, args) => {
+    logger.warn(`[Renderer] ${message}`, { args });
+  });
+
+  ipcMain.handle('logger:debug', (_event, message, args) => {
+    logger.debug(`[Renderer] ${message}`, { args });
   });
 }

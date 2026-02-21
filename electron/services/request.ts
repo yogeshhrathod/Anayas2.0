@@ -1,6 +1,6 @@
+import { BrowserWindow } from 'electron';
 import { apiService } from './api';
 import { createLogger } from './logger';
-import { BrowserWindow } from 'electron';
 
 const logger = createLogger('request');
 
@@ -40,14 +40,12 @@ export class RequestService {
       progress,
       ...extra,
     };
-    console.log('[RequestService] Sending progress:', progressData);
     if (this.mainWindow) {
-      console.log('[RequestService] MainWindow exists, sending to webContents');
       this.mainWindow.webContents.send('request:progress', progressData);
     } else {
-      console.log('[RequestService] ERROR: No mainWindow!');
+      logger.warn('[RequestService] No mainWindow associated');
     }
-    logger.info(`Progress: ${step} - ${message}`, { progress, ...extra });
+    logger.debug(`Progress: ${step} - ${message}`, { progress, ...extra });
   }
 
   async sendRequest(options: RequestOptions): Promise<RequestResponse> {
