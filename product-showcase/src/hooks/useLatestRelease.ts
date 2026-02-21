@@ -21,7 +21,7 @@ interface LatestReleaseData {
   error: Error | null;
 }
 
-const GITHUB_REPO = 'yogeshhrathod/Luna2.0';
+const GITHUB_REPO = 'yogeshhrathod/Anayas2.0';
 const DEFAULT_URLS = {
   mac: `https://github.com/${GITHUB_REPO}/releases/latest/download/Luna-mac.dmg`,
   windows: `https://github.com/${GITHUB_REPO}/releases/latest/download/Luna-win.exe`,

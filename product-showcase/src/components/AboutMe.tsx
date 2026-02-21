@@ -33,7 +33,7 @@ const projects = [
     name: 'Luna_ 2.0',
     desc: 'A modern, Electron-based REST API client reimagined from the ground up. Built for speed, collections, environments, and developer joy.',
     lang: 'TypeScript',
-    url: 'https://github.com/yogeshhrathod/Luna2.0',
+    url: 'https://github.com/yogeshhrathod/Anayas2.0',
     highlight: true,
   },
   {
