@@ -210,15 +210,10 @@ export const useStore = create<AppState>()(
       environmentToEditId: null,
       variableToFocus: null,
       setEnvironmentToEdit: (environmentId, variableName) => {
-        console.log('[Store] setEnvironmentToEdit called with:', {
-          environmentId,
-          variableName,
-        });
         set({
           environmentToEditId: environmentId,
           variableToFocus: variableName || null,
         });
-        console.log('[Store] environmentToEditId set to:', environmentId);
       },
 
       // Collection Hierarchy State
@@ -382,7 +377,9 @@ export const useStore = create<AppState>()(
         sidebarWidth: state.sidebarWidth,
         unsavedSectionHeight: state.unsavedSectionHeight,
         presetsExpanded: state.presetsExpanded,
-        selectedRequest: state.selectedRequest,
+        selectedRequest: state.selectedRequest
+          ? { ...state.selectedRequest, lastResponse: undefined }
+          : null,
         activeUnsavedRequestId: state.activeUnsavedRequestId,
         currentPage: state.currentPage,
         isWelcomeDone: state.isWelcomeDone,

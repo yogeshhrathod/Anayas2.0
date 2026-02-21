@@ -14,7 +14,9 @@
  */
 
 import * as Sentry from '@sentry/electron/main';
+import crypto from 'crypto';
 import { app } from 'electron';
+import os from 'os';
 
 // Check if we're in development mode
 const isDev =
@@ -92,7 +94,7 @@ export async function initSentry(): Promise<void> {
       environment: isDev ? 'development' : 'production',
 
       // Enable all performance monitoring features
-      tracesSampleRate: 1.0, // Capture 100% of transactions for performance monitoring
+      tracesSampleRate: 0.2, // Capture 20% of transactions (reduced from 100% for privacy and billing)
 
       // Capture breadcrumbs for better context
       // Records user actions, console logs, network requests leading to an error
@@ -202,9 +204,6 @@ export function isTelemetryCurrentlyEnabled(): boolean {
  */
 function getAnonymousUserId(): string {
   try {
-    // Use a simple hash of machine info for anonymous tracking
-    const crypto = require('crypto');
-    const os = require('os');
     const machineId = `${os.hostname()}-${os.userInfo().username}-${os.platform()}`;
     return crypto
       .createHash('sha256')

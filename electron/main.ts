@@ -15,7 +15,6 @@ import { createLogger } from './services/logger';
 const logger = createLogger('main');
 
 let mainWindow: BrowserWindow | null = null;
-let lastGeneratedFilePath: string | null = null;
 
 function createWindow() {
   // Detect system dark mode and set appropriate background

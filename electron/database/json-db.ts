@@ -338,10 +338,27 @@ export function updateCollection(id: number, collection: any): void {
 }
 
 export function deleteCollection(id: number): void {
+  // Collect IDs of requests being deleted for cascading cleanup
+  const deletedRequestIds = new Set(
+    db.requests.filter(r => r.collectionId === id).map(r => r.id)
+  );
+
   db.collections = db.collections.filter(c => c.id !== id);
   // Also delete all folders and requests in this collection
   db.folders = db.folders.filter(f => f.collectionId !== id);
   db.requests = db.requests.filter(r => r.collectionId !== id);
+
+  // Clean up orphaned request history for deleted requests
+  if (deletedRequestIds.size > 0) {
+    db.request_history = db.request_history.filter(
+      h => !deletedRequestIds.has(h.requestId)
+    );
+    // Clean up orphaned presets for deleted requests
+    db.presets = db.presets.filter(
+      p => !deletedRequestIds.has(p.requestId)
+    );
+  }
+
   saveDatabase();
 }
 

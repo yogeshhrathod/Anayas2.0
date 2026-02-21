@@ -199,7 +199,6 @@ function App() {
 
     'show-shortcuts': () => {
       // TODO: Implement shortcut help dialog
-      console.log('Show shortcuts help');
     },
 
     'edit-item': (_: KeyboardEvent, context: ContextState) => {
@@ -217,7 +216,6 @@ function App() {
         }
       } else if (context.selectedItem.type === 'folder') {
         // TODO: Implement folder editing
-        console.log('Folder edit not implemented yet');
       }
     },
 
@@ -355,12 +353,10 @@ function App() {
 
     'send-request': () => {
       // TODO: Trigger send request action
-      console.log('Send request');
     },
 
     'save-request': () => {
       // TODO: Trigger save request action
-      console.log('Save request');
     },
 
     'focus-url': () => {
@@ -404,12 +400,10 @@ function App() {
 
     'add-folder': () => {
       // TODO: Implement new folder creation
-      console.log('Add folder');
     },
 
     'new-collection': () => {
       // TODO: Implement new collection creation
-      console.log('New collection');
     },
 
     'export-collection': async (_: KeyboardEvent, context: ContextState) => {
@@ -582,8 +576,7 @@ function App() {
       setIsAppReady(true);
     } catch (error) {
       console.error('Failed to load initial data:', error);
-      // Show user-friendly error - you could add a toast here
-      alert('Failed to load application data. Please restart the application.');
+      showError('Startup Error', 'Failed to load application data. Please restart the application.');
       setIsAppReady(true); // Still set to ready so user can at least see the app/error
     }
   };
@@ -649,7 +642,6 @@ function App() {
   };
 
   const handleSplashFinish = useCallback(() => {
-    console.log('[App] Splash screen finished, transitioning to main UI');
     setShowSplash(false);
   }, []);
 
@@ -660,7 +652,6 @@ function App() {
         <Suspense fallback={null}>
           <OnboardingFlow
             onDismiss={() => {
-              console.log('[App] Welcome flow dismissed');
               setIsWelcomeDoneStore(true);
               // Explicitly set localStorage here as well for backward compatibility
               localStorage.setItem('luna_welcome_seen', 'true');

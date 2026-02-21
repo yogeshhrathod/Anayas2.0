@@ -85,7 +85,7 @@ export async function initSentryRenderer(): Promise<void> {
       environment: isDev ? 'development' : 'production',
 
       // Performance monitoring
-      tracesSampleRate: 1.0,
+      tracesSampleRate: 0.2, // Capture 20% of transactions (reduced from 100% for privacy and billing)
 
       // Breadcrumbs for context
       maxBreadcrumbs: 100,
@@ -111,7 +111,7 @@ export async function initSentryRenderer(): Promise<void> {
       ],
 
       // Replay sample rates
-      replaysSessionSampleRate: 0.1, // 10% of sessions
+      replaysSessionSampleRate: 0.01, // 1% of sessions (reduced for privacy in an API testing tool)
       replaysOnErrorSampleRate: 1.0, // 100% of sessions with errors
 
       // Filter events before sending

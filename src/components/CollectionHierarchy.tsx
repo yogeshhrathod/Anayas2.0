@@ -398,22 +398,19 @@ export function CollectionHierarchy({
       targetFolderId
     ) => {
       try {
+        const requestToMove = requests.find(r => r.id === requestId);
         await window.electronAPI.request.save({
           id: requestId as any,
-          name: requests.find(r => r.id === requestId)?.name || '',
-          method:
-            (requests.find(r => r.id === requestId)?.method as any) || 'GET',
-          url: requests.find(r => r.id === requestId)?.url || '',
-          headers: requests.find(r => r.id === requestId)?.headers || {},
-          body: requests.find(r => r.id === requestId)?.body || '',
-          queryParams:
-            requests.find(r => r.id === requestId)?.queryParams || [],
-          auth: requests.find(r => r.id === requestId)?.auth || {
-            type: 'none',
-          },
+          name: requestToMove?.name || '',
+          method: (requestToMove?.method as any) || 'GET',
+          url: requestToMove?.url || '',
+          headers: requestToMove?.headers || {},
+          body: requestToMove?.body || '',
+          queryParams: requestToMove?.queryParams || [],
+          auth: requestToMove?.auth || { type: 'none' },
           collectionId: targetCollectionId,
           folderId: targetFolderId,
-          isFavorite: requests.find(r => r.id === requestId)?.isFavorite || 0,
+          isFavorite: requestToMove?.isFavorite || 0,
         });
         showSuccess('Request moved successfully');
         // Refresh data
@@ -768,20 +765,17 @@ export function CollectionHierarchy({
                 })
               }
               onEdit={() => {
-                // Handle edit collection
-                console.log('Edit collection:', collection.id);
+                // TODO: Implement edit collection dialog from context menu
               }}
               onDelete={() => handleDeleteCollection(collection.id!)}
               onAddRequest={() => handleAddRequest(collection.id!)}
               onAddFolder={() => handleAddFolder(collection.id!)}
               onDuplicate={() => handleDuplicateCollection(collection.id!)}
               onExport={() => {
-                // Handle export collection
-                console.log('Export collection:', collection.id);
+                // TODO: Implement export collection from context menu
               }}
               onImport={() => {
-                // Handle import collection
-                console.log('Import collection:', collection.id);
+                // TODO: Implement import collection from context menu
               }}
               dragProps={{
                 draggable: true,
@@ -947,8 +941,7 @@ export function CollectionHierarchy({
                           })
                         }
                         onEdit={() => {
-                          // Handle edit folder
-                          console.log('Edit folder:', folder.id);
+                          // TODO: Implement folder editing
                         }}
                         onDelete={() => handleDeleteFolder(folder.id!)}
                         onAddRequest={() => handleAddRequest(collection.id!, folder.id)}
@@ -1157,16 +1150,14 @@ export function CollectionHierarchy({
                                 })
                               }
                               onEdit={() => {
-                                // Handle edit request
-                                console.log('Edit request:', request.id);
+                                // TODO: Implement request editing from context menu
                               }}
                               onDelete={() => handleDeleteRequest(request.id!)}
                               onDuplicate={() =>
                                 handleDuplicateRequest(request.id!)
                               }
                               onExport={() => {
-                                // Handle export request
-                                console.log('Export request:', request.id);
+                                // TODO: Implement request export from context menu
                               }}
                               dragProps={{
                                 draggable: true,
@@ -1253,14 +1244,12 @@ export function CollectionHierarchy({
                       })
                     }
                     onEdit={() => {
-                      // Handle edit request
-                      console.log('Edit request:', request.id);
+                      // TODO: Implement request editing from context menu
                     }}
                     onDelete={() => handleDeleteRequest(request.id!)}
                     onDuplicate={() => handleDuplicateRequest(request.id!)}
                     onExport={() => {
-                      // Handle export request
-                      console.log('Export request:', request.id);
+                      // TODO: Implement request export from context menu
                     }}
                     dragProps={{
                       draggable: true,

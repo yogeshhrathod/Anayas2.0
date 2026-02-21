@@ -218,7 +218,6 @@ export function useRequestState(selectedRequest: Request | null) {
       JSON.stringify(state.requestData.auth || {}) === JSON.stringify(selectedRequest.auth || {});
 
     if (!isSameRequest) {
-      console.log('[useRequestState] Diff detected, updating global store');
       isInternalUpdateRef.current = true;
       setSelectedRequest({
         ...selectedRequest,
