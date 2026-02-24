@@ -74,7 +74,10 @@ export interface RequestHeaderProps {
     setTempName: (name: string) => void;
   };
   onSend: () => void;
+  onCancel: () => void;
   isLoading: boolean;
+  bodyType?: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded';
+  bodyFormData?: Array<{ key: string; value: string; enabled: boolean }>;
 }
 
 export const RequestHeader: React.FC<RequestHeaderProps> = ({
@@ -86,7 +89,10 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
   tempName,
   onNameEdit,
   onSend,
+  onCancel,
   isLoading,
+  bodyType,
+  bodyFormData,
 }) => {
   const { showSuccess, showError } = useToastNotifications();
 
@@ -119,6 +125,8 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
         queryParams: requestData.queryParams || [],
         auth: requestData.auth || { type: 'none' },
         collectionId: requestData.collectionId,
+        bodyType,
+        bodyFormData,
       };
 
       const result = await window.electronAPI.curl.generate(request);
@@ -257,7 +265,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
                   variant="outline"
                   size="icon"
                   onClick={handleCopyAsCurl}
-                  disabled={!requestData.url.trim()}
+                  disabled={!requestData.url.trim() && !isLoading}
                   title="Copy as cURL"
                 >
                   <Copy className="h-4 w-4" />
@@ -269,25 +277,28 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
             </Tooltip>
           </TooltipProvider>
 
-          {/* Send Button */}
-          <Button
-            onClick={onSend}
-            disabled={isLoading || !requestData.url.trim()}
-            title={`Send Request (${getShortcutDisplay(KEYMAP.SEND_REQUEST)})`}
-            className={isLoading ? 'animate-ripple' : 'transition-transform active:scale-95'}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4 mr-2" />
-                Send
-              </>
-            )}
-          </Button>
+          {/* Send / Cancel Button */}
+          {isLoading ? (
+            <Button
+              onClick={onCancel}
+              variant="destructive"
+              title="Cancel Request"
+              className="transition-transform active:scale-95"
+            >
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Cancel
+            </Button>
+          ) : (
+            <Button
+              onClick={onSend}
+              disabled={!requestData.url.trim()}
+              title={`Send Request (${getShortcutDisplay(KEYMAP.SEND_REQUEST)})`}
+              className="transition-transform active:scale-95"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Send
+            </Button>
+          )}
         </div>
       </div>
     </div>

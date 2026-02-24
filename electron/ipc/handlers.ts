@@ -1,47 +1,47 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import fs from 'fs';
 import {
-    addCollection,
-    addEnvironment,
-    addFolder,
-    addFolderAfter,
-    addPreset,
-    addRequest,
-    addRequestAfter,
-    addRequestHistory,
-    addUnsavedRequest,
-    clearAllRequestHistory,
-    clearUnsavedRequests,
-    deleteCollection,
-    deleteEnvironment,
-    deleteFolder,
-    deletePreset,
-    deleteRequest,
-    deleteRequestHistory,
-    deleteUnsavedRequest,
-    generateUniqueId,
-    getAllPresets,
-    getAllSettings,
-    getAllUnsavedRequests,
-    getDatabase,
-    getSetting,
-    promoteUnsavedRequest,
-    reorderFolder,
-    reorderRequest,
-    resetSettings,
-    saveDatabase,
-    setSetting,
-    updateCollection,
-    updateEnvironment,
-    updateFolder,
-    updateRequest,
-    updateUnsavedRequest,
+  addCollection,
+  addEnvironment,
+  addFolder,
+  addFolderAfter,
+  addPreset,
+  addRequest,
+  addRequestAfter,
+  addRequestHistory,
+  addUnsavedRequest,
+  clearAllRequestHistory,
+  clearUnsavedRequests,
+  deleteCollection,
+  deleteEnvironment,
+  deleteFolder,
+  deletePreset,
+  deleteRequest,
+  deleteRequestHistory,
+  deleteUnsavedRequest,
+  generateUniqueId,
+  getAllPresets,
+  getAllSettings,
+  getAllUnsavedRequests,
+  getDatabase,
+  getSetting,
+  promoteUnsavedRequest,
+  reorderFolder,
+  reorderRequest,
+  resetSettings,
+  saveDatabase,
+  setSetting,
+  updateCollection,
+  updateEnvironment,
+  updateFolder,
+  updateRequest,
+  updateUnsavedRequest,
 } from '../database';
 import { generateCurlCommand } from '../lib/curl-generator';
 import { parseCurlCommand, parseCurlCommands } from '../lib/curl-parser';
 import {
-    EnvironmentExportGenerator,
-    getEnvironmentImportFactory,
+  EnvironmentExportGenerator,
+  getEnvironmentImportFactory,
 } from '../lib/environment';
 import type { ImportOptions, ImportResult } from '../lib/import';
 import { getImportFactory } from '../lib/import';
@@ -621,6 +621,10 @@ export function registerIpcHandlers() {
     return { success: true };
   });
 
+  ipcMain.handle('request:cancel', async (_, transactionId) => {
+    return apiService.cancelRequest(transactionId);
+  });
+
   ipcMain.handle('request:send', async (_, options) => {
     const startTime = Date.now();
     try {
@@ -701,43 +705,20 @@ export function registerIpcHandlers() {
       let result: any;
       const method = options.method || 'GET';
 
-      switch (method) {
-        case 'GET':
-          result = await apiService.getJson(resolvedUrl, resolvedHeaders);
-          break;
-        case 'POST':
-          result = await apiService.postJson(
-            resolvedUrl,
-            resolvedBody,
-            resolvedHeaders
-          );
-          break;
-        case 'PUT':
-          result = await apiService.putJson(
-            resolvedUrl,
-            resolvedBody,
-            resolvedHeaders
-          );
-          break;
-        case 'PATCH':
-          result = await apiService.patchJson(
-            resolvedUrl,
-            resolvedBody,
-            resolvedHeaders
-          );
-          break;
-        case 'DELETE':
-          result = await apiService.deleteJson(resolvedUrl, resolvedHeaders);
-          break;
-        case 'HEAD':
-          result = await apiService.headJson(resolvedUrl, resolvedHeaders);
-          break;
-        case 'OPTIONS':
-          result = await apiService.optionsJson(resolvedUrl, resolvedHeaders);
-          break;
-        default:
-          throw new Error(`Unsupported HTTP method: ${method}`);
-      }
+      const isJsonBody = 
+        (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE') && 
+        !!resolvedBody && 
+        typeof resolvedBody === 'string';
+
+      const requestOptions = {
+        method,
+        headers: resolvedHeaders,
+        body: resolvedBody,
+        isJson: isJsonBody,
+        transactionId: options.transactionId,
+      };
+
+      result = await apiService.request(resolvedUrl, requestOptions);
 
       // Get request name if requestId exists
       let requestName: string | undefined;
@@ -891,51 +872,19 @@ export function registerIpcHandlers() {
             })
           );
 
-          // Execute request
-          let result: any;
-          switch (request.method) {
-            case 'GET':
-              result = await apiService.getJson(resolvedUrl, resolvedHeaders);
-              break;
-            case 'POST':
-              result = await apiService.postJson(
-                resolvedUrl,
-                resolvedBody,
-                resolvedHeaders
-              );
-              break;
-            case 'PUT':
-              result = await apiService.putJson(
-                resolvedUrl,
-                resolvedBody,
-                resolvedHeaders
-              );
-              break;
-            case 'PATCH':
-              result = await apiService.patchJson(
-                resolvedUrl,
-                resolvedBody,
-                resolvedHeaders
-              );
-              break;
-            case 'DELETE':
-              result = await apiService.deleteJson(
-                resolvedUrl,
-                resolvedHeaders
-              );
-              break;
-            case 'HEAD':
-              result = await apiService.headJson(resolvedUrl, resolvedHeaders);
-              break;
-            case 'OPTIONS':
-              result = await apiService.optionsJson(
-                resolvedUrl,
-                resolvedHeaders
-              );
-              break;
-            default:
-              throw new Error(`Unsupported HTTP method: ${request.method}`);
-          }
+          const isJsonBody = 
+            (request.method === 'POST' || request.method === 'PUT' || request.method === 'PATCH' || request.method === 'DELETE') && 
+            !!resolvedBody && 
+            typeof resolvedBody === 'string';
+
+          const requestOptions = {
+            method: request.method,
+            headers: resolvedHeaders,
+            body: resolvedBody,
+            isJson: isJsonBody,
+          };
+
+          const result = await apiService.request(resolvedUrl, requestOptions);
 
           // Save to history with request metadata
           await addRequestHistory({
@@ -1406,6 +1355,13 @@ export function registerIpcHandlers() {
         }
       }
 
+      const resolvedBodyFormData = (request.bodyFormData || []).map(
+        (param: { key: string; value: string; enabled: boolean }) => ({
+          ...param,
+          value: variableResolver.resolve(param.value || '', variableContext),
+        })
+      );
+
       // Generate cURL command with resolved values
       const resolvedRequest = {
         method: request.method,
@@ -1414,6 +1370,8 @@ export function registerIpcHandlers() {
         body: resolvedBody,
         queryParams: resolvedQueryParams,
         auth: resolvedAuth,
+        bodyType: request.bodyType,
+        bodyFormData: resolvedBodyFormData,
       };
 
       const curlCommand = generateCurlCommand(resolvedRequest);

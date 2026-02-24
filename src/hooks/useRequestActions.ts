@@ -38,10 +38,12 @@ export interface RequestActionsState {
   newPresetDescription: string;
   isPresetsExpanded: boolean;
   activePresetId: string | null;
+  activeTransactionId: string | null;
 }
 
 export interface RequestActionsActions {
   sendRequest: () => Promise<void>;
+  cancelRequest: () => Promise<void>;
   saveRequest: () => Promise<void>;
   copyResponse: () => void;
   downloadResponse: () => void;
@@ -81,6 +83,7 @@ export function useRequestActions(requestData: RequestFormData) {
     newPresetDescription: '',
     isPresetsExpanded: presetsExpanded ?? false,
     activePresetId: null,
+    activeTransactionId: null,
   });
 
   // Load saved response when request changes
@@ -119,13 +122,25 @@ export function useRequestActions(requestData: RequestFormData) {
     loadPresets();
   }, [requestData.id]);
 
+  const cancelRequest = useCallback(async () => {
+    setState(prev => {
+      if (prev.activeTransactionId) {
+        window.electronAPI.request.cancel(prev.activeTransactionId).catch((err: any) => {
+          logger.error('Cancel request failed', { error: err });
+        });
+      }
+      return { ...prev, isLoading: false, activeTransactionId: null };
+    });
+  }, []);
+
   const sendRequest = useCallback(async () => {
     if (!requestData.url.trim()) {
       showError('Invalid URL', 'Please enter a valid URL');
       return;
     }
 
-    setState(prev => ({ ...prev, isLoading: true, response: null }));
+    const transactionId = Date.now().toString() + Math.random().toString(36).substring(7);
+    setState(prev => ({ ...prev, isLoading: true, response: null, activeTransactionId: transactionId }));
 
     try {
       const result = await window.electronAPI.request.send({
@@ -138,6 +153,7 @@ export function useRequestActions(requestData: RequestFormData) {
         queryParams: requestData.queryParams,
         requestId: requestData.id || activeUnsavedRequestId || undefined, // Link to saved request for history
         environmentId: currentEnvironment?.id,
+        transactionId,
       });
 
       // Convert response to ResponseData format
@@ -419,6 +435,7 @@ export function useRequestActions(requestData: RequestFormData) {
 
   const actions: RequestActionsActions = {
     sendRequest,
+    cancelRequest,
     saveRequest,
     copyResponse,
     downloadResponse,

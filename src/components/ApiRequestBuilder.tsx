@@ -369,7 +369,10 @@ export function ApiRequestBuilder() {
           setTempName: requestState.setTempName,
         }}
         onSend={requestActions.sendRequest}
+        onCancel={requestActions.cancelRequest}
         isLoading={requestActions.isLoading}
+        bodyType={requestState.bodyType}
+        bodyFormData={requestState.bodyFormData}
       />
 
       {/* Main Content Area */}

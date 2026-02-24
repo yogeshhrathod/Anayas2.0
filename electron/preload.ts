@@ -82,6 +82,7 @@ export interface RequestOptions {
   queryParams?: Array<{ key: string; value: string; enabled: boolean }>;
   requestId?: number | string; // Link to saved request for history tracking
   environmentId?: number; // Environment ID for variable resolution
+  transactionId?: string; // Request abort tracker
 }
 
 export interface SidebarState {
@@ -213,6 +214,8 @@ const api = {
     delete: (id: number | string) => ipcRenderer.invoke('request:delete', id),
     send: (options: RequestOptions) =>
       ipcRenderer.invoke('request:send', options),
+    cancel: (transactionId: string) =>
+      ipcRenderer.invoke('request:cancel', transactionId),
     history: (limit?: number) => ipcRenderer.invoke('request:history', limit),
     deleteHistory: (id: number | string) =>
       ipcRenderer.invoke('request:deleteHistory', id),

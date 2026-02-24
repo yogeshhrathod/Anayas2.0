@@ -396,7 +396,25 @@ export function useRequestState(selectedRequest: Request | null) {
     setBodyViewMode: mode =>
       setState(prev => ({ ...prev, bodyViewMode: mode })),
     setBodyFormData: data =>
-      setState(prev => ({ ...prev, bodyFormData: data })),
+      setState(prev => {
+        let newBody = prev.requestData.body;
+        // Keep request data body in sync with form data
+        if (prev.bodyType === 'form-data' || prev.bodyType === 'x-www-form-urlencoded' || prev.bodyViewMode === 'table') {
+          const jsonObj: Record<string, string> = {};
+          data.forEach(item => {
+            if (item.enabled && item.key.trim()) {
+              jsonObj[item.key] = item.value;
+            }
+          });
+          newBody = JSON.stringify(jsonObj, null, 2);
+        }
+        return { 
+          ...prev, 
+          bodyFormData: data,
+          requestData: { ...prev.requestData, body: newBody },
+          isSaved: false 
+        };
+      }),
     setParamsViewMode: mode =>
       setState(prev => ({ ...prev, paramsViewMode: mode })),
     setHeadersViewMode: mode =>

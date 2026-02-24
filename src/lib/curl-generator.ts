@@ -10,7 +10,7 @@ import { Request } from '../types/entities';
 /**
  * Generate a cURL command from a Request object
  */
-export function generateCurlCommand(request: Request): string {
+export function generateCurlCommand(request: any): string {
   const parts: string[] = ['curl'];
 
   // Add method
@@ -38,8 +38,14 @@ export function generateCurlCommand(request: Request): string {
   const authFlags = generateAuthFlags(request.auth);
   parts.push(...authFlags);
 
-  // Add body/data
-  if (request.body && request.body.trim()) {
+  // Handle different body types
+  if (request.bodyType === 'form-data' && request.bodyFormData) {
+    const formDataFlags = generateFormDataFlags(request.bodyFormData);
+    parts.push(...formDataFlags);
+  } else if (request.bodyType === 'x-www-form-urlencoded' && request.bodyFormData) {
+    const urlEncodedFlags = generateUrlEncodedFlags(request.bodyFormData);
+    parts.push(...urlEncodedFlags);
+  } else if (request.body && request.body.trim()) {
     const bodyFlags = generateBodyFlags(request.body, headers);
     parts.push(...bodyFlags);
   }
@@ -162,24 +168,42 @@ function generateBodyFlags(
   return ['--data-raw', escapeShellString(body)];
 }
 
+function generateFormDataFlags(
+  formData: Array<{ key: string; value: string; enabled: boolean }>
+): string[] {
+  const flags: string[] = [];
+  for (const item of formData) {
+    if (item.enabled && item.key) {
+      flags.push('-F', escapeShellString(`${item.key}=${item.value}`));
+    }
+  }
+  return flags;
+}
+
+function generateUrlEncodedFlags(
+  formData: Array<{ key: string; value: string; enabled: boolean }>
+): string[] {
+  const flags: string[] = [];
+  for (const item of formData) {
+    if (item.enabled && item.key) {
+      flags.push('--data-urlencode', escapeShellString(`${item.key}=${item.value}`));
+    }
+  }
+  return flags;
+}
+
 /**
  * Escape shell string for use in cURL command
  */
 function escapeShellString(str: string): string {
-  // If string contains spaces, quotes, or special characters, wrap in single quotes
-  // and escape any single quotes inside
-  if (
-    str.includes(' ') ||
-    str.includes("'") ||
-    str.includes('"') ||
-    str.includes('$') ||
-    str.includes('\\')
-  ) {
-    // Escape single quotes by ending the string, adding escaped quote, and continuing
-    return `'${str.replace(/'/g, "'\\''")}'`;
+  // Safe characters that don't need quoting
+  const safeRegex = /^[a-zA-Z0-9_.\-\/:]+$/;
+  if (safeRegex.test(str)) {
+    return str;
   }
-
-  return str;
+  
+  // Wrap in single quotes and escape any inner single quotes
+  return `'${str.replace(/'/g, "'\\''")}'`;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { FileUp, Plus, Trash2 } from 'lucide-react';
 import React from 'react';
 import { Button } from './button';
 import { Input } from './input';
@@ -18,6 +18,7 @@ interface KeyValueEditorProps {
     value: string;
   };
   showEnabled?: boolean;
+  allowFile?: boolean;
   className?: string;
 }
 
@@ -26,6 +27,7 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
   onChange,
   placeholder = { key: 'Key', value: 'Value' },
   showEnabled = true,
+  allowFile = false,
   className = '',
 }) => {
   const updateItem = (
@@ -44,6 +46,17 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
 
   const removeItem = (index: number) => {
     onChange(items.filter((_, i) => i !== index));
+  };
+
+  const handleFileSelect = async (index: number) => {
+    try {
+      const filePath = await window.electronAPI.file.selectFile({});
+      if (filePath) {
+        updateItem(index, 'value', `FILE::${filePath}`);
+      }
+    } catch (error) {
+      console.error('Failed to select file', error);
+    }
   };
 
   return (
@@ -86,6 +99,17 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
                 onChange={value => updateItem(index, 'value', value)}
                 className="flex-1"
               />
+              {allowFile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleFileSelect(index)}
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+                  title="Select File"
+                >
+                  <FileUp className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"

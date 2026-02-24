@@ -289,6 +289,7 @@ export const BodyTab: React.FC<BodyTabProps> = ({
                       value: bodyType === 'form-data' ? 'Field Value' : 'Parameter Value',
                     }}
                     showEnabled={true}
+                    allowFile={bodyType === 'form-data'}
                   />
                   {bodyFormData.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-muted-foreground/30 gap-3 py-10 opacity-60">

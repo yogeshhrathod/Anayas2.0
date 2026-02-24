@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { createLogger } from './logger';
 
 const logger = createLogger('api');
@@ -19,27 +21,91 @@ interface ApiResponse {
 }
 
 export class ApiService {
-  private async request<T>(
+  private activeRequests: Map<string, AbortController> = new Map();
+
+  public cancelRequest(transactionId: string): boolean {
+    const controller = this.activeRequests.get(transactionId);
+    if (controller) {
+      controller.abort();
+      this.activeRequests.delete(transactionId);
+      logger.info(`Cancelled request with transactionId: ${transactionId}`);
+      return true;
+    }
+    return false;
+  }
+
+  public async request<T>(
     url: string,
-    options: FetchOptions
+    options: FetchOptions & { transactionId?: string }
   ): Promise<ApiResponse> {
     const startTime = Date.now();
 
     try {
-      const headers = { ...options.headers };
+      const headers: Record<string, string> = {};
+      let hasContentType = false;
+      let contentTypeValue = '';
+      if (options.headers) {
+        for (const [key, value] of Object.entries(options.headers)) {
+          headers[key] = value;
+          if (key.toLowerCase() === 'content-type') {
+            hasContentType = true;
+            contentTypeValue = value.toLowerCase();
+          }
+        }
+      }
+
       let body = options.body;
 
-      if (options.isJson && body) {
-        headers['Content-Type'] = 'application/json';
-        body = JSON.stringify(body);
+      if (contentTypeValue.includes('multipart/form-data') && typeof body === 'string') {
+        const formData = new FormData();
+        try {
+          const parsedBody = JSON.parse(body);
+          for (const [key, value] of Object.entries(parsedBody)) {
+            if (typeof value === 'string' && value.startsWith('FILE::')) {
+              const filePath = value.replace('FILE::', '');
+              if (fs.existsSync(filePath)) {
+                const fileBuffer = fs.readFileSync(filePath);
+                const blob = new Blob([fileBuffer]);
+                formData.append(key, blob, path.basename(filePath));
+              } else {
+                logger.warn(`File not found: ${filePath}`);
+              }
+            } else {
+              formData.append(key, String(value));
+            }
+          }
+          body = formData;
+          // Let fetch automatically set the boundary for multipart/form-data
+          const contentTypesKeys = Object.keys(headers).filter(k => k.toLowerCase() === 'content-type');
+          contentTypesKeys.forEach(k => delete headers[k]); 
+        } catch (e) {
+          logger.error('Failed to parse multipart/form-data body', { error: e });
+        }
+      } else if (contentTypeValue.includes('application/x-www-form-urlencoded') && typeof body === 'string') {
+        try {
+          const parsedBody = JSON.parse(body);
+          body = new URLSearchParams(parsedBody).toString();
+        } catch (e) {
+          logger.error('Failed to parse form-urlencoded body', { error: e });
+        }
+      } else if (options.isJson && body) {
+        if (!hasContentType) {
+          headers['Content-Type'] = 'application/json';
+        }
+        body = typeof body === 'string' ? body : JSON.stringify(body);
       } else if (body instanceof URLSearchParams) {
-        headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        if (!hasContentType) {
+          headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        }
       }
 
       logger.info(`API Request: ${options.method} ${url}`, { headers });
 
       // Create AbortController for timeout
       const controller = new AbortController();
+      if (options.transactionId) {
+        this.activeRequests.set(options.transactionId, controller);
+      }
       const timeoutId = setTimeout(
         () => controller.abort(),
         options.timeout || 30000
@@ -52,6 +118,9 @@ export class ApiService {
         signal: controller.signal,
       });
 
+      if (options.transactionId) {
+        this.activeRequests.delete(options.transactionId);
+      }
       clearTimeout(timeoutId);
       const responseTime = Date.now() - startTime;
 
@@ -102,11 +171,15 @@ export class ApiService {
 
       return result;
     } catch (err: any) {
+      if (options.transactionId) {
+        this.activeRequests.delete(options.transactionId);
+      }
       const responseTime = Date.now() - startTime;
 
       if (err.name === 'AbortError') {
-        logger.error(`Request timeout for ${url}`, { responseTime });
-        throw new Error(`Request timeout after ${options.timeout || 30000}ms`);
+        const message = err.message === 'The user aborted a request.' ? 'Request cancelled by user' : `Request timeout after ${options.timeout || 30000}ms`;
+        logger.error(message, { responseTime });
+        throw new Error(message);
       }
 
       logger.error(`Request failed for ${url}`, {
