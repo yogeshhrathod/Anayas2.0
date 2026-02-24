@@ -1,11 +1,11 @@
 import confetti from 'canvas-confetti';
 import {
-  ArrowRight,
-  Box,
-  ChevronRight,
-  Layers,
-  Sparkles,
-  Zap,
+    ArrowRight,
+    Box,
+    ChevronRight,
+    Layers,
+    Sparkles,
+    Zap,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { cn } from '../lib/utils';
@@ -54,7 +54,11 @@ export default function OnboardingFlow({
       // Step 1: Welcome
       {
         icon: <BikeLogoAnimation size={120} />,
-        title: 'Welcome to Luna',
+        title: (
+          <>
+            Welcome to Luna<span className="text-[#F97316]">_</span>
+          </>
+        ),
         description:
           'Your professional workspace for API development and testing is finally here.',
         content: (

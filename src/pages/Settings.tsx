@@ -519,7 +519,7 @@ export function Settings() {
                 Send anonymous usage data & crash reports
               </Label>
               <p className="text-xs text-muted-foreground">
-                Help improve Luna by sending anonymous crash reports and usage
+                Help improve Luna<span className="text-[#F97316]">_</span> by sending anonymous crash reports and usage
                 analytics. No personal data, API content, or secrets are ever
                 collected.
               </p>
@@ -563,7 +563,7 @@ export function Settings() {
         <CardContent className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">Application:</span>
-            <span className="text-muted-foreground">Luna</span>
+            <span className="text-muted-foreground">Luna<span className="text-[#F97316]">_</span></span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">Version:</span>

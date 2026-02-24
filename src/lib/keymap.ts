@@ -1,5 +1,5 @@
 /**
- * Keyboard shortcut configuration for Luna
+ * Keyboard shortcut configuration for Luna_
  * Provides VSCode-like keyboard shortcuts with cross-platform support
  */
 

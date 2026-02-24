@@ -1,11 +1,11 @@
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '../components/ui/card';
 import { useStore } from '../store/useStore';
 
@@ -38,13 +38,13 @@ export function Privacy() {
         <CardHeader>
           <CardTitle>Your Privacy Matters</CardTitle>
           <CardDescription>
-            Luna is designed with privacy in mind. We collect minimal data and
+            Luna<span className="text-[#F97316]">_</span> is designed with privacy in mind. We collect minimal data and
             give you full control.
           </CardDescription>
         </CardHeader>
         <CardContent className="prose prose-sm dark:prose-invert max-w-none">
           <p>
-            Luna is a desktop API client that runs entirely on your computer.
+            Luna<span className="text-[#F97316]">_</span> is a desktop API client that runs entirely on your computer.
             Your API requests, responses, collections, and environments are
             stored locally on your device and are
             <strong> never sent to our servers</strong>.
@@ -57,13 +57,13 @@ export function Privacy() {
         <CardHeader>
           <CardTitle>What We Collect (When Telemetry is Enabled)</CardTitle>
           <CardDescription>
-            Optional crash reports and usage analytics to improve Luna
+            Optional crash reports and usage analytics to improve Luna<span className="text-[#F97316]">_</span>
           </CardDescription>
         </CardHeader>
         <CardContent className="prose prose-sm dark:prose-invert max-w-none space-y-4">
           <p>
             When telemetry is enabled (the default), we collect anonymous data
-            to help us improve Luna. You can disable this at any time in
+            to help us improve Luna<span className="text-[#F97316]">_</span>. You can disable this at any time in
             Settings → Privacy.
           </p>
 
@@ -180,7 +180,7 @@ export function Privacy() {
               on your device
             </li>
             <li>
-              <strong>Delete everything:</strong> Uninstall Luna to remove all
+              <strong>Delete everything:</strong> Uninstall Luna<span className="text-[#F97316]">_</span> to remove all
               local data
             </li>
           </ul>

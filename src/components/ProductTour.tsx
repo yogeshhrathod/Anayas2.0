@@ -1,20 +1,20 @@
 import {
-  ArrowRight,
-  Bookmark,
-  ChevronLeft,
-  Command,
-  Folder,
-  Import,
-  Layers,
-  Rocket,
-  X,
+    ArrowRight,
+    Bookmark,
+    ChevronLeft,
+    Command,
+    Folder,
+    Import,
+    Layers,
+    Rocket,
+    X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Joyride, {
-  CallBackProps,
-  STATUS,
-  Step,
-  TooltipRenderProps,
+    CallBackProps,
+    STATUS,
+    Step,
+    TooltipRenderProps,
 } from 'react-joyride';
 import { cn } from '../lib/utils';
 
@@ -168,7 +168,11 @@ export function ProductTour() {
   const steps: Step[] = [
     {
       target: 'body',
-      title: 'Welcome to Luna',
+      title: (
+        <>
+          Welcome to Luna<span className="text-[#F97316]">_</span>
+        </>
+      ),
       content: (
         <div className="space-y-2">
           <p>Your professional workspace for API development and testing.</p>

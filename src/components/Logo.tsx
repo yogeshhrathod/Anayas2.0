@@ -27,7 +27,9 @@ export function Logo({ className, size = 24, showText = false }: LogoProps) {
         draggable={false}
       />
       {showText && (
-        <span className="text-sm font-semibold whitespace-nowrap">Luna</span>
+        <span className="text-sm font-semibold whitespace-nowrap">
+          Luna<span className="text-[#F97316]">_</span>
+        </span>
       )}
     </div>
   );

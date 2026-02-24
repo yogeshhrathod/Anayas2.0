@@ -126,7 +126,7 @@ export function SplashScreen({
             {/* Text Section */}
             <div className="mt-12 text-center">
               <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-b from-foreground to-foreground/60 bg-clip-text text-transparent transform translate-y-[-2px]">
-                Luna
+                Luna<span className="text-[#F97316]">_</span>
               </h1>
               <p className="mt-3 text-muted-foreground font-medium tracking-widest uppercase text-[10px]">
                 Professional API Workspace

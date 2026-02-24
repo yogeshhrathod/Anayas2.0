@@ -6,11 +6,11 @@
 
 import { Label } from '../ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '../ui/select';
 
 export type Format = 'json' | 'env' | 'postman';
@@ -24,7 +24,7 @@ interface FormatSelectorProps {
 }
 
 const formatLabels: Record<Format, string> = {
-  json: 'JSON (Luna)',
+  json: 'JSON (Luna_)',
   env: '.env File',
   postman: 'Postman Environment',
 };

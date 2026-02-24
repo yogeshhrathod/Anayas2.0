@@ -7,10 +7,10 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import {
-  captureMessage,
-  trackApiRequest,
-  trackPageNavigation,
-  trackUserAction,
+    captureMessage,
+    trackApiRequest,
+    trackPageNavigation,
+    trackUserAction,
 } from '../lib/sentry-renderer';
 
 /**
@@ -171,7 +171,7 @@ export function useErrorTracking() {
 }
 
 /**
- * Track request builder usage (specific to Luna)
+ * Track request builder usage (specific to Luna_)
  */
 export function useRequestBuilderTracking() {
   const trackMethodChange = useCallback((method: string) => {

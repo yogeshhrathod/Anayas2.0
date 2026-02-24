@@ -1,5 +1,5 @@
 /**
- * Core entity types for the Luna application
+ * Core entity types for the Luna_ application
  * Centralized type definitions for all data models
  */
 
