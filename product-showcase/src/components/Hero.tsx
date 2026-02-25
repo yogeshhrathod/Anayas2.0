@@ -45,7 +45,7 @@ const TunnelText = ({
         left: '50%',
         top: '50%',
       }}
-      className="text-6xl md:text-[10rem] font-bold text-white/5 whitespace-nowrap font-display pointer-events-none select-none uppercase tracking-tighter"
+      className="text-4xl sm:text-6xl md:text-[10rem] font-bold text-white/5 whitespace-nowrap font-display pointer-events-none select-none uppercase tracking-tighter"
     >
       <div className="-translate-x-1/2 -translate-y-1/2">{text}</div>
     </motion.div>
@@ -87,18 +87,21 @@ export function Hero() {
   return (
     <section
       ref={ref}
-      className="relative min-h-[100dvh] w-full overflow-hidden bg-black flex flex-col items-center justify-center perspective-[1000px] pt-24 pb-12 overflow-y-auto"
+      className="relative min-h-[100dvh] w-full bg-black flex flex-col items-center justify-start sm:justify-center perspective-[1000px] pt-28 pb-12 sm:pt-24 sm:pb-12"
     >
-      {/* Grid Background */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-20 pointer-events-none" />
+      {/* Background Layer (Handles clipping for effects) */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Grid Background */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-20" />
 
-      {/* Tunnel Effect */}
-      <div className="absolute inset-0 flex items-center justify-center [perspective:1000px] [transform-style:preserve-3d]">
-        <TunnelText text="OFFLINE FIRST" delay={0} x={-400} y={-200} />
-        <TunnelText text="REST CLIENT" delay={2000} x={400} y={200} />
-        <TunnelText text="NATIVE DESKTOP" delay={4000} x={-300} y={300} />
-        <TunnelText text="POWERFUL" delay={6000} x={300} y={-300} />
-        <TunnelText text="UNLIMITED COLLECTIONS" delay={1000} x={0} y={-400} />
+        {/* Tunnel Effect */}
+        <div className="absolute inset-0 flex items-center justify-center [perspective:1000px] [transform-style:preserve-3d] scale-50 sm:scale-100">
+          <TunnelText text="OFFLINE FIRST" delay={0} x={-400} y={-200} />
+          <TunnelText text="REST CLIENT" delay={2000} x={400} y={200} />
+          <TunnelText text="NATIVE DESKTOP" delay={4000} x={-300} y={300} />
+          <TunnelText text="POWERFUL" delay={6000} x={300} y={-300} />
+          <TunnelText text="UNLIMITED COLLECTIONS" delay={1000} x={0} y={-400} />
+        </div>
       </div>
 
       {/* The Pilot (Bike Logo) */}
@@ -108,8 +111,8 @@ export function Hero() {
 
       {/* Center Content */}
       <motion.div
-        style={{ y }}
-        className="relative z-10 flex flex-col items-center text-center px-4 w-full max-w-[100vw]"
+        style={{ y: typeof window !== 'undefined' && window.innerWidth < 640 ? 0 : y }}
+        className="relative z-10 flex flex-col items-center text-center px-4 w-full"
       >
         {/* Tech Badge */}
         <motion.div 
@@ -132,7 +135,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
-          className="text-5xl sm:text-7xl md:text-8xl lg:text-[7rem] font-display font-black tracking-tighter text-white mb-6 leading-[0.9]"
+          className="text-[2.5rem] leading-[1.1] sm:text-7xl md:text-8xl lg:text-[7rem] font-display font-black tracking-tighter text-white mb-6 sm:leading-[0.9]"
         >
           The API client
           <br /> built for{' '}
@@ -145,7 +148,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.6 }}
-          className="max-w-2xl text-gray-400 font-sans text-sm sm:text-lg md:text-xl font-medium mb-10 px-2 leading-relaxed"
+          className="max-w-xl text-gray-400 font-sans text-sm sm:text-lg md:text-xl font-medium mb-10 px-0 sm:px-2 leading-relaxed"
         >
           Debug APIs, organize requests, and write tests without leaving your keyboard.
           <br className="hidden sm:block" />

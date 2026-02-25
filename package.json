@@ -21,6 +21,8 @@
     "validate": "npm run type-check && npm run format:check",
     "pre-commit": "npm run type-check && npm run format:check",
     "test": "playwright test",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "test:electron": "PW_TEST_HTML_REPORT_OPEN=never playwright test --project=electron",

@@ -3,12 +3,12 @@ import { persist } from 'zustand/middleware';
 import logger from '../lib/logger';
 import { Theme } from '../lib/themes';
 import {
-  Collection,
-  EntityId,
-  Environment,
-  Request,
-  RequestHistory,
-  ResponseData,
+    Collection,
+    EntityId,
+    Environment,
+    Request,
+    RequestHistory,
+    ResponseData,
 } from '../types/entities';
 
 export interface UnsavedRequest {
@@ -371,7 +371,7 @@ export const useStore = create<AppState>()(
       // App State
       appVersion: '',
       setAppVersion: appVersion => set({ appVersion }),
-      isWelcomeDone: false,
+      isWelcomeDone: typeof localStorage !== 'undefined' ? localStorage.getItem('luna_welcome_seen') === 'true' : false,
       setIsWelcomeDone: isWelcomeDone => set({ isWelcomeDone }),
     }),
     {

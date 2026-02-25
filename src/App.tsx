@@ -642,7 +642,7 @@ function App() {
   return (
     <FontProvider>
       {/* Welcome Experience - Lazy loaded so zero impact for existing users */}
-      {!isWelcomeDone && (
+      {!isWelcomeDone && localStorage.getItem('luna_welcome_seen') !== 'true' && (
         <Suspense fallback={null}>
           <OnboardingFlow
             onDismiss={() => {
@@ -656,7 +656,7 @@ function App() {
       )}
 
       {/* Splash Screen - Waits for welcome flow if present, but also shows once after if needed */}
-      {isWelcomeDone && showSplash && (
+      {(isWelcomeDone || localStorage.getItem('luna_welcome_seen') === 'true') && showSplash && (
         <SplashScreen
           isLoading={!isAppReady}
           onFinish={handleSplashFinish}

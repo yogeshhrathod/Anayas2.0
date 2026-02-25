@@ -39,6 +39,7 @@ export class ApiService {
     options: FetchOptions & { transactionId?: string }
   ): Promise<ApiResponse> {
     const startTime = Date.now();
+    let isTimeout = false;
 
     try {
       const headers: Record<string, string> = {};
@@ -107,7 +108,10 @@ export class ApiService {
         this.activeRequests.set(options.transactionId, controller);
       }
       const timeoutId = setTimeout(
-        () => controller.abort(),
+        () => {
+          isTimeout = true;
+          controller.abort();
+        },
         options.timeout || 30000
       );
 
@@ -176,8 +180,8 @@ export class ApiService {
       }
       const responseTime = Date.now() - startTime;
 
-      if (err.name === 'AbortError') {
-        const message = err.message === 'The user aborted a request.' ? 'Request cancelled by user' : `Request timeout after ${options.timeout || 30000}ms`;
+      if (err.name === 'AbortError' || isTimeout) {
+        const message = isTimeout ? `Request timeout after ${options.timeout || 30000}ms` : 'Request cancelled by user';
         logger.error(message, { responseTime });
         throw new Error(message);
       }

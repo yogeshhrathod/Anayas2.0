@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateCurlCommand } from './curl-generator';
+import { generateCurlCommand } from '../../../../electron/lib/curl-generator';
 
 describe('generateCurlCommand', () => {
   it('should generate a basic GET request', () => {
