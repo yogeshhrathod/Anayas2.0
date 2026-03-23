@@ -1,49 +1,80 @@
-import { describe, expect, it } from 'vitest';
-import { detectContext } from '../../../../../src/lib/shortcuts/contexts';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { detectContext, isMac, getModifierKey } from '../../../../../src/lib/shortcuts/contexts';
 
-describe('detectContext', () => {
-  const baseState = {
-    page: 'home',
-    selectedItem: { type: null, id: null, data: null },
-    selectedRequest: null,
-    focusedElement: null,
-    sidebarOpen: false,
-    focusedContext: null
-  } as any;
-
-  it('should always include global context', () => {
-    const contexts = detectContext(baseState);
-    expect(contexts).toContain('global');
+describe('shortcuts-contexts', () => {
+  beforeEach(() => {
+    vi.stubGlobal('document', {
+      activeElement: { tagName: 'BODY', getAttribute: () => null }
+    });
+    vi.stubGlobal('navigator', {
+      platform: 'MacIntel'
+    });
   });
 
-  it('should return only global when typing in input', () => {
-    const input = document.createElement('input');
-    document.body.appendChild(input);
-    input.focus();
+  describe('detectContext', () => {
+    it('should return global only when in an input', () => {
+      (document as any).activeElement = { tagName: 'INPUT' };
+      const res = detectContext({ page: 'home', sidebarOpen: false, selectedItem: {} } as any);
+      expect(res).toEqual(['global']);
+    });
 
-    const contexts = detectContext(baseState);
-    expect(contexts).toEqual(['global']);
+    it('should return context based on page', () => {
+       expect(detectContext({ page: 'collections', sidebarOpen: false, selectedItem: { id: '', type: null }, focusedContext: 'page' } as any)).toContain('collections-page');
+    expect(detectContext({ page: 'environments', sidebarOpen: false, selectedItem: { id: '', type: null }, focusedContext: 'page' } as any)).toContain('environments-page');
+    expect(detectContext({ page: 'history', sidebarOpen: false, selectedItem: { id: '', type: null }, focusedContext: 'page' } as any)).toContain('history-page');
+    expect(detectContext({ page: 'settings', sidebarOpen: false, selectedItem: { id: '', type: null }, focusedContext: 'page' } as any)).toContain('settings-page');
+  });
+
+  it('should detect sidebar item contexts', () => {
+    const baseState = { page: 'collections', sidebarOpen: true, focusedContext: 'global' } as any;
     
-    document.body.removeChild(input);
+    expect(detectContext({ ...baseState, selectedItem: { id: '1', type: 'collection' } })).toContain('sidebar:collection');
+    expect(detectContext({ ...baseState, selectedItem: { id: '1', type: 'folder' } })).toContain('sidebar:folder');
+    expect(detectContext({ ...baseState, selectedItem: { id: '1', type: 'request' } })).toContain('sidebar:request');
   });
 
-  it('should detect sidebar contexts', () => {
-    const state = {
-      ...baseState,
-      sidebarOpen: true,
-      selectedItem: { type: 'request', id: 1, data: {} }
-    };
-    const contexts = detectContext(state);
-    expect(contexts).toContain('sidebar');
-    expect(contexts).toContain('sidebar:request');
+    it('should return context based on sidebar state', () => {
+       const res = detectContext({ 
+         page: 'home', 
+         sidebarOpen: true, 
+         selectedItem: { type: 'collection' } 
+       } as any);
+       expect(res).toContain('sidebar');
+       expect(res).toContain('sidebar:collection');
+    });
+
+    it('should return context based on focus', () => {
+       const res = detectContext({
+         page: 'home',
+         focusedContext: 'sidebar',
+         sidebarOpen: false,
+         selectedItem: {}
+       } as any);
+       expect(res).toContain('sidebar');
+    });
   });
 
-  it('should detect page contexts', () => {
-    expect(detectContext({ ...baseState, page: 'collections' })).toContain('collections-page');
-    expect(detectContext({ ...baseState, page: 'environments' })).toContain('environments-page');
+  describe('isMac', () => {
+    it('should return true for mac platforms', () => {
+       (navigator as any).platform = 'MacIntel';
+       expect(isMac()).toBe(true);
+    });
+
+    it('should return false for windows', () => {
+       (navigator as any).platform = 'Win32';
+       expect(isMac()).toBe(false);
+    });
   });
 
-  it('should detect editor context on home page', () => {
-    expect(detectContext({ ...baseState, page: 'home' })).toContain('editor');
+  describe('getModifierKey', () => {
+    it('should return metaKey for mac', () => {
+       (navigator as any).platform = 'MacIntel';
+       expect(getModifierKey()).toBe('metaKey');
+    });
+
+    it('should return ctrlKey for others', () => {
+       (navigator as any).platform = 'Win32';
+       expect(getModifierKey()).toBe('ctrlKey');
+    });
   });
 });

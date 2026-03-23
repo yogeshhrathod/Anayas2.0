@@ -113,11 +113,15 @@ export function CurlImportDialog({
     setError(null);
 
     try {
-      // Split by newlines to support bulk import
-      const commands = curlCommands
-        .split('\n')
+      // 1. Join escaped newlines (lines ending with \)
+      // Handle both \n and \r\n, and remove following whitespace
+      const normalized = curlCommands.replace(/\\[\r\n]+\s*/g, ' ');
+
+      // 2. Split by 'curl' occurrences to support multiple commands
+      const commands = normalized
+        .split(/(?=curl\s+)/)
         .map(cmd => cmd.trim())
-        .filter(cmd => cmd && cmd.toLowerCase().includes('curl'));
+        .filter(cmd => cmd.toLowerCase().startsWith('curl'));
 
       if (commands.length === 0) {
         setError('No valid cURL commands found');
@@ -371,8 +375,24 @@ export function CurlImportDialog({
                           placeholder="Enter request name"
                         />
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {result.request.method} {result.request.url}
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{result.request.method}</span>
+                        <span className="text-muted-foreground truncate max-w-[400px]">{result.request.url}</span>
+                      </div>
+                      <div className="flex gap-4 text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+                        {Object.keys(result.request.headers).length > 0 && (
+                          <span className="bg-muted px-1.5 py-0.5 rounded">
+                            {Object.keys(result.request.headers).length} Headers
+                          </span>
+                        )}
+                        {result.request.body && (
+                          <span className="bg-muted px-1.5 py-0.5 rounded">Body Present</span>
+                        )}
+                        {result.request.queryParams.length > 0 && (
+                          <span className="bg-muted px-1.5 py-0.5 rounded">
+                            {result.request.queryParams.length} Params
+                          </span>
+                        )}
                       </div>
                     </div>
                   ) : (

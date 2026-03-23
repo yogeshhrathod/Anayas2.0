@@ -38,7 +38,7 @@ export function parseCurlCommand(curlCommand: string): Request {
     .trim();
 
   // Remove 'curl' prefix if present
-  let command = normalized.replace(/^curl\s+/, '').trim();
+  let command = normalized.replace(/^curl(\s+|$)/, '').trim();
 
   if (!command) {
     throw new Error('Invalid cURL command: no arguments found');
@@ -58,20 +58,20 @@ export function parseCurlCommand(curlCommand: string): Request {
     },
   };
 
-  // Extract method
-  result.method = parseMethod(args);
+  // Extract body/data
+  const bodyData = parseData(args);
+  if (bodyData) {
+    result.body = bodyData;
+  }
+
+  // Extract method (pass whether body is present for inference)
+  result.method = parseMethod(args, !!bodyData);
 
   // Extract URL
   result.url = parseUrl(args);
 
   // Extract headers
   result.headers = parseHeaders(args);
-
-  // Extract body/data
-  const bodyData = parseData(args);
-  if (bodyData) {
-    result.body = bodyData;
-  }
 
   // Extract authentication
   result.auth = parseAuth(args, result.headers);
@@ -162,7 +162,7 @@ function parseArguments(command: string): string[] {
 /**
  * Extract HTTP method from arguments
  */
-function parseMethod(args: string[]): string {
+function parseMethod(args: string[], hasBody: boolean): string {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === '-X' || arg === '--request') {
@@ -183,7 +183,7 @@ function parseMethod(args: string[]): string {
       }
     }
   }
-  return 'GET'; // Default method
+  return hasBody ? 'POST' : 'GET'; // Default method
 }
 
 /**
@@ -230,11 +230,12 @@ function parseHeaders(args: string[]): Record<string, string> {
       if (i + 1 < args.length) {
         const headerStr = args[i + 1];
         const colonIndex = headerStr.indexOf(':');
-        if (colonIndex > 0) {
+        if (colonIndex !== -1) {
           const key = headerStr.substring(0, colonIndex).trim();
           const value = headerStr.substring(colonIndex + 1).trim();
           headers[key] = value;
         }
+        i++; // Skip the header value in the next iteration
       }
     }
   }
@@ -246,34 +247,36 @@ function parseHeaders(args: string[]): Record<string, string> {
  * Extract request body/data from arguments
  */
 function parseData(args: string[]): string | undefined {
-  let data: string | undefined;
+  const dataParts: string[] = [];
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
-    if (arg === '-d' || arg === '--data' || arg === '--data-raw') {
+    if (arg === '-d' || arg === '--data' || arg === '--data-raw' || arg === '--data-binary') {
       if (i + 1 < args.length) {
-        data = args[i + 1];
-        // If data is already set, append (for multiple -d flags)
-        if (data) {
-          return data;
-        }
-      }
-    } else if (arg === '--data-binary') {
-      if (i + 1 < args.length) {
-        return args[i + 1];
+        dataParts.push(args[i + 1]);
+        i++; // Skip the next arg as it's the data value
       }
     } else if (arg.startsWith('--data=')) {
-      return arg.substring(7);
-    } else if (arg.startsWith('-d')) {
+      dataParts.push(arg.substring(7));
+    } else if (arg.startsWith('-d') && arg.length > 2) {
       // Handle -d"value" format
-      if (arg.length > 2) {
-        return arg.substring(2);
+      dataParts.push(arg.substring(2));
+    } else if (arg === '--data-urlencode') {
+      if (i + 1 < args.length) {
+        const value = args[i + 1];
+        if (value.includes('=')) {
+          const [key, ...rest] = value.split('=');
+          dataParts.push(`${key}=${encodeURIComponent(rest.join('='))}`);
+        } else {
+          dataParts.push(encodeURIComponent(value));
+        }
+        i++;
       }
     }
   }
 
-  return data;
+  return dataParts.length > 0 ? dataParts.join('&') : undefined;
 }
 
 /**
@@ -391,7 +394,15 @@ export function parseCurlCommands(
 ): Array<{ success: boolean; request?: Request; error?: string }> {
   return commands.map((command, index) => {
     try {
-      const request = parseCurlCommand(command);
+      // Cleanup logic: remove 'curl' if it's the last word and not part of a URL
+      let cleanedCommand = command;
+      if (cleanedCommand.toLowerCase().endsWith(' curl')) {
+        cleanedCommand = cleanedCommand.substring(0, cleanedCommand.length - 5);
+      } else if (cleanedCommand.toLowerCase() === 'curl') {
+        cleanedCommand = ''; // Handle case where command is just 'curl'
+      }
+
+      const request = parseCurlCommand(cleanedCommand);
       return { success: true, request };
     } catch (error: any) {
       return {

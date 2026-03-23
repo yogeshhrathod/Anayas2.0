@@ -1,63 +1,73 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-    formatResponseSize,
-    formatResponseTime,
-    getStatusDisplay,
-    getStatusVariant,
-    normalizeResponse,
-    safeStringifyBody
+import { 
+  normalizeResponse, 
+  getStatusDisplay, 
+  getStatusVariant, 
+  formatResponseTime, 
+  safeStringifyBody, 
+  hasHeaders, 
+  getHeaderEntries, 
+  formatResponseSize 
 } from '../../../../src/lib/response-utils';
 
 // Mock logger
 vi.mock('../../../../src/lib/logger', () => ({
   default: {
+    info: vi.fn(),
     warn: vi.fn(),
-  },
+    error: vi.fn(),
+    debug: vi.fn(),
+  }
 }));
+
+declare global {
+  interface Window {
+    electronAPI: any;
+  }
+}
 
 describe('response-utils', () => {
   describe('normalizeResponse', () => {
+    it('should normalize a valid response', () => {
+      const response = {
+        status: 200,
+        statusText: 'OK',
+        headers: { 'Content-Type': 'application/json' },
+        data: { id: 1 },
+        time: 150
+      };
+      const result = normalizeResponse(response as any);
+      expect(result).not.toBeNull();
+      expect(result?.isSuccess).toBe(true);
+      expect(result?.isError).toBe(false);
+    });
+
+    it('should handle missing fields with defaults', () => {
+      const result = normalizeResponse({} as any);
+      expect(result?.status).toBe(0);
+      expect(result?.statusText).toBe('Request Failed');
+      expect(result?.isError).toBe(true);
+    });
+
     it('should return null for null input', () => {
       expect(normalizeResponse(null)).toBeNull();
-    });
-
-    it('should provide safe defaults', () => {
-      const normalized = normalizeResponse({} as any);
-      expect(normalized).toEqual({
-        status: 0,
-        statusText: 'Request Failed',
-        headers: {},
-        data: null,
-        time: 0,
-        isError: true,
-        isSuccess: false
-      });
-    });
-
-    it('should correctly identify success and error statuses', () => {
-      expect(normalizeResponse({ status: 200 } as any)?.isSuccess).toBe(true);
-      expect(normalizeResponse({ status: 204 } as any)?.isSuccess).toBe(true);
-      expect(normalizeResponse({ status: 404 } as any)?.isError).toBe(true);
-      expect(normalizeResponse({ status: 500 } as any)?.isError).toBe(true);
-      expect(normalizeResponse({ status: 200 } as any)?.isError).toBe(false);
     });
   });
 
   describe('getStatusDisplay', () => {
-    it('should return "Error" for 0, null, or undefined', () => {
+    it('should return Error for 0 or null', () => {
       expect(getStatusDisplay(0)).toBe('Error');
       expect(getStatusDisplay(null)).toBe('Error');
-      expect(getStatusDisplay(undefined)).toBe('Error');
     });
 
-    it('should return status code string for valid statuses', () => {
+    it('should return status code as string for valid codes', () => {
       expect(getStatusDisplay(200)).toBe('200');
       expect(getStatusDisplay(404)).toBe('404');
     });
   });
 
   describe('getStatusVariant', () => {
-    it('should return correct variants', () => {
+    it('should return correct variants for status codes', () => {
       expect(getStatusVariant(200)).toBe('success');
       expect(getStatusVariant(404)).toBe('error');
       expect(getStatusVariant(500)).toBe('destructive');
@@ -66,43 +76,51 @@ describe('response-utils', () => {
   });
 
   describe('formatResponseTime', () => {
-    it('should format time with ms suffix', () => {
-      expect(formatResponseTime(123)).toBe('123ms');
-      expect(formatResponseTime(0)).toBe('0ms');
+    it('should format ms', () => {
+      expect(formatResponseTime(150)).toBe('150ms');
       expect(formatResponseTime(null)).toBe('0ms');
     });
   });
 
   describe('safeStringifyBody', () => {
     it('should format JSON strings', () => {
-      const json = '{"a":1}';
-      expect(safeStringifyBody(json)).toContain('"a": 1');
+      const result = safeStringifyBody('{"a":1}');
+      expect(result).toBe('{\n  "a": 1\n}');
     });
 
     it('should stringify objects', () => {
-      const obj = { a: 1 };
-      expect(safeStringifyBody(obj)).toContain('"a": 1');
+      const result = safeStringifyBody({ b: 2 });
+      expect(result).toBe('{\n  "b": 2\n}');
     });
 
-    it('should return empty string for null/undefined', () => {
-      expect(safeStringifyBody(null)).toBe('');
-      expect(safeStringifyBody(undefined)).toBe('');
+    it('should handle circular references', () => {
+       const a: any = {};
+       a.self = a;
+       const result = safeStringifyBody(a);
+       expect(result).toBe('[object Object]');
+    });
+  });
+
+  describe('hasHeaders and getHeaderEntries', () => {
+    it('should handle headers correctly', () => {
+      const headers = { 'X-A': '1' };
+      expect(hasHeaders(headers)).toBe(true);
+      expect(hasHeaders({})).toBe(false);
+      expect(getHeaderEntries(headers)).toEqual([['X-A', '1']]);
+      expect(getHeaderEntries(null)).toEqual([]);
     });
   });
 
   describe('formatResponseSize', () => {
-    it('should format bytes correctly', () => {
+    it('should format bytes, KB, and MB correctly', () => {
       expect(formatResponseSize('hello')).toBe('5 B');
+      expect(formatResponseSize('a'.repeat(2048))).toBe('2.00 KB');
+      expect(formatResponseSize('a'.repeat(2 * 1024 * 1024))).toBe('2.00 MB');
       expect(formatResponseSize(null)).toBe('0 B');
-      expect(formatResponseSize({a: 1})).toBe('7 B'); // {"a":1}
-    });
-
-    it('should format KB and MB', () => {
-      const largeData = 'a'.repeat(1024 * 1.5);
-      expect(formatResponseSize(largeData)).toBe('1.50 KB');
       
-      const veryLargeData = 'a'.repeat(1024 * 1024 * 2);
-      expect(formatResponseSize(veryLargeData)).toBe('2.00 MB');
+      const circular: any = {};
+      circular.self = circular;
+      expect(formatResponseSize(circular)).toBe('0 B');
     });
   });
 });

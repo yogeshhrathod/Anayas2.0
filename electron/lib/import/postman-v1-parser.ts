@@ -81,7 +81,7 @@ export class PostmanV1Parser extends BaseImportStrategy {
 
     // v1 has id, name, and requests at root level
     // v1 does NOT have info object (that's v2)
-    return (
+    return !!(
       data.id &&
       data.name &&
       !data.info &&

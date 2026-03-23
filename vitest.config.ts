@@ -9,6 +9,24 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
-    exclude: ['node_modules', '**/node_modules/**', 'dist', 'dist-electron', 'release', 'playwright-report', 'test-artifacts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**', 'electron/**'],
+      exclude: [
+        '**/*.d.ts',
+        '**/*.test.ts',
+        '**/*.test.tsx',
+        'tests/**',
+        'node_modules/**',
+        'dist/**',
+        'dist-electron/**',
+        'release/**',
+        'electron/preload.ts',
+        'electron/main.ts',
+        'electron/sentry.ts'
+      ],
+      reporter: ['text', 'json', 'html'],
+    },
   },
 });
+

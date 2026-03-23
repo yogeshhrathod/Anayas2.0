@@ -19,7 +19,7 @@ async function createIPCHandlers(testDbPath: string) {
   process.env.TEST_DB_PATH = testDbPath;
 
   // Use require for Node.js modules in test context
-  const db = require('../../electron/database/json-db');
+  const db = require('../../electron/database/index');
   const apiService = require('../../electron/services/api');
   const variableResolver = require('../../electron/services/variable-resolver');
 

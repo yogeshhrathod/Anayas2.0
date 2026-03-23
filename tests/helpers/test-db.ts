@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import Database from 'better-sqlite3';
 
 /**
  * Test database utilities for creating isolated test databases
@@ -24,7 +25,8 @@ export function getTestDatabasePath(config?: TestDatabaseConfig): string {
   // Ensure directory exists
   fs.mkdirSync(testDir, { recursive: true });
 
-  return path.join(testDir, 'database.json');
+  // Use .sqlite extension for SQLite database
+  return path.join(testDir, 'database.sqlite');
 }
 
 /**
@@ -33,28 +35,14 @@ export function getTestDatabasePath(config?: TestDatabaseConfig): string {
 export function createTestDatabase(config?: TestDatabaseConfig): string {
   const dbPath = getTestDatabasePath(config);
 
-  // Initialize with empty database structure
-  const emptyDb = {
-    environments: [],
-    collections: [],
-    folders: [],
-    requests: [],
-    request_history: [],
-    unsaved_requests: [],
-    presets: [],
-    settings: {
-      theme: 'system',
-      defaultMethod: 'GET',
-      requestTimeout: 30000,
-      followRedirects: true,
-      sslVerification: true,
-      autoSaveRequests: true,
-      maxHistory: 1000,
-      debugMode: false,
-    },
-  };
-
-  fs.writeFileSync(dbPath, JSON.stringify(emptyDb, null, 2), 'utf-8');
+  // For SQLite, we just ensure the file doesn't exist yet
+  // so that the initialization logic can create it fresh.
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath);
+    if (fs.existsSync(`${dbPath}-wal`)) fs.unlinkSync(`${dbPath}-wal`);
+    if (fs.existsSync(`${dbPath}-shm`)) fs.unlinkSync(`${dbPath}-shm`);
+  }
+  
   return dbPath;
 }
 
@@ -65,6 +53,10 @@ export function cleanTestDatabase(dbPath: string): void {
   try {
     if (fs.existsSync(dbPath)) {
       fs.unlinkSync(dbPath);
+      // SQLite also creates WAL/SHM files
+      if (fs.existsSync(`${dbPath}-wal`)) fs.unlinkSync(`${dbPath}-wal`);
+      if (fs.existsSync(`${dbPath}-shm`)) fs.unlinkSync(`${dbPath}-shm`);
+      
       // Try to remove parent directory if empty
       const dir = path.dirname(dbPath);
       try {
@@ -90,8 +82,19 @@ export function loadTestData(dbPath: string, fixturePath: string): void {
     throw new Error(`Test fixture not found: ${fixturePath}`);
   }
 
-  const fixtureData = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'));
-  fs.writeFileSync(dbPath, JSON.stringify(fixtureData, null, 2), 'utf-8');
+  // NOTE: This implementation might need specific logic to populate the SQLite table
+  // but for legacy compatibility we might just write the JSON and expect the app to migrate it
+  // Actually, better to just let the app handle the .json if it exists.
+  const oldJsonPath = dbPath.replace('.sqlite', '.json');
+  const fixtureData = fs.readFileSync(fixturePath, 'utf-8');
+  fs.writeFileSync(oldJsonPath, fixtureData, 'utf-8');
+  
+  // If we already have a .sqlite file, we should probably delete it to force migration
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath);
+    if (fs.existsSync(`${dbPath}-wal`)) fs.unlinkSync(`${dbPath}-wal`);
+    if (fs.existsSync(`${dbPath}-shm`)) fs.unlinkSync(`${dbPath}-shm`);
+  }
 }
 
 /**
@@ -102,32 +105,41 @@ export function getDatabaseContents(dbPath: string): any {
     return null;
   }
 
-  return JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
+  const db = new Database(dbPath);
+  try {
+    const listTables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[];
+    const result: any = {};
+    
+    for (const table of listTables) {
+      if (table.name === 'settings') {
+        const rows = db.prepare(`SELECT key, value FROM ${table.name}`).all() as { key: string, value: string }[];
+        result.settings = {};
+        rows.forEach(r => {
+          result.settings[r.key] = JSON.parse(r.value);
+        });
+      } else {
+        const rows = db.prepare(`SELECT data FROM ${table.name}`).all() as { data: string }[];
+        result[table.name] = rows.map(r => JSON.parse(r.data));
+      }
+    }
+    
+    return result;
+  } catch (e) {
+    console.error('Error reading test database:', e);
+    return null;
+  } finally {
+    db.close();
+  }
 }
 
 /**
  * Reset database to empty state
  */
 export function resetDatabase(dbPath: string): void {
-  const emptyDb = {
-    environments: [],
-    collections: [],
-    folders: [],
-    requests: [],
-    request_history: [],
-    unsaved_requests: [],
-    presets: [],
-    settings: {
-      theme: 'system',
-      defaultMethod: 'GET',
-      requestTimeout: 30000,
-      followRedirects: true,
-      sslVerification: true,
-      autoSaveRequests: true,
-      maxHistory: 1000,
-      debugMode: false,
-    },
-  };
-
-  fs.writeFileSync(dbPath, JSON.stringify(emptyDb, null, 2), 'utf-8');
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath);
+  }
+  // Also clean up side files
+  if (fs.existsSync(`${dbPath}-wal`)) fs.unlinkSync(`${dbPath}-wal`);
+  if (fs.existsSync(`${dbPath}-shm`)) fs.unlinkSync(`${dbPath}-shm`);
 }

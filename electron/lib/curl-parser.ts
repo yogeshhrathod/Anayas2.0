@@ -60,14 +60,14 @@ export function parseCurlCommand(curlCommand: string): Request {
     },
   };
 
-  result.method = parseMethod(args);
-  result.url = parseUrl(args);
-  result.headers = parseHeaders(args);
-
   const bodyData = parseData(args);
   if (bodyData) {
     result.body = bodyData;
   }
+
+  result.method = parseMethod(args, !!bodyData);
+  result.url = parseUrl(args);
+  result.headers = parseHeaders(args);
 
   result.auth = parseAuth(args, result.headers);
   result.queryParams = parseQueryParams(result.url);
@@ -145,7 +145,7 @@ function parseArguments(command: string): string[] {
   return args;
 }
 
-function parseMethod(args: string[]): string {
+function parseMethod(args: string[], hasBody: boolean): string {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === '-X' || arg === '--request') {
@@ -166,7 +166,7 @@ function parseMethod(args: string[]): string {
       }
     }
   }
-  return 'GET';
+  return hasBody ? 'POST' : 'GET';
 }
 
 function parseUrl(args: string[]): string {
@@ -201,11 +201,12 @@ function parseHeaders(args: string[]): Record<string, string> {
       if (i + 1 < args.length) {
         const headerStr = args[i + 1];
         const colonIndex = headerStr.indexOf(':');
-        if (colonIndex > 0) {
+        if (colonIndex !== -1) {
           const key = headerStr.substring(0, colonIndex).trim();
           const value = headerStr.substring(colonIndex + 1).trim();
           headers[key] = value;
         }
+        i++; // Skip the header value in the next iteration
       }
     }
   }
@@ -214,32 +215,35 @@ function parseHeaders(args: string[]): Record<string, string> {
 }
 
 function parseData(args: string[]): string | undefined {
-  let data: string | undefined;
+  const dataParts: string[] = [];
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
-    if (arg === '-d' || arg === '--data' || arg === '--data-raw') {
+    if (arg === '-d' || arg === '--data' || arg === '--data-raw' || arg === '--data-binary') {
       if (i + 1 < args.length) {
-        data = args[i + 1];
-        if (data) {
-          return data;
-        }
-      }
-    } else if (arg === '--data-binary') {
-      if (i + 1 < args.length) {
-        return args[i + 1];
+        dataParts.push(args[i + 1]);
+        i++;
       }
     } else if (arg.startsWith('--data=')) {
-      return arg.substring(7);
-    } else if (arg.startsWith('-d')) {
-      if (arg.length > 2) {
-        return arg.substring(2);
+      dataParts.push(arg.substring(7));
+    } else if (arg.startsWith('-d') && arg.length > 2) {
+      dataParts.push(arg.substring(2));
+    } else if (arg === '--data-urlencode') {
+      if (i + 1 < args.length) {
+        const value = args[i + 1];
+        if (value.includes('=')) {
+          const [key, ...rest] = value.split('=');
+          dataParts.push(`${key}=${encodeURIComponent(rest.join('='))}`);
+        } else {
+          dataParts.push(encodeURIComponent(value));
+        }
+        i++;
       }
     }
   }
 
-  return data;
+  return dataParts.length > 0 ? dataParts.join('&') : undefined;
 }
 
 function parseAuth(

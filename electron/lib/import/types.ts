@@ -36,7 +36,7 @@ export type BodyType =
  * Authentication configuration
  */
 export interface ParsedAuth {
-  type: 'none' | 'bearer' | 'basic' | 'apikey';
+  type: 'none' | 'bearer' | 'basic' | 'apikey' | 'oauth2';
   /** For bearer auth */
   token?: string;
   /** For basic auth */

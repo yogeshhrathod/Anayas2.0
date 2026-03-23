@@ -49,17 +49,6 @@ import {
     TooltipTrigger,
 } from '../ui/tooltip';
 
-export interface HeadersTabProps {
-  requestData: RequestFormData;
-  setRequestData: (
-    data: RequestFormData | ((prev: RequestFormData) => RequestFormData)
-  ) => void;
-  headersViewMode: 'table' | 'json';
-  setHeadersViewMode: (mode: 'table' | 'json') => void;
-  bulkEditJson: string;
-  setBulkEditJson: (json: string) => void;
-}
-
 export const HeadersTab: React.FC<HeadersTabProps> = ({
   requestData,
   setRequestData,

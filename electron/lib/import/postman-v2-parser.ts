@@ -100,6 +100,7 @@ interface PostmanV2Auth {
   bearer?: PostmanV2AuthParam[];
   basic?: PostmanV2AuthParam[];
   apikey?: PostmanV2AuthParam[];
+  oauth2?: PostmanV2AuthParam[];
 }
 
 interface PostmanV2AuthParam {
@@ -131,7 +132,7 @@ export class PostmanV2Parser extends BaseImportStrategy {
     if (!data) return false;
 
     // Check for v2 indicators
-    return (
+    return !!(
       data.info &&
       typeof data.info === 'object' &&
       data.info.schema &&
@@ -356,7 +357,9 @@ export class PostmanV2Parser extends BaseImportStrategy {
     if (!url) return '';
 
     if (typeof url === 'string') {
-      return url;
+      // If it's a string, strip query params if they exist
+      const queryIndex = url.indexOf('?');
+      return queryIndex > -1 ? url.substring(0, queryIndex) : url;
     }
 
     // Object format
@@ -548,6 +551,17 @@ export class PostmanV2Parser extends BaseImportStrategy {
           };
         }
         return { type: 'bearer', token: '' };
+      case 'oauth2':
+        if (auth.oauth2 && Array.isArray(auth.oauth2)) {
+          const accessTokenParam = auth.oauth2.find(
+            p => p.key === 'accessToken'
+          );
+          return {
+            type: 'oauth2',
+            token: accessTokenParam?.value || '',
+          };
+        }
+        return { type: 'oauth2', token: '' };
 
       case 'basic':
         if (auth.basic && Array.isArray(auth.basic)) {

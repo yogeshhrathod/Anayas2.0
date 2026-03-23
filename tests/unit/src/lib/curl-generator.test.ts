@@ -40,6 +40,20 @@ describe('curl-generator (renderer)', () => {
     expect(generateCurlCommand(request)).toBe('curl \'https://api.example.com/users?page=1\'');
   });
 
+  it('should handle manual query string parsing for invalid URLs', () => {
+    const request = {
+      url: '{{baseUrl}}/path',
+      method: 'GET',
+      queryParams: [
+        { key: 'a', value: '1', enabled: true },
+        { key: 'b', value: '2', enabled: false }
+      ],
+      auth: { type: 'none' }
+    };
+    const res = generateCurlCommand(request);
+    expect(res).toBe('curl \'{{baseUrl}}/path?a=1\'');
+  });
+
   it('should include bearer token auth', () => {
     const request = {
       method: 'GET',

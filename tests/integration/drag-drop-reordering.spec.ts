@@ -10,8 +10,7 @@
  * - Order persistence
  */
 
-import { test, expect } from '@playwright/test';
-import { electronFixture } from '../../helpers/electron-fixtures';
+import { test, expect } from '../helpers/electron-fixtures';
 
 test.describe('Drag and Drop Reordering', () => {
   test('should reorder request within collection', async ({
@@ -52,6 +51,10 @@ test.describe('Drag and Drop Reordering', () => {
         isFavorite: false,
       });
     }, collection.id);
+
+    // Ensure the UI is refreshed with the newly created data
+    await electronPage.reload();
+    await electronPage.waitForSelector('[data-testid="collection-hierarchy"]');
 
     // When: Drag request2 above request1
     const request1Element = electronPage
