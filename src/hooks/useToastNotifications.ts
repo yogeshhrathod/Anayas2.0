@@ -48,9 +48,13 @@ export function useToastNotifications() {
 
   const showError = useCallback(
     (message: string, details?: string, options: ToastOptions = {}) => {
+      const truncatedDetails = details && details.length > 100 
+        ? `${details.slice(0, 100)}...`
+        : details;
+
       toast({
         title: options.title || 'Error',
-        description: details ? `${message}: ${details}` : message,
+        description: truncatedDetails ? `${message}: ${truncatedDetails}` : message,
         variant: 'destructive',
         duration: options.duration || 5000,
       });

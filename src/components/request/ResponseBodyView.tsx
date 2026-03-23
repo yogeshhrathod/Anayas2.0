@@ -126,24 +126,39 @@ export const ResponseBodyView: React.FC<ResponseBodyViewProps> = ({
           </div>
         )}
 
-        {/* Monaco Editor - Dynamic height, fills remaining space */}
+        {/* Monaco Editor or Error View - Dynamic height, fills remaining space */}
         <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-          <MonacoEditor
-            value={formattedBody}
-            onChange={() => {}} // Read-only, no changes
-            language="json"
-            placeholder="No response body"
-            title=""
-            description=""
-            height="100%"
-            showActions={false} // No editor actions (we have top-level actions)
-            validateJson={false}
-            readOnly={true}
-            minimap={false}
-            fontSize={13}
-            className="border-0"
-            automaticLayout={true}
-          />
+          {response.status === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="h-16 w-16 mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
+                <Badge variant="destructive" className="h-8 w-8 px-0 rounded-full flex items-center justify-center">!</Badge>
+              </div>
+              <h2 className="text-xl font-bold text-destructive mb-2">Request Failed</h2>
+              <div className="max-w-md bg-muted/30 p-4 rounded-lg border border-border/40 text-sm font-medium text-muted-foreground whitespace-pre-wrap break-words mb-6">
+                {response.statusText || 'Unable to reach the server. Please check the URL and your network connection.'}
+              </div>
+              <p className="text-xs text-muted-foreground max-w-sm">
+                If the server uses a self-signed certificate, ensure <strong>SSL Verification</strong> is disabled in settings.
+              </p>
+            </div>
+          ) : (
+            <MonacoEditor
+              value={formattedBody}
+              onChange={() => {}} // Read-only, no changes
+              language={Object.entries(response.headers).find(([k]) => k.toLowerCase() === 'content-type')?.[1].includes('html') ? 'html' : 'json'}
+              placeholder="No response body"
+              title=""
+              description=""
+              height="100%"
+              showActions={false} // No editor actions (we have top-level actions)
+              validateJson={false}
+              readOnly={true}
+              minimap={false}
+              fontSize={13}
+              className="border-0"
+              automaticLayout={true}
+            />
+          )}
         </div>
       </div>
     </TooltipProvider>

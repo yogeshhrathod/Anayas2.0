@@ -10,6 +10,7 @@ interface FetchOptions {
   body?: any;
   isJson?: boolean;
   timeout?: number;
+  sslVerification?: boolean;
 }
 
 interface ApiResponse {
@@ -115,12 +116,25 @@ export class ApiService {
         options.timeout || 30000
       );
 
-      const response = await fetch(url, {
+      const { net, session } = await import('electron');
+      
+      let fetchOptions: any = {
         method: options.method,
         headers,
         body,
         signal: controller.signal,
-      });
+      };
+
+      // Handle SSL verification
+      if (options.sslVerification === false) {
+        const sslSession = session.fromPartition('persist:no-ssl-check');
+        sslSession.setCertificateVerifyProc((_request, callback) => {
+          callback(0); // Accept all certificates
+        });
+        fetchOptions.session = sslSession;
+      }
+
+      const response = await net.fetch(url, fetchOptions);
 
       if (options.transactionId) {
         this.activeRequests.delete(options.transactionId);
@@ -186,11 +200,17 @@ export class ApiService {
         throw new Error(message);
       }
 
+      let errorMessage = err.message;
+      if (err.message === 'fetch failed' && err.cause) {
+        errorMessage = `fetch failed: ${err.cause.message || err.cause}`;
+      }
+
       logger.error(`Request failed for ${url}`, {
-        error: err.message,
+        error: errorMessage,
+        cause: err.cause,
         responseTime,
       });
-      throw err;
+      throw new Error(errorMessage);
     }
   }
 

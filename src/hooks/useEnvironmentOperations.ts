@@ -99,7 +99,7 @@ export function useEnvironmentOperations() {
             ...data.variables,
             base_url: data.base_url,
           },
-          isDefault: data.is_default,
+          isDefault: data.is_default ? 1 : 0,
         };
 
         const result = await window.electronAPI.env.save(envData);
@@ -130,7 +130,7 @@ export function useEnvironmentOperations() {
             ...data.variables,
             base_url: data.base_url,
           },
-          isDefault: data.is_default,
+          isDefault: data.is_default ? 1 : 0,
         };
 
         const result = await window.electronAPI.env.save(envData);
@@ -192,13 +192,13 @@ export function useEnvironmentOperations() {
         // First, unset all environments as default
         const updatedEnvs = environments.map(env => ({
           ...env,
-          isDefault: false,
+          isDefault: 0,
         }));
 
         // Then set the selected environment as default
         const targetEnv = updatedEnvs.find(env => env.id === environment.id);
         if (targetEnv) {
-          targetEnv.isDefault = true;
+          targetEnv.isDefault = 1;
         }
 
         // Save all environments
@@ -225,14 +225,15 @@ export function useEnvironmentOperations() {
 
         // Test the base URL if it exists
         if (environment.variables?.base_url) {
-          await fetch(environment.variables.base_url, {
-            method: 'HEAD',
-            mode: 'no-cors',
-          });
+          const result = await window.electronAPI.env.test(environment);
 
-          showSuccess('Connection test passed', {
-            description: `${environment.displayName} is reachable`,
-          });
+          if (result.success) {
+            showSuccess('Connection test passed', {
+              description: result.message || `${environment.displayName} is reachable`,
+            });
+          } else {
+            showError('Connection test failed', result.message || 'The server is unreachable');
+          }
         } else {
           showSuccess('Environment test completed', {
             description: `${environment.displayName} configuration is valid`,

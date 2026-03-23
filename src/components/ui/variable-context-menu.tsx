@@ -1,3 +1,4 @@
+import { Root as Portal } from '@radix-ui/react-portal';
 import { Copy, Edit, Eye } from 'lucide-react';
 import { forwardRef } from 'react';
 import { useVariableResolution } from '../../hooks/useVariableResolution';
@@ -86,48 +87,52 @@ export const VariableContextMenu = forwardRef<
   };
 
   return (
-    <>
+    <Portal>
       <div
         ref={ref}
-        className="fixed z-context-menu w-56 rounded-md border bg-popover p-1 shadow-lg"
+        className="fixed z-[9999] w-56 rounded-xl border border-border/40 bg-popover/95 backdrop-blur-md p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
         style={{ left: position.x, top: position.y }}
         onClick={e => e.stopPropagation()}
       >
+        <div className="px-2 py-1.5 mb-1.5 border-b border-border/40">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Variable Actions</p>
+          <p className="text-xs font-mono font-medium truncate text-primary/80 mt-0.5">{`{{${variableName}}}`}</p>
+        </div>
         <button
           onClick={handleCopyName}
-          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+          className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         >
-          <Copy className="h-4 w-4" />
+          <Copy className="h-4 w-4 opacity-70" />
           Copy Variable Name
         </button>
         {isResolved && !isDynamic && (
           <button
             onClick={handleCopyValue}
-            className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
           >
-            <Copy className="h-4 w-4" />
+            <Copy className="h-4 w-4 opacity-70" />
             Copy Value
           </button>
         )}
-        <div className="h-px bg-border my-1" />
+        <div className="h-px bg-border/40 my-1.5" />
         <button
           onClick={handleViewDefinition}
-          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+          className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         >
-          <Eye className="h-4 w-4" />
+          <Eye className="h-4 w-4 opacity-70" />
           View Definition
         </button>
         {!isDynamic && (
           <button
             onClick={handleEdit}
-            className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
           >
-            <Edit className="h-4 w-4" />
+            <Edit className="h-4 w-4 opacity-70" />
             Edit Variable
           </button>
         )}
       </div>
-    </>
+    </Portal>
   );
 });
 

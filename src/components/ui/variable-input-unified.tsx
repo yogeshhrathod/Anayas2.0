@@ -23,6 +23,12 @@ import { useVariableInput } from '../../hooks/useVariableInput';
 import { useVariableResolution } from '../../hooks/useVariableResolution';
 import { cn } from '../../lib/utils';
 import { Input } from './input';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './tooltip';
 import { VariableAutocomplete } from './variable-autocomplete';
 import { VariableContextMenu } from './variable-context-menu';
 import { VariableDefinitionDialog } from './variable-definition-dialog';
@@ -47,6 +53,7 @@ interface Segment {
   content?: string;
   name?: string;
   resolved?: boolean;
+  value?: string;
 }
 
 const SHARED_STYLES: React.CSSProperties = {
@@ -88,6 +95,7 @@ function parseTextToSegments(
       type: 'variable',
       name: varName,
       resolved: isDynamic || (!!variable && variable.value !== ''),
+      value: variable?.value || '',
     });
 
     lastIndex = match.index + match[0].length;
@@ -292,90 +300,143 @@ export function VariableInputUnified({
 
   // Overlay variant: input with resolved value overlay
   return (
-    <div
-      ref={wrapperRef}
-      className={cn(
-        'relative w-full flex h-10 rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
-        disabled && 'cursor-not-allowed opacity-50',
-        className
-      )}
-    >
-      {/* Overlay Layer - Visual (BELOW input so input captures clicks) */}
+    <TooltipProvider delayDuration={200}>
       <div
-        ref={overlayRef}
-        style={{
-          ...SHARED_STYLES,
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 1,
-          pointerEvents: 'none',
-          whiteSpace: 'pre',
-          overflow: 'hidden',
-          textOverflow: 'clip',
-          color: 'inherit',
-          border: 'none',
-          outline: 'none',
-          textRendering: 'auto',
-          WebkitFontSmoothing: 'antialiased',
-          MozOsxFontSmoothing: 'grayscale',
-        }}
+        ref={wrapperRef}
+        className={cn(
+          'relative w-full flex h-10 rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
+          disabled && 'cursor-not-allowed opacity-50',
+          className
+        )}
       >
-        <span
+        {/* Overlay Layer - Visual (ON TOP so it captures hover for tooltips) */}
+        <div
+          ref={overlayRef}
           style={{
-            display: 'inline-block',
-            minWidth: '100%',
-            lineHeight: '20px',
+            ...SHARED_STYLES,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 2,
+            pointerEvents: 'none',
+            whiteSpace: 'pre',
+            overflow: 'hidden',
+            textOverflow: 'clip',
+            color: 'inherit',
+            border: 'none',
+            outline: 'none',
+            textRendering: 'auto',
+            WebkitFontSmoothing: 'antialiased',
+            MozOsxFontSmoothing: 'grayscale',
           }}
         >
-          {segments.map((seg, i) =>
-            seg.type === 'variable' ? (
-              <span
-                key={`var-${seg.name}-${i}`}
-                className={cn(
-                  'font-medium transition-colors',
-                  seg.resolved
-                    ? 'text-green-700 dark:text-green-400'
-                    : 'text-red-700 dark:text-red-400'
-                )}
-                style={{
-                  pointerEvents: 'auto',
-                  verticalAlign: 'baseline',
-                  cursor: 'pointer',
-                  display: 'inline',
-                  lineHeight: 'inherit',
-                  backgroundColor: seg.resolved
-                    ? 'rgba(34, 197, 94, 0.2)'
-                    : 'rgba(239, 68, 68, 0.2)',
-                  borderRadius: '3px',
-                  padding: '0',
-                  margin: '0',
-                  border: 'none',
-                  outline: 'none',
-                }}
-                onContextMenu={e => handleContextMenuOverlay(e, seg.name!)}
-                onDoubleClick={() => handleDoubleClick(seg.name!)}
-              >
-                {`{{${seg.name}}}`}
-              </span>
-            ) : (
-              <span
-                key={`text-${seg.content?.substring(0, 20)}-${i}`}
-                style={{ display: 'inline' }}
-              >
-                {seg.content}
-              </span>
-            )
-          )}
+          <span
+            style={{
+              display: 'inline-block',
+              minWidth: '100%',
+              lineHeight: '20px',
+            }}
+          >
+            {segments.map((seg, i) => {
+              // Calculate text index for this segment for click-focusing
+              let firstCharIndex = 0;
+              for (let j = 0; j < i; j++) {
+                const s = segments[j];
+                firstCharIndex += s.type === 'variable' ? `{{${s.name}}}`.length : (s.content?.length || 0);
+              }
+
+              return seg.type === 'variable' ? (
+                <Tooltip key={`var-${seg.name}-${i}`}>
+                  <TooltipTrigger asChild>
+                    <span
+                      className={cn(
+                        'font-medium transition-colors',
+                        seg.resolved
+                          ? 'text-green-700 dark:text-green-400'
+                          : 'text-red-700 dark:text-red-400'
+                      )}
+                      style={{
+                        pointerEvents: 'auto',
+                        verticalAlign: 'baseline',
+                        cursor: 'text',
+                        display: 'inline',
+                        lineHeight: 'inherit',
+                        backgroundColor: seg.resolved
+                          ? 'rgba(34, 197, 94, 0.2)'
+                          : 'rgba(239, 68, 68, 0.2)',
+                        borderRadius: '3px',
+                        padding: '0 2px',
+                        margin: '0',
+                        border: 'none',
+                        outline: 'none',
+                      }}
+                      onContextMenu={e => handleContextMenuOverlay(e, seg.name!)}
+                      onDoubleClick={() => handleDoubleClick(seg.name!)}
+                      onClick={(e) => {
+                        if (inputRef.current) {
+                          inputRef.current.focus();
+                          // Try to calculate exact click position relative to the capsule
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const clickX = e.clientX - rect.left;
+                          const charWidth = 8; // Mono font estimation
+                          const charOffset = Math.round(clickX / charWidth);
+                          const newCursorPos = firstCharIndex + charOffset;
+                          inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
+                        }
+                      }}
+                    >
+                      {`{{${seg.name}}}`}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    align="center"
+                    className="p-0 border-primary/20 shadow-2xl rounded-xl overflow-hidden bg-popover/95 backdrop-blur-md"
+                  >
+                    <div className="flex flex-col min-w-[220px] max-w-[340px]">
+                      <div className="flex items-center justify-between gap-4 px-3 py-2 border-b border-border/40 bg-muted/30">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          Variable Value
+                        </span>
+                        {!seg.resolved ? (
+                          <span className="text-[10px] font-bold text-red-500 uppercase px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20">
+                            Unresolved
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-green-500 uppercase px-1.5 py-0.5 rounded bg-green-500/10 border border-green-500/20">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-3 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-border/60">
+                        <code className="text-[13px] font-mono whitespace-pre-wrap break-all text-foreground leading-relaxed">
+                          {seg.value ||
+                            (seg.name?.startsWith('$')
+                              ? 'Dynamic Variable'
+                              : '(No value set or variable not found)')}
+                        </code>
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <span
+                  key={`text-${seg.content?.substring(0, 20)}-${i}`}
+                  style={{ display: 'inline' }}
+                >
+                  {seg.content}
+                </span>
+              );
+            })}
           {!value && placeholder && (
             <span className="text-muted-foreground">{placeholder}</span>
           )}
         </span>
       </div>
 
-      {/* Input Layer - Interaction (ON TOP, captures all clicks) */}
+      {/* Input Layer - Interaction (UNDERNEATH overlay layer) */}
       <input
         ref={inputRef}
         onScroll={e => {
@@ -386,7 +447,7 @@ export function VariableInputUnified({
         value={value}
         onChange={handleChange}
         onContextMenu={e => {
-          // Check if we're clicking on a capsule by examining click position
+          // Context menu forwarding is still useful as fallback
           const clickX = e.clientX;
           const rect = inputRef.current?.getBoundingClientRect();
           if (!rect) return;
@@ -394,24 +455,20 @@ export function VariableInputUnified({
           // Find which segment is at the click position
           let charPos = 0;
           for (const seg of segments) {
-            if (seg.type === 'variable') {
-              const varText = `{{${seg.name}}}`;
-              const startPos = charPos;
-              const endPos = charPos + varText.length;
-              const charWidth = 8;
-              const relativeX = clickX - rect.left - 12;
-              const clickedChar = Math.floor(relativeX / charWidth);
+            const varText = seg.type === 'variable' ? `{{${seg.name}}}` : (seg.content || '');
+            const startPos = charPos;
+            const endPos = charPos + varText.length;
+            const charWidth = 8;
+            const relativeX = clickX - rect.left - 12;
+            const clickedChar = Math.floor(relativeX / charWidth);
 
-              if (clickedChar >= startPos && clickedChar <= endPos) {
-                e.preventDefault();
-                e.stopPropagation();
-                handleContextMenuOverlay(e, seg.name!);
-                return;
-              }
-              charPos += varText.length;
-            } else if (seg.content) {
-              charPos += seg.content.length;
+            if (seg.type === 'variable' && clickedChar >= startPos && clickedChar <= endPos) {
+              e.preventDefault();
+              e.stopPropagation();
+              handleContextMenuOverlay(e, seg.name!);
+              return;
             }
+            charPos += varText.length;
           }
         }}
         // Keep placeholder attribute for accessibility and testing, but rely on
@@ -425,7 +482,7 @@ export function VariableInputUnified({
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 2,
+          zIndex: 1,
           color: 'transparent',
           caretColor: 'hsl(var(--foreground))',
           background: 'transparent',
@@ -439,6 +496,9 @@ export function VariableInputUnified({
           WebkitFontSmoothing: 'antialiased',
           MozOsxFontSmoothing: 'grayscale',
         }}
+        spellCheck="false"
+        autoCorrect="off"
+        autoCapitalize="off"
         className="placeholder:text-transparent"
         data-testid="variable-input"
       />
@@ -473,5 +533,6 @@ export function VariableInputUnified({
         variableName={definitionDialogVariable}
       />
     </div>
-  );
+  </TooltipProvider>
+);
 }

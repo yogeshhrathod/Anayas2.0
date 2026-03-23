@@ -154,7 +154,7 @@
   "git.autofetch": true,
   
   // Extensions
-  "extensions.ignoreRecommendations": false,
+  "extensions.ignoreRecommendations": true,
   
   // Breadcrumbs
   "breadcrumbs.enabled": true,
