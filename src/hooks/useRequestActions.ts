@@ -62,16 +62,14 @@ export interface RequestActionsActions {
 }
 
 export function useRequestActions(requestData: RequestFormData) {
-  const {
-    triggerSidebarRefresh,
-    setSelectedRequest,
-    selectedRequest,
-    currentEnvironment,
-    activeUnsavedRequestId,
-  } = useStore();
+  const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
+  const setSelectedRequest = useStore(state => state.setSelectedRequest);
+  const selectedRequest = useStore(state => state.selectedRequest);
+  const currentEnvironment = useStore(state => state.currentEnvironment);
+  const activeUnsavedRequestId = useStore(state => state.activeUnsavedRequestId);
+  const presetsExpanded = useStore(state => state.presetsExpanded);
+  const setPresetsExpanded = useStore(state => state.setPresetsExpanded);
   const { showSuccess, showError } = useToastNotifications();
-
-  const { presetsExpanded, setPresetsExpanded } = useStore();
 
   const [state, setState] = useState<RequestActionsState>({
     response: selectedRequest?.lastResponse || null, // Load saved response

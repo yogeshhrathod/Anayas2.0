@@ -8,6 +8,8 @@
   "scripts": {
     "clean": "rm -rf dist dist-electron release node_modules/.vite node_modules/.cache",
     "dev": "vite",
+    "dev:bun": "bun run vite",
+    "electron-rebuild": "electron-rebuild -f -w better-sqlite3",
     "build": "tsc && vite build && electron-builder",
     "build:mac": "npm run build -- --mac",
     "build:win": "npm run build -- --win",
@@ -50,6 +52,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^16.3.1",
+    "esbuild": "^0.27.4",
     "framer-motion": "^12.25.0",
     "lucide-react": "^0.294.0",
     "react": "^18.2.0",

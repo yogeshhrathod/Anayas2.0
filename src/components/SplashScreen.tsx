@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import logger from '../lib/logger';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
@@ -17,10 +17,17 @@ export function SplashScreen({
   const [isVisible, setIsVisible] = useState(true);
   const [progress, setProgress] = useState(0);
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
-  const { appVersion } = useStore();
+  const appVersion = useStore(state => state.appVersion);
+  // Store callbacks in refs to avoid stale closures and unnecessary effect deps
+  const onFinishRef = useRef(onFinish);
+  const isVisibleRef = useRef(true);
+  useEffect(() => { onFinishRef.current = onFinish; }, [onFinish]);
+
+  // Track isVisible in a ref for the safety timeout (avoids stale closure)
+  useEffect(() => { isVisibleRef.current = isVisible; }, [isVisible]);
 
   useEffect(() => {
-    // Minimum display time of 800ms (reduced from 1500ms) to ensure splash is visible but snappier
+    // Minimum display time of 800ms to ensure splash is visible but snappier
     const minTimeTimeout = setTimeout(() => setMinTimeElapsed(true), 800);
 
     // Simulate progress if isLoading is true
@@ -43,12 +50,12 @@ export function SplashScreen({
   }, [isLoading]);
 
   useEffect(() => {
-    // Safety timeout: If for some reason we're stuck in splash more than 5 seconds, clear it
+    // Safety timeout: force dismiss after 5s if still stuck
     const safetyTimeout = setTimeout(() => {
-      if (isVisible) {
+      if (isVisibleRef.current) {
         logger.warn('[SplashScreen] Safety timeout reached, forcing finish');
         setIsVisible(false);
-        if (onFinish) onFinish();
+        onFinishRef.current?.();
       }
     }, 5000);
 
@@ -59,7 +66,7 @@ export function SplashScreen({
         setIsVisible(false);
         // Fire onFinish after the fade-out animation completes
         setTimeout(() => {
-          if (onFinish) onFinish();
+          onFinishRef.current?.();
         }, 800); // Wait for framer motion exit animation
       }, 400);
       return () => {
@@ -69,7 +76,7 @@ export function SplashScreen({
     }
 
     return () => clearTimeout(safetyTimeout);
-  }, [isLoading, progress, minTimeElapsed, onFinish, isVisible]);
+  }, [isLoading, progress, minTimeElapsed]);
 
   return (
     <AnimatePresence>

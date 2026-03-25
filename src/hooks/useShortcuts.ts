@@ -16,16 +16,15 @@ export function useShortcuts(
   const contextState = useShortcutContext();
   const registry = useMemo(() => new ShortcutRegistry(), []);
   const handlersRef = useRef(handlers);
+  const contextRef = useRef(contextState);
 
-  // Update ref when handlers change
-  useEffect(() => {
-    handlersRef.current = handlers;
-  }, [handlers]);
+  // Keep refs up-to-date with latest values (no re-registration needed)
+  handlersRef.current = handlers;
+  contextRef.current = contextState;
 
   useEffect(() => {
-    // Register all shortcuts with their handlers
+    // Register all shortcuts with their handlers once
     Object.entries(SHORTCUTS).forEach(([id, shortcut]) => {
-      // Use the latest handler from the ref
       registry.register(id, {
         ...shortcut,
         handler: (event, context) => {
@@ -38,17 +37,21 @@ export function useShortcuts(
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      const contexts = detectContext(contextState);
+      // Always use the latest context from the ref
+      const currentContext = contextRef.current;
+      const contexts = detectContext(currentContext);
       const matchedShortcut = registry.findMatchingShortcut(event, contexts);
 
       if (matchedShortcut?.handler) {
         event.preventDefault();
         event.stopPropagation();
-        matchedShortcut.handler(event, contextState);
+        matchedShortcut.handler(event, currentContext);
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [contextState, registry]); // No longer depends on handlers directly
+  // Registry is stable (useMemo with []). Only set up once on mount.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registry]);
 }

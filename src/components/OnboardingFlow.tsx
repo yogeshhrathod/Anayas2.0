@@ -122,7 +122,7 @@ export default function OnboardingFlow({
         ),
       },
     ],
-    []
+    [handleComplete]
   );
 
   // Handle keyboard navigation

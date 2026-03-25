@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, Menu, Trash2 } from 'lucide-react';
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { CollectionHierarchy } from './components/CollectionHierarchy';
 import { Logo } from './components/Logo';
 import { NavigationBar } from './components/NavigationBar';
@@ -105,6 +105,16 @@ function App() {
 
   const { showSuccess, showError } = useToastNotifications();
   const [showClearAllDialog, setShowClearAllDialog] = useState(false);
+
+  // Cache the localStorage check once at mount — reading localStorage during render
+  // is a side effect that can vary between renders (e.g., after onboarding sets the flag)
+  const welcomeSeenRef = useRef(
+    typeof localStorage !== 'undefined'
+      ? localStorage.getItem('luna_welcome_seen') === 'true'
+      : false
+  );
+  // Re-check whenever isWelcomeDone changes (e.g., after onboarding completes)
+  const [welcomeSeen, setWelcomeSeen] = useState(welcomeSeenRef.current);
 
   // Dialog States
   const [showSaveAsDialog, setShowSaveAsDialog] = useState(false);
@@ -642,11 +652,12 @@ function App() {
   return (
     <FontProvider>
       {/* Welcome Experience - Lazy loaded so zero impact for existing users */}
-      {!isWelcomeDone && localStorage.getItem('luna_welcome_seen') !== 'true' && (
+      {!isWelcomeDone && !welcomeSeen && (
         <Suspense fallback={null}>
           <OnboardingFlow
             onDismiss={() => {
               setIsWelcomeDoneStore(true);
+              setWelcomeSeen(true);
               // Explicitly set localStorage here as well for backward compatibility
               localStorage.setItem('luna_welcome_seen', 'true');
               setShowSplash(false); // Skip splash screen after onboarding to prevent "flash"
@@ -656,7 +667,7 @@ function App() {
       )}
 
       {/* Splash Screen - Waits for welcome flow if present, but also shows once after if needed */}
-      {(isWelcomeDone || localStorage.getItem('luna_welcome_seen') === 'true') && showSplash && (
+      {(isWelcomeDone || welcomeSeen) && showSplash && (
         <SplashScreen
           isLoading={!isAppReady}
           onFinish={handleSplashFinish}

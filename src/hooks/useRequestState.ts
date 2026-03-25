@@ -95,11 +95,12 @@ export function useRequestState(selectedRequest: Request | null) {
   const setActiveUnsavedRequestId = useStore(
     state => state.setActiveUnsavedRequestId
   );
-  const setSelectedRequest = useStore(state => state.setSelectedRequest);
 
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const unsavedSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isInternalUpdateRef = useRef<boolean>(false);
+  // Track previous selectedRequest id to detect external changes
+  const prevSelectedIdRef = useRef<EntityId | undefined>(selectedRequest?.id);
+  const prevSelectedRevRef = useRef<string>('');
 
   // Load default responseSubTab from settings (defaults to 'headers' if not set)
   const defaultResponseSubTab =
@@ -142,13 +143,11 @@ export function useRequestState(selectedRequest: Request | null) {
     };
   });
 
-  // Load selected request when it changes from outside
+  // Load selected request when it changes from OUTSIDE (e.g., sidebar click, session recovery).
+  // We only reload when the selectedRequest ID changes OR when the request object changes
+  // due to an external action (save, send response). We do NOT sync local edits back to the
+  // global store here — that would cause an infinite update loop.
   useEffect(() => {
-    if (isInternalUpdateRef.current) {
-      isInternalUpdateRef.current = false;
-      return;
-    }
-
     if (!selectedRequest) {
       // Only reset if we're not already at default
       if (state.requestData.url !== '' || state.requestData.body !== '') {
@@ -159,24 +158,26 @@ export function useRequestState(selectedRequest: Request | null) {
           lastSavedAt: null,
         }));
       }
+      prevSelectedIdRef.current = undefined;
+      prevSelectedRevRef.current = '';
       return;
     }
 
-    // Deep check to avoid redundant updates if we already have this request loaded
-    const isSameRequest =
-      state.requestData.id === selectedRequest.id &&
-      state.requestData.name === selectedRequest.name &&
-      state.requestData.method === selectedRequest.method &&
-      state.requestData.url === selectedRequest.url &&
-      state.requestData.body === selectedRequest.body &&
-      JSON.stringify(state.requestData.headers) ===
-        JSON.stringify(selectedRequest.headers || {}) &&
-      JSON.stringify(state.requestData.queryParams) ===
-        JSON.stringify(selectedRequest.queryParams || []) &&
-      JSON.stringify(state.requestData.auth) ===
-        JSON.stringify(selectedRequest.auth || { type: 'none' });
+    const newId = selectedRequest.id;
+    const prevId = prevSelectedIdRef.current;
 
-    if (!isSameRequest) {
+    // Build a lightweight revision token from fields that indicate an *external* update.
+    // We use name+collectionId+folderId because those are set by the DB after save.
+    // We intentionally exclude url/headers/body/queryParams because those change locally.
+    const revToken = `${newId}|${selectedRequest.name}|${selectedRequest.collectionId}|${selectedRequest.folderId}|${selectedRequest.isFavorite}`;
+    const prevRevToken = prevSelectedRevRef.current;
+
+    // Only reload if the request ID changed (different request selected) OR
+    // the revision token changed (save/DB updated the request externally)
+    if (newId !== prevId || revToken !== prevRevToken) {
+      prevSelectedIdRef.current = newId;
+      prevSelectedRevRef.current = revToken;
+
       setState(prev => ({
         ...prev,
         requestData: {
@@ -196,37 +197,9 @@ export function useRequestState(selectedRequest: Request | null) {
         lastSavedAt: new Date(),
       }));
     }
+  // Disable exhaustive-deps: we intentionally only react to selectedRequest reference changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRequest]);
-
-  // Synchronize local changes back to the global store
-  useEffect(() => {
-    // IMPORTANT: Never sync if there's no selected request.
-    // This prevents the infinite loop when selectedRequest is cleared (null).
-    if (!selectedRequest || !state.requestData) return;
-
-    // Use a more robust comparison including deep check for objects
-    const isSameRequest = 
-      state.requestData.id === selectedRequest.id &&
-      state.requestData.name === selectedRequest.name &&
-      state.requestData.method === selectedRequest.method &&
-      state.requestData.url === selectedRequest.url &&
-      state.requestData.body === selectedRequest.body &&
-      state.requestData.collectionId === selectedRequest.collectionId &&
-      state.requestData.folderId === selectedRequest.folderId &&
-      Boolean(state.requestData.isFavorite) === Boolean(selectedRequest.isFavorite) &&
-      JSON.stringify(state.requestData.headers || {}) === JSON.stringify(selectedRequest.headers || {}) &&
-      JSON.stringify(state.requestData.queryParams || []) === JSON.stringify(selectedRequest.queryParams || []) &&
-      JSON.stringify(state.requestData.auth || {}) === JSON.stringify(selectedRequest.auth || {});
-
-    if (!isSameRequest) {
-      isInternalUpdateRef.current = true;
-      setSelectedRequest({
-        ...selectedRequest,
-        ...state.requestData,
-        isFavorite: state.requestData.isFavorite ? 1 : 0,
-      } as Request);
-    }
-  }, [state.requestData, setSelectedRequest, selectedRequest]);
 
   // Auto-save functionality for saved requests
   const autoSave = useCallback(async () => {
@@ -345,23 +318,12 @@ export function useRequestState(selectedRequest: Request | null) {
     };
   }, [state.requestData, autoSave, settings.autoSaveRequests]);
 
-  // Flush save on ID change or unmount
-  const prevIdRef = useRef<EntityId | undefined>(selectedRequest?.id);
+  // Track latest request data in a ref (used by auto-save for unsaved requests so we
+  // always read the most recent value even inside closures).
   const stateRef = useRef(state.requestData);
-  
-  // Track latest request data in a ref for cleanup/flush
   useEffect(() => {
     stateRef.current = state.requestData;
   }, [state.requestData]);
-
-  useEffect(() => {
-    // When the ID changes, we should ideally save the PREVIOUS request if it was dirty.
-    // However, since we now sync to the global store immediately and have 1s auto-save
-    // with sidebar refresh triggers, the risk is much lower.
-    
-    // We update the prevIdRef for future use
-    prevIdRef.current = selectedRequest?.id;
-  }, [selectedRequest?.id]);
 
   // Debounced auto-save for unsaved requests (1 second)
   useEffect(() => {

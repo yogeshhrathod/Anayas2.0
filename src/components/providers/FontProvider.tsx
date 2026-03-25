@@ -6,21 +6,18 @@ import {
 } from '../../constants/fonts';
 
 export function FontProvider({ children }: { children: React.ReactNode }) {
-  const { settings } = useStore();
+  const uiFontFamily = useStore(state => state.settings.uiFontFamily);
+  const codeFontFamily = useStore(state => state.settings.codeFontFamily);
 
   useEffect(() => {
-    // Get font values from settings, handling both undefined and empty string cases
-    const uiFont = settings.uiFontFamily;
-    const codeFont = settings.codeFontFamily;
-
     // Use saved font if it exists and is not empty, otherwise use default
     const uiFontStack =
-      uiFont && typeof uiFont === 'string' && uiFont.trim().length > 0
-        ? uiFont.trim()
+      uiFontFamily && typeof uiFontFamily === 'string' && uiFontFamily.trim().length > 0
+        ? uiFontFamily.trim()
         : DEFAULT_UI_FONT_STACK;
     const codeFontStack =
-      codeFont && typeof codeFont === 'string' && codeFont.trim().length > 0
-        ? codeFont.trim()
+      codeFontFamily && typeof codeFontFamily === 'string' && codeFontFamily.trim().length > 0
+        ? codeFontFamily.trim()
         : DEFAULT_CODE_FONT_STACK;
 
     // Apply CSS variables
@@ -51,7 +48,7 @@ export function FontProvider({ children }: { children: React.ReactNode }) {
         font-family: var(--font-code) !important;
       }
     `;
-  }, [settings.uiFontFamily, settings.codeFontFamily]);
+  }, [uiFontFamily, codeFontFamily]);
 
   return <>{children}</>;
 }

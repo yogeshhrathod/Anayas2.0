@@ -78,9 +78,12 @@ export function useToast() {
   );
 }
 
-export const toast = (
-  ...args: Parameters<ReturnType<typeof useToast>['toast']>
-) => {
-  const { toast } = useToastStore.getState() as any;
-  return toast?.(...args);
+
+/**
+ * Standalone function to show a toast outside of React components.
+ * Uses the store's addToast directly (no hook required).
+ */
+export const toast = (props: Omit<Toast, 'id'>) => {
+  useToastStore.getState().addToast({ duration: 4000, ...props });
 };
+
