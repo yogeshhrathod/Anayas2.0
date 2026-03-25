@@ -22,7 +22,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import logger from '../lib/logger';
-import { safeStringifyBody } from '../lib/response-utils';
+import { getStatusText, safeStringifyBody } from '../lib/response-utils';
 import { useStore } from '../store/useStore';
 import { RequestPreset, ResponseData } from '../types/entities';
 import { RequestFormData } from '../types/forms';
@@ -157,7 +157,7 @@ export function useRequestActions(requestData: RequestFormData) {
       // Convert response to ResponseData format
       const response: ResponseData = {
         status: result.status ?? 0,
-        statusText: result.statusText ?? 'Request Failed',
+        statusText: getStatusText(result.status, result.statusText),
         headers: result.headers ?? {},
         data: result.data ?? null,
         time: result.responseTime ?? 0,

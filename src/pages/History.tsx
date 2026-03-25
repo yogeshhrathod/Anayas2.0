@@ -34,6 +34,10 @@ import {
 } from '../components/ui/select';
 import { useToast } from '../components/ui/use-toast';
 import logger from '../lib/logger';
+import {
+    getStatusText,
+    getStatusVariant,
+} from '../lib/response-utils';
 import { useStore } from '../store/useStore';
 import { EntityId, Request } from '../types/entities';
 
@@ -426,22 +430,20 @@ export function History() {
     return Array.from(methods).sort();
   };
 
-  const getStatusBadge = (status: number) => {
-    if (status === 200) {
-      return (
-        <Badge variant="success" className="text-xs">
+  const getStatusBadge = (status: number, statusText?: string) => {
+    const variant = getStatusVariant(status);
+    const isSuccess = status >= 200 && status < 300;
+
+    return (
+      <Badge variant={variant} className="text-xs">
+        {isSuccess ? (
           <CheckCircle2 className="h-3 w-3 mr-1" />
-          Success
-        </Badge>
-      );
-    } else {
-      return (
-        <Badge variant="destructive" className="text-xs">
+        ) : (
           <XCircle className="h-3 w-3 mr-1" />
-          Error
-        </Badge>
-      );
-    }
+        )}
+        {getStatusText(status, statusText)}
+      </Badge>
+    );
   };
 
   const renderHistoryItem = (request: any) => (
@@ -460,7 +462,7 @@ export function History() {
             <Badge variant="outline" className="text-xs font-mono">
               {request.method}
             </Badge>
-            {getStatusBadge(request.status)}
+            {getStatusBadge(request.status, request.statusText)}
             <span className="text-sm text-muted-foreground">
               {request.responseTime}ms
             </span>
@@ -761,7 +763,7 @@ export function History() {
               <Badge variant="outline" className="text-sm font-mono">
                 {selectedRequest.method}
               </Badge>
-              {getStatusBadge(selectedRequest.status)}
+              {getStatusBadge(selectedRequest.status, selectedRequest.statusText)}
               <span className="text-sm text-muted-foreground">
                 {selectedRequest.responseTime}ms
               </span>

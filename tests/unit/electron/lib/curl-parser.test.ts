@@ -61,7 +61,7 @@ describe('electron curl-parser', () => {
   it('should throw error for empty or invalid command', () => {
     expect(() => parseCurlCommand('')).toThrow('Empty cURL command');
     expect(() => parseCurlCommand('   ')).toThrow('Empty cURL command');
-    expect(() => parseCurlCommand('curl')).toThrow('URL not found');
+    expect(() => parseCurlCommand('curl')).toThrow('Invalid cURL command: no arguments found');
   });
 
 

@@ -23,6 +23,9 @@ export interface Request {
   folderId?: number;
   isFavorite: number;
   order?: number;
+  bodyType?: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded';
+  bodyContentType?: 'json' | 'text';
+  bodyViewMode?: 'table' | 'json';
   lastResponse?: ResponseData; // Saved response from last request execution
   createdAt?: string;
 }
@@ -69,6 +72,7 @@ export interface RequestHistory {
   method: string;
   url: string;
   status: number;
+  statusText?: string;
   responseTime: number;
   response_body?: string;
   headers?: string;
@@ -78,6 +82,9 @@ export interface RequestHistory {
   requestBody?: string; // Store request body for reconstruction
   queryParams?: Array<{ key: string; value: string; enabled: boolean }>; // Store query params
   auth?: any; // Store auth info
+  bodyType?: string;
+  bodyContentType?: string;
+  bodyViewMode?: string;
   requestName?: string; // Name of the request (for saved requests)
 }
 

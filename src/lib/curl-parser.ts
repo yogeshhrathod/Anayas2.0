@@ -1,111 +1,181 @@
-/**
- * cURL Parser
- *
- * Parses cURL command strings into Request objects compatible with Luna_.
- * Supports common cURL flags and options.
- */
-
 import { Request } from '../types/entities';
 
-interface ParseResult {
-  method: string;
-  url: string;
-  headers: Record<string, string>;
-  body?: string;
-  queryParams: Array<{ key: string; value: string; enabled: boolean }>;
-  auth: {
-    type: 'none' | 'bearer' | 'basic' | 'apikey';
-    token?: string;
-    username?: string;
-    password?: string;
-    apiKey?: string;
-    apiKeyHeader?: string;
-  };
+const VALID_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const;
+
+function normalizeLineContiuations(command: string): string {
+  return command.replace(/\\\s*\n\s*/g, ' ').trim();
 }
 
 /**
- * Parse a cURL command string into a Request object
+ * Pre-process curl extensions into a generalized format tokenizable by our custom parser.
  */
-export function parseCurlCommand(curlCommand: string): Request {
-  if (!curlCommand || !curlCommand.trim()) {
-    throw new Error('Empty cURL command');
-  }
+function preProcessCurlExtensions(command: string): string {
+  let processed = command;
+  
+  // Convert --data-urlencode "key=value" to --data "key=encoded_value"
+  processed = processed.replace(
+    /--data-urlencode\s+(['"]?)([^'"\\s][^'"]*?)\1(?=\s|$)/g,
+    (_match, _quote, value) => {
+      const eqIdx = value.indexOf('=');
+      if (eqIdx >= 0) {
+        const key = value.substring(0, eqIdx);
+        const val = encodeURIComponent(value.substring(eqIdx + 1));
+        return `--data "${key}=${val}"`;
+      }
+      return `--data "${encodeURIComponent(value)}"`;
+    }
+  );
 
-  // Normalize the command - remove extra whitespace, handle multi-line
-  const normalized = curlCommand
-    .replace(/\n/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return processed;
+}
 
-  // Remove 'curl' prefix if present
-  let command = normalized.replace(/^curl(\s+|$)/, '').trim();
-
-  if (!command) {
-    throw new Error('Invalid cURL command: no arguments found');
-  }
-
-  // Parse arguments
-  const args = parseArguments(command);
-
-  const result: ParseResult = {
-    method: 'GET',
-    url: '',
-    headers: {},
-    body: '',
-    queryParams: [],
-    auth: {
-      type: 'none',
-    },
-  };
-
-  // Extract body/data
-  const bodyData = parseData(args);
-  if (bodyData) {
-    result.body = bodyData;
-  }
-
-  // Extract method (pass whether body is present for inference)
-  result.method = parseMethod(args, !!bodyData);
-
-  // Extract URL
-  result.url = parseUrl(args);
-
-  // Extract headers
-  result.headers = parseHeaders(args);
-
-  // Extract authentication
-  result.auth = parseAuth(args, result.headers);
-
-  // Extract query parameters from URL
-  result.queryParams = parseQueryParams(result.url);
-
-  // Clean up URL (remove query params as they're in queryParams array)
+function parseQueryParams(url: string): Array<{ key: string; value: string; enabled: boolean }> {
   try {
-    const urlObj = new URL(result.url);
-    result.url = `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
-  } catch (e) {
-    // If URL parsing fails, try to remove query string manually
-    const queryIndex = result.url.indexOf('?');
-    if (queryIndex > 0) {
-      result.url = result.url.substring(0, queryIndex);
+    const urlObj = new URL(url);
+    const params: Array<{ key: string; value: string; enabled: boolean }> = [];
+    urlObj.searchParams.forEach((value, key) => {
+      params.push({ key, value, enabled: true });
+    });
+    return params;
+  } catch {
+    return [];
+  }
+}
+
+function stripQueryString(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    return `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
+  } catch {
+    const idx = url.indexOf('?');
+    return idx > 0 ? url.substring(0, idx) : url;
+  }
+}
+
+function generateRequestName(method: string, url: string): string {
+  try {
+    const urlObj = new URL(url);
+    const segment = urlObj.pathname.split('/').filter(Boolean).pop() || 'request';
+    return `${method} ${segment}`;
+  } catch {
+    return `${method} Request`;
+  }
+}
+
+/**
+ * Extract body/data from parsed shell arguments
+ */
+function parseData(args: string[]): string | undefined {
+  const dataParts: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '-d' || arg === '--data' || arg === '--data-raw' || arg === '--data-binary') {
+      if (i + 1 < args.length) {
+        dataParts.push(args[i + 1]);
+        i++;
+      }
+    } else if (arg.startsWith('--data=')) {
+      dataParts.push(arg.substring(7));
+    } else if (arg.startsWith('-d') && arg.length > 2) {
+      dataParts.push(arg.substring(2));
+    }
+  }
+  return dataParts.length > 0 ? dataParts.join('&') : undefined;
+}
+
+/**
+ * Extract HTTP method from parsed arguments
+ */
+function parseMethod(args: string[], hasBody: boolean): string {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '-X' || arg === '--request') {
+      if (i + 1 < args.length) {
+        return args[i + 1].toUpperCase();
+      }
+    }
+    if (arg === '-I' || arg === '--head') {
+      return 'HEAD';
+    }
+  }
+  return hasBody ? 'POST' : 'GET';
+}
+
+/**
+ * Extract Headers from parsed arguments
+ */
+function parseHeaders(args: string[]): Record<string, string> {
+  const headers: Record<string, string> = {};
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '-H' || arg === '--header') {
+      if (i + 1 < args.length) {
+        const headerStr = args[i + 1];
+        const colonIndex = headerStr.indexOf(':');
+        if (colonIndex !== -1) {
+          const key = headerStr.substring(0, colonIndex).trim();
+          const value = headerStr.substring(colonIndex + 1).trim();
+          headers[key] = value;
+        } else {
+          headers[headerStr] = ''; // Handle unexpected formats gracefully
+        }
+        i++;
+      }
+    } else if (arg === '-A' || arg === '--user-agent') {
+      if (i + 1 < args.length) {
+        headers['User-Agent'] = args[i + 1];
+        i++;
+      }
+    } else if (arg === '-b' || arg === '--cookie') {
+      if (i + 1 < args.length) {
+        headers['Cookie'] = args[i + 1];
+        i++;
+      }
+    } else if (arg === '-e' || arg === '--referer') {
+      if (i + 1 < args.length) {
+        headers['Referer'] = args[i + 1];
+        i++;
+      }
+    }
+  }
+  return headers;
+}
+
+/**
+ * Extract URL from parsed arguments
+ */
+function parseUrl(args: string[]): string {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--url') {
+      if (i + 1 < args.length) {
+        return args[i + 1];
+      }
     }
   }
 
-  // Convert to Request format
-  return {
-    name: generateRequestName(result.method, result.url),
-    method: result.method as Request['method'],
-    url: result.url,
-    headers: result.headers,
-    body: result.body || '',
-    queryParams: result.queryParams,
-    auth: result.auth,
-    isFavorite: 0,
-  };
+  const skipVals = new Set([
+    '-X', '--request', '--url', '-H', '--header',
+    '-d', '--data', '--data-raw', '--data-binary', '--data-urlencode',
+    '-u', '--user', '-b', '--cookie', '-A', '--user-agent', '-e', '--referer'
+  ]);
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg.startsWith('-')) {
+      if (skipVals.has(arg)) i++;
+      continue;
+    }
+    // Simple heuristic to differentiate URL from other standalone strings
+    if (arg.includes('://') || arg.includes('.') || arg.includes('localhost') || arg.includes(':')) {
+      return arg;
+    }
+  }
+  throw new Error('URL not found in cURL command');
 }
 
 /**
- * Parse command arguments, handling quoted strings
+ * Precise Bash argument string tokenizer. Retains accurate escape structures inside quotes.
  */
 function parseArguments(command: string): string[] {
   const args: string[] = [];
@@ -118,13 +188,21 @@ function parseArguments(command: string): string[] {
     const char = command[i];
 
     if (escapeNext) {
-      current += char;
+      if (char === '\n' || char === '\r') {
+         // Line continuation
+      } else {
+        current += char;
+      }
       escapeNext = false;
       continue;
     }
 
     if (char === '\\') {
-      escapeNext = true;
+      if (inQuotes && quoteChar === "'") {
+        current += char; // bash preserves escaping backslash entirely in single quotes
+      } else {
+        escapeNext = true;
+      }
       continue;
     }
 
@@ -141,9 +219,9 @@ function parseArguments(command: string): string[] {
       continue;
     }
 
-    if (char === ' ' && !inQuotes) {
-      if (current.trim()) {
-        args.push(current.trim());
+    if (!inQuotes && /\s/.test(char)) {
+      if (current.length > 0) {
+        args.push(current);
         current = '';
       }
       continue;
@@ -152,257 +230,119 @@ function parseArguments(command: string): string[] {
     current += char;
   }
 
-  if (current.trim()) {
-    args.push(current.trim());
+  if (current.length > 0) {
+    args.push(current);
   }
 
   return args;
 }
 
-/**
- * Extract HTTP method from arguments
- */
-function parseMethod(args: string[], hasBody: boolean): string {
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === '-X' || arg === '--request') {
-      if (i + 1 < args.length) {
-        const method = args[i + 1].toUpperCase();
-        const validMethods = [
-          'GET',
-          'POST',
-          'PUT',
-          'PATCH',
-          'DELETE',
-          'HEAD',
-          'OPTIONS',
-        ];
-        if (validMethods.includes(method)) {
-          return method;
-        }
-      }
-    }
-  }
-  return hasBody ? 'POST' : 'GET'; // Default method
-}
-
-/**
- * Extract URL from arguments
- */
-function parseUrl(args: string[]): string {
-  // URL is typically the last non-flag argument
-  // But it could also be after --url or -u (if not used for auth)
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === '--url') {
-      if (i + 1 < args.length) {
-        return args[i + 1];
-      }
-    }
-  }
-
-  // Find the first argument that looks like a URL
-  for (const arg of args) {
-    // Skip flags
-    if (arg.startsWith('-')) {
-      continue;
-    }
-
-    // Check if it's a URL
-    if (arg.startsWith('http://') || arg.startsWith('https://')) {
-      return arg;
-    }
-  }
-
-  throw new Error('URL not found in cURL command');
-}
-
-/**
- * Extract headers from arguments
- */
-function parseHeaders(args: string[]): Record<string, string> {
-  const headers: Record<string, string> = {};
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === '-H' || arg === '--header') {
-      if (i + 1 < args.length) {
-        const headerStr = args[i + 1];
-        const colonIndex = headerStr.indexOf(':');
-        if (colonIndex !== -1) {
-          const key = headerStr.substring(0, colonIndex).trim();
-          const value = headerStr.substring(colonIndex + 1).trim();
-          headers[key] = value;
-        }
-        i++; // Skip the header value in the next iteration
-      }
-    }
-  }
-
-  return headers;
-}
-
-/**
- * Extract request body/data from arguments
- */
-function parseData(args: string[]): string | undefined {
-  const dataParts: string[] = [];
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-
-    if (arg === '-d' || arg === '--data' || arg === '--data-raw' || arg === '--data-binary') {
-      if (i + 1 < args.length) {
-        dataParts.push(args[i + 1]);
-        i++; // Skip the next arg as it's the data value
-      }
-    } else if (arg.startsWith('--data=')) {
-      dataParts.push(arg.substring(7));
-    } else if (arg.startsWith('-d') && arg.length > 2) {
-      // Handle -d"value" format
-      dataParts.push(arg.substring(2));
-    } else if (arg === '--data-urlencode') {
-      if (i + 1 < args.length) {
-        const value = args[i + 1];
-        if (value.includes('=')) {
-          const [key, ...rest] = value.split('=');
-          dataParts.push(`${key}=${encodeURIComponent(rest.join('='))}`);
-        } else {
-          dataParts.push(encodeURIComponent(value));
-        }
-        i++;
-      }
-    }
-  }
-
-  return dataParts.length > 0 ? dataParts.join('&') : undefined;
-}
-
-/**
- * Extract authentication from arguments
- */
-function parseAuth(
-  args: string[],
-  headers: Record<string, string>
-): Request['auth'] {
-  const auth: Request['auth'] = {
-    type: 'none',
-  };
-
-  // Check for Bearer token in Authorization header
+function parseAuth(headers: Record<string, string>, args: string[]): Request['auth'] {
   const authHeader = headers['Authorization'] || headers['authorization'];
   if (authHeader) {
-    if (authHeader.startsWith('Bearer ') || authHeader.startsWith('bearer ')) {
-      return {
-        type: 'bearer',
-        token: authHeader.substring(7).trim(),
-      };
+    const lower = authHeader.toLowerCase();
+    if (lower.startsWith('bearer ')) {
+      return { type: 'bearer', token: authHeader.substring(7).trim() };
     }
-  }
-
-  // Check for Basic auth (-u or --user)
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === '-u' || arg === '--user') {
-      if (i + 1 < args.length) {
-        const credentials = args[i + 1];
-        const colonIndex = credentials.indexOf(':');
-        if (colonIndex > 0) {
+    if (lower.startsWith('basic ')) {
+      try {
+        const decoded = atob(authHeader.substring(6).trim());
+        const colonIdx = decoded.indexOf(':');
+        if (colonIdx >= 0) {
           return {
             type: 'basic',
-            username: credentials.substring(0, colonIndex),
-            password: credentials.substring(colonIndex + 1),
+            username: decoded.substring(0, colonIdx),
+            password: decoded.substring(colonIdx + 1),
           };
         } else {
-          // Username only, password might be prompted
-          return {
-            type: 'basic',
-            username: credentials,
-            password: '',
-          };
+           return { type: 'basic', username: decoded, password: '' };
         }
+      } catch { /* fall through */ }
+    }
+  }
+
+  // -u inline bash syntax check
+  for (let i = 0; i < args.length; i++) {
+    if ((args[i] === '-u' || args[i] === '--user') && i + 1 < args.length) {
+      const creds = args[i + 1];
+      const colonIdx = creds.indexOf(':');
+      if (colonIdx >= 0) {
+        return { type: 'basic', username: creds.substring(0, colonIdx), password: creds.substring(colonIdx + 1) };
       }
+      return { type: 'basic', username: creds, password: '' };
     }
   }
 
-  // Check for API key in headers (common patterns)
-  const apiKeyHeaders = [
-    'X-API-Key',
-    'X-Api-Key',
-    'API-Key',
-    'apikey',
-    'x-api-key',
-  ];
-  for (const key of apiKeyHeaders) {
-    if (headers[key] || headers[key.toLowerCase()]) {
-      const value = headers[key] || headers[key.toLowerCase()];
-      return {
-        type: 'apikey',
-        apiKey: value,
-        apiKeyHeader: key,
-      };
+  const apiKeyHeaderNames = ['X-API-Key', 'X-Api-Key', 'API-Key', 'apikey', 'x-api-key'];
+  for (const key of apiKeyHeaderNames) {
+    const value = headers[key] ?? headers[key.toLowerCase()];
+    if (value) {
+      return { type: 'apikey', apiKey: value, apiKeyHeader: key };
     }
   }
 
-  return auth;
+  return { type: 'none' };
 }
 
-/**
- * Extract query parameters from URL
- */
-function parseQueryParams(
-  url: string
-): Array<{ key: string; value: string; enabled: boolean }> {
-  try {
-    const urlObj = new URL(url);
-    const params: Array<{ key: string; value: string; enabled: boolean }> = [];
-
-    urlObj.searchParams.forEach((value, key) => {
-      params.push({
-        key,
-        value,
-        enabled: true,
-      });
-    });
-
-    return params;
-  } catch (e) {
-    // Invalid URL, return empty array
-    return [];
+export function parseCurlCommand(curlCommand: string): Request {
+  if (!curlCommand || !curlCommand.trim()) {
+    throw new Error('Empty cURL command');
   }
-}
 
-/**
- * Generate a default request name from method and URL
- */
-function generateRequestName(method: string, url: string): string {
-  try {
-    const urlObj = new URL(url);
-    const path = urlObj.pathname.split('/').filter(Boolean).pop() || 'request';
-    return `${method} ${path}`;
-  } catch (e) {
-    return `${method} Request`;
+  let cmd = curlCommand.trim();
+  if (cmd.startsWith('$ ')) cmd = cmd.substring(2).trim();
+  if (cmd.startsWith('curl ')) cmd = cmd.substring(5).trim();
+  if (!cmd || cmd.toLowerCase() === 'curl') {
+    throw new Error('Invalid cURL command: no arguments found');
   }
+
+  // Handle cross-line integrations safely before feeding tokenizer
+  let normalized = normalizeLineContiuations(curlCommand);
+  if (normalized.startsWith('$ ')) normalized = normalized.substring(2).trim();
+  if (normalized.startsWith('curl ')) normalized = normalized.substring(5).trim();
+
+  normalized = preProcessCurlExtensions(normalized);
+
+  const args = parseArguments(normalized);
+  
+  const rawBody = parseData(args);
+  const body = rawBody || '';
+  const rawMethod = (parseMethod(args, !!rawBody)).toUpperCase();
+  const method: Request['method'] = VALID_METHODS.includes(
+    rawMethod as (typeof VALID_METHODS)[number]
+  ) ? (rawMethod as Request['method']) : 'GET';
+
+  let url;
+  try {
+     url = parseUrl(args);
+  } catch (e) {
+     if (normalized.length === 0) throw new Error('Invalid cURL command: no arguments found');
+     throw new Error('Failed to parse cURL command: URL not found');
+  }
+  
+  const headers = parseHeaders(args);
+  const queryParams = parseQueryParams(url);
+  const cleanUrl = stripQueryString(url);
+  const auth = parseAuth(headers, args);
+
+  return {
+    name: generateRequestName(method, cleanUrl),
+    method,
+    url: cleanUrl,
+    headers,
+    body,
+    queryParams,
+    auth,
+    isFavorite: 0,
+  };
 }
 
-/**
- * Parse multiple cURL commands (for bulk import)
- */
 export function parseCurlCommands(
   commands: string[]
 ): Array<{ success: boolean; request?: Request; error?: string }> {
   return commands.map((command, index) => {
     try {
-      // Cleanup logic: remove 'curl' if it's the last word and not part of a URL
-      let cleanedCommand = command;
-      if (cleanedCommand.toLowerCase().endsWith(' curl')) {
-        cleanedCommand = cleanedCommand.substring(0, cleanedCommand.length - 5);
-      } else if (cleanedCommand.toLowerCase() === 'curl') {
-        cleanedCommand = ''; // Handle case where command is just 'curl'
-      }
-
-      const request = parseCurlCommand(cleanedCommand);
+      const request = parseCurlCommand(command);
       return { success: true, request };
     } catch (error: any) {
       return {

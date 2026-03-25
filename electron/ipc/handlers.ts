@@ -565,6 +565,9 @@ export function registerIpcHandlers() {
         folderId: request.folderId || null,
         isFavorite: request.isFavorite ? 1 : 0,
         order: request.order,
+        bodyType: request.bodyType || 'raw',
+        bodyContentType: request.bodyContentType || 'json',
+        bodyViewMode: request.bodyViewMode || 'json',
         lastResponse: request.lastResponse || null,
       });
       broadcast('requests:updated');
@@ -582,6 +585,9 @@ export function registerIpcHandlers() {
         folderId: request.folderId || null,
         isFavorite: request.isFavorite ? 1 : 0,
         order: request.order,
+        bodyType: request.bodyType || 'raw',
+        bodyContentType: request.bodyContentType || 'json',
+        bodyViewMode: request.bodyViewMode || 'json',
         lastResponse: request.lastResponse || null,
       });
       broadcast('requests:updated');
@@ -602,6 +608,9 @@ export function registerIpcHandlers() {
         collectionId: request.collectionId,
         folderId: request.folderId || null,
         isFavorite: request.isFavorite ? 1 : 0,
+        bodyType: request.bodyType || 'raw',
+        bodyContentType: request.bodyContentType || 'json',
+        bodyViewMode: request.bodyViewMode || 'json',
       },
       afterRequestId
     );
@@ -701,6 +710,53 @@ export function registerIpcHandlers() {
         value: variableResolver.resolve(param.value, variableContext),
       }));
 
+      // Resolve auth variables
+      const resolvedAuth = { ...options.auth };
+      if (resolvedAuth) {
+        if (resolvedAuth.type === 'bearer' && resolvedAuth.token) {
+          resolvedAuth.token = variableResolver.resolve(resolvedAuth.token, variableContext);
+        } else if (resolvedAuth.type === 'basic') {
+          if (resolvedAuth.username) {
+            resolvedAuth.username = variableResolver.resolve(resolvedAuth.username, variableContext);
+          }
+          if (resolvedAuth.password) {
+            resolvedAuth.password = variableResolver.resolve(resolvedAuth.password, variableContext);
+          }
+        } else if (resolvedAuth.type === 'apikey') {
+          if (resolvedAuth.apiKey) {
+            resolvedAuth.apiKey = variableResolver.resolve(resolvedAuth.apiKey, variableContext);
+          }
+          if (resolvedAuth.apiKeyHeader) {
+            resolvedAuth.apiKeyHeader = variableResolver.resolve(resolvedAuth.apiKeyHeader, variableContext);
+          }
+        }
+      }
+
+      // Inject auth headers into resolvedHeaders
+      if (resolvedAuth && resolvedAuth.type !== 'none') {
+        const authType = resolvedAuth.type;
+        
+        // Only inject if the user hasn't manually set the header
+        if (authType === 'bearer' && resolvedAuth.token) {
+          const hasAuthHeader = Object.keys(resolvedHeaders).some(h => h.toLowerCase() === 'authorization');
+          if (!hasAuthHeader) {
+            resolvedHeaders['Authorization'] = `Bearer ${resolvedAuth.token}`;
+          }
+        } else if (authType === 'basic' && (resolvedAuth.username || resolvedAuth.password)) {
+          const hasAuthHeader = Object.keys(resolvedHeaders).some(h => h.toLowerCase() === 'authorization');
+          if (!hasAuthHeader) {
+            const credentials = Buffer.from(`${resolvedAuth.username || ''}:${resolvedAuth.password || ''}`).toString('base64');
+            resolvedHeaders['Authorization'] = `Basic ${credentials}`;
+          }
+        } else if (authType === 'apikey' && resolvedAuth.apiKey && resolvedAuth.apiKeyHeader) {
+          const headerName = resolvedAuth.apiKeyHeader;
+          const hasApiKeyHeader = Object.keys(resolvedHeaders).some(h => h.toLowerCase() === headerName.toLowerCase());
+          if (!hasApiKeyHeader) {
+            resolvedHeaders[headerName] = resolvedAuth.apiKey;
+          }
+        }
+      }
+
       // Execute HTTP request using apiService with resolved values
       let result: any;
       const method = options.method || 'GET';
@@ -739,6 +795,7 @@ export function registerIpcHandlers() {
         method: method,
         url: resolvedUrl,
         status: result.status,
+        statusText: result.statusText,
         response_time: result.responseTime,
         response_body:
           typeof result.body === 'string'
@@ -753,6 +810,9 @@ export function registerIpcHandlers() {
             : JSON.stringify(options.body || ''),
         queryParams: options.queryParams || [],
         auth: options.auth || null,
+        bodyType: options.bodyType,
+        bodyContentType: options.bodyContentType,
+        bodyViewMode: options.bodyViewMode,
         requestName: requestName, // Store request name for display
         createdAt: new Date().toISOString(),
       });
@@ -896,6 +956,7 @@ export function registerIpcHandlers() {
             method: request.method,
             url: resolvedUrl,
             status: result.status,
+            statusText: result.statusText,
             response_time: result.responseTime,
             response_body:
               typeof result.body === 'string'
@@ -1156,8 +1217,11 @@ export function registerIpcHandlers() {
           url: request.url,
           headers: request.headers || {},
           body: request.body || '',
-          queryParams: request.queryParams || [],
-          auth: request.auth || null,
+          queryParams: request.queryParams,
+          auth: request.auth,
+          bodyType: request.bodyType || 'raw',
+          bodyContentType: request.bodyContentType || 'json',
+          bodyViewMode: request.bodyViewMode || 'json',
           lastResponse: request.lastResponse,
         });
         return { success: true, id: request.id };

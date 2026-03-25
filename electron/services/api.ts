@@ -121,18 +121,29 @@ export class ApiService {
       let fetchOptions: any = {
         method: options.method,
         headers,
-        body,
         signal: controller.signal,
       };
 
-      // Handle SSL verification
+      if (options.method !== 'GET' && options.method !== 'HEAD' && body !== undefined && body !== null) {
+        fetchOptions.body = body;
+      }
+
+      // Always use a shared persistent session to allow session/cookie sharing across API calls
+      const apiSession = session.fromPartition('persist:api-session');
+      
+      // Update certificate verification on the shared session
       if (options.sslVerification === false) {
-        const sslSession = session.fromPartition('persist:no-ssl-check');
-        sslSession.setCertificateVerifyProc((_request, callback) => {
+        apiSession.setCertificateVerifyProc((_request, callback) => {
           callback(0); // Accept all certificates
         });
-        fetchOptions.session = sslSession;
+      } else {
+        // Use default certificate verification
+        apiSession.setCertificateVerifyProc((_request, callback) => {
+          callback(-1); // Use default verification logic
+        });
       }
+      
+      fetchOptions.session = apiSession;
 
       const response = await net.fetch(url, fetchOptions);
 
@@ -149,16 +160,41 @@ export class ApiService {
       });
 
       let responseBody: any;
-      const contentType = response.headers.get('content-type') || '';
+      const contentTypeHeader = response.headers.get('content-type') || '';
+      const contentType = contentTypeHeader.toLowerCase();
 
-      if (contentType.includes('application/json')) {
+      if (contentType.includes('json')) {
         try {
           responseBody = await response.json();
         } catch (e) {
           responseBody = await response.text();
+          try {
+            // Try parsing as JSON anyway if it looks like JSON
+            if (typeof responseBody === 'string' && (responseBody.trim().startsWith('{') || responseBody.trim().startsWith('['))) {
+              responseBody = JSON.parse(responseBody);
+            }
+          } catch {
+            // Keep as text if parsing fails
+          }
         }
-      } else if (contentType.includes('text/')) {
-        responseBody = await response.text();
+      } else if (contentType.includes('text/') || contentType === '' || response.status >= 400) {
+        try {
+          const text = await response.text();
+          // Try to parse as JSON anyway, as many APIs send JSON without proper content-type or as plain text
+          if (text && (text.trim().startsWith('{') || text.trim().startsWith('['))) {
+            try {
+              responseBody = JSON.parse(text);
+            } catch {
+              responseBody = text;
+            }
+          } else {
+            responseBody = text;
+          }
+        } catch (e) {
+          // Fallback to base64 if it fails to read as text (unlikely for text/ or status >= 400)
+          const buffer = await response.arrayBuffer();
+          responseBody = Buffer.from(buffer).toString('base64');
+        }
       } else {
         // For binary content, return as base64 string
         const buffer = await response.arrayBuffer();

@@ -108,7 +108,7 @@ export function useRequestState(selectedRequest: Request | null) {
     'headers';
 
   const [state, setState] = useState<RequestState>(() => {
-    const initialRequestData = selectedRequest
+    const initialRequestData: RequestFormData = selectedRequest
       ? {
           id: selectedRequest.id,
           name: selectedRequest.name,
@@ -121,16 +121,40 @@ export function useRequestState(selectedRequest: Request | null) {
           collectionId: selectedRequest.collectionId,
           folderId: selectedRequest.folderId,
           isFavorite: Boolean(selectedRequest.isFavorite),
+          bodyType: selectedRequest.bodyType as RequestFormData['bodyType'],
+          bodyContentType: selectedRequest.bodyContentType as RequestFormData['bodyContentType'],
+          bodyViewMode: selectedRequest.bodyViewMode as RequestFormData['bodyViewMode'],
         }
       : defaultRequestData;
+
+    const bodyType = initialRequestData.bodyType || (initialRequestData.body ? 'raw' : 'none');
+    const bodyViewMode = initialRequestData.bodyViewMode || 'json';
+    
+    // Parse body for table view if needed
+    let bodyFormData: Array<{ key: string; value: string; enabled: boolean }> = [];
+    if (bodyType === 'form-data' || bodyType === 'x-www-form-urlencoded' || bodyViewMode === 'table') {
+      try {
+        const parsed = JSON.parse(initialRequestData.body || '{}');
+        bodyFormData = Object.entries(parsed).map(([key, value]) => ({
+          key,
+          value: String(value),
+          enabled: true,
+        }));
+      } catch (e) {
+        bodyFormData = [{ key: '', value: '', enabled: true }];
+      }
+    }
+    if (bodyFormData.length === 0) {
+      bodyFormData = [{ key: '', value: '', enabled: true }];
+    }
 
     return {
       requestData: initialRequestData,
       activeTab: 'params',
-      bodyType: 'raw',
-      bodyContentType: 'json',
-      bodyViewMode: 'table',
-      bodyFormData: [],
+      bodyType,
+      bodyContentType: initialRequestData.bodyContentType || 'json',
+      bodyViewMode,
+      bodyFormData,
       paramsViewMode: 'table',
       headersViewMode: 'table',
       bulkEditJson: '',
@@ -178,24 +202,55 @@ export function useRequestState(selectedRequest: Request | null) {
       prevSelectedIdRef.current = newId;
       prevSelectedRevRef.current = revToken;
 
-      setState(prev => ({
-        ...prev,
-        requestData: {
-          id: selectedRequest.id,
-          name: selectedRequest.name,
-          method: selectedRequest.method as RequestFormData['method'],
-          url: selectedRequest.url,
-          headers: selectedRequest.headers || {},
-          body: selectedRequest.body || '',
-          queryParams: selectedRequest.queryParams || [],
-          auth: selectedRequest.auth || { type: 'none' },
-          collectionId: selectedRequest.collectionId,
-          folderId: selectedRequest.folderId,
-          isFavorite: Boolean(selectedRequest.isFavorite),
-        },
-        isSaved: true,
-        lastSavedAt: new Date(),
-      }));
+      setState(prev => {
+        const bodyType = (selectedRequest as any).bodyType || (selectedRequest.body ? 'raw' : 'none');
+        const bodyViewMode = (selectedRequest as any).bodyViewMode || (bodyType === 'raw' ? 'json' : 'table');
+        const bodyContentType = (selectedRequest as any).bodyContentType || 'json';
+
+        // Parse body for table view if it exists
+        let bodyFormData: Array<{ key: string; value: string; enabled: boolean }> = [];
+        if (bodyType === 'form-data' || bodyType === 'x-www-form-urlencoded' || bodyViewMode === 'table') {
+          try {
+            const parsed = JSON.parse(selectedRequest.body || '{}');
+            bodyFormData = Object.entries(parsed).map(([key, value]) => ({
+              key,
+              value: String(value),
+              enabled: true,
+            }));
+          } catch (e) {
+            bodyFormData = [{ key: '', value: '', enabled: true }];
+          }
+        }
+        if (bodyFormData.length === 0) {
+          bodyFormData = [{ key: '', value: '', enabled: true }];
+        }
+
+        return {
+          ...prev,
+          requestData: {
+            id: selectedRequest.id,
+            name: selectedRequest.name,
+            method: selectedRequest.method as RequestFormData['method'],
+            url: selectedRequest.url,
+            headers: selectedRequest.headers || {},
+            body: selectedRequest.body || '',
+            queryParams: selectedRequest.queryParams || [],
+            auth: selectedRequest.auth || { type: 'none' },
+            collectionId: selectedRequest.collectionId,
+            folderId: selectedRequest.folderId,
+            isFavorite: Boolean(selectedRequest.isFavorite),
+            bodyType: bodyType,
+            bodyContentType: bodyContentType,
+            bodyViewMode: bodyViewMode,
+          },
+          bodyType,
+          bodyContentType,
+          bodyViewMode,
+          bodyFormData,
+          isSaved: true,
+          lastSavedAt: new Date(),
+        };
+      });
     }
   // Disable exhaustive-deps: we intentionally only react to selectedRequest reference changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -352,11 +407,23 @@ export function useRequestState(selectedRequest: Request | null) {
       }));
     },
     setActiveTab: tab => setState(prev => ({ ...prev, activeTab: tab })),
-    setBodyType: type => setState(prev => ({ ...prev, bodyType: type })),
+    setBodyType: type => setState(prev => ({ 
+      ...prev, 
+      bodyType: type,
+      requestData: { ...prev.requestData, bodyType: type } 
+    })),
     setBodyContentType: type =>
-      setState(prev => ({ ...prev, bodyContentType: type })),
+      setState(prev => ({ 
+        ...prev, 
+        bodyContentType: type,
+        requestData: { ...prev.requestData, bodyContentType: type }
+      })),
     setBodyViewMode: mode =>
-      setState(prev => ({ ...prev, bodyViewMode: mode })),
+      setState(prev => ({ 
+        ...prev, 
+        bodyViewMode: mode,
+        requestData: { ...prev.requestData, bodyViewMode: mode }
+      })),
     setBodyFormData: data =>
       setState(prev => {
         let newBody = prev.requestData.body;
@@ -373,7 +440,13 @@ export function useRequestState(selectedRequest: Request | null) {
         return { 
           ...prev, 
           bodyFormData: data,
-          requestData: { ...prev.requestData, body: newBody },
+          requestData: { 
+            ...prev.requestData, 
+            body: newBody,
+            bodyType: prev.bodyType,
+            bodyContentType: prev.bodyContentType,
+            bodyViewMode: prev.bodyViewMode
+          },
           isSaved: false 
         };
       }),

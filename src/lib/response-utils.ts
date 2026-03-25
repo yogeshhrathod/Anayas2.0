@@ -10,6 +10,41 @@
 import { ResponseData } from '../types/entities';
 import logger from './logger';
 
+const STATUS_TEXTS: Record<number, string> = {
+  // 1xx
+  100: 'Continue',
+  101: 'Switching Protocols',
+  // 2xx
+  200: 'OK',
+  201: 'Created',
+  202: 'Accepted',
+  204: 'No Content',
+  206: 'Partial Content',
+  // 3xx
+  301: 'Moved Permanently',
+  302: 'Found',
+  304: 'Not Modified',
+  // 4xx
+  400: 'Bad Request',
+  401: 'Unauthorized',
+  403: 'Forbidden',
+  404: 'Not Found',
+  405: 'Method Not Allowed',
+  406: 'Not Acceptable',
+  408: 'Request Timeout',
+  409: 'Conflict',
+  413: 'Payload Too Large',
+  415: 'Unsupported Media Type',
+  422: 'Unprocessable Entity',
+  429: 'Too Many Requests',
+  // 5xx
+  500: 'Internal Server Error',
+  501: 'Not Implemented',
+  502: 'Bad Gateway',
+  503: 'Service Unavailable',
+  504: 'Gateway Timeout',
+};
+
 /**
  * Normalized response data with guaranteed non-null values
  */
@@ -36,7 +71,9 @@ export function normalizeResponse(
 
   const status = response.status ?? 0;
   const statusText =
-    response.statusText ?? (status === 0 ? 'Request Failed' : 'Unknown');
+    response.statusText ||
+    STATUS_TEXTS[status] ||
+    (status === 0 ? 'Request Failed' : 'Unknown');
   const headers = response.headers ?? {};
   const data = response.data ?? null;
   const time = response.time ?? 0;
@@ -61,6 +98,29 @@ export function getStatusDisplay(status: number | undefined | null): string {
     return 'Error';
   }
   return String(status);
+}
+
+/**
+ * Get status text for a status code, with fallback to standard HTTP status texts
+ */
+export function getStatusText(
+  status: number | undefined | null,
+  providedText?: string,
+  maxLength: number = 30
+): string {
+  let text = '';
+  if (providedText && providedText.trim()) {
+    text = providedText;
+  } else if (status === undefined || status === null || status === 0) {
+    text = 'Request Failed';
+  } else {
+    text = STATUS_TEXTS[status] || 'Unknown';
+  }
+
+  if (maxLength > 0 && text.length > maxLength) {
+    return `${text.slice(0, maxLength)}...`;
+  }
+  return text;
 }
 
 /**

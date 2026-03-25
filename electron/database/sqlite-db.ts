@@ -16,6 +16,9 @@ export interface UnsavedRequest {
   body: string;
   queryParams: Array<{ key: string; value: string; enabled: boolean }>;
   auth: any;
+  bodyType?: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded';
+  bodyContentType?: 'json' | 'text';
+  bodyViewMode?: 'table' | 'json';
   lastResponse?: any;
   lastModified: string;
   createdAt: string;

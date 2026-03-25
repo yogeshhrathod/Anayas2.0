@@ -24,6 +24,7 @@ import {
     formatResponseSize,
     formatResponseTime,
     getStatusDisplay,
+    getStatusText,
     getStatusVariant,
 } from '../../lib/response-utils';
 import { cn } from '../../lib/utils';
@@ -169,9 +170,7 @@ export function ResponseTab({
                 className="px-2 py-0.5 font-bold tracking-tight"
               >
                 {getStatusDisplay(response.status)}{' '}
-                {response.statusText && response.statusText.length > 30
-                  ? `${response.statusText.slice(0, 30)}...`
-                  : response.statusText || 'OK'}
+                {getStatusText(response.status, response.statusText)}
               </Badge>
               <div className="h-4 w-[1px] bg-border/60" />
               <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">

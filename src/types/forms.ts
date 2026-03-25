@@ -56,6 +56,9 @@ export interface RequestFormData {
   collectionId?: number;
   folderId?: number;
   isFavorite: boolean;
+  bodyType?: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded';
+  bodyContentType?: 'json' | 'text';
+  bodyViewMode?: 'table' | 'json';
 }
 
 export interface SettingsFormData {
