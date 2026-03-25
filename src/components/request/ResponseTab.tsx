@@ -18,7 +18,7 @@ import {
     History,
     List,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import logger from '../../lib/logger';
 import {
     formatResponseSize,
@@ -44,6 +44,7 @@ import { ResponseHeadersView } from './ResponseHeadersView';
 
 export interface ResponseTabProps {
   response: ResponseData | null;
+  isLoading?: boolean;
   onCopy?: () => void;
   onDownload?: () => void;
   responseSubTab: 'headers' | 'body' | 'both';
@@ -57,6 +58,7 @@ export interface ResponseTabProps {
 
 export function ResponseTab({
   response,
+  isLoading,
   onCopy,
   onDownload,
   responseSubTab,
@@ -107,6 +109,10 @@ export function ResponseTab({
 
   // Render sub-tab content
   const renderSubTabContent = () => {
+    if (isLoading) {
+      return <LoadingState />;
+    }
+
     if (!response) {
       return (
         <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-8 text-center animate-in fade-in zoom-in-95 duration-500">
@@ -298,6 +304,31 @@ export function ResponseTab({
       {/* Sub-tab Content - Fills remaining space */}
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col bg-background/20 relative">
         {renderSubTabContent()}
+      </div>
+    </div>
+  );
+}
+
+function LoadingState() {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      setElapsed(Date.now() - startTime);
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center text-primary p-8 text-center animate-in fade-in zoom-in-95 duration-500">
+      <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 relative">
+        <div className="absolute inset-0 rounded-full border-t-2 border-primary animate-spin" />
+        <Clock className="h-8 w-8 text-primary animate-pulse" />
+      </div>
+      <h3 className="text-xl font-medium mb-2">Waiting for Response</h3>
+      <div className="font-mono text-2xl font-bold mt-2 tabular-nums">
+        {(elapsed / 1000).toFixed(2)}s
       </div>
     </div>
   );

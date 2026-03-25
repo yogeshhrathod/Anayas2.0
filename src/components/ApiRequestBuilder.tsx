@@ -330,6 +330,7 @@ export function ApiRequestBuilder() {
         return (
           <ResponseTab
             response={requestActions.response}
+            isLoading={requestActions.isLoading}
             onCopy={requestActions.copyResponse}
             onDownload={requestActions.downloadResponse}
             responseSubTab={requestState.responseSubTab}

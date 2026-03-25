@@ -36,6 +36,9 @@ export function generateCurlCommand(request: Request): string {
   const headers = request.headers || {};
   const authHeaders = getAuthHeaders(request.auth);
   for (const [key, value] of Object.entries(headers)) {
+    if (!key || key.trim() === '') {
+      continue;
+    }
     if (authHeaders.includes(key.toLowerCase())) {
       continue;
     }

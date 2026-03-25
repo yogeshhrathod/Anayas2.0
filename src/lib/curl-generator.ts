@@ -27,6 +27,9 @@ export function generateCurlCommand(request: any): string {
   // Don't add auth headers if we're using auth flags
   const authHeaders = getAuthHeaders(request.auth);
   for (const [key, value] of Object.entries(headers)) {
+    if (!key || key.trim() === '') {
+      continue;
+    }
     // Skip auth headers that will be added via auth flags
     if (authHeaders.includes(key.toLowerCase())) {
       continue;

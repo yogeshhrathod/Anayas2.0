@@ -48,6 +48,7 @@ export class ApiService {
       let contentTypeValue = '';
       if (options.headers) {
         for (const [key, value] of Object.entries(options.headers)) {
+          if (!key || key.trim() === '') continue;
           headers[key] = value;
           if (key.toLowerCase() === 'content-type') {
             hasContentType = true;

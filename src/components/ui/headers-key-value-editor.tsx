@@ -29,9 +29,7 @@ export const HeadersKeyValueEditor: React.FC<HeadersKeyValueEditorProps> = ({
     if (oldKey !== newKey) {
       delete newHeaders[oldKey];
     }
-    if (newKey.trim()) {
-      newHeaders[newKey] = value;
-    }
+    newHeaders[newKey] = value;
     onChange(newHeaders);
   };
 
