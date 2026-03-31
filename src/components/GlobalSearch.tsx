@@ -5,10 +5,10 @@ import {
     Globe,
     Search,
     Zap,
+    X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useClickOutside } from '../hooks/useClickOutside';
 import logger from '../lib/logger';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
@@ -27,23 +27,22 @@ export function GlobalSearch() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const resultsRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  const {
-    collections,
-    environments,
-    requestHistory,
-    setCurrentPage,
-    setSelectedRequest,
-    setCurrentEnvironment,
-  } = useStore();
+  const collections = useStore(state => state.collections);
+  const environments = useStore(state => state.environments);
+  const requestHistory = useStore(state => state.requestHistory);
+  const setCurrentPage = useStore(state => state.setCurrentPage);
+  const setSelectedRequest = useStore(state => state.setSelectedRequest);
+  const setCurrentEnvironment = useStore(state => state.setCurrentEnvironment);
 
   // Load all requests for search
   const [allRequests, setAllRequests] = useState<any[]>([]);
 
+  // Lazy-load requests only when search is opened (not on mount)
   useEffect(() => {
+    if (!isOpen) return;
     const loadRequests = async () => {
       try {
         const requests = await window.electronAPI.request.list();
@@ -53,7 +52,12 @@ export function GlobalSearch() {
       }
     };
     loadRequests();
-  }, []);
+    
+    // Auto focus the input when modal opens
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+  }, [isOpen]);
 
   // Search logic
   useEffect(() => {
@@ -97,8 +101,7 @@ export function GlobalSearch() {
               isFavorite: request.isFavorite,
               lastResponse: request.lastResponse,
             });
-            setIsOpen(false);
-            setQuery('');
+            handleClose();
           },
         });
       }
@@ -120,8 +123,7 @@ export function GlobalSearch() {
           icon: FolderPlus,
           action: () => {
             setCurrentPage('collections');
-            setIsOpen(false);
-            setQuery('');
+            handleClose();
           },
         });
       }
@@ -144,8 +146,7 @@ export function GlobalSearch() {
           action: () => {
             setCurrentEnvironment(env);
             setCurrentPage('environments');
-            setIsOpen(false);
-            setQuery('');
+            handleClose();
           },
         });
       }
@@ -165,8 +166,7 @@ export function GlobalSearch() {
           icon: Clock,
           action: () => {
             setCurrentPage('history');
-            setIsOpen(false);
-            setQuery('');
+            handleClose();
           },
         });
       }
@@ -183,7 +183,7 @@ export function GlobalSearch() {
       return typeOrder[a.type] - typeOrder[b.type];
     });
 
-    setResults(searchResults.slice(0, 8)); // Limit to 8 results
+    setResults(searchResults.slice(0, 10)); // Provide up to 10 results in the palette
     setSelectedIndex(0);
   }, [
     query,
@@ -217,8 +217,7 @@ export function GlobalSearch() {
           }
           break;
         case 'Escape':
-          setIsOpen(false);
-          setQuery('');
+          handleClose();
           break;
       }
     };
@@ -233,7 +232,6 @@ export function GlobalSearch() {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setIsOpen(true);
-        setTimeout(() => inputRef.current?.focus(), 0);
       }
     };
 
@@ -241,13 +239,17 @@ export function GlobalSearch() {
     return () => document.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
 
-  // Click outside to close (escape handled in keyboard navigation above)
   const handleClose = () => {
     setIsOpen(false);
     setQuery('');
   };
 
-  useClickOutside(resultsRef, handleClose, isOpen, { handleEscape: false });
+  // Only handle clicks directly on the backdrop wrapper to close
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -267,114 +269,168 @@ export function GlobalSearch() {
   const getTypeBgColor = (type: string) => {
     switch (type) {
       case 'request':
-        return 'bg-primary/5 border-primary/20';
+        return 'bg-primary/10 border-primary/20';
       case 'collection':
-        return 'bg-success/5 border-success/20';
+        return 'bg-success/10 border-success/20';
       case 'environment':
-        return 'bg-info/5 border-info/20';
+        return 'bg-info/10 border-info/20';
       case 'history':
-        return 'bg-warning/5 border-warning/20';
+        return 'bg-warning/10 border-warning/20';
       default:
-        return 'bg-muted/5 border-muted/20';
+        return 'bg-muted/10 border-muted/20';
     }
   };
+  
+  // Platform aware keybinding label
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+  const modKey = isMac ? '⌘' : 'Ctrl';
 
   return (
-    <div className="relative" ref={resultsRef}>
-      {/* Search Input */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="Search... (⌘K)"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          onFocus={() => {
-            setIsOpen(true);
-            setIsFocused(true);
-          }}
-          onBlur={() => {
-            setIsFocused(false);
-            // Delay closing to allow clicking on results
-            setTimeout(() => setIsOpen(false), 150);
-          }}
-          className={cn(
-            'h-8 pl-10 pr-4 bg-background/80 backdrop-blur-sm border border-input/50 rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring/50 focus:bg-background transition-all duration-300 shadow-sm hover:shadow',
-            isFocused ? 'w-[420px]' : 'w-64'
-          )}
-        />
-        {query && (
-          <button
-            onClick={() => {
-              setQuery('');
-              setIsOpen(false);
-            }}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground"
-          >
-            ×
-          </button>
-        )}
-      </div>
+    <>
+      {/* Search Input Trigger Button in TitleBar/Header */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="group relative flex h-8 w-64 items-center gap-2 rounded-lg border border-input/50 bg-background/50 px-3 text-sm text-muted-foreground shadow-sm transition-all duration-200 hover:bg-accent/80 hover:text-accent-foreground hover:shadow"
+        aria-label="Open global search command palette"
+      >
+        <Search className="h-4 w-4 shrink-0 opacity-70 group-hover:opacity-100" />
+        <span className="flex-1 text-left font-medium opacity-80 group-hover:opacity-100">Search everything...</span>
+        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 transition-colors group-hover:border-border/80 group-hover:bg-background">
+          <span className="text-xs">{modKey}</span>K
+        </kbd>
+      </button>
 
-      {/* Search Results - Portal */}
+      {/* Command Palette Overlay - Portal */}
       {isOpen &&
         createPortal(
-          <div
-            className="fixed bg-card/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-xl z-global-search max-h-96 overflow-y-auto transition-all duration-300"
-            style={{
-              top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 8,
-              left: inputRef.current?.getBoundingClientRect().left ?? 0,
-              width: isFocused ? 420 : 260,
-            }}
+          <div 
+            className="fixed inset-0 z-[100] flex items-start justify-center bg-background/60 p-4 pt-[15vh] pb-[10vh] backdrop-blur-sm sm:p-6 sm:pt-[20vh]"
+            onClick={handleBackdropClick}
           >
-            {results.length > 0 ? (
-              <div className="p-2">
-                {results.map((result, index) => {
-                  const Icon = result.icon;
-                  return (
-                    <button
-                      key={result.id}
-                      onClick={result.action}
-                      className={cn(
-                        'group w-full flex items-center gap-3 p-3 rounded-lg text-left hover:bg-accent transition-all duration-200 border border-transparent hover:border-border/50',
-                        index === selectedIndex &&
-                          'bg-accent border-border/50 shadow-sm'
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          'p-2 rounded-md border',
-                          getTypeBgColor(result.type)
-                        )}
-                      >
-                        <Icon
-                          className={cn('h-4 w-4', getTypeColor(result.type))}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">
-                          {result.title}
-                        </div>
-                        {result.subtitle && (
-                          <div className="text-xs text-muted-foreground truncate mt-0.5">
-                            {result.subtitle}
-                          </div>
-                        )}
-                      </div>
-                      <ArrowRight className="h-3 w-3 text-muted-foreground flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
-                  );
-                })}
+            <div
+              ref={modalRef}
+              className="w-full max-w-2xl transform divide-y divide-border/50 overflow-hidden rounded-xl border border-border/80 bg-card shadow-2xl transition-all duration-300 animate-in fade-in zoom-in-95"
+            >
+              {/* Search Header */}
+              <div className="relative flex items-center px-4">
+                <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Search requests, collections, environments..."
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  className="h-14 w-full bg-transparent px-4 text-base text-foreground placeholder-muted-foreground focus:outline-none"
+                />
+                {query && (
+                  <button
+                    onClick={() => setQuery('')}
+                    className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+                <kbd className="hidden sm:inline-flex pointer-events-none select-none items-center gap-1 rounded bg-muted/50 px-1.5 font-mono text-[10px] font-medium text-muted-foreground ml-2">
+                  ESC
+                </kbd>
               </div>
-            ) : query ? (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                No results found for "{query}"
-              </div>
-            ) : null}
+
+              {/* Results Container */}
+              {query.trim() && (
+                <div className="max-h-[60vh] overflow-y-auto p-2 scrollbar-thin">
+                  {results.length > 0 ? (
+                    <div className="space-y-1">
+                      {results.map((result, index) => {
+                        const Icon = result.icon;
+                        const isSelected = index === selectedIndex;
+                        return (
+                          <button
+                            key={result.id}
+                            onClick={result.action}
+                            onMouseEnter={() => setSelectedIndex(index)}
+                            className={cn(
+                              'group flex w-full items-center gap-3 rounded-lg p-3 text-left outline-none transition-all duration-200 border border-transparent',
+                              isSelected 
+                                ? 'bg-accent shadow-sm border-border/50' 
+                                : 'hover:bg-accent/50'
+                            )}
+                          >
+                            <div
+                              className={cn(
+                                'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border',
+                                getTypeBgColor(result.type),
+                                isSelected && 'scale-110 shadow-sm transition-transform duration-200'
+                              )}
+                            >
+                              <Icon
+                                className={cn('h-4 w-4', getTypeColor(result.type))}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                              <span className={cn(
+                                "text-sm font-medium truncate transition-colors", 
+                                isSelected ? "text-foreground" : "text-foreground/90"
+                              )}>
+                                {result.title}
+                              </span>
+                              {result.subtitle && (
+                                <span className="text-xs text-muted-foreground truncate mt-0.5">
+                                  {result.subtitle}
+                                </span>
+                              )}
+                            </div>
+                            {isSelected && (
+                              <span className="hidden sm:flex text-[10px] text-muted-foreground pr-2 font-medium">
+                                Jump to
+                              </span>
+                            )}
+                            <ArrowRight className={cn(
+                              "h-4 w-4 shrink-0 transition-all duration-200",
+                              isSelected 
+                                ? "text-foreground opacity-100 translate-x-0" 
+                                : "text-muted-foreground opacity-0 -translate-x-2"
+                            )} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="py-14 text-center">
+                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted/30 mb-4">
+                        <Search className="h-8 w-8 text-muted-foreground/60" />
+                      </div>
+                      <h3 className="text-sm font-semibold text-foreground">No results found</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        We couldn't find anything matching "<span className="font-medium text-foreground">{query}</span>"
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Initial State / Default view when no query is typed */}
+              {!query.trim() && (
+                <div className="hidden sm:flex px-4 py-3 bg-muted/20 border-t border-border/50 gap-4 text-xs text-muted-foreground items-center justify-center">
+                  <span className="flex items-center gap-1.5">
+                    <kbd className="flex h-5 items-center justify-center rounded border border-border bg-background px-1.5 font-sans font-medium">↑</kbd>
+                    <kbd className="flex h-5 items-center justify-center rounded border border-border bg-background px-1.5 font-sans font-medium">↓</kbd>
+                    to navigate
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <kbd className="flex h-5 items-center justify-center rounded border border-border bg-background px-1.5 font-sans font-medium text-[10px]">↵</kbd>
+                    to select
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <kbd className="flex h-5 items-center justify-center rounded border border-border bg-background px-2 font-sans font-medium text-[10px]">ESC</kbd>
+                    to close
+                  </span>
+                </div>
+              )}
+            </div>
           </div>,
           document.body
         )}
-    </div>
+    </>
   );
 }
+

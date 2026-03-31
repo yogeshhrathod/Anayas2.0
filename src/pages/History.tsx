@@ -39,6 +39,7 @@ import {
     getStatusVariant,
 } from '../lib/response-utils';
 import { useStore } from '../store/useStore';
+import { useConfirmation } from '../hooks/useConfirmation';
 import { EntityId, Request } from '../types/entities';
 
 export function History() {
@@ -51,6 +52,7 @@ export function History() {
     historyFilter,
     setHistoryFilter,
   } = useStore();
+  const { confirm } = useConfirmation();
   const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -235,8 +237,12 @@ export function History() {
   }, [filteredHistory, groupByRequest]);
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this request from history?'))
-      return;
+    const isConfirmed = await confirm({
+      title: 'Delete History',
+      message: 'Are you sure you want to delete this request from history?',
+      variant: 'destructive',
+    });
+    if (!isConfirmed) return;
 
     try {
       await window.electronAPI.request.deleteHistory(id);

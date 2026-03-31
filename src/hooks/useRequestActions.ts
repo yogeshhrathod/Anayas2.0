@@ -393,9 +393,7 @@ export function useRequestActions(requestData: RequestFormData) {
         showCreatePresetDialog: false,
       }));
 
-      showSuccess('Preset Created', {
-        description: `"${preset.name}" has been saved successfully`,
-      });
+      // Toast removed: UI updates automatically
     } catch (error: any) {
       logger.error('Failed to save preset', { error });
       showError('Save Failed', 'Failed to save preset to database');
@@ -418,11 +416,9 @@ export function useRequestActions(requestData: RequestFormData) {
       if (onApply) {
         onApply(preset.requestData);
       }
-      showSuccess('Preset Applied', {
-        description: `"${preset.name}" configuration has been applied`,
-      });
+      // Toast removed: UI updates automatically
     },
-    [showSuccess]
+    []
   );
 
   const deletePreset = useCallback(
@@ -433,9 +429,7 @@ export function useRequestActions(requestData: RequestFormData) {
           ...prev,
           presets: prev.presets.filter(p => p.id !== presetId),
         }));
-        showSuccess('Preset Deleted', {
-          description: 'Preset has been removed successfully',
-        });
+        // Toast removed: UI updates automatically
       } catch (error: any) {
         logger.error('Failed to delete preset', { error });
         showError('Delete Failed', 'Failed to delete preset from database');

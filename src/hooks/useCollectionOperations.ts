@@ -111,7 +111,7 @@ export function useCollectionOperations() {
           description: data.description,
           documentation: data.documentation || '',
           environments: data.environments || [],
-          isFavorite: data.isFavorite,
+          isFavorite: data.isFavorite ? 1 : 0,
         });
 
         if (result.success) {
@@ -140,7 +140,7 @@ export function useCollectionOperations() {
           description: data.description,
           documentation: data.documentation || '',
           environments: data.environments || [],
-          isFavorite: data.isFavorite,
+          isFavorite: data.isFavorite ? 1 : 0,
         });
 
         if (result.success) {
@@ -215,8 +215,8 @@ export function useCollectionOperations() {
             auth: request.auth,
             collectionId: newCollectionId,
             folderId: undefined, // Reset folder association for simplicity
-            isFavorite: false,
-          };
+            isFavorite: 0,
+          } as any;
 
           await window.electronAPI.request.save(duplicateRequest);
 
@@ -224,7 +224,7 @@ export function useCollectionOperations() {
           await new Promise(resolve => setTimeout(resolve, 1));
         }
 
-        showSuccess('Collection and requests duplicated successfully');
+        // UI updates automatically via reactivity, so no noisy toast needed.
       } catch (error: any) {
         showError('Failed to duplicate collection', error.message);
         throw error;

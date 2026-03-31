@@ -7,7 +7,9 @@ import { useStore } from '../store/useStore';
  * Supports: light, dark, system modes + custom addon themes
  */
 export function ThemeManager() {
-  const { themeMode, currentThemeId, customThemes } = useStore();
+  const themeMode = useStore(state => state.themeMode);
+  const currentThemeId = useStore(state => state.currentThemeId);
+  const customThemes = useStore(state => state.customThemes);
 
   useEffect(() => {
     const applyCurrentTheme = () => {

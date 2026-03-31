@@ -83,7 +83,7 @@ export const CollectionItem: React.FC<CollectionItemProps> = ({
   isDragOver = false,
   dropPosition = null,
 }) => {
-  const { selectedItem } = useStore();
+  const selectedItem = useStore(state => state.selectedItem);
   const isSelected =
     selectedItem.type === 'collection' && selectedItem.id === collection.id;
   const actions = [
@@ -143,7 +143,7 @@ export const CollectionItem: React.FC<CollectionItemProps> = ({
       )}
 
       <div
-        className={`group flex items-center gap-2.5 px-3 py-2 mx-1 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative ${
+        className={`group flex items-center gap-2.5 px-3 py-2 pl-8 mx-1 mb-1 rounded-lg cursor-pointer relative ${
           isSelected 
             ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' 
             : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -183,9 +183,9 @@ export const CollectionItem: React.FC<CollectionItemProps> = ({
         {/* Collection Name */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className={`text-sm font-medium truncate transition-colors ${isSelected ? 'text-primary drop-shadow-sm' : 'group-hover:text-foreground'}`}>
+            <div className={`text-sm font-medium truncate ${isSelected ? 'text-primary drop-shadow-sm' : 'group-hover:text-foreground'}`}>
               {collection.name}
-            </span>
+            </div>
             {collection.isFavorite === 1 && (
               <Badge variant="secondary" className="h-4 px-1 text-xs">
                 ★

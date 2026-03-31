@@ -18,6 +18,7 @@ import {
     History,
     List,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { memo, useEffect, useState } from 'react';
 import logger from '../../lib/logger';
 import {
@@ -72,7 +73,8 @@ export const ResponseTab = memo(function ResponseTab({
   requestId,
   startTime,
 }: ResponseTabProps) {
-  const { setCurrentPage, setHistoryFilter } = useStore();
+  const setCurrentPage = useStore(state => state.setCurrentPage);
+  const setHistoryFilter = useStore(state => state.setHistoryFilter);
 
   const handleShowHistory = () => {
     if (requestId) {
@@ -167,7 +169,10 @@ export const ResponseTab = memo(function ResponseTab({
   };
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-background/30 backdrop-blur-sm rounded-xl border border-border/40 shadow-2xl">
+    <div className={cn(
+      "flex flex-col flex-1 min-h-0 overflow-hidden bg-background/30 backdrop-blur-sm rounded-xl border border-border/40 shadow-2xl transition-all duration-700",
+      isLoading && "ring-2 ring-primary/20 shadow-[0_0_50px_rgba(var(--primary),0.15)] border-primary/30"
+    )}>
       {/* Unified Premium Header */}
       <div className="flex-shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 border-b border-border/40 bg-muted/10">
         <div className="flex flex-wrap items-center gap-4">
@@ -199,7 +204,7 @@ export const ResponseTab = memo(function ResponseTab({
             <button
               onClick={() => setResponseSubTab('headers')}
               className={cn(
-                'flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300',
+                'flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 cursor-pointer',
                 responseSubTab === 'headers'
                   ? 'bg-primary text-primary-foreground shadow-md scale-[1.02]'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -211,7 +216,7 @@ export const ResponseTab = memo(function ResponseTab({
             <button
               onClick={() => setResponseSubTab('body')}
               className={cn(
-                'flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300',
+                'flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 cursor-pointer',
                 responseSubTab === 'body'
                   ? 'bg-primary text-primary-foreground shadow-md scale-[1.02]'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -223,7 +228,7 @@ export const ResponseTab = memo(function ResponseTab({
             <button
               onClick={() => setResponseSubTab('both')}
               className={cn(
-                'flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300',
+                'flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 cursor-pointer',
                 responseSubTab === 'both'
                   ? 'bg-primary text-primary-foreground shadow-md scale-[1.02]'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -270,28 +275,24 @@ export const ResponseTab = memo(function ResponseTab({
             </div>
           )}
 
-          {/* History Button - More Prominent */}
+          {/* History Button */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant={
-                    requestId || (requestMethod && requestUrl)
-                      ? 'default'
-                      : 'outline'
-                  }
+                  variant="outline"
                   size="sm"
                   onClick={handleShowHistory}
                   disabled={!requestId && (!requestMethod || !requestUrl)}
                   className={cn(
-                    'h-9 gap-2 px-4 font-bold transition-all duration-500 rounded-xl border border-primary/20',
+                    'h-8 gap-2 px-3 font-medium transition-all duration-200 rounded-lg',
                     requestId || (requestMethod && requestUrl)
-                      ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 ring-offset-2 hover:ring-2 ring-primary/30'
-                      : 'opacity-50 grayscale cursor-not-allowed'
+                      ? 'hover:bg-primary/10 hover:text-primary hover:border-primary/30'
+                      : 'opacity-40 cursor-not-allowed'
                   )}
                 >
-                  <History className="h-4 w-4" />
-                  <span className="hidden lg:inline">History</span>
+                  <History className="h-3.5 w-3.5" />
+                  <span className="hidden lg:inline text-xs">History</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left" className="font-medium">
@@ -304,9 +305,23 @@ export const ResponseTab = memo(function ResponseTab({
         </div>
       </div>
 
-      {/* Sub-tab Content - Fills remaining space */}
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col bg-background/20 relative">
-        {renderSubTabContent()}
+      {/* Enhanced Content Area with Staggered Reveal */}
+      <div className="flex-1 min-h-0 relative">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={responseSubTab + (response ? 'has-data' : 'no-data')}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 0.15, 
+              ease: 'easeOut'
+            }}
+            className="absolute inset-0 flex flex-col"
+          >
+            {renderSubTabContent()}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

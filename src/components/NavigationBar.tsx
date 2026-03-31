@@ -36,17 +36,15 @@ import {
 } from './ui/tooltip';
 
 export function NavigationBar() {
-  const {
-    currentPage,
-    setCurrentPage,
-    setSelectedRequest,
-    setActiveUnsavedRequestId,
-    setCollections,
-    setHistoryFilter,
-    setRequests,
-    setUnsavedRequests,
-    triggerSidebarRefresh,
-  } = useStore();
+  const currentPage = useStore(state => state.currentPage);
+  const setCurrentPage = useStore(state => state.setCurrentPage);
+  const setSelectedRequest = useStore(state => state.setSelectedRequest);
+  const setActiveUnsavedRequestId = useStore(state => state.setActiveUnsavedRequestId);
+  const setCollections = useStore(state => state.setCollections);
+  const setHistoryFilter = useStore(state => state.setHistoryFilter);
+  const setRequests = useStore(state => state.setRequests);
+  const setUnsavedRequests = useStore(state => state.setUnsavedRequests);
+  const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [showCurlImport, setShowCurlImport] = useState(false);
   const [showPostmanImport, setShowPostmanImport] = useState(false);

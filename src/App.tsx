@@ -11,10 +11,11 @@ import { TitleBar } from './components/TitleBar';
 import Toaster from './components/Toaster';
 import { UnsavedRequestsSection } from './components/collection/UnsavedRequestsSection';
 import { CollectionEditDialog } from './components/dialogs/CollectionEditDialog';
+import { GlobalConfirmDialog } from './components/dialogs/GlobalConfirmDialog';
 import { SaveRequestAsDialog } from './components/dialogs/SaveRequestAsDialog';
 import { ImportCollectionDialog } from './components/import/ImportCollectionDialog';
 import { CollapsibleSection } from './components/sidebar/CollapsibleSection';
-import { PageLoadingSpinner } from './components/ui/PageLoadingSpinner';
+
 import { Button } from './components/ui/button';
 import { Dialog } from './components/ui/dialog';
 import { ResizeHandle } from './components/ui/resize-handle';
@@ -74,34 +75,28 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
   const currentPage = useStore(state => state.currentPage);
   const setCurrentPage = useStore(state => state.setCurrentPage);
-  const setEnvironments = useStore(state => state.setEnvironments);
-  const setCurrentEnvironment = useStore(state => state.setCurrentEnvironment);
   const collections = useStore(state => state.collections);
   const setCollections = useStore(state => state.setCollections);
   const setRequests = useStore(state => state.setRequests);
   const selectedRequest = useStore(state => state.selectedRequest);
   const setSelectedRequest = useStore(state => state.setSelectedRequest);
-  const setRequestHistory = useStore(state => state.setRequestHistory);
-  const setSettings = useStore(state => state.setSettings);
-  const setThemeMode = useStore(state => state.setThemeMode);
-  const setCurrentThemeId = useStore(state => state.setCurrentThemeId);
   const setCustomThemes = useStore(state => state.setCustomThemes);
   const sidebarWidth = useStore(state => state.sidebarWidth);
   const setSidebarWidth = useStore(state => state.setSidebarWidth);
   const unsavedRequests = useStore(state => state.unsavedRequests);
   const setSelectedItem = useStore(state => state.setSelectedItem);
   const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
+  const sidebarRefreshTrigger = useStore(state => state.sidebarRefreshTrigger);
   const expandedSidebarSections = useStore(state => state.expandedSidebarSections);
   const toggleSidebarSection = useStore(state => state.toggleSidebarSection);
   const loadSidebarState = useStore(state => state.loadSidebarState);
+  const appVersion = useStore(state => state.appVersion);
+  const isWelcomeDone = useStore(state => state.isWelcomeDone);
+  const setIsWelcomeDoneStore = useStore(state => state.setIsWelcomeDone);
   const setUnsavedRequests = useStore(state => state.setUnsavedRequests);
   const setActiveUnsavedRequestId = useStore(state => state.setActiveUnsavedRequestId);
   const splitViewEnabled = useStore(state => state.splitViewEnabled);
   const setSplitViewEnabled = useStore(state => state.setSplitViewEnabled);
-  const setAppVersion = useStore(state => state.setAppVersion);
-  const appVersion = useStore(state => state.appVersion);
-  const isWelcomeDone = useStore(state => state.isWelcomeDone);
-  const setIsWelcomeDoneStore = useStore(state => state.setIsWelcomeDone);
 
   const { showSuccess, showError } = useToastNotifications();
   const [showClearAllDialog, setShowClearAllDialog] = useState(false);
@@ -188,6 +183,41 @@ function App() {
     });
   }, []);
 
+  // Listen for sidebar refresh triggers to reload all data
+  useEffect(() => {
+    if (sidebarRefreshTrigger > 0) {
+      loadData().catch(error => {
+        logger.error('[App] Failed to refresh data on trigger', { error });
+      });
+    }
+  }, [sidebarRefreshTrigger]);
+
+  // Centralized, debounced data refresh for real-time updates from main process
+  useEffect(() => {
+    const api: any = (window as any).electronAPI;
+    if (!api) return;
+
+    let debounceTimer: NodeJS.Timeout | null = null;
+    const debouncedRefresh = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        loadData().catch(err => logger.error('Debounced refresh failed', { err }));
+      }, 50); // 50ms debouncing is enough to batch most rapid updates
+    };
+
+    // Unified subscriptions
+    const unsubC = api.collection?.onUpdated?.(debouncedRefresh);
+    const unsubF = api.folder?.onUpdated?.(debouncedRefresh);
+    const unsubR = api.request?.onUpdated?.(debouncedRefresh);
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      unsubC?.();
+      unsubF?.();
+      unsubR?.();
+    };
+  }, []);
+
   // Load sidebar state on mount
   useEffect(() => {
     loadSidebarState().catch(error => {
@@ -209,7 +239,8 @@ function App() {
     },
 
     'show-shortcuts': () => {
-      // TODO: Implement shortcut help dialog
+      // Dispatch a custom event that can be caught by a ShortcutHelpDialog component
+      window.dispatchEvent(new CustomEvent('show-shortcuts-dialog'));
     },
 
     'edit-item': (_: KeyboardEvent, context: ContextState) => {
@@ -226,7 +257,16 @@ function App() {
           setShowEditCollectionDialog(true);
         }
       } else if (context.selectedItem.type === 'folder') {
-        // TODO: Implement folder editing
+        // Trigger inline editing of folder name by dispatching a custom event
+        const folderId = context.selectedItem.id;
+        const folderEl = document.querySelector(`[data-folder-id="${folderId}"]`);
+        if (folderEl) {
+          const nameEl = folderEl.querySelector('[title="Double-click to edit name"]');
+          if (nameEl) {
+            const dblClickEvent = new MouseEvent('dblclick', { bubbles: true });
+            nameEl.dispatchEvent(dblClickEvent);
+          }
+        }
       }
     },
 
@@ -363,11 +403,13 @@ function App() {
     },
 
     'send-request': () => {
-      // TODO: Trigger send request action
+      // Dispatch event caught by ApiRequestBuilder to trigger send
+      window.dispatchEvent(new CustomEvent('trigger-send-request'));
     },
 
     'save-request': () => {
-      // TODO: Trigger save request action
+      // Dispatch event caught by ApiRequestBuilder to trigger save
+      window.dispatchEvent(new CustomEvent('trigger-save-request'));
     },
 
     'focus-url': () => {
@@ -409,12 +451,31 @@ function App() {
       }
     },
 
-    'add-folder': () => {
-      // TODO: Implement new folder creation
+    'add-folder': async (_: KeyboardEvent, context: ContextState) => {
+      // Create a new folder in the currently selected collection
+      if (context.selectedItem.type === 'collection' && context.selectedItem.id) {
+        try {
+          const collectionId = context.selectedItem.id as number;
+          const existingFolders = await window.electronAPI.folder.list();
+          const collectionFolderCount = existingFolders.filter(
+            (f: any) => f.collectionId === collectionId
+          ).length;
+          const folderName = `New Folder${collectionFolderCount > 0 ? ` ${collectionFolderCount + 1}` : ''}`;
+          await window.electronAPI.folder.save({
+            name: folderName,
+            description: '',
+            collectionId,
+          });
+          triggerSidebarRefresh();
+        } catch (error) {
+          logger.error('Failed to create folder', { error });
+        }
+      }
     },
 
     'new-collection': () => {
-      // TODO: Implement new collection creation
+      // Navigate to the Collections page which will show the create form
+      setCurrentPage('collections');
     },
 
     'export-collection': async (_: KeyboardEvent, context: ContextState) => {
@@ -535,32 +596,41 @@ function App() {
 
   const loadData = async () => {
     try {
-      let envs = [], currentEnv = null, collections = [], history = [], settings: any = {}, requests = [], version = 'unknown';
+      const [
+        envs,
+        currentEnv,
+        collectionsData,
+        history,
+        settings,
+        requestsData,
+        foldersData,
+        version,
+      ] = await Promise.all([
+        window.electronAPI.env.list(),
+        window.electronAPI.env.getCurrent(),
+        window.electronAPI.collection.list(),
+        window.electronAPI.request.history(100),
+        window.electronAPI.settings.getAll(),
+        window.electronAPI.request.list(),
+        window.electronAPI.folder.list(),
+        window.electronAPI.app.getVersion(),
+      ]);
 
-      try { envs = await window.electronAPI.env.list(); } catch(e: any) { logger.error('env.list failed', { e: e.message }); throw e; }
-      try { currentEnv = await window.electronAPI.env.getCurrent(); } catch(e: any) { logger.error('env.getCurrent failed', { e: e.message }); throw e; }
-      try { collections = await window.electronAPI.collection.list(); } catch(e: any) { logger.error('collection.list failed', { e: e.message }); throw e; }
-      try { history = await window.electronAPI.request.history(100); } catch(e: any) { logger.error('request.history failed', { e: e.message }); throw e; }
-      try { settings = await window.electronAPI.settings.getAll(); } catch(e: any) { logger.error('settings.getAll failed', { e: e.message }); throw e; }
-      try { requests = await window.electronAPI.request.list(); } catch(e: any) { logger.error('request.list failed', { e: e.message }); throw e; }
-      try { version = await window.electronAPI.app.getVersion(); } catch(e: any) { logger.error('app.getVersion failed', { e: e.message }); throw e; }
+      // Consolidate updates into a single store operation where possible
+      useStore.setState({
+        environments: envs,
+        currentEnvironment: currentEnv,
+        collections: collectionsData,
+        requestHistory: history,
+        settings: settings,
+        requests: requestsData,
+        folders: foldersData,
+        appVersion: version,
+        ...(settings.themeMode ? { themeMode: settings.themeMode, theme: settings.themeMode } : {}),
+        ...(settings.currentThemeId ? { currentThemeId: settings.currentThemeId } : {}),
+      });
 
-      setEnvironments(envs);
-      setCurrentEnvironment(currentEnv);
-      setCollections(collections);
-      setRequestHistory(history);
-      // DB settings are the source of truth - they override any cached localStorage values
-      setSettings(settings);
-      setRequests(requests);
-      setAppVersion(version);
-
-      // Load theme settings
-      if (settings.themeMode) {
-        setThemeMode(settings.themeMode);
-      }
-      if (settings.currentThemeId) {
-        setCurrentThemeId(settings.currentThemeId);
-      }
+      // Handle custom themes separately due to parsing
       if (settings.customThemes) {
         try {
           const themes = JSON.parse(settings.customThemes);
@@ -572,16 +642,21 @@ function App() {
 
       // Legacy theme support
       if (settings.theme && !settings.themeMode) {
-        setThemeMode(settings.theme);
+        useStore.setState({ themeMode: settings.theme, theme: settings.theme });
       }
 
       // Mark app as ready once all data is loaded
       setIsAppReady(true);
     } catch (error: any) {
       console.error('Initial data load error detail:', error);
-      logger.error('Failed to load initial data', { error: error?.message || error });
-      showError('Startup Error', `Failed to load application data: ${error?.message || 'Unknown error'}`);
-      setIsAppReady(true); // Still set to ready so user can at least see the app/error
+      logger.error('Failed to load initial data', {
+        error: error?.message || error,
+      });
+      showError(
+        'Startup Error',
+        `Failed to load application data: ${error?.message || 'Unknown error'}`
+      );
+      setIsAppReady(true);
     }
   };
 
@@ -639,7 +714,7 @@ function App() {
           transition={{ duration: 0.25, ease: 'easeOut' }}
           className="flex-1 flex flex-col min-h-0 relative"
         >
-          <Suspense fallback={<PageLoadingSpinner />}>{pageComponent}</Suspense>
+          <Suspense fallback={<div className="flex-1 bg-background" />}>{pageComponent}</Suspense>
         </motion.div>
       </AnimatePresence>
     );
@@ -935,6 +1010,8 @@ function App() {
             triggerSidebarRefresh();
           }}
         />
+        
+        <GlobalConfirmDialog />
       </div>
     </FontProvider>
   );

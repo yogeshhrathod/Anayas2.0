@@ -6,6 +6,7 @@ import {
     Collection,
     EntityId,
     Environment,
+    Folder,
     Request,
     RequestHistory,
     ResponseData,
@@ -55,6 +56,10 @@ interface AppState {
   // Requests
   requests: Request[];
   setRequests: (requests: Request[]) => void;
+
+  // Folders
+  folders: Folder[];
+  setFolders: (folders: Folder[]) => void;
 
   // Collection to edit (triggered from variable context menu)
   collectionToEditId: number | null;
@@ -111,6 +116,20 @@ interface AppState {
   // Settings
   settings: Record<string, any>;
   setSettings: (settings: Record<string, any>) => void;
+
+  // Global Confirmation
+  confirmState: {
+    isOpen: boolean;
+    options: {
+      title: string;
+      message: string;
+      confirmText?: string;
+      cancelText?: string;
+      variant?: 'default' | 'destructive';
+    } | null;
+    resolve: ((value: boolean) => void) | null;
+  };
+  setConfirmState: (state: Partial<AppState['confirmState']>) => void;
 
   // Unsaved Requests
   unsavedRequests: UnsavedRequest[];
@@ -188,11 +207,20 @@ interface AppState {
   setLoadingRequest: (id: string, isLoading: boolean) => void;
   requestStartTimes: Record<string, number>;
   setRequestStartTime: (id: string, startTime: number | null) => void;
+
+  // Request Navigation History (browser-style back/forward)
+  requestNavHistory: Array<Request | null>;
+  requestNavIndex: number;
+  pushRequestNav: (request: Request | null) => void;
+  goBackRequest: () => Request | null | undefined;
+  goForwardRequest: () => Request | null | undefined;
+  canGoBack: () => boolean;
+  canGoForward: () => boolean;
 }
 
 export const useStore = create<AppState>()(
   persist(
-    set => ({
+    (set, get) => ({
       // Environment
       environments: [],
       currentEnvironment: null,
@@ -216,6 +244,10 @@ export const useStore = create<AppState>()(
       requests: [],
       setRequests: requests => set({ requests }),
 
+      // Folders
+      folders: [],
+      setFolders: folders => set({ folders }),
+
       // Collection to edit (triggered from variable context menu)
       collectionToEditId: null,
       setCollectionToEditId: collectionToEditId => set({ collectionToEditId }),
@@ -237,7 +269,12 @@ export const useStore = create<AppState>()(
 
       // Selected Request
       selectedRequest: null,
-      setSelectedRequest: selectedRequest => set({ selectedRequest }),
+      setSelectedRequest: selectedRequest => {
+        set({ selectedRequest });
+        if (selectedRequest) {
+          get().pushRequestNav(selectedRequest);
+        }
+      },
 
       // Selected Collection for new requests
       selectedCollectionForNewRequest: null,
@@ -267,6 +304,16 @@ export const useStore = create<AppState>()(
       // Settings
       settings: {},
       setSettings: settings => set({ settings }),
+
+      // Global Confirmation
+      confirmState: {
+        isOpen: false,
+        options: null,
+        resolve: null,
+      },
+      setConfirmState: state => set(prev => ({ 
+        confirmState: { ...prev.confirmState, ...state } 
+      })),
 
       // Unsaved Requests
       unsavedRequests: [],
@@ -403,12 +450,61 @@ export const useStore = create<AppState>()(
           }
           return { requestStartTimes: newStartTimes };
         }),
+
+      // Request Navigation History (browser-style back/forward)
+      requestNavHistory: [],
+      requestNavIndex: -1,
+      pushRequestNav: (request) =>
+        set(state => {
+          // If we're in the middle of history, truncate forward entries
+          const history = state.requestNavHistory.slice(0, state.requestNavIndex + 1);
+          // Don't push duplicates of the current entry
+          const current = history[history.length - 1];
+          if (current?.id === request?.id && current?.id !== undefined) {
+            return {};
+          }
+          // Limit history to 50 entries
+          const newHistory = [...history, request].slice(-50);
+          return {
+            requestNavHistory: newHistory,
+            requestNavIndex: newHistory.length - 1,
+          };
+        }),
+      goBackRequest: () => {
+        const state = get();
+        if (state.requestNavIndex > 0) {
+          const newIndex = state.requestNavIndex - 1;
+          const request = state.requestNavHistory[newIndex];
+          set({ requestNavIndex: newIndex, selectedRequest: request });
+          return request;
+        }
+        return undefined;
+      },
+      goForwardRequest: () => {
+        const state = get();
+        if (state.requestNavIndex < state.requestNavHistory.length - 1) {
+          const newIndex = state.requestNavIndex + 1;
+          const request = state.requestNavHistory[newIndex];
+          set({ requestNavIndex: newIndex, selectedRequest: request });
+          return request;
+        }
+        return undefined;
+      },
+      canGoBack: () => {
+        const state = get();
+        return state.requestNavIndex > 0;
+      },
+      canGoForward: () => {
+        const state = get();
+        return state.requestNavIndex < state.requestNavHistory.length - 1;
+      },
     }),
     {
       name: 'luna-store',
       partialize: state => ({
         expandedCollections: Array.from(state.expandedCollections),
         settings: state.settings,
+        folders: state.folders,
         themeMode: state.themeMode,
         currentThemeId: state.currentThemeId,
         customThemes: state.customThemes,

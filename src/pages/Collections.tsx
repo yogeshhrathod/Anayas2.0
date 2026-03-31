@@ -43,13 +43,11 @@ export function Collections() {
   const [showPostmanImport, setShowPostmanImport] = useState(false);
   const formRef = useRef<React.ElementRef<typeof CollectionForm>>(null);
 
-  const {
-    setCurrentPage,
-    setSelectedRequest,
-    triggerSidebarRefresh,
-    collectionToEditId,
-    setCollectionToEditId,
-  } = useStore();
+  const setCurrentPage = useStore(state => state.setCurrentPage);
+  const setSelectedRequest = useStore(state => state.setSelectedRequest);
+  const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
+  const collectionToEditId = useStore(state => state.collectionToEditId);
+  const setCollectionToEditId = useStore(state => state.setCollectionToEditId);
   const { showSuccess, showError } = useToastNotifications();
 
   const {

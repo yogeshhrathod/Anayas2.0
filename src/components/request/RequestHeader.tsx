@@ -24,11 +24,12 @@
  * ```
  */
 
-import { Check, Circle, Copy, Loader2, Send } from 'lucide-react';
+import { Check, Circle, Copy, Loader2, Send, ArrowLeft, ArrowRight } from 'lucide-react';
 import React from 'react';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
 import { KEYMAP, getShortcutDisplay } from '../../lib/keymap';
 import logger from '../../lib/logger';
+import { useStore } from '../../store/useStore';
 import { RequestFormData } from '../../types/forms';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -95,6 +96,10 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
   bodyFormData,
 }) => {
   const { showSuccess, showError } = useToastNotifications();
+  const hasBack = useStore(state => state.requestNavIndex > 0);
+  const hasForward = useStore(state => state.requestNavIndex < state.requestNavHistory.length - 1);
+  const goBackRequest = useStore(state => state.goBackRequest);
+  const goForwardRequest = useStore(state => state.goForwardRequest);
 
   const handleNameKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -150,6 +155,30 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
       <div className="p-4">
         {/* Request Name Row */}
         <div className="flex items-center gap-4 mb-2">
+          {/* Browser Navigation */}
+          <div className="flex items-center gap-1 bg-muted/50 rounded-md p-0.5 border border-border/50">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goBackRequest}
+              disabled={!hasBack}
+              className="h-6 w-6 p-0 hover:bg-background"
+              title="Go back"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goForwardRequest}
+              disabled={!hasForward}
+              className="h-6 w-6 p-0 hover:bg-background"
+              title="Go forward"
+            >
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
           <div className="flex-1">
             {isEditingName ? (
               <Input

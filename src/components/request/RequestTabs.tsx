@@ -16,6 +16,7 @@ import {
     Key,
     Zap,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import React from 'react';
 import { cn } from '../../lib/utils';
 import { ResponseData } from '../../types/entities';
@@ -107,7 +108,7 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
               className={cn(
                 'relative flex-shrink-0 flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold rounded-lg transition-all duration-300 group whitespace-nowrap',
                 isActive
-                  ? 'bg-background text-foreground shadow-sm ring-1 ring-border/50'
+                  ? 'text-foreground'
                   : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
               )}
             >
@@ -139,7 +140,11 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
               )}
               
               {isActive && (
-                <div className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary shadow-sm animate-in fade-in zoom-in duration-300" />
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-0 bg-background rounded-lg shadow-sm border border-border/50 -z-10"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
               )}
             </button>
           );

@@ -62,7 +62,10 @@ export function MonacoKeyValueEditor({
   const [showJsonEditor, setShowJsonEditor] = useState(false);
   const editorRef = useRef<any>(null);
   const { success, error: showError } = useToast();
-  const { themeMode, currentThemeId, customThemes, settings } = useStore();
+  const themeMode = useStore(state => state.themeMode);
+  const currentThemeId = useStore(state => state.currentThemeId);
+  const customThemes = useStore(state => state.customThemes);
+  const settings = useStore(state => state.settings);
   // Get code font from settings, fallback to default
   const codeFontFamily =
     settings.codeFontFamily &&

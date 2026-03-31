@@ -27,6 +27,7 @@
  */
 
 import { useCallback } from 'react';
+import { useStore } from '../store/useStore';
 
 export interface ConfirmationOptions {
   title: string;
@@ -36,26 +37,24 @@ export interface ConfirmationOptions {
   variant?: 'default' | 'destructive';
 }
 
-export interface ConfirmationState {
-  isOpen: boolean;
-  options: ConfirmationOptions | null;
-  resolve: ((value: boolean) => void) | null;
-}
-
 export function useConfirmation() {
+  const setConfirmState = useStore(state => state.setConfirmState);
+
   const confirm = useCallback(
     (options: ConfirmationOptions): Promise<boolean> => {
       return new Promise(resolve => {
-        // For now, use native confirm dialog
-        // TODO: Replace with proper modal when AlertDialog is available
-        const result = window.confirm(`${options.title}\n\n${options.message}`);
-        resolve(result);
+        setConfirmState({
+          isOpen: true,
+          options,
+          resolve: (value: boolean) => {
+            setConfirmState({ isOpen: false });
+            resolve(value);
+          },
+        });
       });
     },
-    []
+    [setConfirmState]
   );
 
-  return {
-    confirm,
-  };
+  return { confirm };
 }

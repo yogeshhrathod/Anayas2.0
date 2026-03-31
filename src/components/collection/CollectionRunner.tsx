@@ -177,13 +177,13 @@ export function CollectionRunner({
                 <div className="text-sm text-muted-foreground">Total</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-emerald-500 dark:text-emerald-400">
                   {summary.passed}
                 </div>
                 <div className="text-sm text-muted-foreground">Passed</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-red-600">
+                <div className="text-2xl font-bold text-destructive">
                   {summary.failed}
                 </div>
                 <div className="text-sm text-muted-foreground">Failed</div>
@@ -202,8 +202,8 @@ export function CollectionRunner({
                   key={result.requestId}
                   className={`border rounded-lg p-3 ${
                     result.success && result.status && result.status < 400
-                      ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
-                      : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800'
+                      ? 'bg-emerald-500/5 border-emerald-500/20'
+                      : 'bg-destructive/5 border-destructive/20'
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -211,9 +211,9 @@ export function CollectionRunner({
                       {result.success &&
                       result.status &&
                       result.status < 400 ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                        <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5" />
                       ) : (
-                        <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                        <XCircle className="h-5 w-5 text-destructive mt-0.5" />
                       )}
                       <div className="flex-1">
                         <div className="font-medium">{result.requestName}</div>

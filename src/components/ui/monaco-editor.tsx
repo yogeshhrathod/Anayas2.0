@@ -584,7 +584,10 @@ export function MonacoEditor({
   const hoverProviderRef = useRef<any>(null);
   const decorationRef = useRef<any>(null);
   const { success, error: showError } = useToast();
-  const { themeMode, currentThemeId, customThemes, settings } = useStore();
+  const themeMode = useStore(state => state.themeMode);
+  const currentThemeId = useStore(state => state.currentThemeId);
+  const customThemes = useStore(state => state.customThemes);
+  const settings = useStore(state => state.settings);
   const availableVariables = useAvailableVariables();
   // Get code font from settings, fallback to default
   const codeFontFamily =

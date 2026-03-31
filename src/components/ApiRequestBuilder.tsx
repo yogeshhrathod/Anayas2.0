@@ -28,13 +28,11 @@ import { ResponseTab } from './request/ResponseTab';
 import { SaveRequestDialog } from './ui/save-request-dialog';
 
 export function ApiRequestBuilder() {
-  const {
-    selectedRequest,
-    triggerSidebarRefresh,
-    setSelectedRequest,
-    setFocusedContext,
-    activeUnsavedRequestId,
-  } = useStore();
+  const selectedRequest = useStore(state => state.selectedRequest);
+  const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
+  const setSelectedRequest = useStore(state => state.setSelectedRequest);
+  const setFocusedContext = useStore(state => state.setFocusedContext);
+  const activeUnsavedRequestId = useStore(state => state.activeUnsavedRequestId);
 
   // Use custom hooks for state and actions
   const requestState = useRequestState(selectedRequest);
@@ -43,11 +41,7 @@ export function ApiRequestBuilder() {
   // Track previous response to detect new responses
   const previousResponseRef = useRef<typeof requestActions.response>(null);
 
-  // Reload presets when request ID changes (when switching between requests)
-  useEffect(() => {
-    // This is handled inside useRequestActions, but we trigger a refresh here if needed
-    // The effect in useRequestActions will handle loading presets for the new request
-  }, [requestState.requestData.id]);
+  // Presets are automatically reloaded inside useRequestActions when request ID changes.
 
   // Auto-switch to Response tab when a NEW response is received
   // Only switches when response changes from null to a value (new response)

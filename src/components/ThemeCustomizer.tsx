@@ -19,6 +19,7 @@ import {
     validateThemeColors,
 } from '../lib/themes';
 import { cn } from '../lib/utils';
+import { useConfirmation } from '../hooks/useConfirmation';
 import { useStore } from '../store/useStore';
 import { Button } from './ui/button';
 import {
@@ -42,6 +43,7 @@ export function ThemeCustomizer() {
     removeCustomTheme,
     updateCustomTheme,
   } = useStore();
+  const { confirm } = useConfirmation();
 
   const [isCreating, setIsCreating] = useState(false);
   const [editingTheme, setEditingTheme] = useState<Theme | null>(null);
@@ -75,8 +77,13 @@ export function ThemeCustomizer() {
     setNewThemeName('');
   };
 
-  const handleDeleteTheme = (themeId: string) => {
-    if (!confirm('Are you sure you want to delete this theme?')) return;
+  const handleDeleteTheme = async (themeId: string) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Theme',
+      message: 'Are you sure you want to delete this custom theme?',
+      variant: 'destructive',
+    });
+    if (!isConfirmed) return;
 
     removeCustomTheme(themeId);
     if (currentThemeId === themeId) {

@@ -74,7 +74,8 @@ export const FolderItem: React.FC<FolderItemProps> = ({
   isDragOver = false,
   dropPosition = null,
 }) => {
-  const { selectedItem, triggerSidebarRefresh } = useStore();
+  const selectedItem = useStore(state => state.selectedItem);
+  const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
   const isSelected =
     selectedItem.type === 'folder' && selectedItem.id === folder.id;
   const inlineEdit = useInlineEdit({
@@ -114,7 +115,7 @@ export const FolderItem: React.FC<FolderItemProps> = ({
     {
       label: 'Edit',
       icon: <Edit className="h-3 w-3" />,
-      onClick: onEdit,
+      onClick: () => { onEdit(); inlineEdit.startEdit(); },
       shortcut: '⌘E',
     },
     { type: 'separator' as const },
@@ -135,7 +136,7 @@ export const FolderItem: React.FC<FolderItemProps> = ({
       )}
 
       <div
-        className={`group flex items-center gap-2.5 px-3 py-2 pl-8 mx-1 mb-1 rounded-lg cursor-pointer transition-all duration-200 relative ${
+        className={`group flex items-center gap-2.5 px-3 py-2 pl-8 mx-1 mb-1 rounded-lg cursor-pointer relative ${
           isSelected 
             ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' 
             : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -183,7 +184,7 @@ export const FolderItem: React.FC<FolderItemProps> = ({
             />
           ) : (
             <div
-              className={`text-sm font-medium truncate transition-colors ${isSelected ? 'text-primary drop-shadow-sm' : 'group-hover:text-foreground'}`}
+              className={`text-sm font-medium truncate ${isSelected ? 'text-primary drop-shadow-sm' : 'group-hover:text-foreground'}`}
               onDoubleClick={e => {
                 e.stopPropagation();
                 inlineEdit.startEdit();

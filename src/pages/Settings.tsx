@@ -16,6 +16,7 @@ import {
     DEFAULT_CODE_FONT_STACK,
     DEFAULT_UI_FONT_STACK,
 } from '../constants/fonts';
+import { useConfirmation } from '../hooks/useConfirmation';
 import logger from '../lib/logger';
 import { useStore } from '../store/useStore';
 
@@ -27,6 +28,7 @@ interface ValidationErrors {
 }
 
 export function Settings() {
+  const { confirm } = useConfirmation();
   const createLocalSettings = (incoming: Record<string, any>) => ({
     ...incoming,
     // Preserve actual values, only default to empty string if truly undefined
@@ -36,14 +38,12 @@ export function Settings() {
       incoming.codeFontFamily !== undefined ? incoming.codeFontFamily : '',
   });
 
-  const {
-    settings,
-    setSettings,
-    themeMode,
-    currentThemeId,
-    customThemes,
-    appVersion,
-  } = useStore();
+  const settings = useStore(state => state.settings);
+  const setSettings = useStore(state => state.setSettings);
+  const themeMode = useStore(state => state.themeMode);
+  const currentThemeId = useStore(state => state.currentThemeId);
+  const customThemes = useStore(state => state.customThemes);
+  const appVersion = useStore(state => state.appVersion);
   const [localSettings, setLocalSettings] = useState<Record<string, any>>(() =>
     createLocalSettings(settings)
   );
@@ -188,10 +188,7 @@ export function Settings() {
           success('Settings saved', 'Your changes have been saved');
         }
 
-        if (showToast) {
-          error('Save failed', 'Failed to save settings');
-        }
-        return false;
+        return true;
       } catch (e: any) {
         logger.error('Failed to save settings', { error: e });
         if (showToast) {
@@ -214,8 +211,12 @@ export function Settings() {
   );
 
   const handleReset = async () => {
-    if (!confirm('Are you sure you want to reset all settings to defaults?'))
-      return;
+    const isConfirmed = await confirm({
+      title: 'Reset Settings',
+      message: 'Are you sure you want to reset all settings to defaults?',
+      variant: 'destructive',
+    });
+    if (!isConfirmed) return;
 
     try {
       await window.electronAPI.settings.reset();
@@ -446,7 +447,7 @@ export function Settings() {
                 onChange={e =>
                   updateSetting('followRedirects', e.target.checked)
                 }
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
               />
               <Label htmlFor="followRedirects" className="cursor-pointer">
                 Follow redirects automatically
@@ -461,7 +462,7 @@ export function Settings() {
                 onChange={e =>
                   updateSetting('sslVerification', e.target.checked)
                 }
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
               />
               <Label htmlFor="sslVerification" className="cursor-pointer">
                 Verify SSL certificates
@@ -476,7 +477,7 @@ export function Settings() {
                 onChange={e =>
                   updateSetting('autoSaveRequests', e.target.checked)
                 }
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
               />
               <Label htmlFor="autoSaveRequests" className="cursor-pointer">
                 Auto-save requests
@@ -509,7 +510,7 @@ export function Settings() {
               onChange={e =>
                 updateSetting('telemetryEnabled', e.target.checked)
               }
-              className="mt-1 h-4 w-4 rounded border-gray-300"
+              className="mt-1 h-4 w-4 rounded border-border accent-primary cursor-pointer"
             />
             <div className="space-y-1">
               <Label
