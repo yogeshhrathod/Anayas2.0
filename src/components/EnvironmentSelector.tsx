@@ -95,16 +95,21 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent/50 hover:scale-[1.02] transition-all duration-200"
+        className={cn(
+          "flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent/50 hover:scale-[1.02] transition-all duration-200 w-full max-w-[200px]",
+          isOpen ? "bg-accent shadow-inner" : "shadow-sm"
+        )}
         title="Switch environment"
         aria-label="Environment switcher"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         data-testid="environment-switcher-trigger"
       >
-        <Globe className="h-4 w-4" />
-        <span>{getDisplayText()}</span>
-        <ChevronDown className="h-4 w-4" />
+        <Globe className="h-3.5 w-3.5 shrink-0 opacity-70" />
+        <span className="truncate flex-1 text-left select-none tracking-tight">
+          {getDisplayText()}
+        </span>
+        <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 opacity-50 transition-transform duration-200", isOpen && "rotate-180")} />
       </button>
 
       {isOpen && (

@@ -794,28 +794,7 @@ function App() {
               )}
             >
               {sidebarOpen && (
-                <div className="flex items-center gap-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            "h-8 w-8 transition-colors",
-                            sidebarCompactMode ? "text-primary bg-primary/10" : "text-muted-foreground"
-                          )}
-                          onClick={() => setSidebarCompactMode(!sidebarCompactMode)}
-                        >
-                          <LayoutList className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        {sidebarCompactMode ? "Standard View" : "Compact View"}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
+                <span className="font-semibold text-sm text-foreground/80 pl-1 select-none">Explorer</span>
               )}
               <button
                 onClick={() => {
@@ -951,6 +930,40 @@ function App() {
                 </div>
               )}
             </nav>
+
+            {/* Sidebar Footer */}
+            {sidebarOpen && (
+              <div className="p-2 border-t border-border/40 shrink-0 mt-auto bg-card/40">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setSidebarCompactMode(!sidebarCompactMode)}
+                        className={cn(
+                          "w-full flex items-center justify-between px-2.5 py-2 rounded-md transition-all duration-200 group",
+                          sidebarCompactMode 
+                            ? "bg-primary/5 text-primary shadow-sm ring-1 ring-primary/20" 
+                            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <LayoutList className={cn(
+                            "h-4 w-4 transition-transform group-hover:scale-110",
+                            sidebarCompactMode ? "text-primary" : "text-muted-foreground group-hover:text-foreground/80"
+                          )} />
+                          <span className="text-xs font-medium tracking-wide">
+                            {sidebarCompactMode ? "Standard View" : "Compact View"}
+                          </span>
+                        </div>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {sidebarCompactMode ? "Switch to more spacing" : "Switch to condensed spacing"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
           </div>
 
           {/* Resize Handle - Always visible */}

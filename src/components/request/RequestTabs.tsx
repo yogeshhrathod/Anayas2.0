@@ -9,7 +9,6 @@
  */
 
 import {
-    Activity,
     Code,
     Eye,
     Fingerprint,
@@ -21,7 +20,6 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 import { ResponseData } from '../../types/entities';
 import { RequestFormData } from '../../types/forms';
-import { Badge } from '../ui/badge';
 
 export interface RequestTabsProps {
   activeTab: 'params' | 'auth' | 'headers' | 'body' | 'response';
@@ -49,8 +47,8 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
       icon: Zap,
       color: 'text-amber-500',
       badge:
-        requestData.queryParams.length > 0
-          ? requestData.queryParams.length
+        requestData.queryParams.filter(p => p.key || p.value).length > 0
+          ? requestData.queryParams.filter(p => p.key || p.value).length
           : undefined,
     },
     {
@@ -69,8 +67,8 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
       icon: Key,
       color: 'text-emerald-500',
       badge:
-        Object.keys(requestData.headers).length > 0
-          ? Object.keys(requestData.headers).length
+        Object.keys(requestData.headers).filter(k => k.trim() !== '').length > 0
+          ? Object.keys(requestData.headers).filter(k => k.trim() !== '').length
           : undefined,
     },
     {
@@ -95,8 +93,8 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
   ];
 
   return (
-    <div className="flex-shrink-0 bg-background/20 backdrop-blur-md border-b border-border/40 p-2">
-      <div className="flex items-center gap-2 p-1 bg-muted/30 rounded-xl border border-border/20 shadow-inner overflow-x-auto relative min-w-0" style={{ scrollbarWidth: 'none' }}>
+    <div className="flex-shrink-0 bg-transparent px-3 py-2 flex items-center justify-between">
+      <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-2xl border border-border/10 shadow-inner overflow-x-auto relative no-scrollbar" style={{ scrollbarWidth: 'none' }}>
         {tabs.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -106,57 +104,71 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'relative flex-shrink-0 flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold rounded-lg transition-all duration-300 group whitespace-nowrap',
+                'relative flex-shrink-0 flex items-center gap-2.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all duration-300 group whitespace-nowrap cursor-pointer z-0',
                 isActive
                   ? 'text-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
             >
+              {/* Hover Background */}
+              {!isActive && (
+                <div className="absolute inset-0 rounded-xl bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 border border-border/5" />
+              )}
+
+              {/* Background Highlight (Segmented Control Pill) */}
+              {isActive && (
+                <motion.div
+                  layoutId="active-tab-bg"
+                  className="absolute inset-0 bg-background rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.06)] border border-border/40 -z-10"
+                  transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                />
+              )}
+
               <div className={cn(
-                'flex items-center justify-center p-1 rounded-md transition-colors duration-300',
-                isActive ? 'bg-muted/50' : 'group-hover:bg-muted/30'
+                'flex items-center justify-center transition-all duration-300',
+                isActive ? 'scale-110' : 'group-hover:scale-110 group-hover:-translate-y-[1px]'
               )}>
                 <Icon className={cn(
-                  'h-4 w-4 transition-all duration-300',
-                  isActive ? tab.color : 'text-muted-foreground group-hover:text-foreground',
-                  isLoading && isActive ? 'animate-pulse' : ''
+                  'h-3.5 w-3.5 transition-colors duration-300',
+                  isActive ? tab.color : cn(tab.color, 'opacity-60 group-hover:opacity-100')
                 )} />
               </div>
               
-              <span className="tracking-tight">{tab.label}</span>
+              <span className={cn(
+                "tracking-tight transition-all duration-300",
+                isActive ? "font-bold" : "font-medium opacity-90 group-hover:opacity-100 group-hover:translate-x-[1px]"
+              )}>
+                {tab.label}
+              </span>
               
               {tab.badge && (
-                <Badge
-                  variant={isActive ? 'default' : 'secondary'}
+                <div
                   className={cn(
-                    'h-5 px-1.5 ml-0.5 flex items-center justify-center text-[10px] font-black rounded transition-all duration-300',
-                    isActive ? 'bg-primary text-primary-foreground shadow-xs' : 'bg-muted/60 text-muted-foreground group-hover:bg-muted group-hover:text-foreground',
-                    tab.isSpecial && response?.status && response.status >= 400 ? 'bg-rose-500 text-white' : '',
-                    tab.isSpecial && response?.status && response.status < 300 ? 'bg-emerald-500 text-white' : ''
+                    'h-4.5 px-1.5 min-w-[18px] flex items-center justify-center text-[10px] font-black rounded-md transition-all duration-300 ring-1 ring-inset',
+                    isActive 
+                      ? 'bg-primary/10 text-primary ring-primary/20' 
+                      : 'bg-muted/50 text-muted-foreground ring-border/50 group-hover:text-foreground',
+                    tab.isSpecial && response?.status && response.status >= 400 ? 'bg-rose-500/10 text-rose-600 ring-rose-500/30' : '',
+                    tab.isSpecial && response?.status && response.status < 300 ? 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/30' : ''
                   )}
                 >
                   {tab.badge}
-                </Badge>
-              )}
-              
-              {isActive && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute inset-0 bg-background rounded-lg shadow-sm border border-border/50 -z-10"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                />
+                </div>
               )}
             </button>
           );
         })}
-        
-        {isLoading && (
-          <div className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-primary animate-pulse ml-auto bg-primary/10 rounded-full border border-primary/20 shadow-sm">
-            <Activity className="h-3 w-3" />
-            <span className="uppercase tracking-widest hidden sm:inline">Processing</span>
-          </div>
-        )}
       </div>
+
+      {isLoading && (
+        <div className="flex items-center gap-2 px-3 h-8 text-[11px] font-bold text-primary bg-primary/5 rounded-xl border border-primary/10 animate-in fade-in slide-in-from-right-4">
+          <div className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+          </div>
+          <span className="uppercase tracking-[0.15em]">Live</span>
+        </div>
+      )}
     </div>
   );
 };

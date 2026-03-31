@@ -14,6 +14,7 @@ import {
   X,
   Maximize2
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import { useToastNotifications } from '../hooks/useToastNotifications';
 import { getShortcutDisplay, KEYMAP } from '../lib/keymap';
@@ -213,20 +214,20 @@ export function TitleBar() {
     <TooltipProvider>
       <div
         className={cn(
-          'grid grid-cols-[1fr_auto_1fr] h-14 items-center border-b border-border bg-background/80 backdrop-blur-xl select-none z-sticky transition-all duration-300 px-3'
+          'flex h-14 items-center gap-2 border-b border-border bg-background/80 backdrop-blur-xl select-none z-sticky transition-all duration-300 px-3'
         )}
         style={{ WebkitAppRegion: 'drag' } as any}
       >
-        {/* Column 1: Left Side (Logo + Primary Nav) */}
-        <div className="flex items-center gap-4 min-w-0" style={{ WebkitAppRegion: 'no-drag' } as any}>
-          <div className="flex items-center gap-3 shrink-0">
-             {isMac && <div className="w-[72px]" />}
-             <Logo size={20} showText={!isUltraCompact} className="hover:opacity-80 transition-opacity cursor-pointer flex-shrink-0" onClick={() => setCurrentPage('home')} />
+        {/* Left Side (Logo + Primary Nav) */}
+        <div className="flex items-center gap-1.5 shrink-0 overflow-visible" style={{ WebkitAppRegion: 'no-drag' } as any}>
+          <div className="flex items-center gap-1.5">
+             {isMac && <div className="w-[72px] min-w-[72px] shrink-0 block" aria-hidden="true" />}
+             <Logo size={20} showText={!isUltraCompact} className="hover:opacity-80 transition-opacity cursor-pointer shrink-0 ml-1" onClick={() => setCurrentPage('home')} />
           </div>
 
-          <div className="h-6 w-[1px] bg-border/40 mx-1 shrink-0" />
+          {!isUltraCompact && <div className="h-4 w-[1px] bg-border/40 mx-2 shrink-0" />}
 
-          <nav className="flex items-center gap-1.5 shrink-0" aria-label="Primary navigation">
+          <nav className="flex items-center gap-1" aria-label="Primary navigation">
             {primaryNavItems.map(item => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
@@ -235,20 +236,20 @@ export function TitleBar() {
                   key={item.id}
                   onClick={() => setCurrentPage(item.id)}
                   className={cn(
-                    'h-9 rounded-xl transition-all duration-200 text-sm font-medium flex items-center gap-2 relative group flex-shrink-0',
+                    'h-8 rounded-lg transition-all duration-200 text-sm font-medium flex items-center relative group shrink-0',
                     isActive
-                      ? 'bg-primary/10 text-primary shadow-sm'
+                      ? 'bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-                    isCompact ? 'px-2' : 'px-3'
+                    isCompact ? 'px-2 gap-0' : 'px-2.5 gap-2'
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >
-                  <Icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive && "text-primary")} />
-                  {!isCompact && <span className="ml-2 pr-0.5">{item.label}</span>}
+                  <Icon className={cn("h-4 w-4 transition-transform group-hover:scale-105", isActive && "text-primary")} />
+                  {!isCompact && <span className="truncate max-w-[100px]">{item.label}</span>}
                   {isActive && (
                     <motion.div 
                       layoutId="active-nav-dot" 
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" 
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" 
                       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     />
                   )}
@@ -258,33 +259,34 @@ export function TitleBar() {
           </nav>
         </div>
 
-        {/* Column 2: Center (Search) */}
-        <div className="flex justify-center items-center px-4 overflow-hidden h-full" style={{ WebkitAppRegion: 'drag' } as any}>
-          <div className={cn("w-full transition-all duration-300", isUltraCompact ? "max-w-[260px]" : "max-w-md")} style={{ WebkitAppRegion: 'no-drag' } as any}>
+        {/* Center: Search (Flexible width, softly centers) */}
+        <div className="flex-1 flex justify-center items-center px-4 h-full min-w-0" style={{ WebkitAppRegion: 'drag' } as any}>
+          <div className="w-full max-w-xl transition-all duration-300" style={{ WebkitAppRegion: 'no-drag' } as any}>
             <GlobalSearch />
           </div>
         </div>
 
-              {/* Column 3: Right Side (Env + Actions + Utilities + Controls) */}
-        <div className="flex items-center gap-2 justify-end min-w-0 h-full" style={{ WebkitAppRegion: 'no-drag' } as any}>
-          {/* Environment Selector (Most used Context) */}
-          <div className={cn("shrink-0 transition-all duration-300", isUltraCompact ? "w-28" : "w-40")}>
+        {/* Right Side (Env + Actions + Utilities + Controls) */}
+        <div className="flex items-center gap-2 shrink-0 overflow-visible" style={{ WebkitAppRegion: 'no-drag' } as any}>
+          
+          {/* Environment Selector */}
+          <div className={cn("transition-all duration-300", isUltraCompact ? "w-28" : "w-44")}>
              <EnvironmentSelector />
           </div>
 
-          <div className="h-6 w-[1px] bg-border/40 shrink-0 mx-0.5" />
+          <div className="h-4 w-[1px] bg-border/40 shrink-0 mx-1" />
 
           {/* Quick Actions (Import/New) */}
           {currentPage === 'home' && (
-            <div className={cn("flex items-center gap-1 p-1 bg-muted/20 rounded-2xl border border-border/20 shrink-0", isUltraCompact ? "px-0.5" : "px-1")}>
+            <div className="flex items-center gap-1.5 shrink-0">
               <DropdownMenu>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className={cn("h-8 rounded-xl bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 hover:text-blue-700 transition-colors gap-2", isUltraCompact ? "px-2" : "px-3")}>
-                        <Upload className="h-3.5 w-3.5 shrink-0" />
-                        {!isCompact && <span className="text-xs font-bold uppercase tracking-wider">Import</span>}
-                        <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
+                      <Button variant="outline" size="sm" className={cn("h-8 rounded-lg shadow-sm border-border/50 bg-background/50 hover:bg-muted font-medium transition-colors shrink-0", isUltraCompact ? "px-2 w-8" : "px-3 gap-2")}>
+                        <Upload className="h-4 w-4 text-blue-500" />
+                        {!isCompact && <span>Import</span>}
+                        {!isUltraCompact && <ChevronDown className="h-3 w-3 opacity-50 ml-1" />}
                       </Button>
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
@@ -306,9 +308,9 @@ export function TitleBar() {
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button onClick={handleNewRequest} size="sm" className={cn("h-8 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all gap-2", isUltraCompact ? "px-2" : "px-3")}>
-                    <Plus className="h-3.5 w-3.5 shrink-0" />
-                    {!isCompact && <span className="text-xs font-bold uppercase tracking-wider">New</span>}
+                  <Button onClick={handleNewRequest} size="sm" className={cn("h-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm font-medium transition-all shrink-0", isUltraCompact ? "px-2 w-8" : "px-3 gap-2")}>
+                    <Plus className="h-4 w-4" />
+                    {!isCompact && <span>New</span>}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>New Request ({getShortcutDisplay(KEYMAP.NEW_REQUEST)})</TooltipContent>
@@ -316,9 +318,9 @@ export function TitleBar() {
             </div>
           )}
 
-          {!isUltraCompact && <div className="h-6 w-[1px] bg-border/40 shrink-0 mx-0.5" />}
+          <div className="h-4 w-[1px] bg-border/40 shrink-0 mx-1" />
 
-          {/* Secondary Utilities (History, Settings, Help) */}
+          {/* Secondary Utilities */}
           <div className="flex items-center gap-0.5 shrink-0">
              {secondaryNavItems.map(item => {
                const Icon = item.icon;
@@ -332,7 +334,7 @@ export function TitleBar() {
                          setCurrentPage(item.id);
                        }}
                        className={cn(
-                         "h-8 w-8 flex items-center justify-center rounded-xl transition-all duration-200",
+                         "h-8 w-8 flex items-center justify-center rounded-lg transition-all duration-200",
                          isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                        )}
                      >
@@ -348,14 +350,12 @@ export function TitleBar() {
 
           {/* Platform Controls for Windows */}
           {!isMac && (
-            <div className="flex items-center h-full border-l border-border/20 pl-1 ml-1 shrink-0">
-              <button onClick={handleMinimize} className="h-full px-2.5 flex items-center justify-center hover:bg-muted transition-colors"><Minus className="h-3.5 w-3.5" /></button>
-              <button onClick={handleMaximize} className="h-full px-2.5 flex items-center justify-center hover:bg-muted transition-colors">{isMaximized ? <Square className="h-3 w-3" /> : <Maximize2 className="h-3.5 w-3.5" />}</button>
-              <button onClick={handleClose} className="h-full px-2.5 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"><X className="h-4 w-4" /></button>
+            <div className="flex items-center h-8 ml-2 gap-1 shrink-0">
+              <button onClick={handleMinimize} className="w-8 h-8 rounded hover:bg-muted flex items-center justify-center transition-colors"><Minus className="h-4 w-4 opacity-70" /></button>
+              <button onClick={handleMaximize} className="w-8 h-8 rounded hover:bg-muted flex items-center justify-center transition-colors">{isMaximized ? <Square className="h-3.5 w-3.5 opacity-70" /> : <Maximize2 className="h-4 w-4 opacity-70" />}</button>
+              <button onClick={handleClose} className="w-8 h-8 rounded hover:bg-destructive hover:text-white flex items-center justify-center transition-colors"><X className="h-4 w-4 opacity-70" /></button>
             </div>
           )}
-          
-          {/* On Mac, we don't need a right spacer since there are no system buttons there */}
         </div>
       </div>
 
@@ -368,5 +368,3 @@ export function TitleBar() {
     </TooltipProvider>
   );
 }
-
-import { motion } from 'framer-motion';
