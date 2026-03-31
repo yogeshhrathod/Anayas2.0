@@ -109,7 +109,12 @@ export function CollectionEnvironmentManager({
 
       const confirmed = await confirm({
         title: 'Delete Environment',
-        message: `Are you sure you want to delete "${environment.name}"? This action cannot be undone.`,
+        message: (
+          <span>
+            Are you sure you want to delete <strong className="font-bold text-foreground underline decoration-destructive/30 underline-offset-4">"{environment.name}"</strong>? This action cannot be undone.
+          </span>
+        ),
+        variant: 'destructive',
       });
 
       if (confirmed) {

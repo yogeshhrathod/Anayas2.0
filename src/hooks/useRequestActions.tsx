@@ -20,13 +20,14 @@
  * ```
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import logger from '../lib/logger';
 import { getStatusText, safeStringifyBody } from '../lib/response-utils';
 import { useStore } from '../store/useStore';
 import { RequestPreset, ResponseData } from '../types/entities';
 import { RequestFormData } from '../types/forms';
 import { useToastNotifications } from './useToastNotifications';
+import { useConfirmation } from './useConfirmation';
 
 export interface RequestActionsState {
   response: ResponseData | null;
@@ -71,6 +72,7 @@ export function useRequestActions(requestData: RequestFormData) {
   const presetsExpanded = useStore(state => state.presetsExpanded);
   const setPresetsExpanded = useStore(state => state.setPresetsExpanded);
   const { showSuccess, showError } = useToastNotifications();
+  const { confirm } = useConfirmation();
 
   const [state, setState] = useState<RequestActionsState>({
     response: selectedRequest?.lastResponse || null, // Load saved response
@@ -172,6 +174,7 @@ export function useRequestActions(requestData: RequestFormData) {
         headers: result.headers ?? {},
         data: result.data ?? null,
         time: result.responseTime ?? 0,
+        requestDetails: result.requestDetails,
       };
 
       setState(prev => ({ ...prev, response }));
@@ -423,6 +426,18 @@ export function useRequestActions(requestData: RequestFormData) {
 
   const deletePreset = useCallback(
     async (presetId: string) => {
+      const preset = state.presets.find(p => p.id === presetId);
+      const isConfirmed = await confirm({
+        title: 'Delete Preset',
+        message: (
+          <span>
+            Are you sure you want to delete the preset <strong className="font-bold text-foreground underline decoration-destructive/30 underline-offset-4">"{preset?.name}"</strong>?
+          </span>
+        ),
+        variant: 'destructive',
+      });
+      if (!isConfirmed) return;
+
       try {
         await window.electronAPI.preset.delete(presetId);
         setState(prev => ({
@@ -435,7 +450,7 @@ export function useRequestActions(requestData: RequestFormData) {
         showError('Delete Failed', 'Failed to delete preset from database');
       }
     },
-    [showSuccess, showError]
+    [confirm, state.presets, showSuccess, showError]
   );
 
   const actions: RequestActionsActions = useMemo(() => ({

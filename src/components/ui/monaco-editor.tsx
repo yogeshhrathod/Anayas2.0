@@ -291,6 +291,7 @@ function registerEnvironmentVariableCompletion(
             endLineNumber: position.lineNumber,
             endColumn: position.column,
           },
+          filterText: variablePart, // Force Monaco to only filter by the text inside braces
           sortText: `${sortPrefix}_${variable.name}`,
         };
       });
@@ -718,6 +719,20 @@ export function MonacoEditor({
       cursorBlinking: 'blink',
       cursorSmoothCaretAnimation: true,
       smoothScrolling: true,
+    });
+
+    // Add Cmd/Ctrl + Enter shortcut to trigger global send request
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      document.dispatchEvent(
+        new window.KeyboardEvent('keydown', {
+          key: 'Enter',
+          metaKey: isMac,
+          ctrlKey: !isMac,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
     });
 
     // Add placeholder if value is empty

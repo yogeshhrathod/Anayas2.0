@@ -1,3 +1,4 @@
+import React from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import logger from '../lib/logger';
@@ -122,7 +123,7 @@ interface AppState {
     isOpen: boolean;
     options: {
       title: string;
-      message: string;
+      message: string | React.ReactNode;
       confirmText?: string;
       cancelText?: string;
       variant?: 'default' | 'destructive';

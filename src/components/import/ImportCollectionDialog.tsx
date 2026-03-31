@@ -320,6 +320,24 @@ export function ImportCollectionDialog({
     return detectedFormat.format;
   };
 
+  // Listen for Enter key to import
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && open && step === 'preview' && importResult) {
+        e.preventDefault();
+        handleImport();
+      }
+    };
+
+    if (open) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, step, importResult, handleImport]);
+
   if (!open) return null;
 
   return (

@@ -135,7 +135,12 @@ export function Collections() {
   const handleDeleteCollection = async (collection: Collection) => {
     const confirmed = await confirm({
       title: 'Delete Collection',
-      message: `Are you sure you want to delete "${collection.name}"? This action cannot be undone.`,
+      message: (
+        <span>
+          Are you sure you want to delete <strong className="font-bold text-foreground underline decoration-destructive/30 underline-offset-4">"{collection.name}"</strong>? This action cannot be undone.
+        </span>
+      ),
+      variant: 'destructive',
     });
 
     if (confirmed) {
@@ -205,6 +210,31 @@ export function Collections() {
       throw error;
     }
   };
+
+  // Listen for Enter key to save when editing
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && isEditing) {
+        // Prevent submission if we are in a textarea or something else that might need Enter
+        const activeElement = document.activeElement;
+        const isTextArea = activeElement?.tagName.toLowerCase() === 'textarea';
+        const isSubmitButton = activeElement?.getAttribute('type') === 'submit';
+        
+        if (!isTextArea && !isSubmitButton) {
+          e.preventDefault();
+          formRef.current?.submit();
+        }
+      }
+    };
+
+    if (isEditing) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isEditing]);
 
   if (isEditing) {
     return (

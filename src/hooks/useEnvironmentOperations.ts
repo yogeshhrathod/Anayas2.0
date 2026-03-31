@@ -46,9 +46,9 @@ export function useEnvironmentOperations() {
   const { setEnvironments: setStoreEnvironments, setCurrentEnvironment } = useStore();
 
   // Load environments
-  const loadEnvironments = useCallback(async () => {
+  const loadEnvironments = useCallback(async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       const environmentsData = await window.electronAPI.env.list();
       setEnvironments(environmentsData);
       // Sync to global store so EnvironmentSelector dropdown updates
@@ -59,7 +59,7 @@ export function useEnvironmentOperations() {
     } catch (error: any) {
       showError('Failed to load environments', error.message);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   }, [showError, setStoreEnvironments, setCurrentEnvironment]);
 
@@ -105,7 +105,7 @@ export function useEnvironmentOperations() {
         const result = await window.electronAPI.env.save(envData);
 
         if (result.success) {
-          await loadEnvironments();
+          await loadEnvironments(true);
           showSuccess('Environment created', {
             description: `${data.display_name} has been created successfully`,
           });
@@ -136,7 +136,7 @@ export function useEnvironmentOperations() {
         const result = await window.electronAPI.env.save(envData);
 
         if (result.success) {
-          await loadEnvironments();
+          await loadEnvironments(true);
           showSuccess('Environment updated', {
             description: `${data.display_name} has been updated successfully`,
           });
@@ -154,7 +154,7 @@ export function useEnvironmentOperations() {
     async (id: number) => {
       try {
         await window.electronAPI.env.delete(id);
-        await loadEnvironments();
+        await loadEnvironments(true);
         showSuccess('Environment deleted', {
           description: 'Environment has been deleted successfully',
         });
@@ -206,7 +206,7 @@ export function useEnvironmentOperations() {
           await window.electronAPI.env.save(env);
         }
 
-        await loadEnvironments();
+        await loadEnvironments(true);
         showSuccess('Default environment set', {
           description: `${environment.displayName} is now the default environment`,
         });

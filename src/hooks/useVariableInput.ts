@@ -77,11 +77,18 @@ export function useVariableInput({
       const newValue = e.target.value;
       onChange(newValue);
 
+      const cursorPosition = e.target.selectionStart || newValue.length;
+      const textUntilCursor = newValue.substring(0, cursorPosition);
+      
       // Check if typing after {{
-      const lastBraces = newValue.lastIndexOf('{{');
+      const lastBraces = textUntilCursor.lastIndexOf('{{');
       if (lastBraces !== -1) {
-        const afterBraces = newValue.substring(lastBraces + 2);
-        if (!afterBraces.includes('}}')) {
+        // Are we still inside the braces? (no closing }} between {{ and cursor)
+        const closeBraces = textUntilCursor.indexOf('}}', lastBraces);
+        
+        if (closeBraces === -1) {
+          const afterBraces = textUntilCursor.substring(lastBraces + 2);
+          
           // Still typing variable name
           // Check if user typed {{$ (wants dynamic variables)
           const isDynamicSearch =
@@ -110,20 +117,25 @@ export function useVariableInput({
     (variableName: string) => {
       if (!inputRef.current) return;
 
-      // Find the last {{ position
-      const lastBraces = value.lastIndexOf('{{');
+      const cursorPosition = inputRef.current.selectionStart || value.length;
+      const textUntilCursor = value.substring(0, cursorPosition);
+      
+      // Find the last {{ position before cursor
+      const lastBraces = textUntilCursor.lastIndexOf('{{');
       if (lastBraces === -1) return;
 
       const beforeBraces = value.substring(0, lastBraces);
-      // Calculate the actual length of what was typed after {{ (including $ if present)
-      const afterBraces = value.substring(lastBraces + 2);
-      const actualTypedLength = afterBraces.includes('}}')
-        ? afterBraces.indexOf('}}')
-        : afterBraces.length;
-      const afterCurrentVar = value.substring(
-        lastBraces + 2 + actualTypedLength
-      );
-      const newValue = beforeBraces + `{{${variableName}}}` + afterCurrentVar;
+      // We only replace from the last {{ to the cursor position
+      const afterCursor = value.substring(cursorPosition);
+      // To prevent '}}' duplication if the user already closed it:
+      const insertStr = `{{${variableName}}}`;
+      let newValue = beforeBraces + insertStr + afterCursor;
+      
+      // Edge case: if the user was typing `{{var}}` and we insert `{{var}}`, 
+      // check if afterCursor starts with `}}` so we don't end up with `{{var}}}}`
+      if (afterCursor.startsWith('}}')) {
+        newValue = beforeBraces + insertStr + afterCursor.substring(2);
+      }
 
       onChange(newValue);
       setShowAutocomplete(false);

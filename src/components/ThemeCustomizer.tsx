@@ -78,9 +78,14 @@ export function ThemeCustomizer() {
   };
 
   const handleDeleteTheme = async (themeId: string) => {
+    const theme = customThemes.find(t => t.id === themeId);
     const isConfirmed = await confirm({
       title: 'Delete Theme',
-      message: 'Are you sure you want to delete this custom theme?',
+      message: (
+        <span>
+          Are you sure you want to delete the theme <strong className="font-bold text-foreground underline decoration-destructive/30 underline-offset-4">"{theme?.name}"</strong>?
+        </span>
+      ),
       variant: 'destructive',
     });
     if (!isConfirmed) return;

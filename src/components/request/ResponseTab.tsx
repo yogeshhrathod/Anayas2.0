@@ -17,6 +17,7 @@ import {
     FileCode,
     History,
     List,
+    Terminal,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { memo, useEffect, useState } from 'react';
@@ -49,8 +50,8 @@ export interface ResponseTabProps {
   isLoading?: boolean;
   onCopy?: () => void;
   onDownload?: () => void;
-  responseSubTab: 'headers' | 'body' | 'both';
-  setResponseSubTab: (tab: 'headers' | 'body' | 'both') => void;
+  responseSubTab: 'headers' | 'body' | 'both' | 'console';
+  setResponseSubTab: (tab: 'headers' | 'body' | 'both' | 'console') => void;
   splitRatio: number;
   setSplitRatio: (ratio: number) => void;
   requestMethod?: string;
@@ -163,6 +164,77 @@ export const ResponseTab = memo(function ResponseTab({
             showActions={false}
           />
         );
+      case 'console':
+        return (
+          <div className="flex-1 flex flex-col min-h-0 overflow-auto p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="max-w-4xl mx-auto w-full space-y-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <Terminal className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold tracking-tight">Request Console</h3>
+                  <p className="text-xs text-muted-foreground">Actual data sent over the wire after resolving all variables</p>
+                </div>
+              </div>
+
+              {!response.requestDetails ? (
+                <div className="bg-muted/30 border border-dashed border-border rounded-xl p-8 text-center">
+                  <p className="text-sm text-muted-foreground">No request details captured for this execution.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* URL Section */}
+                  <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
+                    <div className="px-4 py-2 bg-muted/30 border-b border-border/20 flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Endpoint</span>
+                      <Badge variant="outline" className="font-mono text-[10px]">{response.requestDetails.method}</Badge>
+                    </div>
+                    <div className="p-4 font-mono text-sm break-all bg-background/50 selection:bg-primary/20">
+                      {response.requestDetails.url}
+                    </div>
+                  </div>
+
+                  {/* Headers Section */}
+                  <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
+                    <div className="px-4 py-2 bg-muted/30 border-b border-border/20 flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Resolved Request Headers</span>
+                      <span className="text-[10px] text-muted-foreground">{Object.keys(response.requestDetails.headers || {}).length} pairs</span>
+                    </div>
+                    <div className="p-4 space-y-2">
+                      {Object.keys(response.requestDetails.headers || {}).length > 0 ? (
+                        Object.entries(response.requestDetails.headers).map(([key, value]) => (
+                          <div key={key} className="flex gap-4 text-xs font-mono group">
+                            <span className="w-40 shrink-0 text-muted-foreground font-semibold selection:bg-primary/20">{key}:</span>
+                            <span className="break-all selection:bg-primary/20">{value}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-xs italic text-muted-foreground">No custom headers sent</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Body Section */}
+                  {response.requestDetails.body && (
+                    <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
+                      <div className="px-4 py-2 bg-muted/30 border-b border-border/20 flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Resolved Payload</span>
+                      </div>
+                      <div className="p-0">
+                        <pre className="p-4 text-xs font-mono bg-background/50 selection:bg-primary/20 whitespace-pre-wrap break-all max-h-[400px] overflow-y-auto leading-relaxed">
+                          {typeof response.requestDetails.body === 'string'
+                            ? response.requestDetails.body
+                            : JSON.stringify(response.requestDetails.body, null, 2)}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -236,6 +308,18 @@ export const ResponseTab = memo(function ResponseTab({
             >
               <Columns className="h-3.5 w-3.5" />
               Both
+            </button>
+            <button
+              onClick={() => setResponseSubTab('console')}
+              className={cn(
+                'flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 cursor-pointer',
+                responseSubTab === 'console'
+                  ? 'bg-primary text-primary-foreground shadow-md scale-[1.02]'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              )}
+            >
+              <Terminal className="h-3.5 w-3.5" />
+              Console
             </button>
           </div>
         </div>

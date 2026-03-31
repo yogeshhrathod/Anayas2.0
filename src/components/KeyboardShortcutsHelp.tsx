@@ -39,6 +39,10 @@ export function KeyboardShortcutsHelp() {
         { id: 'CLOSE_TAB', label: 'Close Tab' },
         { id: 'FOCUS_URL', label: 'Focus URL Bar' },
         { id: 'TOGGLE_SPLIT_VIEW', label: 'Toggle Split View' },
+        { id: 'CREATE_PRESET', label: 'Create Request Preset' },
+        { id: 'SELECT_PRESET_1', label: 'Select Preset 1' },
+        { id: 'SELECT_PRESET_2', label: 'Select Preset 2' },
+        { id: 'SELECT_PRESET_3', label: 'Select Preset 3' },
       ],
     },
     {

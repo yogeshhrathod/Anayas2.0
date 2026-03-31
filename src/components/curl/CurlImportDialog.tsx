@@ -250,6 +250,40 @@ export function CurlImportDialog({
     return folders.filter(folder => folder.collectionId === collectionId);
   };
 
+  // Listen for Enter key to parse or import
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && open) {
+        const activeElement = document.activeElement;
+        const isTextArea = activeElement?.tagName.toLowerCase() === 'textarea';
+        const isInput = activeElement?.tagName.toLowerCase() === 'input';
+        
+        if (isTextArea || (isInput && activeElement?.getAttribute('id')?.startsWith('request-name-'))) {
+           // If we're in textarea, Enter should be allowed for new lines UNLESS we want to auto-parse?
+           // Usually in cURL pasting, users might want to paste and hit Enter.
+           // But actually, for the textarea, we should allow Enter naturally.
+           return;
+        }
+
+        if (parsedRequests.length > 0) {
+          e.preventDefault();
+          handleImport();
+        } else if (curlCommands.trim()) {
+          e.preventDefault();
+          handleParse();
+        }
+      }
+    };
+
+    if (open) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, parsedRequests, curlCommands, handleImport, handleParse]);
+
   if (!open) return null;
 
   const successfulCount = parsedRequests.filter(r => r.success).length;

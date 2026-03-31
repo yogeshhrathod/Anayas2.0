@@ -188,4 +188,44 @@ export const SHORTCUTS: Record<string, ShortcutDefinition> = {
     action: 'toggle-split-view',
     description: 'Toggle split view',
   },
+
+  CREATE_PRESET: {
+    key: 'p',
+    metaKey: true,
+    ctrlKey: true,
+    shiftKey: true,
+    contexts: ['editor'],
+    action: 'create-preset',
+    description: 'Create Preset',
+  },
+
+  SELECT_PRESET_1: {
+    key: '1',
+    metaKey: true,
+    ctrlKey: true,
+    shiftKey: true,
+    contexts: ['editor'],
+    action: 'select-preset-1',
+    description: 'Select Preset 1',
+  },
+
+  SELECT_PRESET_2: {
+    key: '2',
+    metaKey: true,
+    ctrlKey: true,
+    shiftKey: true,
+    contexts: ['editor'],
+    action: 'select-preset-2',
+    description: 'Select Preset 2',
+  },
+
+  SELECT_PRESET_3: {
+    key: '3',
+    metaKey: true,
+    ctrlKey: true,
+    shiftKey: true,
+    contexts: ['editor'],
+    action: 'select-preset-3',
+    description: 'Select Preset 3',
+  },
 };

@@ -151,6 +151,16 @@ textarea {
   transition: all 0.2s ease-in-out;
 }
 
+/* Global focus outline reset and focus-visible enhancement */
+:focus {
+  outline: none !important;
+}
+
+:focus-visible {
+  outline: 2px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+}
+
 /* Smooth card transitions */
 .card-hover {
   transition:

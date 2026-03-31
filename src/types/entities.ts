@@ -120,6 +120,12 @@ export interface ResponseData {
   headers: Record<string, string>;
   data: any;
   time: number;
+  requestDetails?: {
+    method: string;
+    url: string;
+    headers: Record<string, string>;
+    body: any;
+  };
 }
 
 // Utility types for API operations

@@ -239,7 +239,11 @@ export function History() {
   const handleDelete = async (id: number) => {
     const isConfirmed = await confirm({
       title: 'Delete History',
-      message: 'Are you sure you want to delete this request from history?',
+      message: (
+        <span>
+          Are you sure you want to delete the request to <strong className="font-bold text-foreground underline decoration-destructive/30 underline-offset-4">"{filteredHistory.find(h => h.id === id)?.url}"</strong> from history?
+        </span>
+      ),
       variant: 'destructive',
     });
     if (!isConfirmed) return;

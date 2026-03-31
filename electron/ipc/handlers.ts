@@ -790,6 +790,21 @@ export function registerIpcHandlers() {
         }
       }
 
+      // Safeguard against huge response sizes that crash JSON/IPC (5MB cap)
+      const MAX_RES_SIZE = 5 * 1024 * 1024;
+      let bodyToSave =
+        typeof result.body === 'string'
+          ? result.body
+          : JSON.stringify(result.body || '');
+      let finalDataToUI = result.body;
+      
+      if (bodyToSave.length > MAX_RES_SIZE) {
+        bodyToSave =
+          bodyToSave.substring(0, MAX_RES_SIZE) +
+          '\n\n... [Response truncated due to exceeding 5MB size limit to prevent application crash]';
+        finalDataToUI = bodyToSave; // force string to UI
+      }
+
       // Save to history with original URL and request metadata for reference
       await addRequestHistory({
         method: method,
@@ -797,10 +812,7 @@ export function registerIpcHandlers() {
         status: result.status,
         statusText: result.statusText,
         response_time: result.responseTime,
-        response_body:
-          typeof result.body === 'string'
-            ? result.body
-            : JSON.stringify(result.body),
+        response_body: bodyToSave,
         headers: JSON.stringify(resolvedHeaders),
         requestId: options.requestId, // Link to saved request if available
         collectionId: options.collectionId, // Link to collection if available
@@ -820,11 +832,17 @@ export function registerIpcHandlers() {
 
       return {
         success: true,
-        data: result.body,
+        data: finalDataToUI,
         responseTime: result.responseTime,
         status: result.status,
         statusText: result.statusText,
         headers: result.headers,
+        requestDetails: {
+          method: method,
+          url: resolvedUrl,
+          headers: resolvedHeaders,
+          body: resolvedBody,
+        },
       };
     } catch (error: any) {
       const responseTime = Date.now() - startTime;
@@ -909,6 +927,10 @@ export function registerIpcHandlers() {
         status?: number;
         responseTime?: number;
         error?: string;
+        // Include actual sent parameters for debugging
+        method?: string;
+        url?: string;
+        responseBody?: string;
       }> = [];
 
       // Execute requests sequentially
@@ -951,6 +973,17 @@ export function registerIpcHandlers() {
 
           const result = await apiService.request(resolvedUrl, requestOptions);
 
+          // Truncate response
+          const MAX_RES_SIZE = 5 * 1024 * 1024;
+          let bodyToSave =
+            typeof result.body === 'string'
+              ? result.body
+              : JSON.stringify(result.body || '');
+          if (bodyToSave.length > MAX_RES_SIZE) {
+            bodyToSave = bodyToSave.substring(0, MAX_RES_SIZE) + 
+              '\n\n... [Response truncated due to exceeding 5MB size limit to prevent application crash]';
+          }
+
           // Save to history with request metadata
           await addRequestHistory({
             method: request.method,
@@ -958,10 +991,7 @@ export function registerIpcHandlers() {
             status: result.status,
             statusText: result.statusText,
             response_time: result.responseTime,
-            response_body:
-              typeof result.body === 'string'
-                ? result.body
-                : JSON.stringify(result.body),
+            response_body: bodyToSave,
             headers: JSON.stringify(resolvedHeaders),
             requestId: request.id, // Link to saved request
             collectionId: request.collectionId, // Link to collection
@@ -982,6 +1012,9 @@ export function registerIpcHandlers() {
             success: true,
             status: result.status,
             responseTime: result.responseTime,
+            method: request.method,
+            url: resolvedUrl,
+            responseBody: bodyToSave,
           });
 
           // Send progress update

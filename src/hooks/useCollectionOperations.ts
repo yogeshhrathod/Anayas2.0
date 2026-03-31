@@ -44,9 +44,9 @@ export function useCollectionOperations() {
     useStore();
 
   // Load collections and requests
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       const [collectionsData, requestsData] = await Promise.all([
         window.electronAPI.collection.list(),
         window.electronAPI.request.list(),
@@ -60,7 +60,7 @@ export function useCollectionOperations() {
     } catch (error: any) {
       showError('Failed to load data', error.message);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   }, [showError, setGlobalCollections]);
 
@@ -115,7 +115,7 @@ export function useCollectionOperations() {
         });
 
         if (result.success) {
-          await loadData();
+          await loadData(true);
           // Trigger sidebar refresh for real-time updates
           triggerSidebarRefresh();
           showSuccess('Collection created', {
@@ -144,7 +144,7 @@ export function useCollectionOperations() {
         });
 
         if (result.success) {
-          await loadData();
+          await loadData(true);
           // Trigger sidebar refresh for real-time updates
           triggerSidebarRefresh();
           showSuccess('Collection updated', {
@@ -164,7 +164,7 @@ export function useCollectionOperations() {
     async (id: number) => {
       try {
         await window.electronAPI.collection.delete(id);
-        await loadData();
+        await loadData(true);
         // Trigger sidebar refresh for real-time updates
         triggerSidebarRefresh();
         showSuccess('Collection deleted', {
