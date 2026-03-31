@@ -36,7 +36,7 @@ export interface RequestState {
   paramsViewMode: 'table' | 'json';
   headersViewMode: 'table' | 'json';
   bulkEditJson: string;
-  responseSubTab: 'headers' | 'body' | 'both';
+  responseSubTab: 'headers' | 'body' | 'both' | 'console';
   splitViewRatio: number;
   isSaved: boolean;
   lastSavedAt: Date | null;
@@ -56,7 +56,7 @@ export interface RequestStateActions {
   setParamsViewMode: (mode: RequestState['paramsViewMode']) => void;
   setHeadersViewMode: (mode: RequestState['headersViewMode']) => void;
   setBulkEditJson: (json: string) => void;
-  setResponseSubTab: (tab: RequestState['responseSubTab']) => void;
+  setResponseSubTab: (tab: 'headers' | 'body' | 'both' | 'console') => void;
   setSplitViewRatio: (ratio: number) => void;
   setIsSaved: (saved: boolean) => void;
   setLastSavedAt: (date: Date | null) => void;
@@ -104,7 +104,7 @@ export function useRequestState(selectedRequest: Request | null) {
 
   // Load default responseSubTab from settings (defaults to 'headers' if not set)
   const defaultResponseSubTab =
-    (settings?.defaultResponseSubTab as 'headers' | 'body' | 'both') ||
+    (settings?.defaultResponseSubTab as 'headers' | 'body' | 'both' | 'console') ||
     'headers';
 
   const [state, setState] = useState<RequestState>(() => {

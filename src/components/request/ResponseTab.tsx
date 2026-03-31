@@ -25,7 +25,6 @@ import logger from '../../lib/logger';
 import {
     formatResponseSize,
     formatResponseTime,
-    getStatusDisplay,
     getStatusText,
     getStatusVariant,
 } from '../../lib/response-utils';
@@ -35,12 +34,6 @@ import { ResponseData } from '../../types/entities';
 import { BikeLogoAnimation } from '../BikeLogoAnimation';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '../ui/tooltip';
 import { ResponseBodyView } from './ResponseBodyView';
 import { ResponseBothView } from './ResponseBothView';
 import { ResponseHeadersView } from './ResponseHeadersView';
@@ -245,26 +238,23 @@ export const ResponseTab = memo(function ResponseTab({
       "flex flex-col flex-1 min-h-0 overflow-hidden bg-background/30 backdrop-blur-sm rounded-xl border border-border/40 shadow-2xl transition-all duration-700",
       isLoading && "ring-2 ring-primary/20 shadow-[0_0_50px_rgba(var(--primary),0.15)] border-primary/30"
     )}>
-      {/* Unified Premium Header */}
-      <div className="flex-shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 border-b border-border/40 bg-muted/10">
-        <div className="flex flex-wrap items-center gap-4">
+      {/* Refined Unified Header */}
+      <div className="flex-shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 bg-muted/5">
+        <div className="flex items-center gap-4">
           {/* Response Status Indicators */}
           {response && (
-            <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-background/50 border border-border/40 shadow-sm animate-in slide-in-from-left-4 duration-500">
+            <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-background/50 border border-border/20 shadow-sm transition-all duration-300">
               <Badge
                 variant={getStatusVariant(response.status)}
                 className="px-2 py-0.5 font-bold tracking-tight"
               >
-                {getStatusDisplay(response.status)}{' '}
-                {getStatusText(response.status, response.statusText)}
+                {response.status} {getStatusText(response.status, response.statusText)}
               </Badge>
-              <div className="h-4 w-[1px] bg-border/60" />
-              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
                 <Clock className="h-3.5 w-3.5 text-blue-500/80" />
                 <span>{formatResponseTime(response.time)}</span>
               </div>
-              <div className="h-4 w-[1px] bg-border/60" />
-              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
                 <Activity className="h-3.5 w-3.5 text-green-500/80" />
                 <span>{formatResponseSize(response.data)}</span>
               </div>
@@ -273,119 +263,64 @@ export const ResponseTab = memo(function ResponseTab({
 
           {/* Premium Segmented Tab Switcher */}
           <div className="flex p-1 bg-muted/40 rounded-xl border border-border/20 shadow-inner">
-            <button
-              onClick={() => setResponseSubTab('headers')}
-              className={cn(
-                'flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 cursor-pointer',
-                responseSubTab === 'headers'
-                  ? 'bg-primary text-primary-foreground shadow-md scale-[1.02]'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-              )}
-            >
-              <List className="h-3.5 w-3.5" />
-              Headers
-            </button>
-            <button
-              onClick={() => setResponseSubTab('body')}
-              className={cn(
-                'flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 cursor-pointer',
-                responseSubTab === 'body'
-                  ? 'bg-primary text-primary-foreground shadow-md scale-[1.02]'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-              )}
-            >
-              <FileCode className="h-3.5 w-3.5" />
-              Body
-            </button>
-            <button
-              onClick={() => setResponseSubTab('both')}
-              className={cn(
-                'flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 cursor-pointer',
-                responseSubTab === 'both'
-                  ? 'bg-primary text-primary-foreground shadow-md scale-[1.02]'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-              )}
-            >
-              <Columns className="h-3.5 w-3.5" />
-              Both
-            </button>
-            <button
-              onClick={() => setResponseSubTab('console')}
-              className={cn(
-                'flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 cursor-pointer',
-                responseSubTab === 'console'
-                  ? 'bg-primary text-primary-foreground shadow-md scale-[1.02]'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-              )}
-            >
-              <Terminal className="h-3.5 w-3.5" />
-              Console
-            </button>
+            {[
+              { id: 'headers', icon: List, label: 'Headers' },
+              { id: 'body', icon: FileCode, label: 'Body' },
+              { id: 'both', icon: Columns, label: 'Both' },
+              { id: 'console', icon: Terminal, label: 'Console' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setResponseSubTab(tab.id as any)}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer group',
+                  responseSubTab === tab.id
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <tab.icon className={cn(
+                  "h-3.5 w-3.5",
+                  responseSubTab === tab.id ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                )} />
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 justify-end">
-          {/* Action Buttons */}
+        <div className="flex items-center gap-2">
           {response && (
-            <div className="flex items-center bg-muted/30 p-0.5 rounded-lg border border-border/20">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={onCopy}
-                      className="h-8 w-8 p-0 rounded-md hover:bg-primary/10 hover:text-primary transition-all grayscale hover:grayscale-0"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copy Response Body</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={onDownload}
-                      className="h-8 w-8 p-0 rounded-md hover:bg-primary/10 hover:text-primary transition-all grayscale hover:grayscale-0"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Download Response</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+            <div className="flex items-center p-0.5 rounded-lg border border-border/20 bg-muted/30">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onCopy}
+                className="h-8 w-8 p-0 rounded-md hover:bg-primary/10 hover:text-primary transition-all grayscale hover:grayscale-0"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onDownload}
+                className="h-8 w-8 p-0 rounded-md hover:bg-primary/10 hover:text-primary transition-all grayscale hover:grayscale-0"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
             </div>
           )}
 
-          {/* History Button */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleShowHistory}
-                  disabled={!requestId && (!requestMethod || !requestUrl)}
-                  className={cn(
-                    'h-8 gap-2 px-3 font-medium transition-all duration-200 rounded-lg',
-                    requestId || (requestMethod && requestUrl)
-                      ? 'hover:bg-primary/10 hover:text-primary hover:border-primary/30'
-                      : 'opacity-40 cursor-not-allowed'
-                  )}
-                >
-                  <History className="h-3.5 w-3.5" />
-                  <span className="hidden lg:inline text-xs">History</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="font-medium">
-                {!requestId && (!requestMethod || !requestUrl)
-                  ? 'Send a request to see its history'
-                  : 'View full history for this request'}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShowHistory}
+            disabled={!requestId && (!requestMethod || !requestUrl)}
+            className="h-9 gap-2 px-3 font-bold transition-all duration-200 rounded-lg border-border/40 hover:bg-primary/5 hover:text-primary"
+          >
+            <History className="h-4 w-4" />
+            <span className="hidden lg:inline text-xs">History</span>
+          </Button>
         </div>
       </div>
 

@@ -29,6 +29,7 @@ export interface RequestPresetsProps {
   onShowCreateDialog: (show: boolean) => void;
   onSetNewPresetName: (name: string) => void;
   onSetNewPresetDescription: (description: string) => void;
+  requestId?: number | string;
 }
 
 const methodColorMap: Record<string, string> = {
@@ -55,6 +56,7 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
   onShowCreateDialog,
   onSetNewPresetName,
   onSetNewPresetDescription,
+  requestId,
 }) => {
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -119,12 +121,17 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => onShowCreateDialog(true)}
-                          className="h-8 w-8 p-0 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
+                          disabled={!requestId || typeof requestId !== 'number'}
+                          className="h-8 w-8 p-0 rounded-full hover:bg-primary/10 hover:text-primary transition-colors disabled:opacity-30"
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Create Scenario</TooltipContent>
+                      <TooltipContent>
+                        {!requestId || typeof requestId !== 'number' 
+                          ? 'Save to collection to create scenarios' 
+                          : 'Create Scenario'}
+                      </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
 
@@ -294,15 +301,31 @@ export const RequestPresets: React.FC<RequestPresetsProps> = ({
                           </div>
 
                           <div className="pt-2">
-                            <Button
-                              variant="default"
-                              size="sm"
-                              className="w-full text-xs gap-2 shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 active:scale-95"
-                              onClick={() => onShowCreateDialog(true)}
-                            >
-                              <Plus className="h-3 w-3" />
-                              Create First Scenario
-                            </Button>
+                            {(!requestId || typeof requestId !== 'number') ? (
+                              <div className="bg-muted/50 border border-dashed border-border rounded-xl p-5 text-center space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center mx-auto shadow-sm">
+                                  <Save className="h-4 w-4 text-muted-foreground/60" />
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-xs font-bold text-foreground">
+                                    Scenarios Unavailable
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                                    This request is currently a draught. Save it to a collection to start capturing snapshots.
+                                  </p>
+                                </div>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="w-full text-xs gap-2 shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 active:scale-95"
+                                onClick={() => onShowCreateDialog(true)}
+                              >
+                                <Plus className="h-3 w-3" />
+                                Create First Scenario
+                              </Button>
+                            )}
                           </div>
                         </motion.div>
                       )}

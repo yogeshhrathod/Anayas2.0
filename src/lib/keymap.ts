@@ -110,83 +110,99 @@ export const KEYMAP: Record<string, KeymapConfig> = {
   },
   CREATE_PRESET: {
     key: 'p',
-    metaKey: true, // Cmd+Shift+P on Mac
-    ctrlKey: true, // Ctrl+Shift+P on Windows/Linux
+    metaKey: true,
+    ctrlKey: true,
     shiftKey: true,
     description: 'Create Preset',
     action: 'create-preset',
   },
+  TOGGLE_PRESETS: {
+    key: 'p',
+    metaKey: true,
+    ctrlKey: true,
+    altKey: true,
+    description: 'Toggle Scenarios Panel',
+    action: 'toggle-presets',
+  },
   SELECT_PRESET_1: {
     key: '1',
-    metaKey: true, // Cmd+Shift+1 on Mac
-    ctrlKey: true, // Ctrl+Shift+1 on Windows/Linux
-    shiftKey: true,
+    metaKey: true,
+    ctrlKey: true,
+    altKey: true,
     description: 'Select Preset 1',
     action: 'select-preset-1',
   },
   SELECT_PRESET_2: {
     key: '2',
-    metaKey: true, // Cmd+Shift+2 on Mac
-    ctrlKey: true, // Ctrl+Shift+2 on Windows/Linux
-    shiftKey: true,
+    metaKey: true,
+    ctrlKey: true,
+    altKey: true,
     description: 'Select Preset 2',
     action: 'select-preset-2',
   },
   SELECT_PRESET_3: {
     key: '3',
-    metaKey: true, // Cmd+Shift+3 on Mac
-    ctrlKey: true, // Ctrl+Shift+3 on Windows/Linux
-    shiftKey: true,
+    metaKey: true,
+    ctrlKey: true,
+    altKey: true,
     description: 'Select Preset 3',
     action: 'select-preset-3',
   },
   SELECT_PRESET_4: {
     key: '4',
-    metaKey: true, // Cmd+Shift+4 on Mac
-    ctrlKey: true, // Ctrl+Shift+4 on Windows/Linux
-    shiftKey: true,
+    metaKey: true,
+    ctrlKey: true,
+    altKey: true,
     description: 'Select Preset 4',
     action: 'select-preset-4',
   },
   SELECT_PRESET_5: {
     key: '5',
-    metaKey: true, // Cmd+Shift+5 on Mac
-    ctrlKey: true, // Ctrl+Shift+5 on Windows/Linux
-    shiftKey: true,
+    metaKey: true,
+    ctrlKey: true,
+    altKey: true,
     description: 'Select Preset 5',
     action: 'select-preset-5',
   },
   SELECT_PRESET_6: {
     key: '6',
-    metaKey: true, // Cmd+Shift+6 on Mac
-    ctrlKey: true, // Ctrl+Shift+6 on Windows/Linux
-    shiftKey: true,
+    metaKey: true,
+    ctrlKey: true,
+    altKey: true,
     description: 'Select Preset 6',
     action: 'select-preset-6',
   },
   SELECT_PRESET_7: {
     key: '7',
-    metaKey: true, // Cmd+Shift+7 on Mac
-    ctrlKey: true, // Ctrl+Shift+7 on Windows/Linux
-    shiftKey: true,
+    metaKey: true,
+    ctrlKey: true,
+    altKey: true,
     description: 'Select Preset 7',
     action: 'select-preset-7',
   },
   SELECT_PRESET_8: {
     key: '8',
-    metaKey: true, // Cmd+Shift+8 on Mac
-    ctrlKey: true, // Ctrl+Shift+8 on Windows/Linux
-    shiftKey: true,
+    metaKey: true,
+    ctrlKey: true,
+    altKey: true,
     description: 'Select Preset 8',
     action: 'select-preset-8',
   },
   SELECT_PRESET_9: {
     key: '9',
-    metaKey: true, // Cmd+Shift+9 on Mac
-    ctrlKey: true, // Ctrl+Shift+9 on Windows/Linux
-    shiftKey: true,
+    metaKey: true,
+    ctrlKey: true,
+    altKey: true,
     description: 'Select Preset 9',
     action: 'select-preset-9',
+  },
+  SELECT_PRESET_0: {
+    key: '0',
+    metaKey: true,
+    ctrlKey: true,
+    altKey: true,
+    description: 'Select Preset 10',
+    action: 'select-preset-0',
   },
 };
 
@@ -211,46 +227,61 @@ export const matchesKeymap = (
   event: KeyboardEvent,
   keymap: KeymapConfig
 ): boolean => {
-  const modifierKey = getModifierKey();
+  const isMacPlatform = isMac();
 
-  // Check the main key
-  if (event.key.toLowerCase() !== keymap.key.toLowerCase()) {
-    return false;
-  }
-
-  // Check modifiers based on platform
-  if (modifierKey === 'metaKey') {
-    return (
-      event.metaKey === keymap.metaKey &&
-      event.ctrlKey === false &&
-      event.shiftKey === (keymap.shiftKey || false) &&
-      event.altKey === (keymap.altKey || false)
-    );
+  // On Mac, when Option/Alt is pressed, event.key changes to the mapped character (e.g., 1 -> ¡).
+  // We use event.code for digits to ensure shortcuts like Cmd+Option+1 work regardless of layout.
+  let keyMatches = false;
+  const isDigitKey = /^\d$/.test(keymap.key);
+  
+  if (isDigitKey && event.code.startsWith('Digit')) {
+    keyMatches = event.code === `Digit${keymap.key}`;
   } else {
-    return (
-      event.ctrlKey === keymap.ctrlKey &&
-      event.metaKey === false &&
-      event.shiftKey === (keymap.shiftKey || false) &&
-      event.altKey === (keymap.altKey || false)
-    );
+    keyMatches = event.key.toLowerCase() === keymap.key.toLowerCase();
   }
+
+  if (!keyMatches) return false;
+
+  // Cross-platform primary modifier logic:
+  // If both metaKey and ctrlKey are true, we treat it as "Primary Modifier + Other key".
+  // On Mac: Primary = Cmd (metaKey).
+  // On Windows/Linux: Primary = Ctrl (ctrlKey).
+  let targetMeta = keymap.metaKey || false;
+  let targetCtrl = keymap.ctrlKey || false;
+
+  if (targetMeta && targetCtrl) {
+    if (isMacPlatform) {
+      targetCtrl = false; // On Mac, meta is primary, ignore ctrl requirement
+    } else {
+      targetMeta = false; // On Win, ctrl is primary, ignore meta requirement
+    }
+  }
+
+  // Strict modifier matching
+  if (event.metaKey !== targetMeta) return false;
+  if (event.ctrlKey !== targetCtrl) return false;
+  if (event.shiftKey !== (keymap.shiftKey || false)) return false;
+  if (event.altKey !== (keymap.altKey || false)) return false;
+
+  return true;
 };
 
 /**
  * Get keyboard shortcut display text for UI
  */
 export const getShortcutDisplay = (keymap: KeymapConfig): string => {
-  const modifierKey = getModifierKey();
-  const modifierSymbol = modifierKey === 'metaKey' ? '⌘' : 'Ctrl';
+  const isMacPlatform = isMac();
+  const mainSymbol = isMacPlatform ? '⌘' : 'Ctrl';
 
-  let shortcut = modifierSymbol;
+  const parts = [];
+  parts.push(mainSymbol);
 
-  if (keymap.shiftKey) shortcut += '+Shift';
-  if (keymap.altKey) shortcut += '+Alt';
+  if (keymap.altKey) parts.push(isMacPlatform ? '⌥' : 'Alt');
+  if (keymap.shiftKey) parts.push(isMacPlatform ? '⇧' : 'Shift');
+  
+  parts.push(keymap.key.toUpperCase());
 
-  shortcut += `+${keymap.key.toUpperCase()}`;
-
-  return shortcut;
+  return parts.join(isMacPlatform ? '' : '+');
 };
 
 /**

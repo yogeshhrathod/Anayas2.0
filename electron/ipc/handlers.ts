@@ -1709,4 +1709,15 @@ export function registerIpcHandlers() {
   ipcMain.handle('logger:debug', (_event, message, args) => {
     logger.debug(`[Renderer] ${message}`, { args });
   });
+
+  ipcMain.handle('app:getPlatform', () => {
+    switch (process.platform) {
+      case 'darwin':
+        return 'mac';
+      case 'win32':
+        return 'windows';
+      default:
+        return 'linux';
+    }
+  });
 }

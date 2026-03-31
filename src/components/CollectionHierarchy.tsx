@@ -96,15 +96,8 @@ export function CollectionHierarchy({
     prevCollectionIdsRef.current = currentIds;
   }, [collections, expandedCollections, setExpandedCollections]);
 
-  // Subscribe to collection/request/folder updates from the main process (if supported).
-  // In test environments, the mocked electronAPI does not provide these events, so we
-  // guard access to keep the UI rendering instead of crashing.
-
   // Check if dragging an unsaved request
-  // Note: getData() doesn't work during dragOver, so we check for the data type
   const isDraggingUnsavedRequest = (e: React.DragEvent): boolean => {
-    // Check if the drag contains JSON data (unsaved requests use application/json)
-    // Regular drag-drop items don't set this type
     return e.dataTransfer.types.includes('application/json');
   };
 
@@ -128,20 +121,15 @@ export function CollectionHierarchy({
     folderId?: number
   ) => {
     e.preventDefault();
-    setUnsavedDragOver(null); // Clear drag over state
+    setUnsavedDragOver(null);
 
     try {
-      // Only handle unsaved requests here - regular drag-drop is handled by dragDrop hook
       const jsonData = e.dataTransfer.getData('application/json');
-      if (!jsonData || jsonData.trim() === '') {
-        // No data means it's a regular drag-drop, not an unsaved request
-        return;
-      }
+      if (!jsonData || jsonData.trim() === '') return;
 
       const data = JSON.parse(jsonData);
 
       if (data.type === 'unsaved-request') {
-        // Promote unsaved request to this collection (and optionally folder)
         const result = await window.electronAPI.unsavedRequest.promote(
           data.id,
           {
@@ -153,13 +141,8 @@ export function CollectionHierarchy({
         );
 
         if (result.success) {
-          showSuccess(
-            folderId
-              ? 'Unsaved request saved to folder'
-              : 'Unsaved request saved to collection'
-          );
+          showSuccess(folderId ? 'Unsaved request saved to folder' : 'Unsaved request saved to collection');
 
-          // Load the newly saved request and set it as selected
           const savedRequest = {
             id: result.id,
             name: data.data.name,
@@ -178,14 +161,9 @@ export function CollectionHierarchy({
           setSelectedRequest(savedRequest);
           setCurrentPage('home');
 
-          // Clear active unsaved request ID if it was the one being dropped
-          const { setActiveUnsavedRequestId, setUnsavedRequests } =
-            useStore.getState();
-          if (data.id) {
-            setActiveUnsavedRequestId(null);
-          }
+          const { setActiveUnsavedRequestId, setUnsavedRequests } = useStore.getState();
+          if (data.id) setActiveUnsavedRequestId(null);
 
-          // Refresh data including unsaved requests
           const [requestsData, foldersData, unsavedData] = await Promise.all([
             window.electronAPI.request.list(),
             window.electronAPI.folder.list(),
@@ -193,163 +171,83 @@ export function CollectionHierarchy({
           ]);
           setRequests(requestsData);
           setFolders(foldersData);
-
-          // Update unsaved requests in store
           setUnsavedRequests(unsavedData);
-
-          // Trigger sidebar refresh
           triggerSidebarRefresh();
         }
       }
     } catch (error: any) {
-      // Only show error if it's not a JSON parse error (which is expected for regular drag-drop)
-      if (error instanceof SyntaxError && error.message.includes('JSON')) {
-        // This is expected when dragging regular items - they don't have JSON data
-        return;
-      }
+      if (error instanceof SyntaxError && error.message.includes('JSON')) return;
       logger.error('Drop failed', { error });
       showError('Failed to save request', error.message);
     }
   };
 
-  // Reorder handlers
-  const handleReorderRequest = async (
-    requestId: EntityId,
-    targetRequestId: EntityId,
-    position: 'above' | 'below'
-  ) => {
+  const getRequestsForFolder = (folderId: number) => {
+    return requests
+      .filter(r => r.folderId === folderId)
+      .sort((a, b) => (a.order || 0) - (b.order || 0) || String(a.id || '').localeCompare(String(b.id || '')));
+  };
+
+  const getRequestsForCollection = (collectionId: number) => {
+    return requests
+      .filter(r => r.collectionId === collectionId && !r.folderId)
+      .sort((a, b) => (a.order || 0) - (b.order || 0) || String(a.id || '').localeCompare(String(b.id || '')));
+  };
+
+  const getFoldersForCollection = (collectionId: number) => {
+    return folders
+      .filter(f => f.collectionId === collectionId)
+      .sort((a, b) => (a.order || 0) - (b.order || 0) || String(a.id || '').localeCompare(String(b.id || '')));
+  };
+
+  const handleReorderRequest = async (requestId: EntityId, targetRequestId: EntityId, position: 'above' | 'below') => {
     try {
       const draggedRequest = requests.find(r => r.id === requestId);
       const targetRequest = requests.find(r => r.id === targetRequestId);
+      if (!draggedRequest || !targetRequest) throw new Error('Request not found');
 
-      if (!draggedRequest || !targetRequest) {
-        throw new Error('Request not found');
-      }
-
-      // Verify both requests are in the same container
-      if (
-        draggedRequest.collectionId !== targetRequest.collectionId ||
-        draggedRequest.folderId !== targetRequest.folderId
-      ) {
-        throw new Error('Requests must be in the same container');
-      }
-
-      // Get all requests in the same container
-      const containerRequests = draggedRequest.folderId
-        ? getRequestsForFolder(draggedRequest.folderId)
-        : getRequestsForCollection(draggedRequest.collectionId!);
-
-      // Find target index
-      const targetIndex = containerRequests.findIndex(
-        r => r.id === targetRequestId
-      );
-      if (targetIndex === -1) {
-        throw new Error('Target request not found in container');
-      }
-
-      // Calculate drop index
+      const containerRequests = draggedRequest.folderId ? getRequestsForFolder(draggedRequest.folderId) : getRequestsForCollection(draggedRequest.collectionId!);
+      const targetIndex = containerRequests.findIndex(r => r.id === targetRequestId);
       const dropIndex = position === 'above' ? targetIndex : targetIndex + 1;
-
-      // Calculate new order value
       const newOrder = calculateOrderForPosition(containerRequests, dropIndex);
 
-      // Update order
       await window.electronAPI.request.reorder(requestId as any, newOrder);
-
-      // Refresh data
-      const requestsData = await window.electronAPI.request.list();
-      setRequests(requestsData);
-
+      setRequests(await window.electronAPI.request.list());
       triggerSidebarRefresh();
     } catch (error: any) {
       showError('Failed to reorder request', error.message);
     }
   };
 
-  const handleReorderFolder = async (
-    folderId: number,
-    targetFolderId: number,
-    position: 'above' | 'below'
-  ) => {
+  const handleReorderFolder = async (folderId: number, targetFolderId: number, position: 'above' | 'below') => {
     try {
       const draggedFolder = folders.find(f => f.id === folderId);
       const targetFolder = folders.find(f => f.id === targetFolderId);
+      if (!draggedFolder || !targetFolder) throw new Error('Folder not found');
 
-      if (!draggedFolder || !targetFolder) {
-        throw new Error('Folder not found');
-      }
-
-      // Get all folders in the same collection
-      const collectionFolders = getFoldersForCollection(
-        draggedFolder.collectionId
-      );
-
-      // Find target index
-      const targetIndex = collectionFolders.findIndex(
-        f => f.id === targetFolderId
-      );
-      if (targetIndex === -1) {
-        throw new Error('Target folder not found in collection');
-      }
-
-      // Calculate drop index
+      const collectionFolders = getFoldersForCollection(draggedFolder.collectionId);
+      const targetIndex = collectionFolders.findIndex(f => f.id === targetFolderId);
       const dropIndex = position === 'above' ? targetIndex : targetIndex + 1;
-
-      // Calculate new order value
       const newOrder = calculateOrderForPosition(collectionFolders, dropIndex);
 
-      // Update order
       await window.electronAPI.folder.reorder(folderId, newOrder);
-
-      // Refresh data
-      const foldersData = await window.electronAPI.folder.list();
-      setFolders(foldersData);
-
+      setFolders(await window.electronAPI.folder.list());
       triggerSidebarRefresh();
     } catch (error: any) {
       showError('Failed to reorder folder', error.message);
     }
   };
 
-  // Helper to resolve folder's collectionId
-  const resolveFolderCollectionId = (folderId: number): number | undefined => {
-    const folder = folders.find(f => f.id === folderId);
-    return folder?.collectionId;
-  };
-
-  // Drag and drop functionality
   const dragDrop = useCollectionDragDrop({
-    resolveFolderCollectionId: resolveFolderCollectionId,
-    onMoveRequest: async (
-      requestId: EntityId,
-      targetCollectionId: number,
-      targetFolderId
-    ) => {
+    resolveFolderCollectionId: (folderId: number) => folders.find(f => f.id === folderId)?.collectionId,
+    onMoveRequest: async (requestId, targetCollectionId, targetFolderId) => {
       try {
-        const requestToMove = requests.find(r => r.id === requestId);
-        await window.electronAPI.request.save({
-          id: requestId as any,
-          name: requestToMove?.name || '',
-          method: (requestToMove?.method as any) || 'GET',
-          url: requestToMove?.url || '',
-          headers: requestToMove?.headers || {},
-          body: requestToMove?.body || '',
-          queryParams: requestToMove?.queryParams || [],
-          auth: requestToMove?.auth || { type: 'none' },
-          collectionId: targetCollectionId,
-          folderId: targetFolderId,
-          isFavorite: requestToMove?.isFavorite || 0,
-        });
+        const r = requests.find(req => req.id === requestId);
+        if (!r) return;
+        await window.electronAPI.request.save({ ...r, id: requestId as any, collectionId: targetCollectionId, folderId: targetFolderId });
         showSuccess('Request moved successfully');
-        // Refresh data
-        const [requestsData, foldersData] = await Promise.all([
-          window.electronAPI.request.list(),
-          window.electronAPI.folder.list(),
-        ]);
-        setRequests(requestsData);
-        setFolders(foldersData);
-
-        // Trigger sidebar refresh for real-time updates
+        setRequests(await window.electronAPI.request.list());
+        setFolders(await window.electronAPI.folder.list());
         triggerSidebarRefresh();
       } catch (error: any) {
         showError('Failed to move request', error.message);
@@ -357,18 +255,11 @@ export function CollectionHierarchy({
     },
     onMoveFolder: async (folderId, targetCollectionId) => {
       try {
-        await window.electronAPI.folder.save({
-          id: folderId,
-          name: folders.find(f => f.id === folderId)?.name || '',
-          description: folders.find(f => f.id === folderId)?.description || '',
-          collectionId: targetCollectionId,
-        });
+        const f = folders.find(folder => folder.id === folderId);
+        if (!f) return;
+        await window.electronAPI.folder.save({ ...f, collectionId: targetCollectionId });
         showSuccess('Folder moved successfully');
-        // Refresh data
-        const foldersData = await window.electronAPI.folder.list();
-        setFolders(foldersData);
-
-        // Trigger sidebar refresh for real-time updates
+        setFolders(await window.electronAPI.folder.list());
         triggerSidebarRefresh();
       } catch (error: any) {
         showError('Failed to move folder', error.message);
@@ -378,137 +269,62 @@ export function CollectionHierarchy({
     onReorderFolder: handleReorderFolder,
   });
 
-  const toggleCollection = (collectionId: number) => {
-    const newExpanded = new Set(expandedCollections);
-    if (newExpanded.has(collectionId)) {
-      newExpanded.delete(collectionId);
-    } else {
-      newExpanded.add(collectionId);
+  const toggleCollection = (id: number) => {
+    const next = new Set(expandedCollections);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setExpandedCollections(next);
+  };
+
+  const toggleFolder = (id: number) => {
+    const next = new Set(expandedFolders);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setExpandedFolders(next);
+  };
+
+  const handleEditCollection = (id: number) => {
+    const { setCollectionToEditId, setCurrentPage } = useStore.getState();
+    setCollectionToEditId(id);
+    setCurrentPage('collections');
+  };
+
+  const handleExportCollection = async (id: number) => {
+    try {
+      const c = collections.find(col => col.id === id);
+      if (!c) return;
+      const exportData = { collection: c, folders: folders.filter(f => f.collectionId === id), requests: requests.filter(r => r.collectionId === id), exportedAt: new Date().toISOString(), type: 'luna-collection-export', version: '1.0' };
+      const fileName = `${c.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.json`;
+      const result = await window.electronAPI.file.saveFile(fileName, JSON.stringify(exportData, null, 2));
+      if (result.success) showSuccess('Collection exported successfully');
+    } catch (error: any) {
+      showError('Failed to export collection', error.message);
     }
-    setExpandedCollections(newExpanded);
   };
 
-  const toggleFolder = (folderId: number) => {
-    const newExpanded = new Set(expandedFolders);
-    if (newExpanded.has(folderId)) {
-      newExpanded.delete(folderId);
-    } else {
-      newExpanded.add(folderId);
+  const handleEditRequest = (request: Request) => onRequestSelect(request);
+
+  const handleExportRequest = async (request: Request) => {
+    try {
+      const fileName = `${(request.name || 'request').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_request.json`;
+      const result = await window.electronAPI.file.saveFile(fileName, JSON.stringify(request, null, 2));
+      if (result.success) showSuccess('Request exported successfully');
+    } catch (error: any) {
+      showError('Failed to export request', error.message);
     }
-    setExpandedFolders(newExpanded);
-  };
-
-  const getRequestsForCollection = (collectionId: number) => {
-    return requests
-      .filter(r => r.collectionId === collectionId && !r.folderId)
-      .sort((a, b) => {
-        const orderA = a.order || 0;
-        const orderB = b.order || 0;
-        if (orderA !== orderB) {
-          return orderA - orderB;
-        }
-        return String(a.id || '').localeCompare(String(b.id || ''));
-      });
-  };
-
-  const getRequestsForFolder = (folderId: number) => {
-    return requests
-      .filter(r => r.folderId === folderId)
-      .sort((a, b) => {
-        const orderA = a.order || 0;
-        const orderB = b.order || 0;
-        if (orderA !== orderB) {
-          return orderA - orderB;
-        }
-        return String(a.id || '').localeCompare(String(b.id || ''));
-      });
-  };
-
-  const getFoldersForCollection = (collectionId: number) => {
-    return folders
-      .filter(f => f.collectionId === collectionId)
-      .sort((a, b) => {
-        const orderA = a.order || 0;
-        const orderB = b.order || 0;
-        if (orderA !== orderB) {
-          return orderA - orderB;
-        }
-        return String(a.id || '').localeCompare(String(b.id || ''));
-      });
   };
 
   const handleAddRequest = (collectionId: number, folderId?: number) => {
-    // Set selected item for keyboard shortcuts
-    if (folderId) {
-      const folder = folders.find(f => f.id === folderId);
-      if (folder) {
-        setSelectedItem({
-          type: 'folder',
-          id: folderId,
-          data: folder,
-        });
-      }
-    } else {
-      const collection = collections.find(c => c.id === collectionId);
-      if (collection) {
-        setSelectedItem({
-          type: 'collection',
-          id: collectionId,
-          data: collection,
-        });
-      }
-    }
-
-    // Create a new empty request and set it as selected
-    const newRequest: Request = {
-      name: '',
-      method: 'GET',
-      url: '',
-      headers: { 'Content-Type': 'application/json' },
-      body: '',
-      queryParams: [],
-      auth: { type: 'none' },
-      collectionId: collectionId,
-      folderId: folderId,
-      isFavorite: 0,
-    };
-
+    const newRequest: Request = { name: 'New Request', method: 'GET', url: '', headers: { 'Content-Type': 'application/json' }, body: '', queryParams: [], auth: { type: 'none' }, collectionId, folderId, isFavorite: 0 };
     setSelectedRequest(newRequest);
     setCurrentPage('home');
   };
 
   const handleAddFolder = async (collectionId: number) => {
     try {
-      // Set selected collection for keyboard shortcuts
-      const collection = collections.find(c => c.id === collectionId);
-      if (collection) {
-        setSelectedItem({
-          type: 'collection',
-          id: collectionId,
-          data: collection,
-        });
-      }
-
-      // Create a new folder with a default name
-      const folderCount = folders.filter(
-        f => f.collectionId === collectionId
-      ).length;
-      const folderName = `New Folder${folderCount > 0 ? ` ${folderCount + 1}` : ''}`;
-
-      const result = await window.electronAPI.folder.save({
-        name: folderName,
-        description: '',
-        collectionId: collectionId,
-      });
-
+      const name = `New Folder ${folders.filter(f => f.collectionId === collectionId).length + 1}`;
+      const result = await window.electronAPI.folder.save({ name, description: '', collectionId });
       if (result.success) {
         showSuccess('Folder created successfully');
-
-        // Refresh folders
-        const foldersData = await window.electronAPI.folder.list();
-        setFolders(foldersData);
-
-        // Trigger sidebar refresh
+        setFolders(await window.electronAPI.folder.list());
         triggerSidebarRefresh();
       }
     } catch (error: any) {
@@ -516,822 +332,190 @@ export function CollectionHierarchy({
     }
   };
 
-  const handleDeleteCollection = async (collectionId: number) => {
+  const handleDeleteCollection = async (id: number) => {
     try {
-      await window.electronAPI.collection.delete(collectionId);
+      await window.electronAPI.collection.delete(id);
       showSuccess('Collection deleted successfully');
-      setCollections(collections.filter(c => c.id !== collectionId));
-      // Trigger sidebar refresh for real-time updates
+      setCollections(collections.filter(c => c.id !== id));
       triggerSidebarRefresh();
     } catch (error: any) {
       showError('Failed to delete collection', error.message);
     }
   };
 
-  const handleDuplicateCollection = async (collectionId: number) => {
+  const handleDuplicateCollection = async (id: number) => {
     try {
-      const collection = collections.find(c => c.id === collectionId);
-      if (!collection) {
-        showError('Collection not found');
-        return;
+      const c = collections.find(col => col.id === id);
+      if (!c) return;
+      const result = await window.electronAPI.collection.save({ ...c, id: undefined, name: `${c.name} (Copy)`, isFavorite: 0 });
+      if (result.success) {
+        const originalReqs = await window.electronAPI.request.list(id);
+        for (const r of originalReqs) {
+          await window.electronAPI.request.save({ ...r, id: undefined, name: `${r.name} (Copy)`, collectionId: result.id, isFavorite: 0 });
+        }
+        showSuccess('Collection duplicated successfully');
+        setCollections(await window.electronAPI.collection.list());
+        setRequests(await window.electronAPI.request.list());
+        triggerSidebarRefresh();
       }
-
-      // Create the duplicate collection
-      const duplicateCollection = {
-        name: `${collection.name} (Copy)`,
-        description: collection.description || '',
-        environments: collection.environments
-          ? collection.environments.map(env => ({ ...env, id: undefined }))
-          : [],
-        isFavorite: 0,
-      };
-
-      const result =
-        await window.electronAPI.collection.save(duplicateCollection);
-      if (!result.success) {
-        showError('Failed to create duplicate collection');
-        return;
-      }
-
-      const newCollectionId = result.id;
-
-      // Get all requests for the original collection
-      const originalRequests =
-        await window.electronAPI.request.list(collectionId);
-
-      // Duplicate all requests for the new collection
-      for (const request of originalRequests) {
-        const duplicateRequest = {
-          name: `${request.name} (Copy)`,
-          method: request.method,
-          url: request.url,
-          headers: request.headers,
-          body: request.body,
-          queryParams: request.queryParams || [],
-          auth: request.auth,
-          collectionId: newCollectionId,
-          folderId: undefined, // Reset folder association for simplicity
-          isFavorite: 0,
-        };
-
-        await window.electronAPI.request.save(duplicateRequest);
-
-        // Small delay to ensure unique IDs
-        await new Promise(resolve => setTimeout(resolve, 1));
-      }
-
-      showSuccess('Collection and requests duplicated successfully');
-
-      // Refresh collections and requests
-      const updatedCollections = await window.electronAPI.collection.list();
-      const updatedRequests = await window.electronAPI.request.list();
-      setCollections(updatedCollections);
-      setRequests(updatedRequests);
-
-      // Trigger sidebar refresh for real-time updates
-      triggerSidebarRefresh();
     } catch (error: any) {
       showError('Failed to duplicate collection', error.message);
     }
   };
 
-  const handleDeleteFolder = async (folderId: number) => {
+  const handleDeleteFolder = async (id: number) => {
     try {
-      await window.electronAPI.folder.delete(folderId);
+      await window.electronAPI.folder.delete(id);
       showSuccess('Folder deleted successfully');
-      setFolders(folders.filter(f => f.id !== folderId));
-      // Trigger sidebar refresh for real-time updates
+      setFolders(folders.filter(f => f.id !== id));
       triggerSidebarRefresh();
     } catch (error: any) {
       showError('Failed to delete folder', error.message);
     }
   };
 
-  const handleDeleteRequest = async (requestId: EntityId) => {
+  const handleDeleteRequest = async (id: EntityId) => {
     try {
-      await window.electronAPI.request.delete(requestId as any);
+      await window.electronAPI.request.delete(id as any);
       showSuccess('Request deleted successfully');
-      setRequests(requests.filter(r => r.id !== requestId));
-      // Trigger sidebar refresh for real-time updates
+      setRequests(requests.filter(r => r.id !== id));
       triggerSidebarRefresh();
     } catch (error: any) {
       showError('Failed to delete request', error.message);
     }
   };
 
-  const handleDuplicateRequest = async (requestId: EntityId) => {
+  const handleDuplicateRequest = async (id: EntityId) => {
     try {
-      const originalRequest = requests.find(r => r.id === requestId);
-      if (!originalRequest) return;
-
-      const duplicatedRequest = {
-        name: `${originalRequest.name} (Copy)`,
-        method: originalRequest.method,
-        url: originalRequest.url,
-        headers: originalRequest.headers,
-        body: originalRequest.body,
-        queryParams: originalRequest.queryParams || [],
-        auth: originalRequest.auth,
-        collectionId: originalRequest.collectionId,
-        folderId: originalRequest.folderId,
-        isFavorite: 0,
-      };
-
-      // Use saveAfter to insert the duplicate right after the original request
-      await window.electronAPI.request.saveAfter(
-        duplicatedRequest,
-        requestId as any
-      );
+      const r = requests.find(req => req.id === id);
+      if (!r) return;
+      await window.electronAPI.request.saveAfter({ ...r, id: undefined, name: `${r.name} (Copy)`, isFavorite: 0 }, id as any);
       showSuccess('Request duplicated successfully');
-
-      // Refresh requests
-      const requestsData = await window.electronAPI.request.list();
-      setRequests(requestsData);
-
-      // Trigger sidebar refresh for real-time updates
+      setRequests(await window.electronAPI.request.list());
       triggerSidebarRefresh();
     } catch (error: any) {
       showError('Failed to duplicate request', error.message);
     }
   };
 
-  // ─── Context Menu Action Handlers ───────────────────────────
+  const sidebarCompactMode = useStore(state => state.sidebarCompactMode);
 
-  const handleEditCollection = (collectionId: number) => {
-    // Navigate to the Collections page with the collection pre-selected for editing
-    const { setCollectionToEditId, setCurrentPage } = useStore.getState();
-    setCollectionToEditId(collectionId);
-    setCurrentPage('collections');
-  };
+  const renderRequests = (list: Request[], level: number, collectionId: number, folderId?: number) => (
+    list.map(r => (
+      <motion.div key={String(r.id)} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }} layout>
+        <RequestItem
+          request={r}
+          level={level}
+          onSelect={onRequestSelect}
+          onEdit={() => handleEditRequest(r)}
+          onDelete={() => handleDeleteRequest(r.id!)}
+          onDuplicate={() => handleDuplicateRequest(r.id!)}
+          onExport={() => handleExportRequest(r)}
+          onItemSelect={() => setSelectedItem({ type: 'request', id: r.id!, data: r })}
+          dragProps={{
+            draggable: true,
+            onDragStart: e => dragDrop.handleDragStart(e, { type: 'request', id: r.id!, collectionId, folderId }),
+            onDragOver: e => dragDrop.handleDragOver(e, { type: 'request', id: r.id!, collectionId, folderId }),
+            onDrop: e => dragDrop.handleDrop(e, { type: 'request', id: r.id!, collectionId, folderId }),
+            onDragEnd: dragDrop.handleDragEnd,
+          }}
+          isDragging={dragDrop.draggedItem?.type === 'request' && dragDrop.draggedItem?.id === r.id}
+          isDragOver={dragDrop.dragOverItem?.type === 'request' && dragDrop.dragOverItem?.id === r.id}
+          dropPosition={dragDrop.dragOverItem?.id === r.id ? dragDrop.dropPosition : null}
+        />
+      </motion.div>
+    ))
+  );
 
-  const handleExportCollection = async (collectionId: number) => {
-    try {
-      const collection = collections.find(c => c.id === collectionId);
-      if (!collection) {
-        showError('Collection not found');
-        return;
-      }
-      const collectionFolders = folders.filter(f => f.collectionId === collectionId);
-      const collectionRequests = requests.filter(r => r.collectionId === collectionId);
-      const exportData = {
-        collection,
-        folders: collectionFolders,
-        requests: collectionRequests,
-        exportedAt: new Date().toISOString(),
-        type: 'luna-collection-export',
-        version: '1.0',
-      };
-      const fileName = `${collection.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.json`;
-      const result = await window.electronAPI.file.saveFile(fileName, JSON.stringify(exportData, null, 2));
-      if (result.success) {
-        showSuccess('Collection exported successfully');
-      }
-    } catch (error: any) {
-      showError('Failed to export collection', error.message);
-    }
-  };
-
-  const handleEditRequest = (request: Request) => {
-    // Open the request in the editor
-    onRequestSelect(request);
-  };
-
-  const handleExportRequest = async (request: Request) => {
-    try {
-      const fileName = `${(request.name || 'request').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_request.json`;
-      const result = await window.electronAPI.file.saveFile(fileName, JSON.stringify(request, null, 2));
-      if (result.success) {
-        showSuccess('Request exported successfully');
-      }
-    } catch (error: any) {
-      showError('Failed to export request', error.message);
-    }
-  };
-
-  return (
-    <div
-      className="space-y-1"
-      data-testid="collection-hierarchy"
-      onFocus={() => setFocusedContext('sidebar')}
-      onBlur={() => setFocusedContext(null)}
-    >
-      <AnimatePresence initial={false}>
-        {collections.map(collection => {
-          const isExpanded = expandedCollections.has(collection.id!);
-          const collectionRequests = getRequestsForCollection(collection.id!);
-          const collectionFolders = getFoldersForCollection(collection.id!);
-          const totalRequests =
-            collectionRequests.length +
-            collectionFolders.reduce(
-              (sum, folder) => sum + getRequestsForFolder(folder.id!).length,
-              0
-            );
-
-          return (
-            <motion.div
-              key={collection.id}
-              initial={{ opacity: 0, x: -20, height: 0 }}
-              animate={{ opacity: 1, x: 0, height: "auto" }}
-              exit={{ opacity: 0, x: -20, height: 0 }}
-              transition={{ 
-                type: "spring",
-                stiffness: 300,
-                damping: 30,
-                opacity: { duration: 0.2 }
-              }}
-              layout
-              data-testid="collection-group"
-              data-collection-id={collection.id}
-              data-collection-name={collection.name}
-              className="overflow-hidden"
-            >
-            <CollectionItem
-              collection={collection}
-              isExpanded={isExpanded}
-              requestCount={totalRequests}
-              onToggle={() => toggleCollection(collection.id!)}
-              onSelect={() =>
-                setSelectedItem({
-                  type: 'collection',
-                  id: collection.id!,
-                  data: collection,
-                })
-              }
-              onEdit={() => handleEditCollection(collection.id!)}
-              onDelete={() => handleDeleteCollection(collection.id!)}
-              onAddRequest={() => handleAddRequest(collection.id!)}
-              onAddFolder={() => handleAddFolder(collection.id!)}
-              onDuplicate={() => handleDuplicateCollection(collection.id!)}
-              onExport={() => handleExportCollection(collection.id!)}
-              onImport={() => {
-                // Import is handled via the NavigationBar Import button
-                // which already has full import support (JSON, cURL, Postman)
-              }}
-              dragProps={{
-                draggable: true,
-                onDragStart: e => {
-                  dragDrop.handleDragStart(e, {
-                    type: 'collection',
-                    id: collection.id!,
-                  });
-                  setUnsavedDragOver(null);
-                },
-                onDragOver: e => {
-                  // Check for unsaved requests first
-                  if (isDraggingUnsavedRequest(e)) {
-                    handleUnsavedDragOver(e, 'collection', collection.id!);
-                  } else {
-                    // Clear unsaved drag over state when dragging regular items
-                    if (unsavedDragOver) {
-                      setUnsavedDragOver(null);
-                    }
-                    e.preventDefault();
-                    dragDrop.handleDragOver(e, {
-                      type: 'collection',
-                      id: collection.id!,
-                    });
-                  }
-                },
-                onDrop: async e => {
-                  // Handle unsaved requests first
-                  await handleCollectionDrop(e, collection.id!);
-                  // Then handle regular drag-drop
-                  await dragDrop.handleDrop(e, {
-                    type: 'collection',
-                    id: collection.id!,
-                  });
-                },
-                onDragEnd: () => {
-                  dragDrop.handleDragEnd();
-                  setUnsavedDragOver(null);
-                },
-                onDragLeave: (e: React.DragEvent<HTMLElement>) => {
-                  // Only clear if we're actually leaving the collection group entirely
-                  const relatedTarget = e.relatedTarget as HTMLElement;
-                  if (relatedTarget) {
-                    const collectionGroup = e.currentTarget.closest(
-                      '[data-testid="collection-group"]'
-                    );
-                    // Only clear if the relatedTarget is outside the collection group
-                    if (
-                      collectionGroup &&
-                      !collectionGroup.contains(relatedTarget)
-                    ) {
-                      setUnsavedDragOver(null);
-                    }
-                  }
-                  // If no relatedTarget, don't clear - might be moving to expanded area
-                },
-              }}
-              isDragging={
-                dragDrop.draggedItem?.type === 'collection' &&
-                dragDrop.draggedItem?.id === collection.id
-              }
-              isDragOver={
-                (unsavedDragOver?.type === 'collection' &&
-                  unsavedDragOver?.id === collection.id) ||
-                (dragDrop.dragOverItem?.type === 'collection' &&
-                  dragDrop.dragOverItem?.id === collection.id)
-              }
-              dropPosition={
-                unsavedDragOver?.type === 'collection' &&
-                unsavedDragOver?.id === collection.id
-                  ? 'inside'
-                  : dragDrop.dropPosition
-              }
-            />
-
-            {/* Expanded Content */}
-            <AnimatePresence initial={false}>
-              {isExpanded && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                  className={cn(
-                    "ml-4 space-y-1 min-h-0 rounded-md overflow-hidden",
-                    ((unsavedDragOver?.type === 'collection' && unsavedDragOver?.id === collection.id) || 
-                     (dragDrop.dragOverItem?.type === 'collection' && dragDrop.dragOverItem?.id === collection.id))
-                      ? "bg-primary/5 border-l-2 border-primary/50 pl-2 -ml-4"
-                      : ""
-                  )}
-                  data-testid="collection-children"
-                  onDragOver={e => {
-                    // Check for unsaved requests first
-                    if (isDraggingUnsavedRequest(e)) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      e.dataTransfer.dropEffect = 'move';
-                      handleUnsavedDragOver(e, 'collection', collection.id!);
-                    } else {
-                      // Clear unsaved drag over state when dragging regular items
-                      if (
-                        unsavedDragOver?.type === 'collection' &&
-                        unsavedDragOver?.id === collection.id
-                      ) {
-                        setUnsavedDragOver(null);
-                      }
-                      e.preventDefault();
-                      e.stopPropagation();
-                      dragDrop.handleDragOver(e, {
-                        type: 'collection',
-                        id: collection.id!,
-                      });
-                    }
-                  }}
-                  onDrop={async e => {
-                    e.stopPropagation();
-                    // Handle unsaved requests first
-                    await handleCollectionDrop(e, collection.id!);
-                    // Then handle regular drag-drop
-                    await dragDrop.handleDrop(e, {
-                      type: 'collection',
-                      id: collection.id!,
-                    });
-                  }}
-                  onDragEnter={e => {
-                    // When entering the expanded area, ensure we show the collection as drag-over
-                    if (isDraggingUnsavedRequest(e)) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleUnsavedDragOver(e, 'collection', collection.id!);
-                    }
-                  }}
-                  onDragLeave={(e: React.DragEvent<HTMLElement>) => {
-                    // Only clear if we're actually leaving the collection group entirely
-                    const relatedTarget = e.relatedTarget as HTMLElement;
-                    if (relatedTarget) {
-                      const collectionGroup = e.currentTarget.closest(
-                        '[data-testid="collection-group"]'
-                      );
-                      // Only clear if the relatedTarget is outside the collection group
-                      if (
-                        collectionGroup &&
-                        !collectionGroup.contains(relatedTarget)
-                      ) {
-                        setUnsavedDragOver(null);
-                      }
-                    }
-                    // If no relatedTarget, don't clear - might be moving to expanded area
-                  }}
-                >
-                {/* Folders */}
-                <AnimatePresence initial={false}>
-                  {collectionFolders.map(folder => {
-                    const folderRequests = getRequestsForFolder(folder.id!);
-                    const isFolderExpanded = expandedFolders.has(folder.id!);
-                    return (
-                      <motion.div
-                        key={folder.id}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -8 }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
-                      >
-                      <FolderItem
-                        folder={folder}
-                        requestCount={folderRequests.length}
-                        isExpanded={isFolderExpanded}
-                        onToggle={() => toggleFolder(folder.id!)}
-                        onSelect={() =>
-                          setSelectedItem({
-                            type: 'folder',
-                            id: folder.id!,
-                            data: folder,
-                          })
-                        }
-                        onEdit={() => {
-                          // Inline editing is handled by FolderItem internally
-                        }}
-                        onDelete={() => handleDeleteFolder(folder.id!)}
-                        onAddRequest={() => handleAddRequest(collection.id!, folder.id)}
-                        dragProps={{
-                          draggable: true,
-                          onDragStart: e => {
-                            dragDrop.handleDragStart(e, {
-                              type: 'folder',
-                              id: folder.id!,
-                              collectionId: folder.collectionId,
-                            });
-                            setUnsavedDragOver(null);
-                          },
-                          onDragOver: e => {
-                            // Check for unsaved requests first
-                            if (isDraggingUnsavedRequest(e)) {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              e.dataTransfer.dropEffect = 'move';
-                              handleUnsavedDragOver(e, 'folder', folder.id!);
-                            } else {
-                              // Clear unsaved drag over state when dragging regular items
-                              if (
-                                unsavedDragOver?.type === 'folder' &&
-                                unsavedDragOver?.id === folder.id
-                              ) {
-                                setUnsavedDragOver(null);
-                              }
-                              const rect =
-                                e.currentTarget.getBoundingClientRect();
-                              const mouseY = e.clientY;
-                              const itemCenterY = rect.top + rect.height / 2;
-                              const position =
-                                mouseY < itemCenterY ? 'above' : 'below';
-                              dragDrop.handleDragOver(
-                                e,
-                                {
-                                  type: 'folder',
-                                  id: folder.id!,
-                                  collectionId: folder.collectionId,
-                                },
-                                position
-                              );
-                            }
-                          },
-                          onDrop: async e => {
-                            e.stopPropagation();
-                            // Handle unsaved requests first
-                            await handleCollectionDrop(
-                              e,
-                              folder.collectionId,
-                              folder.id!
-                            );
-                            // Then handle regular drag-drop
-                            const rect =
-                              e.currentTarget.getBoundingClientRect();
-                            const mouseY = e.clientY;
-                            const itemCenterY = rect.top + rect.height / 2;
-                            const position =
-                              mouseY < itemCenterY ? 'above' : 'below';
-                            dragDrop.handleDrop(
-                              e,
-                              {
-                                type: 'folder',
-                                id: folder.id!,
-                                collectionId: folder.collectionId,
-                              },
-                              position
-                            );
-                          },
-                          onDragEnd: () => {
-                            dragDrop.handleDragEnd();
-                            setUnsavedDragOver(null);
-                          },
-                          onDragLeave: (e: React.DragEvent<HTMLElement>) => {
-                            // Only clear if we're actually leaving the folder group entirely
-                            const relatedTarget =
-                              e.relatedTarget as HTMLElement;
-                            if (relatedTarget) {
-                              // Check if we're moving to the expanded area or another part of the folder
-                              const folderContainer =
-                                e.currentTarget.closest('div');
-                              if (
-                                folderContainer &&
-                                !folderContainer.contains(relatedTarget)
-                              ) {
-                                setUnsavedDragOver(null);
-                              }
-                            }
-                            // If no relatedTarget, don't clear - might be moving to expanded area
-                          },
-                        }}
-                        isDragging={
-                          dragDrop.draggedItem?.type === 'folder' &&
-                          dragDrop.draggedItem?.id === folder.id
-                        }
-                        isDragOver={
-                          (unsavedDragOver?.type === 'folder' &&
-                            unsavedDragOver?.id === folder.id) ||
-                          (dragDrop.dragOverItem?.type === 'folder' &&
-                            dragDrop.dragOverItem?.id === folder.id)
-                        }
-                        dropPosition={
-                          unsavedDragOver?.type === 'folder' &&
-                          unsavedDragOver?.id === folder.id
-                            ? 'inside'
-                            : dragDrop.dropPosition
-                        }
-                      />
-
-                      {/* Folder Expanded Content */}
-                      <AnimatePresence initial={false}>
-                        {isFolderExpanded && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-                            className={cn(
-                              "ml-8 space-y-1 min-h-0 rounded-md overflow-hidden",
-                              ((unsavedDragOver?.type === 'folder' && unsavedDragOver?.id === folder.id) || 
-                               (dragDrop.dragOverItem?.type === 'folder' && dragDrop.dragOverItem?.id === folder.id))
-                                ? "bg-primary/5 border-l-2 border-primary/50 pl-2 -ml-8"
-                                : ""
-                            )}
-                            onDragOver={e => {
-                              // Check for unsaved requests first
-                              if (isDraggingUnsavedRequest(e)) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                e.dataTransfer.dropEffect = 'move';
-                                handleUnsavedDragOver(e, 'folder', folder.id!);
-                              } else {
-                                // Clear unsaved drag over state when dragging regular items
-                                if (
-                                  unsavedDragOver?.type === 'folder' &&
-                                  unsavedDragOver?.id === folder.id
-                                ) {
-                                  setUnsavedDragOver(null);
-                                }
-                                e.preventDefault();
-                                e.stopPropagation();
-                                dragDrop.handleDragOver(
-                                  e,
-                                  {
-                                    type: 'folder',
-                                    id: folder.id!,
-                                    collectionId: folder.collectionId,
-                                  },
-                                  'inside'
-                                );
-                              }
-                            }}
-                            onDrop={async e => {
-                              e.stopPropagation();
-                              // Handle unsaved requests first
-                              await handleCollectionDrop(
-                                e,
-                                folder.collectionId,
-                                folder.id!
-                              );
-                              // Then handle regular drag-drop
-                              await dragDrop.handleDrop(
-                                e,
-                                {
-                                  type: 'folder',
-                                  id: folder.id!,
-                                  collectionId: folder.collectionId,
-                                },
-                                'inside'
-                              );
-                            }}
-                            onDragEnter={e => {
-                              // When entering the expanded area, ensure we show the folder as drag-over
-                              if (isDraggingUnsavedRequest(e)) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleUnsavedDragOver(e, 'folder', folder.id!);
-                              }
-                            }}
-                            onDragLeave={(e: React.DragEvent<HTMLElement>) => {
-                              // Only clear if we're actually leaving the folder group entirely
-                              const relatedTarget =
-                                e.relatedTarget as HTMLElement;
-                              if (relatedTarget) {
-                                const folderGroup =
-                                  e.currentTarget.closest('div');
-                                // Only clear if the relatedTarget is outside the folder group
-                                if (
-                                  folderGroup &&
-                                  !folderGroup.contains(relatedTarget)
-                                ) {
-                                  setUnsavedDragOver(null);
-                                }
-                              }
-                              // If no relatedTarget, don't clear - might be moving to folder header
-                            }}
-                          >
-                          {/* Folder Requests */}
-                          <AnimatePresence initial={false}>
-                            {folderRequests.map(request => (
-                              <motion.div
-                                key={request.id}
-                                initial={{ opacity: 0, x: -8 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -8 }}
-                                transition={{ duration: 0.15, ease: "easeOut" }}
-                              >
-                            <RequestItem
-                              key={request.id}
-                              request={request}
-                              onSelect={onRequestSelect}
-                              onItemSelect={() =>
-                                setSelectedItem({
-                                  type: 'request',
-                                  id: request.id!,
-                                  data: request,
-                                })
-                              }
-                              onEdit={() => handleEditRequest(request)}
-                              onDelete={() => handleDeleteRequest(request.id!)}
-                              onDuplicate={() =>
-                                handleDuplicateRequest(request.id!)
-                              }
-                              onExport={() => handleExportRequest(request)}
-                              dragProps={{
-                                draggable: true,
-                                onDragStart: e =>
-                                  dragDrop.handleDragStart(e, {
-                                    type: 'request',
-                                    id: request.id!,
-                                    collectionId: request.collectionId,
-                                    folderId: request.folderId,
-                                  }),
-                                onDragOver: e => {
-                                  const rect =
-                                    e.currentTarget.getBoundingClientRect();
-                                  const mouseY = e.clientY;
-                                  const itemCenterY =
-                                    rect.top + rect.height / 2;
-                                  const position =
-                                    mouseY < itemCenterY ? 'above' : 'below';
-                                  dragDrop.handleDragOver(
-                                    e,
-                                    {
-                                      type: 'request',
-                                      id: request.id!,
-                                      collectionId: request.collectionId,
-                                      folderId: request.folderId,
-                                    },
-                                    position
-                                  );
-                                },
-                                onDrop: e => {
-                                  const rect =
-                                    e.currentTarget.getBoundingClientRect();
-                                  const mouseY = e.clientY;
-                                  const itemCenterY =
-                                    rect.top + rect.height / 2;
-                                  const position =
-                                    mouseY < itemCenterY ? 'above' : 'below';
-                                  dragDrop.handleDrop(
-                                    e,
-                                    {
-                                      type: 'request',
-                                      id: request.id!,
-                                      collectionId: request.collectionId,
-                                      folderId: request.folderId,
-                                    },
-                                    position
-                                  );
-                                },
-                                onDragEnd: dragDrop.handleDragEnd,
-                              }}
-                              isDragging={
-                                dragDrop.draggedItem?.type === 'request' &&
-                                dragDrop.draggedItem?.id === request.id
-                              }
-                              isDragOver={
-                                dragDrop.dragOverItem?.type === 'request' &&
-                                dragDrop.dragOverItem?.id === request.id
-                              }
-                              dropPosition={dragDrop.dropPosition}
-                          />
-                          </motion.div>
-                  ))}
-                </AnimatePresence>
-                        {folderRequests.length === 0 && (
-                          <div className="ml-8 text-xs text-muted-foreground p-2">
-                            No requests in this folder
-                          </div>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
-
-                {/* Collection Requests (not in folders) */}
-                <AnimatePresence initial={false}>
-                  {collectionRequests.map(request => (
-                    <motion.div
-                      key={request.id}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -8 }}
-                      transition={{ duration: 0.15, ease: "easeOut" }}
-                    >
-                  <RequestItem
-                    key={request.id}
-                    request={request}
-                    onSelect={onRequestSelect}
-                    onItemSelect={() =>
-                      setSelectedItem({
-                        type: 'request',
-                        id: request.id!,
-                        data: request,
-                      })
-                    }
-                    onEdit={() => handleEditRequest(request)}
-                    onDelete={() => handleDeleteRequest(request.id!)}
-                    onDuplicate={() => handleDuplicateRequest(request.id!)}
-                    onExport={() => handleExportRequest(request)}
-                    dragProps={{
-                      draggable: true,
-                      onDragStart: e =>
-                        dragDrop.handleDragStart(e, {
-                          type: 'request',
-                          id: request.id!,
-                          collectionId: request.collectionId,
-                          folderId: request.folderId,
-                        }),
-                      onDragOver: e => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const mouseY = e.clientY;
-                        const itemCenterY = rect.top + rect.height / 2;
-                        const position =
-                          mouseY < itemCenterY ? 'above' : 'below';
-                        dragDrop.handleDragOver(
-                          e,
-                          {
-                            type: 'request',
-                            id: request.id!,
-                            collectionId: request.collectionId,
-                            folderId: request.folderId,
-                          },
-                          position
-                        );
-                      },
-                      onDrop: e => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const mouseY = e.clientY;
-                        const itemCenterY = rect.top + rect.height / 2;
-                        const position =
-                          mouseY < itemCenterY ? 'above' : 'below';
-                        dragDrop.handleDrop(
-                          e,
-                          {
-                            type: 'request',
-                            id: request.id!,
-                            collectionId: request.collectionId,
-                            folderId: request.folderId,
-                          },
-                          position
-                        );
-                      },
-                      onDragEnd: dragDrop.handleDragEnd,
-                    }}
-                    isDragging={
-                      dragDrop.draggedItem?.type === 'request' &&
-                      dragDrop.draggedItem?.id === request.id
-                    }
-                    isDragOver={
-                      dragDrop.dragOverItem?.type === 'request' &&
-                      dragDrop.dragOverItem?.id === request.id
-                    }
-                    dropPosition={dragDrop.dropPosition}
-                  />
-                  </motion.div>
-                ))}
-                </AnimatePresence>
+  const renderFolders = (list: any[], level: number, collectionId: number) => (
+    list.map(f => {
+      const expanded = expandedFolders.has(f.id!);
+      const folderReqs = getRequestsForFolder(f.id!);
+      return (
+        <div key={f.id} className="relative">
+          <FolderItem
+            folder={f}
+            level={level}
+            requestCount={folderReqs.length}
+            isExpanded={expanded}
+            onToggle={() => toggleFolder(f.id!)}
+            onEdit={() => {}}
+            onDelete={() => handleDeleteFolder(f.id!)}
+            onAddRequest={() => handleAddRequest(collectionId, f.id)}
+            onSelect={() => setSelectedItem({ type: 'folder', id: f.id!, data: f })}
+            dragProps={{
+              draggable: true,
+              onDragStart: e => dragDrop.handleDragStart(e, { type: 'folder', id: f.id!, collectionId }),
+              onDragOver: e => isDraggingUnsavedRequest(e) ? handleUnsavedDragOver(e, 'folder', f.id!) : dragDrop.handleDragOver(e, { type: 'folder', id: f.id!, collectionId }),
+              onDrop: e => handleCollectionDrop(e, collectionId, f.id).then(() => dragDrop.handleDrop(e, { type: 'folder', id: f.id!, collectionId })),
+              onDragEnd: dragDrop.handleDragEnd,
+            }}
+            isDragging={dragDrop.draggedItem?.type === 'folder' && dragDrop.draggedItem?.id === f.id}
+            isDragOver={(dragDrop.dragOverItem?.id === f.id) || (unsavedDragOver?.type === 'folder' && unsavedDragOver?.id === f.id)}
+            dropPosition={dragDrop.dragOverItem?.id === f.id ? dragDrop.dropPosition : (unsavedDragOver?.id === f.id ? 'inside' : null)}
+          />
+          {expanded && <div className="absolute left-[19px] top-[40px] bottom-1 w-[1px] bg-border/40 pointer-events-none" style={{ left: `${level * 16 + 19}px` }} />}
+          <AnimatePresence>
+            {expanded && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                {renderRequests(folderReqs, level + 1, collectionId, f.id)}
               </motion.div>
             )}
           </AnimatePresence>
-          </motion.div>
-        );
-      })}
+        </div>
+      );
+    })
+  );
+
+  return (
+    <div className={cn("space-y-1", sidebarCompactMode && "space-y-0")} data-testid="collection-hierarchy" onFocus={() => setFocusedContext('sidebar')} onBlur={() => setFocusedContext(null)}>
+      <AnimatePresence initial={false}>
+        {collections.map(c => {
+          const expanded = expandedCollections.has(c.id!);
+          const colReqs = getRequestsForCollection(c.id!);
+          const colFolders = getFoldersForCollection(c.id!);
+          const totalReqs = colReqs.length + colFolders.reduce((sum, f) => sum + getRequestsForFolder(f.id!).length, 0);
+          return (
+            <motion.div key={c.id} initial={{ opacity: 0, x: -20, height: 0 }} animate={{ opacity: 1, x: 0, height: "auto" }} exit={{ opacity: 0, x: -20, height: 0 }} transition={{ type: "spring", stiffness: 300, damping: 30, opacity: { duration: 0.2 } }} layout data-testid="collection-group" className="overflow-hidden">
+              <CollectionItem
+                collection={c}
+                level={0}
+                isExpanded={expanded}
+                requestCount={totalReqs}
+                onToggle={() => toggleCollection(c.id!)}
+                onSelect={() => setSelectedItem({ type: 'collection', id: c.id!, data: c })}
+                onEdit={() => handleEditCollection(c.id!)}
+                onDelete={() => handleDeleteCollection(c.id!)}
+                onAddRequest={() => handleAddRequest(c.id!)}
+                onAddFolder={() => handleAddFolder(c.id!)}
+                onDuplicate={() => handleDuplicateCollection(c.id!)}
+                onExport={() => handleExportCollection(c.id!)}
+                onImport={() => {}}
+                dragProps={{
+                  draggable: true,
+                  onDragStart: e => dragDrop.handleDragStart(e, { type: 'collection', id: c.id! }),
+                  onDragOver: e => isDraggingUnsavedRequest(e) ? handleUnsavedDragOver(e, 'collection', c.id!) : dragDrop.handleDragOver(e, { type: 'collection', id: c.id! }),
+                  onDrop: e => handleCollectionDrop(e, c.id!).then(() => dragDrop.handleDrop(e, { type: 'collection', id: c.id! })),
+                  onDragEnd: dragDrop.handleDragEnd,
+                }}
+                isDragging={dragDrop.draggedItem?.type === 'collection' && dragDrop.draggedItem?.id === c.id}
+                isDragOver={(dragDrop.dragOverItem?.id === c.id) || (unsavedDragOver?.type === 'collection' && unsavedDragOver?.id === c.id)}
+                dropPosition={dragDrop.dragOverItem?.id === c.id ? dragDrop.dropPosition : (unsavedDragOver?.id === c.id ? 'inside' : null)}
+              />
+              <div className="relative">
+                {expanded && <div className="absolute left-[19px] top-0 bottom-1 w-[1px] bg-border/40 pointer-events-none" />}
+                <AnimatePresence>
+                  {expanded && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                      {renderFolders(colFolders, 1, c.id!)}
+                      {renderRequests(colReqs, 1, c.id!)}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          );
+        })}
       </AnimatePresence>
     </div>
   );

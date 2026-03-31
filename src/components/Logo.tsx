@@ -4,15 +4,19 @@ interface LogoProps {
   className?: string;
   size?: number;
   showText?: boolean;
+  onClick?: () => void;
 }
 
 /**
  * Logo component that adapts to dark and light themes
  * Uses CSS filters to ensure visibility in both themes
  */
-export function Logo({ className, size = 24, showText = false }: LogoProps) {
+export function Logo({ className, size = 24, showText = false, onClick }: LogoProps) {
   return (
-    <div className={cn('flex items-center gap-2', className)}>
+    <div 
+      className={cn('flex items-center gap-2', className)}
+      onClick={onClick}
+    >
       <img
         src="logo.png"
         alt="Luna Logo"

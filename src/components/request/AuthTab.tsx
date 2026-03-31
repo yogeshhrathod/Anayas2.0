@@ -8,7 +8,7 @@
  * - Dynamic form rendering
  */
 
-import { Ban, Fingerprint, Key, Lock, Shield, ShieldCheck, Sparkles, User } from 'lucide-react';
+import { Ban, Fingerprint, Key, Lock, Shield, Sparkles, User } from 'lucide-react';
 import React from 'react';
 import { RequestFormData } from '../../types/forms';
 import { Label } from '../ui/label';
@@ -36,27 +36,16 @@ export const AuthTab: React.FC<AuthTabProps> = ({
   return (
     <TooltipProvider>
       <div className="flex flex-col h-full space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        {/* Premium Header Area */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 shadow-sm shadow-indigo-500/5">
-              <Fingerprint className="h-5 w-5 text-indigo-500" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold tracking-tight flex items-center gap-2">
-                Authentication
-                <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" />
-              </h3>
-              <p className="text-[11px] text-muted-foreground/80 font-medium">
-                Secure your request with various auth methods
-              </p>
-            </div>
+        {/* Compressed Header Area */}
+        <div className="flex items-center justify-between pb-1 -mt-2">
+          <div className="flex items-center gap-2">
+            <Fingerprint className="h-3.5 w-3.5 text-indigo-500" />
+            <h3 className="text-xs font-bold tracking-tight uppercase opacity-70">
+              Authentication
+            </h3>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Label htmlFor="auth-type" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-              Method
-            </Label>
+          <div className="flex items-center gap-3 scale-90 origin-right">
             <Select
               value={requestData.auth.type}
               onValueChange={(value: 'none' | 'bearer' | 'basic' | 'apikey') =>
@@ -66,17 +55,17 @@ export const AuthTab: React.FC<AuthTabProps> = ({
                 })
               }
             >
-              <SelectTrigger className="w-48 h-9 rounded-xl border-border/40 bg-muted/20 text-xs font-bold transition-all hover:bg-muted/30">
-                <div className="flex items-center gap-2 text-indigo-500">
-                  <Shield className="h-3.5 w-3.5" />
+              <SelectTrigger className="w-40 h-7 px-2 rounded-lg border-border/20 bg-muted/20 text-[10px] font-bold transition-all hover:bg-muted/30">
+                <div className="flex items-center gap-1.5 text-indigo-500">
+                  <Shield className="h-3 w-3" />
                   <SelectValue />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-xl border-border/40 shadow-2xl">
-                <SelectItem value="none" className="text-xs font-bold">No Authentication</SelectItem>
-                <SelectItem value="bearer" className="text-xs font-bold">Bearer Token</SelectItem>
-                <SelectItem value="basic" className="text-xs font-bold">Basic Authentication</SelectItem>
-                <SelectItem value="apikey" className="text-xs font-bold">API Key</SelectItem>
+              <SelectContent className="rounded-lg border-border/20 shadow-xl">
+                <SelectItem value="none" className="text-[10px] font-bold">No Auth</SelectItem>
+                <SelectItem value="bearer" className="text-[10px] font-bold">Bearer Token</SelectItem>
+                <SelectItem value="basic" className="text-[10px] font-bold">Basic Auth</SelectItem>
+                <SelectItem value="apikey" className="text-[10px] font-bold">API Key</SelectItem>
               </SelectContent>
             </Select>
           </div>

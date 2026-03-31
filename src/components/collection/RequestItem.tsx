@@ -30,6 +30,7 @@ import { Request } from '../../types/entities';
 import { ActionMenu } from '../shared/ActionMenu';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
+import { cn } from '../../lib/utils';
 
 export interface RequestItemProps {
   request: Request;
@@ -49,6 +50,7 @@ export interface RequestItemProps {
   isDragging?: boolean;
   isDragOver?: boolean;
   dropPosition?: 'above' | 'below' | 'inside' | null;
+  level?: number;
 }
 
 const methodColors = {
@@ -73,7 +75,10 @@ export const RequestItem: React.FC<RequestItemProps> = ({
   isDragging = false,
   isDragOver = false,
   dropPosition = null,
+  level = 0,
 }) => {
+  const sidebarCompactMode = useStore(state => state.sidebarCompactMode);
+  const lastStatus = useStore(state => state.lastRequestStatuses[String(request.id)]);
   const selectedItem = useStore(state => state.selectedItem);
   const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
   const isRequestLoading = useStore(state => !!state.loadingRequests[String(request.id)]);
@@ -150,15 +155,16 @@ export const RequestItem: React.FC<RequestItemProps> = ({
       )}
 
       <div
-        className={`group flex items-center gap-2.5 px-3 py-2 pl-8 mx-1 mb-1 rounded-lg cursor-pointer relative ${
+        className={cn(
+          "group flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer relative mx-1 mb-1 transition-all duration-200",
           isSelected 
-            ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' 
-            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-        } ${isDragging ? 'opacity-50' : ''} ${
-          isDragOver && dropPosition === 'inside'
-            ? 'bg-primary/5 ring-1 ring-primary/30'
-            : ''
-        }`}
+            ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20" 
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+          isDragging && "opacity-50",
+          isDragOver && dropPosition === "inside" && "bg-primary/5 ring-1 ring-primary/30",
+          sidebarCompactMode && "py-1 mb-0",
+        )}
+        style={{ paddingLeft: `${level * 16 + 12}px` }}
         onClick={() => {
           onSelect(request);
           if (onItemSelect) {
@@ -168,10 +174,19 @@ export const RequestItem: React.FC<RequestItemProps> = ({
         {...dragProps}
       >
         {/* Activity indicator for loading requests */}
-        {isRequestLoading && (
+        {isRequestLoading ? (
           <div className="absolute left-2 w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.5)]">
             <div className="absolute inset-0 rounded-full bg-primary animate-ping opacity-40" />
           </div>
+        ) : lastStatus && (
+          <div 
+            className={cn(
+              "absolute left-2 w-2 h-2 rounded-full transition-all duration-300",
+              lastStatus >= 200 && lastStatus < 300 ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.4)]" :
+              lastStatus >= 400 ? "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]" :
+              "bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.4)]"
+            )}
+          />
         )}
 
         {/* Method Badge */}

@@ -217,6 +217,19 @@ interface AppState {
   goForwardRequest: () => Request | null | undefined;
   canGoBack: () => boolean;
   canGoForward: () => boolean;
+
+  // Sidebar Compact Mode
+  sidebarCompactMode: boolean;
+  setSidebarCompactMode: (enabled: boolean) => void;
+
+  // Global Tracking of Request status for Sidebar Dots
+  lastRequestStatuses: Record<string, number>;
+  setLastRequestStatus: (id: string, status: number) => void;
+  clearLastRequestStatuses: () => void;
+
+  // Platform info
+  platform: 'mac' | 'windows' | 'linux' | null;
+  setPlatform: (platform: 'mac' | 'windows' | 'linux') => void;
 }
 
 export const useStore = create<AppState>()(
@@ -499,6 +512,22 @@ export const useStore = create<AppState>()(
         const state = get();
         return state.requestNavIndex < state.requestNavHistory.length - 1;
       },
+
+      // Sidebar Compact Mode
+      sidebarCompactMode: false,
+      setSidebarCompactMode: sidebarCompactMode => set({ sidebarCompactMode }),
+
+      // Last Request Statuses
+      lastRequestStatuses: {},
+      setLastRequestStatus: (id, status) =>
+        set(state => ({
+          lastRequestStatuses: { ...state.lastRequestStatuses, [id]: status },
+        })),
+      clearLastRequestStatuses: () => set({ lastRequestStatuses: {} }),
+
+      // Platform info
+      platform: null,
+      setPlatform: platform => set({ platform }),
     }),
     {
       name: 'luna-store',
@@ -516,6 +545,8 @@ export const useStore = create<AppState>()(
         activeUnsavedRequestId: state.activeUnsavedRequestId,
         currentPage: state.currentPage,
         isWelcomeDone: state.isWelcomeDone,
+        sidebarCompactMode: state.sidebarCompactMode,
+        lastRequestStatuses: state.lastRequestStatuses,
       }),
       onRehydrateStorage: () => state => {
         if (state) {

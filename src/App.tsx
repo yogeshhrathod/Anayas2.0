@@ -1,9 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, Menu, Trash2 } from 'lucide-react';
+import { LayoutList, Menu, Trash2 } from 'lucide-react';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { CollectionHierarchy } from './components/CollectionHierarchy';
-import { Logo } from './components/Logo';
-import { NavigationBar } from './components/NavigationBar';
 import { ProductTour } from './components/ProductTour';
 import { SplashScreen } from './components/SplashScreen';
 import { ThemeManager } from './components/ThemeManager';
@@ -97,6 +95,8 @@ function App() {
   const setActiveUnsavedRequestId = useStore(state => state.setActiveUnsavedRequestId);
   const splitViewEnabled = useStore(state => state.splitViewEnabled);
   const setSplitViewEnabled = useStore(state => state.setSplitViewEnabled);
+  const sidebarCompactMode = useStore(state => state.sidebarCompactMode);
+  const setSidebarCompactMode = useStore(state => state.setSidebarCompactMode);
 
   const { showSuccess, showError } = useToastNotifications();
   const [showClearAllDialog, setShowClearAllDialog] = useState(false);
@@ -142,6 +142,26 @@ function App() {
       version: appVersion || '1.0',
     };
   };
+
+  const setPlatform = useStore(state => state.setPlatform);
+
+  // Initialize platform
+  useEffect(() => {
+    const initPlatform = async () => {
+      try {
+        const p = await window.electronAPI.app.getPlatform();
+        // The API already returns 'mac', 'windows', or 'linux'
+        setPlatform(p as any);
+      } catch (e) {
+        // Fallback to browser detection if API fails
+        const p = window.navigator.platform.toLowerCase();
+        if (p.includes('mac')) setPlatform('mac');
+        else if (p.includes('win')) setPlatform('windows');
+        else setPlatform('linux');
+      }
+    };
+    initPlatform();
+  }, [setPlatform]);
 
   const handleClearAllUnsaved = async () => {
     try {
@@ -752,11 +772,8 @@ function App() {
       <Toaster />
       {!showSplash && <ProductTour />}
       <div className="flex h-screen flex-col bg-background">
-        {/* Title Bar */}
+        {/* Unified Global Header (Merged TitleBar + Nav) */}
         <TitleBar />
-
-        {/* Navigation Bar */}
-        <NavigationBar />
 
         {/* Main Layout */}
         <div className="flex flex-1 overflow-hidden">
@@ -777,7 +794,28 @@ function App() {
               )}
             >
               {sidebarOpen && (
-                <Logo size={24} showText={true} className="text-lg" />
+                <div className="flex items-center gap-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "h-8 w-8 transition-colors",
+                            sidebarCompactMode ? "text-primary bg-primary/10" : "text-muted-foreground"
+                          )}
+                          onClick={() => setSidebarCompactMode(!sidebarCompactMode)}
+                        >
+                          <LayoutList className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {sidebarCompactMode ? "Standard View" : "Compact View"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               )}
               <button
                 onClick={() => {
@@ -924,37 +962,17 @@ function App() {
           />
 
           {/* Main Content */}
-          <div className="flex flex-1 flex-col min-w-0">
-            {/* Top Bar - Only show for non-home pages */}
-            {currentPage !== 'home' && (
-              <div className="flex h-12 items-center border-b bg-card px-4 gap-3">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full bg-muted/50 hover:bg-muted"
-                  onClick={() => setCurrentPage('home')}
-                >
-                  <ArrowLeft className="h-4 w-4 text-foreground/80" />
-                </Button>
-                <div className="h-4 w-px bg-border/60 mx-1" />
-                <h2 className="text-base font-semibold capitalize tracking-tight font-display">
-                  {currentPage}
-                </h2>
-              </div>
-            )}
-
-            {/* Page Content */}
+            {/* Main Content Area */}
             <div
               className={cn(
                 'flex-1 min-h-0',
                 currentPage === 'home'
                   ? 'p-0 overflow-hidden flex flex-col' // Home page: flex container for proper height propagation
-                  : 'p-4 overflow-auto' // Other pages can scroll
+                  : 'p-6 overflow-auto' // Other pages: more padding for better focus
               )}
             >
               {renderPage()}
             </div>
-          </div>
         </div>
 
         {/* Clear All Unsaved Requests Confirmation Dialog */}

@@ -20,7 +20,7 @@
  * ```
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import logger from '../lib/logger';
 import { getStatusText, safeStringifyBody } from '../lib/response-utils';
 import { useStore } from '../store/useStore';
@@ -106,6 +106,16 @@ export function useRequestActions(requestData: RequestFormData) {
     const loadPresets = async () => {
       try {
         const requestId = requestData.id;
+        
+        if (!requestId) {
+          setState(prev => ({
+            ...prev,
+            presets: [],
+            activePresetId: null,
+          }));
+          return;
+        }
+
         const loadedPresets = await window.electronAPI.preset.list(requestId);
         setState(prev => {
           // Reset active preset if it doesn't belong to the current request
@@ -180,6 +190,9 @@ export function useRequestActions(requestData: RequestFormData) {
       setState(prev => ({ ...prev, response }));
 
       // Update the selected request in store so it's persisted by zustand/persist
+      const setLastRequestStatus = useStore.getState().setLastRequestStatus;
+      setLastRequestStatus(trackingId, response.status);
+
       if (selectedRequest) {
         setSelectedRequest({
           ...selectedRequest,
@@ -351,10 +364,10 @@ export function useRequestActions(requestData: RequestFormData) {
 
   const createPreset = useCallback(async () => {
     // Presets can only be created for saved requests (requests with an ID)
-    if (!requestData.id) {
+    if (!requestData.id || typeof requestData.id !== 'number') {
       showError(
         'Request Not Saved',
-        'Please save the request first before creating presets'
+        'Please save the request to a collection first before creating scenarios'
       );
       return;
     }

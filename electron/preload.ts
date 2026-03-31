@@ -293,6 +293,7 @@ const api = {
   app: {
     getVersion: () => ipcRenderer.invoke('app:getVersion'),
     getPath: (name: string) => ipcRenderer.invoke('app:getPath', name),
+    getPlatform: () => ipcRenderer.invoke('app:getPlatform'),
   },
 
   // Window controls

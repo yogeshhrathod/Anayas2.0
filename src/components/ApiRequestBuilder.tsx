@@ -90,6 +90,10 @@ export function ApiRequestBuilder() {
       requestActions.setShowCreatePresetDialog(true);
     });
 
+    const handleTogglePresets = createKeymapHandler(KEYMAP.TOGGLE_PRESETS, () => {
+      requestActions.setIsPresetsExpanded(!requestActions.isPresetsExpanded);
+    });
+
     // Handlers for selecting presets 1-9
     const applyPresetToForm = (preset: any) => {
       requestActions.applyPreset(preset, data => {
@@ -177,11 +181,20 @@ export function ApiRequestBuilder() {
         }
       }
     );
+    const handleSelectPreset0 = createKeymapHandler(
+      KEYMAP.SELECT_PRESET_0,
+      () => {
+        if (requestActions.presets[9]) {
+          applyPresetToForm(requestActions.presets[9]);
+        }
+      }
+    );
 
     document.addEventListener('keydown', handleSaveRequest);
     document.addEventListener('keydown', handleSendRequest);
     document.addEventListener('keydown', handleFocusUrl);
     document.addEventListener('keydown', handleCreatePreset);
+    document.addEventListener('keydown', handleTogglePresets);
     document.addEventListener('keydown', handleSelectPreset1);
     document.addEventListener('keydown', handleSelectPreset2);
     document.addEventListener('keydown', handleSelectPreset3);
@@ -191,12 +204,14 @@ export function ApiRequestBuilder() {
     document.addEventListener('keydown', handleSelectPreset7);
     document.addEventListener('keydown', handleSelectPreset8);
     document.addEventListener('keydown', handleSelectPreset9);
+    document.addEventListener('keydown', handleSelectPreset0);
 
     return () => {
       document.removeEventListener('keydown', handleSaveRequest);
       document.removeEventListener('keydown', handleSendRequest);
       document.removeEventListener('keydown', handleFocusUrl);
       document.removeEventListener('keydown', handleCreatePreset);
+      document.removeEventListener('keydown', handleTogglePresets);
       document.removeEventListener('keydown', handleSelectPreset1);
       document.removeEventListener('keydown', handleSelectPreset2);
       document.removeEventListener('keydown', handleSelectPreset3);
@@ -206,6 +221,7 @@ export function ApiRequestBuilder() {
       document.removeEventListener('keydown', handleSelectPreset7);
       document.removeEventListener('keydown', handleSelectPreset8);
       document.removeEventListener('keydown', handleSelectPreset9);
+      document.removeEventListener('keydown', handleSelectPreset0);
     };
   }, [requestState.requestData, requestActions]);
 
@@ -422,6 +438,7 @@ export function ApiRequestBuilder() {
           onShowCreateDialog={requestActions.setShowCreatePresetDialog}
           onSetNewPresetName={requestActions.setNewPresetName}
           onSetNewPresetDescription={requestActions.setNewPresetDescription}
+          requestId={requestState.requestData.id}
         />
       </div>
 
