@@ -18,7 +18,7 @@ import {
     History,
     List,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import logger from '../../lib/logger';
 import {
     formatResponseSize,
@@ -30,6 +30,7 @@ import {
 import { cn } from '../../lib/utils';
 import { useStore } from '../../store/useStore';
 import { ResponseData } from '../../types/entities';
+import { BikeLogoAnimation } from '../BikeLogoAnimation';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import {
@@ -54,9 +55,10 @@ export interface ResponseTabProps {
   requestMethod?: string;
   requestUrl?: string;
   requestId?: number | string;
+  startTime?: number | null;
 }
 
-export function ResponseTab({
+export const ResponseTab = memo(function ResponseTab({
   response,
   isLoading,
   onCopy,
@@ -68,6 +70,7 @@ export function ResponseTab({
   requestMethod,
   requestUrl,
   requestId,
+  startTime,
 }: ResponseTabProps) {
   const { setCurrentPage, setHistoryFilter } = useStore();
 
@@ -110,7 +113,7 @@ export function ResponseTab({
   // Render sub-tab content
   const renderSubTabContent = () => {
     if (isLoading) {
-      return <LoadingState />;
+      return <LoadingState startTime={startTime} />;
     }
 
     if (!response) {
@@ -307,29 +310,62 @@ export function ResponseTab({
       </div>
     </div>
   );
-}
+});
 
-function LoadingState() {
+const LoadingState = memo(function LoadingState({ startTime }: { startTime?: number | null }) {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
-    const startTime = Date.now();
+    // If we have a stable start time from the global store, use it.
+    // Otherwise fallback to local Date.now()
+    const timerStart = startTime || Date.now();
+    
+    // Set initial elapsed immediately to prevent jump
+    setElapsed(Date.now() - timerStart);
+
     const interval = setInterval(() => {
-      setElapsed(Date.now() - startTime);
+      setElapsed(Date.now() - timerStart);
     }, 50);
     return () => clearInterval(interval);
-  }, []);
+  }, [startTime]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center text-primary p-8 text-center animate-in fade-in zoom-in-95 duration-500">
-      <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 relative">
-        <div className="absolute inset-0 rounded-full border-t-2 border-primary animate-spin" />
-        <Clock className="h-8 w-8 text-primary animate-pulse" />
+    <div className="flex-1 flex flex-col items-center justify-center text-primary p-8 text-center animate-in fade-in zoom-in-95 duration-700 bg-gradient-to-b from-primary/5 via-transparent to-transparent">
+      {/* Background Orbs to indicate data flow */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/20 blur-[80px] rounded-full animate-pulse" />
       </div>
-      <h3 className="text-xl font-medium mb-2">Waiting for Response</h3>
-      <div className="font-mono text-2xl font-bold mt-2 tabular-nums">
-        {(elapsed / 1000).toFixed(2)}s
+
+      <div className="relative mb-4">
+        {/* The creative logo animation */}
+        <div className="transform scale-125 mb-4">
+          <BikeLogoAnimation size={100} />
+        </div>
+        
+        {/* Glow effect under the bike */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-32 h-4 bg-primary/10 blur-xl rounded-full" />
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center">
+        <h3 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+          Requesting Data...
+        </h3>
+        
+        <div className="mt-4 flex items-center gap-3 px-4 py-2 bg-background/50 border border-border/40 backdrop-blur-md rounded-2xl shadow-xl">
+          <div className="flex gap-1.5 items-center mr-2">
+             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce delay-0" />
+             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce delay-150" />
+             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce delay-300" />
+          </div>
+          <div className="font-mono text-xl font-bold tabular-nums text-foreground/80">
+            {(elapsed / 1000).toFixed(2)}s
+          </div>
+        </div>
+        
+        <p className="mt-4 text-xs text-muted-foreground/60 max-w-[200px]">
+          Traveling across the web to fetch your response
+        </p>
       </div>
     </div>
   );
-}
+});

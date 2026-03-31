@@ -19,7 +19,7 @@
  * ```
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { generateDraftName } from '../lib/draftNaming';
 import logger from '../lib/logger';
 import { useStore } from '../store/useStore';
@@ -150,7 +150,7 @@ export function useRequestState(selectedRequest: Request | null) {
 
     return {
       requestData: initialRequestData,
-      activeTab: 'params',
+      activeTab: (selectedRequest as any)?.activeTab || 'params',
       bodyType,
       bodyContentType: initialRequestData.bodyContentType || 'json',
       bodyViewMode,
@@ -159,7 +159,7 @@ export function useRequestState(selectedRequest: Request | null) {
       headersViewMode: 'table',
       bulkEditJson: '',
       responseSubTab: defaultResponseSubTab,
-      splitViewRatio: 50,
+      splitViewRatio: (selectedRequest as any)?.splitViewRatio || 50,
       isSaved: !!selectedRequest,
       lastSavedAt: selectedRequest ? new Date() : null,
       isEditingName: false,
@@ -178,6 +178,7 @@ export function useRequestState(selectedRequest: Request | null) {
         setState(prev => ({
           ...prev,
           requestData: defaultRequestData,
+          activeTab: 'params',
           isSaved: false,
           lastSavedAt: null,
         }));
@@ -206,6 +207,8 @@ export function useRequestState(selectedRequest: Request | null) {
         const bodyType = (selectedRequest as any).bodyType || (selectedRequest.body ? 'raw' : 'none');
         const bodyViewMode = (selectedRequest as any).bodyViewMode || (bodyType === 'raw' ? 'json' : 'table');
         const bodyContentType = (selectedRequest as any).bodyContentType || 'json';
+        const activeTab = (selectedRequest as any).activeTab || 'params';
+        const splitViewRatio = (selectedRequest as any).splitViewRatio || 50;
 
         // Parse body for table view if it exists
         let bodyFormData: Array<{ key: string; value: string; enabled: boolean }> = [];
@@ -243,10 +246,12 @@ export function useRequestState(selectedRequest: Request | null) {
             bodyContentType: bodyContentType,
             bodyViewMode: bodyViewMode,
           },
+          activeTab,
           bodyType,
           bodyContentType,
           bodyViewMode,
           bodyFormData,
+          splitViewRatio,
           isSaved: true,
           lastSavedAt: new Date(),
         };
@@ -398,7 +403,45 @@ export function useRequestState(selectedRequest: Request | null) {
     };
   }, [state.requestData, autoSaveUnsaved]);
 
-  const actions: RequestStateActions = {
+  const setSelectedRequest = useStore(state => state.setSelectedRequest);
+  const selectedRequestRef = useRef(selectedRequest);
+  useEffect(() => {
+    selectedRequestRef.current = selectedRequest;
+  }, [selectedRequest]);
+
+  // Sync edits back to the global store immediately so they survive navigation
+  useEffect(() => {
+    if (selectedRequestRef.current) {
+      const currentInStore = selectedRequestRef.current;
+      // Only update if there are meaningful changes to avoid loops
+      const hasDataChanges = 
+        currentInStore.url !== state.requestData.url ||
+        currentInStore.method !== state.requestData.method ||
+        currentInStore.body !== state.requestData.body ||
+        JSON.stringify(currentInStore.headers) !== JSON.stringify(state.requestData.headers);
+        
+      const hasUIChanges =
+        (currentInStore as any).activeTab !== state.activeTab ||
+        (currentInStore as any).splitViewRatio !== state.splitViewRatio ||
+        (currentInStore as any).bodyType !== state.bodyType ||
+        (currentInStore as any).bodyViewMode !== state.bodyViewMode;
+
+      if (hasDataChanges || hasUIChanges) {
+        setSelectedRequest({
+          ...currentInStore,
+          ...state.requestData,
+          isFavorite: state.requestData.isFavorite ? 1 : 0,
+          // Persist UI state within the request object
+          activeTab: state.activeTab,
+          splitViewRatio: state.splitViewRatio,
+          bodyType: state.bodyType,
+          bodyViewMode: state.bodyViewMode,
+        } as any);
+      }
+    }
+  }, [state.requestData, state.activeTab, state.splitViewRatio, state.bodyType, state.bodyViewMode, setSelectedRequest]);
+
+  const actions: RequestStateActions = useMemo(() => ({
     setRequestData: data => {
       setState(prev => ({
         ...prev,
@@ -560,7 +603,15 @@ export function useRequestState(selectedRequest: Request | null) {
         throw e;
       }
     },
-  };
+  }), [
+    state.tempName,
+    state.requestData,
+    activeUnsavedRequestId,
+    setActiveUnsavedRequestId,
+    setUnsavedRequests,
+    selectedRequest?.lastResponse,
+    triggerSidebarRefresh,
+  ]);
 
   return {
     ...state,

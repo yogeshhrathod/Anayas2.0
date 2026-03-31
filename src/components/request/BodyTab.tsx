@@ -271,7 +271,7 @@ export const BodyTab: React.FC<BodyTabProps> = ({
                   title=""
                   description=""
                   height="100%"
-                  showActions={false}
+                  showActions={true}
                   validateJson={bodyContentType === 'json'}
                   readOnly={false}
                   minimap={false}

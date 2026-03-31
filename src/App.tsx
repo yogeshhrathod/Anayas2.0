@@ -795,7 +795,10 @@ function App() {
                           setCurrentPage('home');
                           // Load request data and set it as selected
                           try {
-                            // First set the existing request data so UI updates immediately
+                            // First clear activeUnsavedRequestId to fix dual selection issue
+                            useStore.getState().setActiveUnsavedRequestId(null);
+                            
+                            // Then set the existing request data so UI updates immediately
                             setSelectedRequest(request);
 
                             // Then try to load full/latest data from DB

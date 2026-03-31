@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import logger from '../lib/logger';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
-import { Logo } from './Logo';
+import { BikeLogoAnimation } from './BikeLogoAnimation';
 
 interface SplashScreenProps {
   onFinish?: () => void;
@@ -114,20 +114,22 @@ export function SplashScreen({
             transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
             className="relative flex flex-col items-center"
           >
-            {/* Logo Section */}
-            <div className="relative group">
+            {/* Animated Logo Section */}
+            <div className="relative mb-4 transform scale-[1.35]">
               <motion.div
-                animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
+                animate={{ 
+                  scale: [1, 1.05, 1],
+                  opacity: [0.6, 0.9, 0.6],
+                  filter: ['blur(40px)', 'blur(60px)', 'blur(40px)']
+                }}
                 transition={{
-                  duration: 3,
+                  duration: 4,
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
-                className="absolute inset-0 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/30 transition-all duration-500"
+                className="absolute inset-0 bg-primary/30 rounded-full"
               />
-              <div className="relative bg-foreground/5 backdrop-blur-xl p-8 rounded-[2.5rem] border border-border/50 shadow-2xl">
-                <Logo size={80} showText={false} />
-              </div>
+              <BikeLogoAnimation size={100} />
             </div>
 
             {/* Text Section */}

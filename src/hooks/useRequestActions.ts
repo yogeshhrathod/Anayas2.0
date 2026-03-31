@@ -20,7 +20,7 @@
  * ```
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import logger from '../lib/logger';
 import { getStatusText, safeStringifyBody } from '../lib/response-utils';
 import { useStore } from '../store/useStore';
@@ -39,6 +39,7 @@ export interface RequestActionsState {
   isPresetsExpanded: boolean;
   activePresetId: string | null;
   activeTransactionId: string | null;
+  startTime: number | null;
 }
 
 export interface RequestActionsActions {
@@ -82,14 +83,19 @@ export function useRequestActions(requestData: RequestFormData) {
     isPresetsExpanded: presetsExpanded ?? false,
     activePresetId: null,
     activeTransactionId: null,
+    startTime: null,
   });
 
   // Load saved response when request changes
   useEffect(() => {
-    // Load the response from the selected request
+    // Load the response from the selected request and clear loading state
+    // so the user can switch requests without the new one seeming blocked.
     setState(prev => ({
       ...prev,
       response: selectedRequest?.lastResponse || null,
+      isLoading: false,
+      activeTransactionId: null,
+      startTime: null,
     }));
   }, [selectedRequest?.id, selectedRequest?.lastResponse]);
 
@@ -138,6 +144,11 @@ export function useRequestActions(requestData: RequestFormData) {
     }
 
     const transactionId = Date.now().toString() + Math.random().toString(36).substring(7);
+    const trackingId = String(requestData.id || activeUnsavedRequestId || 'new_request');
+    
+    const startTime = Date.now();
+    useStore.getState().setLoadingRequest(trackingId, true);
+    useStore.getState().setRequestStartTime(trackingId, startTime);
     setState(prev => ({ ...prev, isLoading: true, response: null, activeTransactionId: transactionId }));
 
     try {
@@ -234,8 +245,10 @@ export function useRequestActions(requestData: RequestFormData) {
       );
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
+      useStore.getState().setLoadingRequest(trackingId, false);
+      useStore.getState().setRequestStartTime(trackingId, null);
     }
-  }, [requestData, showSuccess, showError, selectedRequest]);
+  }, [requestData, showSuccess, showError, selectedRequest, activeUnsavedRequestId, currentEnvironment]);
 
   const saveRequest = useCallback(async () => {
     if (!requestData.name.trim()) {
@@ -431,7 +444,7 @@ export function useRequestActions(requestData: RequestFormData) {
     [showSuccess, showError]
   );
 
-  const actions: RequestActionsActions = {
+  const actions: RequestActionsActions = useMemo(() => ({
     sendRequest,
     cancelRequest,
     saveRequest,
@@ -454,10 +467,29 @@ export function useRequestActions(requestData: RequestFormData) {
     },
     setActivePresetId: id =>
       setState(prev => ({ ...prev, activePresetId: id })),
-  };
+  }), [
+    sendRequest,
+    cancelRequest,
+    saveRequest,
+    copyResponse,
+    downloadResponse,
+    createPreset,
+    applyPreset,
+    deletePreset,
+    setPresetsExpanded,
+  ]);
+
+  const reqTrackingId = String(requestData.id || activeUnsavedRequestId || 'new_request');
+  const globalIsLoadingFromStore = useStore(state => !!state.loadingRequests[reqTrackingId]);
+  const globalStartTimeFromStore = useStore(state => state.requestStartTimes[reqTrackingId] || null);
+  
+  const globalIsLoading = globalIsLoadingFromStore || state.isLoading;
+  const globalStartTime = globalStartTimeFromStore || state.startTime;
 
   return {
     ...state,
     ...actions,
+    isLoading: globalIsLoading,
+    startTime: globalStartTime,
   };
 }

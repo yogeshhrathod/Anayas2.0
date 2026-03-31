@@ -29,17 +29,11 @@ export function useSessionRecovery() {
           );
           if (activeRequest) {
             setSelectedRequest({
-              id: undefined,
-              name: activeRequest.name,
-              method: activeRequest.method as any,
-              url: activeRequest.url,
-              headers: activeRequest.headers,
-              body: activeRequest.body,
-              queryParams: activeRequest.queryParams,
-              auth: activeRequest.auth,
+              ...activeRequest,
+              id: undefined, // Ensure it's treated as unsaved even if it was partially populated
               collectionId: undefined,
               folderId: undefined,
-              isFavorite: 0,
+              isFavorite: activeRequest.isFavorite || 0,
               lastResponse: activeRequest.lastResponse,
             });
             setCurrentPage('home');

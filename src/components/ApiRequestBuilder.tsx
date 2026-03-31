@@ -79,6 +79,7 @@ export function ApiRequestBuilder() {
 
     const handleSendRequest = createKeymapHandler(KEYMAP.SEND_REQUEST, () => {
       requestActions.sendRequest();
+      requestState.setActiveTab('response');
     });
 
     const handleFocusUrl = createKeymapHandler(KEYMAP.FOCUS_URL, () => {
@@ -342,6 +343,7 @@ export function ApiRequestBuilder() {
             requestId={
               requestState.requestData.id || activeUnsavedRequestId || undefined
             }
+            startTime={requestActions.startTime}
           />
         );
       default:
@@ -369,7 +371,10 @@ export function ApiRequestBuilder() {
           cancel: requestState.cancelNameEdit,
           setTempName: requestState.setTempName,
         }}
-        onSend={requestActions.sendRequest}
+        onSend={() => {
+          requestActions.sendRequest();
+          requestState.setActiveTab('response');
+        }}
         onCancel={requestActions.cancelRequest}
         isLoading={requestActions.isLoading}
         bodyType={requestState.bodyType}

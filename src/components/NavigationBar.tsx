@@ -43,6 +43,9 @@ export function NavigationBar() {
     setActiveUnsavedRequestId,
     setCollections,
     setHistoryFilter,
+    setRequests,
+    setUnsavedRequests,
+    triggerSidebarRefresh,
   } = useStore();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [showCurlImport, setShowCurlImport] = useState(false);
@@ -165,8 +168,8 @@ export function NavigationBar() {
 
   const handleCurlImportComplete = async (
     requests: Request[],
-    _collectionId?: number,
-    _folderId?: number
+    collectionId?: number,
+    folderId?: number
   ) => {
     try {
       if (requests.length === 0) {
@@ -174,33 +177,77 @@ export function NavigationBar() {
         return;
       }
 
-      // For home page, load the first request into the request builder
-      // Clear active unsaved request ID to create a new one
-      setActiveUnsavedRequestId(null);
+      let loadedRequest: Request | null = null;
+      let loadedActiveUnsavedId: string | null = null;
 
-      const importedRequest = requests[0];
-      const newRequest: Request = {
-        name: importedRequest.name || 'Imported Request',
-        method: importedRequest.method,
-        url: importedRequest.url || '',
-        headers: importedRequest.headers || {
-          'Content-Type': 'application/json',
-        },
-        body: importedRequest.body || '',
-        queryParams: importedRequest.queryParams || [],
-        auth: importedRequest.auth || { type: 'none' },
-        collectionId: undefined,
-        folderId: undefined,
-        isFavorite: 0,
-      };
+      if (collectionId) {
+        // Save all to collection
+        for (const req of requests) {
+          const result = await window.electronAPI.request.save({
+            ...req,
+            collectionId,
+            folderId,
+            isFavorite: 0,
+          });
+          if (!loadedRequest) {
+            loadedRequest = { ...req, id: result.id, collectionId, folderId };
+          }
+        }
+        
+        showSuccess('Requests imported', {
+          description: `Successfully imported ${requests.length} request(s) to collection`
+        });
+        
+        // Refresh requests
+        const updatedReqs = await window.electronAPI.request.list();
+        setRequests(updatedReqs);
 
-      setSelectedRequest(newRequest);
-      showSuccess('Request imported', {
-        description:
-          requests.length > 1
-            ? `Loaded first request (${requests.length} total parsed)`
-            : 'Request loaded into builder',
-      });
+        triggerSidebarRefresh();
+      } else {
+        // Save all as unsaved requests
+        for (const req of requests) {
+          const result = await window.electronAPI.unsavedRequest.save({
+            name: req.name || 'Imported Request',
+            method: req.method,
+            url: req.url || '',
+            headers: req.headers || {},
+            body: req.body || '',
+            queryParams: req.queryParams || [],
+            auth: req.auth || { type: 'none' },
+          });
+          if (result.id) {
+            loadedActiveUnsavedId = result.id;
+            // The last one will be loaded
+            loadedRequest = {
+              ...req,
+              id: undefined, // Treat as unsaved in global state
+              collectionId: undefined,
+              folderId: undefined,
+            };
+          }
+        }
+
+        showSuccess('Requests loaded', {
+          description: `Loaded ${requests.length} request(s) into unsaved drafts`
+        });
+
+        const allUnsaved = await window.electronAPI.unsavedRequest.getAll();
+        setUnsavedRequests(allUnsaved);
+
+        triggerSidebarRefresh();
+      }
+
+      // Load the last imported request into the UI
+      if (loadedRequest) {
+        if (!collectionId) {
+          setActiveUnsavedRequestId(loadedActiveUnsavedId);
+        } else {
+          setActiveUnsavedRequestId(null);
+        }
+        setSelectedRequest(loadedRequest);
+        setCurrentPage('home');
+      }
+
     } catch (error: any) {
       logger.error('Failed to import cURL request', { error });
       showError('Import failed', error.message || 'Failed to import request');

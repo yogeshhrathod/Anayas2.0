@@ -59,6 +59,8 @@ export interface RequestFormData {
   bodyType?: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded';
   bodyContentType?: 'json' | 'text';
   bodyViewMode?: 'table' | 'json';
+  activeTab?: string;
+  splitViewRatio?: number;
 }
 
 export interface SettingsFormData {

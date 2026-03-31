@@ -99,7 +99,7 @@ export function EnvironmentVariable({
               title=""
               description=""
               height={350}
-              showActions={false}
+              showActions={true}
               validateJson={true}
               readOnly={false}
               minimap={false}

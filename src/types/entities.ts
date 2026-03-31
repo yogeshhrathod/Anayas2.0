@@ -26,6 +26,8 @@ export interface Request {
   bodyType?: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded';
   bodyContentType?: 'json' | 'text';
   bodyViewMode?: 'table' | 'json';
+  activeTab?: string;
+  splitViewRatio?: number;
   lastResponse?: ResponseData; // Saved response from last request execution
   createdAt?: string;
 }

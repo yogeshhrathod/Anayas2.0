@@ -39,8 +39,9 @@ export function useToastNotifications() {
       toast({
         title: options.title || 'Success',
         description: message,
-        variant: 'default',
+        variant: 'success',
         duration: options.duration || 3000,
+        important: true,
       });
     },
     [toast]
@@ -57,6 +58,7 @@ export function useToastNotifications() {
         description: truncatedDetails ? `${message}: ${truncatedDetails}` : message,
         variant: 'destructive',
         duration: options.duration || 5000,
+        important: true,
       });
     },
     [toast]
@@ -69,6 +71,7 @@ export function useToastNotifications() {
         description: message,
         variant: 'default',
         duration: options.duration || 3000,
+        important: false, // Info is usually not considered "important" enough for an alert
       });
     },
     [toast]
@@ -79,8 +82,9 @@ export function useToastNotifications() {
       toast({
         title: options.title || 'Warning',
         description: message,
-        variant: 'default',
+        variant: 'warning',
         duration: options.duration || 4000,
+        important: true,
       });
     },
     [toast]

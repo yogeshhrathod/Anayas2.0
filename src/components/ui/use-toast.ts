@@ -8,6 +8,7 @@ export type Toast = {
   // an optional action element (e.g., button)
   action?: React.ReactNode;
   variant?: 'default' | 'destructive' | 'success' | 'warning';
+  important?: boolean;
   // minimal props we use from Radix toast
   open?: boolean;
   duration?: number;
@@ -27,6 +28,15 @@ interface ToastStore {
 export const useToastStore = create<ToastStore>((set, get) => ({
   toasts: [],
   addToast: toast => {
+    // Only show important toasts
+    const isImportant =
+      toast.important ||
+      toast.variant === 'destructive' ||
+      toast.variant === 'warning' ||
+      toast.variant === 'success';
+
+    if (!isImportant) return;
+
     const id = Math.random().toString(36).slice(2);
     set(state => {
       const next = [{ ...toast, id }, ...state.toasts].slice(0, TOAST_LIMIT);
@@ -63,16 +73,29 @@ export function useToast() {
       dismiss: dismissToast,
       // helpers
       success: (title: React.ReactNode, description?: React.ReactNode) =>
-        addToast({ title, description, variant: 'success', duration: 4000 }),
+        addToast({
+          title,
+          description,
+          variant: 'success',
+          duration: 4000,
+          important: true,
+        }),
       error: (title: React.ReactNode, description?: React.ReactNode) =>
         addToast({
           title,
           description,
           variant: 'destructive',
           duration: 5000,
+          important: true,
         }),
       warning: (title: React.ReactNode, description?: React.ReactNode) =>
-        addToast({ title, description, variant: 'warning', duration: 5000 }),
+        addToast({
+          title,
+          description,
+          variant: 'warning',
+          duration: 5000,
+          important: true,
+        }),
     }),
     [addToast, dismissToast]
   );

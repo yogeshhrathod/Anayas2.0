@@ -182,6 +182,12 @@ interface AppState {
   setAppVersion: (version: string) => void;
   isWelcomeDone: boolean;
   setIsWelcomeDone: (done: boolean) => void;
+
+  // Active Requests (Global tracking for background execution)
+  loadingRequests: Record<string, boolean>;
+  setLoadingRequest: (id: string, isLoading: boolean) => void;
+  requestStartTimes: Record<string, number>;
+  setRequestStartTime: (id: string, startTime: number | null) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -373,6 +379,30 @@ export const useStore = create<AppState>()(
       setAppVersion: appVersion => set({ appVersion }),
       isWelcomeDone: typeof localStorage !== 'undefined' ? localStorage.getItem('luna_welcome_seen') === 'true' : false,
       setIsWelcomeDone: isWelcomeDone => set({ isWelcomeDone }),
+
+      // Active Requests
+      loadingRequests: {},
+      setLoadingRequest: (id, isLoading) =>
+        set(state => {
+          const newLoading = { ...state.loadingRequests };
+          if (isLoading) {
+            newLoading[id] = true;
+          } else {
+            delete newLoading[id];
+          }
+          return { loadingRequests: newLoading };
+        }),
+      requestStartTimes: {},
+      setRequestStartTime: (id, startTime) =>
+        set(state => {
+          const newStartTimes = { ...state.requestStartTimes };
+          if (startTime === null) {
+            delete newStartTimes[id];
+          } else {
+            newStartTimes[id] = startTime;
+          }
+          return { requestStartTimes: newStartTimes };
+        }),
     }),
     {
       name: 'luna-store',
@@ -385,12 +415,7 @@ export const useStore = create<AppState>()(
         sidebarWidth: state.sidebarWidth,
         unsavedSectionHeight: state.unsavedSectionHeight,
         presetsExpanded: state.presetsExpanded,
-        selectedRequest: state.selectedRequest
-          ? (() => {
-              const { lastResponse, ...rest } = state.selectedRequest;
-              return rest;
-            })()
-          : null,
+        selectedRequest: state.selectedRequest,
         activeUnsavedRequestId: state.activeUnsavedRequestId,
         currentPage: state.currentPage,
         isWelcomeDone: state.isWelcomeDone,
@@ -404,8 +429,6 @@ export const useStore = create<AppState>()(
           } else {
             state.expandedCollections = new Set();
           }
-          // Note: Settings will be loaded from DB in App.tsx loadData()
-          // Don't override DB settings with cached localStorage settings
         }
       },
     }

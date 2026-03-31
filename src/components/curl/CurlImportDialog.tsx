@@ -405,15 +405,17 @@ export function CurlImportDialog({
               ))}
             </div>
 
-            {/* Collection Selection - Only show if required */}
-            {successfulCount > 0 && requireCollection && (
+            {/* Collection Selection - Always visible so user can save directly to a collection */}
+            {successfulCount > 0 && (
               <div className="space-y-4 pt-4 border-t">
                 <div className="space-y-2">
-                  <Label htmlFor="collection-select">Collection *</Label>
+                  <Label htmlFor="collection-select">
+                    Collection {requireCollection ? '*' : '(Optional)'}
+                  </Label>
                   <Select
-                    value={selectedCollectionId?.toString() || ''}
+                    value={selectedCollectionId ? selectedCollectionId.toString() : (requireCollection ? undefined : 'none')}
                     onValueChange={value => {
-                      setSelectedCollectionId(parseInt(value));
+                      setSelectedCollectionId(value === 'none' ? null : parseInt(value));
                       setSelectedFolderId(null);
                     }}
                   >
@@ -421,6 +423,9 @@ export function CurlImportDialog({
                       <SelectValue placeholder="Select a collection" />
                     </SelectTrigger>
                     <SelectContent>
+                      {!requireCollection && (
+                        <SelectItem value="none">Save as Unsaved Requests</SelectItem>
+                      )}
                       {collections.map(collection => (
                         <SelectItem
                           key={collection.id}
@@ -479,10 +484,10 @@ export function CurlImportDialog({
                     {isImporting ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Importing...
+                        Loading...
                       </>
                     ) : (
-                      `Import ${successfulCount} Request(s)`
+                      `Load ${successfulCount} Request(s)`
                     )}
                   </Button>
                   <Button
@@ -493,33 +498,6 @@ export function CurlImportDialog({
                     Cancel
                   </Button>
                 </div>
-              </div>
-            )}
-
-            {/* Import Button for Home Page (no collection required) */}
-            {successfulCount > 0 && !requireCollection && (
-              <div className="flex gap-2 pt-4 border-t">
-                <Button
-                  onClick={handleImport}
-                  disabled={isImporting}
-                  className="flex-1"
-                >
-                  {isImporting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    `Load ${successfulCount} Request(s)`
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={isImporting}
-                >
-                  Cancel
-                </Button>
               </div>
             )}
           </div>
