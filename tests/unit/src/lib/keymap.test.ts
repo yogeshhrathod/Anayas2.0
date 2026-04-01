@@ -163,5 +163,69 @@ describe('keymap', () => {
             expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
         });
     });
+
+    describe('digit key matching', () => {
+        it('should match digit keys using event.code', () => {
+            Object.defineProperty(navigator, 'platform', { value: 'MacIntel', writable: true });
+            const config = { key: '1', metaKey: true, action: 'test', description: 'test' };
+            const event = { 
+                key: '¡', // Mapped char on Mac when option is pressed, but here we just test code
+                code: 'Digit1', 
+                metaKey: true, 
+                ctrlKey: false, 
+                shiftKey: false, 
+                altKey: false 
+            } as unknown as KeyboardEvent;
+            expect(matchesKeymap(event, config)).toBe(true);
+        });
+
+        it('should match digit keys using event.key if code is missing', () => {
+            const config = { key: '5', metaKey: true, action: 'test', description: 'test' };
+            const event = { 
+                key: '5', 
+                metaKey: true, 
+                ctrlKey: false, 
+                shiftKey: false, 
+                altKey: false 
+            } as unknown as KeyboardEvent;
+            expect(matchesKeymap(event, config)).toBe(true);
+        });
+    });
+
+    describe('primary modifier logic', () => {
+        const primaryConfig = {
+            key: 'k',
+            metaKey: true,
+            ctrlKey: true,
+            action: 'search',
+            description: 'Search'
+        };
+
+        it('should require meta but NOT ctrl on Mac for primary config', () => {
+            Object.defineProperty(navigator, 'platform', { value: 'MacIntel', writable: true });
+            const event = { key: 'k', metaKey: true, ctrlKey: false, shiftKey: false, altKey: false } as KeyboardEvent;
+            expect(matchesKeymap(event, primaryConfig)).toBe(true);
+            
+            const eventWithBoth = { key: 'k', metaKey: true, ctrlKey: true, shiftKey: false, altKey: false } as KeyboardEvent;
+            expect(matchesKeymap(eventWithBoth, primaryConfig)).toBe(false); // Strict matching: Mac only wants meta for primary
+        });
+
+        it('should require ctrl but NOT meta on Windows for primary config', () => {
+            Object.defineProperty(navigator, 'platform', { value: 'Win32', writable: true });
+            const event = { key: 'k', ctrlKey: true, metaKey: false, shiftKey: false, altKey: false } as KeyboardEvent;
+            expect(matchesKeymap(event, primaryConfig)).toBe(true);
+        });
+    });
+
+    describe('case insensitivity', () => {
+        it('should match keys regardless of case', () => {
+            const config = { key: 'S', metaKey: true, action: 'save', description: 'Save' };
+            const event = { key: 's', metaKey: true, ctrlKey: false, shiftKey: false, altKey: false } as KeyboardEvent;
+            expect(matchesKeymap(event, config)).toBe(true);
+            
+            const eventUpper = { key: 'S', metaKey: true, ctrlKey: false, shiftKey: false, altKey: false } as KeyboardEvent;
+            expect(matchesKeymap(eventUpper, config)).toBe(true);
+        });
+    });
 });
 

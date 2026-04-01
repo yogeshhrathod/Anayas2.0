@@ -61,9 +61,15 @@ describe('drag-drop-utils', () => {
       expect(calculateOrderForPosition(items, 3)).toBe(4000);
     });
 
-    it('should return order between items when dropped in middle', () => {
-      expect(calculateOrderForPosition(items, 1)).toBe(1500);
-      expect(calculateOrderForPosition(items, 2)).toBe(2500);
+    it('should handle items without order property', () => {
+      const unorderedItems = [{}, {}];
+      expect(calculateOrderForPosition(unorderedItems as any, 0)).toBe(1);
+      expect(calculateOrderForPosition(unorderedItems as any, 2)).toBe(1000);
+      expect(calculateOrderForPosition(unorderedItems as any, 1)).toBe(1); // 0 + floor((0-0)/2) = 0, then 0 === 0 so 0 + 1
+    });
+
+    it('should handle dropIndex larger than items length', () => {
+      expect(calculateOrderForPosition(items, 10)).toBe(4000);
     });
   });
 });

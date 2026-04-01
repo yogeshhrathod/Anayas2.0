@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { 
   normalizeResponse, 
   getStatusDisplay, 
+  getStatusText,
   getStatusVariant, 
   formatResponseTime, 
   safeStringifyBody, 
@@ -66,19 +67,51 @@ describe('response-utils', () => {
     });
   });
 
+  describe('getStatusText', () => {
+    it('should return provided status text', () => {
+      expect(getStatusText(200, 'Custom OK')).toBe('Custom OK');
+    });
+
+    it('should return standard status text for valid codes', () => {
+      expect(getStatusText(200)).toBe('OK');
+      expect(getStatusText(404)).toBe('Not Found');
+    });
+
+    it('should return Request Failed for invalid or missing status', () => {
+      expect(getStatusText(0)).toBe('Request Failed');
+      expect(getStatusText(null)).toBe('Request Failed');
+      expect(getStatusText(undefined)).toBe('Request Failed');
+    });
+
+    it('should truncate long status text', () => {
+      const longText = 'A very long status text that should be truncated because it exceeds the limit';
+      expect(getStatusText(200, longText, 10)).toBe('A very lon...');
+    });
+
+    it('should return Unknown for unknown status codes', () => {
+      expect(getStatusText(999)).toBe('Unknown');
+    });
+  });
+
   describe('getStatusVariant', () => {
     it('should return correct variants for status codes', () => {
       expect(getStatusVariant(200)).toBe('success');
+      expect(getStatusVariant(204)).toBe('success');
       expect(getStatusVariant(404)).toBe('error');
+      expect(getStatusVariant(401)).toBe('error');
       expect(getStatusVariant(500)).toBe('destructive');
       expect(getStatusVariant(null)).toBe('destructive');
+      expect(getStatusVariant(undefined)).toBe('destructive');
+      expect(getStatusVariant(302)).toBe('default');
     });
   });
 
   describe('formatResponseTime', () => {
     it('should format ms', () => {
       expect(formatResponseTime(150)).toBe('150ms');
+      expect(formatResponseTime(0)).toBe('0ms');
       expect(formatResponseTime(null)).toBe('0ms');
+      expect(formatResponseTime(undefined)).toBe('0ms');
     });
   });
 
@@ -88,9 +121,19 @@ describe('response-utils', () => {
       expect(result).toBe('{\n  "a": 1\n}');
     });
 
+    it('should return raw string for invalid JSON', () => {
+      const invalidJson = '{"a":1';
+      expect(safeStringifyBody(invalidJson)).toBe(invalidJson);
+    });
+
     it('should stringify objects', () => {
       const result = safeStringifyBody({ b: 2 });
       expect(result).toBe('{\n  "b": 2\n}');
+    });
+
+    it('should handle undefined and null', () => {
+      expect(safeStringifyBody(undefined)).toBe('');
+      expect(safeStringifyBody(null)).toBe('');
     });
 
     it('should handle circular references', () => {
@@ -106,17 +149,24 @@ describe('response-utils', () => {
       const headers = { 'X-A': '1' };
       expect(hasHeaders(headers)).toBe(true);
       expect(hasHeaders({})).toBe(false);
+      expect(hasHeaders(null)).toBe(false);
+      expect(hasHeaders(undefined)).toBe(false);
       expect(getHeaderEntries(headers)).toEqual([['X-A', '1']]);
       expect(getHeaderEntries(null)).toEqual([]);
+      expect(getHeaderEntries(undefined)).toEqual([]);
+      expect(getHeaderEntries({} as any)).toEqual([]);
     });
   });
 
   describe('formatResponseSize', () => {
     it('should format bytes, KB, and MB correctly', () => {
       expect(formatResponseSize('hello')).toBe('5 B');
+      expect(formatResponseSize('a'.repeat(100))).toBe('100 B');
       expect(formatResponseSize('a'.repeat(2048))).toBe('2.00 KB');
       expect(formatResponseSize('a'.repeat(2 * 1024 * 1024))).toBe('2.00 MB');
       expect(formatResponseSize(null)).toBe('0 B');
+      expect(formatResponseSize(undefined)).toBe('0 B');
+      expect(formatResponseSize({})).toBe('2 B'); // "{}"
       
       const circular: any = {};
       circular.self = circular;

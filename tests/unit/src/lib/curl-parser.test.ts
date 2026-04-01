@@ -228,4 +228,92 @@ describe('curl-parser', () => {
   it('should throw error for only whitespaces after curl keyword', () => {
     expect(() => parseCurlCommand('curl   ')).toThrow('Invalid cURL command');
   });
+
+  it('should handle normalizeLineContiuations with backslashes and newlines', () => {
+    const curl = 'curl -X POST \\\n  -H "Content-Type: application/json" \\\n  -d "test"\\\n  https://api.com';
+    const request = parseCurlCommand(curl);
+    expect(request.url).toBe('https://api.com/');
+    expect(request.body).toBe('test');
+  });
+
+  it('should handle unquoted data with special characters', () => {
+    const curl = 'curl -d key=value&other=123 https://api.com';
+    const request = parseCurlCommand(curl);
+    expect(request.body).toBe('key=value&other=123');
+  });
+
+  it('should handle single quotes with escaped single quotes inside', () => {
+    // In bash: 'it'\''s' becomes it's
+    const curl = "curl -d 'it'\\''s' https://api.com";
+    const request = parseCurlCommand(curl);
+    expect(request.body).toBe("it's");
+  });
+
+  it('should handle -A and --user-agent', () => {
+    expect(parseCurlCommand('curl -A "my-agent" https://api.com').headers['User-Agent']).toBe('my-agent');
+    expect(parseCurlCommand('curl --user-agent "my-agent-2" https://api.com').headers['User-Agent']).toBe('my-agent-2');
+  });
+
+  it('should handle -b and --cookie', () => {
+    expect(parseCurlCommand('curl -b "name=val" https://api.com').headers['Cookie']).toBe('name=val');
+    expect(parseCurlCommand('curl --cookie "session=123" https://api.com').headers['Cookie']).toBe('session=123');
+  });
+
+  it('should handle -e and --referer', () => {
+    expect(parseCurlCommand('curl -e "http://ref.com" https://api.com').headers['Referer']).toBe('http://ref.com');
+  });
+
+  it('should handle multiple headers with same key (last one wins in our simple implementation)', () => {
+    const curl = 'curl -H "X-A: 1" -H "X-A: 2" https://api.com';
+    const request = parseCurlCommand(curl);
+    expect(request.headers['X-A']).toBe('2');
+  });
+
+  it('should handle basic auth from Authorization header', () => {
+    const creds = btoa('user:pass');
+    const curl = `curl -H "Authorization: Basic ${creds}" https://api.com`;
+    const request = parseCurlCommand(curl);
+    expect(request.auth.type).toBe('basic');
+    expect(request.auth.username).toBe('user');
+    expect(request.auth.password).toBe('pass');
+  });
+
+  it('should handle basic auth without colon in decoded string', () => {
+    const creds = btoa('user');
+    const curl = `curl -H "Authorization: Basic ${creds}" https://api.com`;
+    const request = parseCurlCommand(curl);
+    expect(request.auth.type).toBe('basic');
+    expect(request.auth.username).toBe('user');
+    expect(request.auth.password).toBe('');
+  });
+
+  it('should handle invalid base64 in basic auth header', () => {
+    const curl = `curl -H "Authorization: Basic invalid!!!" https://api.com`;
+    const request = parseCurlCommand(curl);
+    expect(request.auth.type).toBe('none');
+  });
+
+  it('should handle unknown authorization schemes', () => {
+    const curl = `curl -H "Authorization: Unknown token" https://api.com`;
+    const request = parseCurlCommand(curl);
+    expect(request.auth.type).toBe('none');
+  });
+
+  it('should handle non-standard HTTP methods', () => {
+    const curl = 'curl -X UNKNOWN https://api.com';
+    const request = parseCurlCommand(curl);
+    expect(request.method).toBe('GET'); // VALID_METHODS check
+  });
+
+  it('should handle URLs with localhost and ports', () => {
+    expect(parseCurlCommand('curl localhost:3000').url).toBe('localhost:3000');
+    expect(parseCurlCommand('curl http://localhost:8080/api').url).toBe('http://localhost:8080/api');
+  });
+
+  it('should handle missing values for flags at the end of command', () => {
+    expect(() => parseCurlCommand('curl -H')).toThrow();
+    expect(() => parseCurlCommand('curl -X')).toThrow();
+    expect(() => parseCurlCommand('curl -u')).toThrow();
+    expect(() => parseCurlCommand('curl -d')).toThrow();
+  });
 });

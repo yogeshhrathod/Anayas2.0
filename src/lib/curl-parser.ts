@@ -44,12 +44,15 @@ function parseQueryParams(url: string): Array<{ key: string; value: string; enab
 
 function stripQueryString(url: string): string {
   try {
-    const urlObj = new URL(url);
-    return `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
+    if (url.includes('://')) {
+      const urlObj = new URL(url);
+      return `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
+    }
   } catch {
-    const idx = url.indexOf('?');
-    return idx > 0 ? url.substring(0, idx) : url;
+    // Fall through to manual parsing
   }
+  const idx = url.indexOf('?');
+  return idx > 0 ? url.substring(0, idx) : url;
 }
 
 function generateRequestName(method: string, url: string): string {
