@@ -62,6 +62,7 @@ const Performance = lazy(() =>
 
 // Static import for instant onboarding (no delay)
 import OnboardingFlow from './components/OnboardingFlow';
+import { StatusBar } from './components/StatusBar';
 
 import { FontProvider } from './components/providers/FontProvider';
 
@@ -993,6 +994,9 @@ function App() {
               {renderPage()}
             </div>
         </div>
+
+        {/* Global Status Bar */}
+        <StatusBar />
 
         {/* Clear All Unsaved Requests Confirmation Dialog */}
         <Dialog

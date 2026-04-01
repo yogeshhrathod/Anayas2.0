@@ -230,6 +230,11 @@ export function Environments() {
     <PageLayout
       title="Environments"
       description="Manage API environments with variables and configurations"
+      showBackButton
+      onBack={() => {
+        const { setCurrentPage } = useStore.getState();
+        setCurrentPage('home');
+      }}
     >
       <div className="space-y-6">
         <CollectionActions

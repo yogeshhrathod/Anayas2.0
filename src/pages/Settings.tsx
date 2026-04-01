@@ -1,4 +1,4 @@
-import { AlertCircle, Check, RotateCcw } from 'lucide-react';
+import { AlertCircle, Check, RotateCcw, ArrowLeft } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ThemeCustomizer } from '../components/ThemeCustomizer';
 import { Button } from '../components/ui/button';
@@ -297,22 +297,36 @@ export function Settings() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Settings</h1>
-          <p className="mt-2 text-muted-foreground">
-            Configure application preferences
-            {lastSaved && (
-              <span className="ml-2 inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                <Check className="h-3 w-3" />
-                Saved {lastSaved.toLocaleTimeString()}
-              </span>
-            )}
-            {isSaving && (
-              <span className="ml-2 text-xs text-muted-foreground">
-                Saving...
-              </span>
-            )}
-          </p>
+        <div className="space-y-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const { setCurrentPage } = useStore.getState();
+              setCurrentPage('home');
+            }}
+            className="h-8 px-2 -ml-2 text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Settings</h1>
+            <p className="mt-2 text-muted-foreground">
+              Configure application preferences
+              {lastSaved && (
+                <span className="ml-2 inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                  <Check className="h-3 w-3" />
+                  Saved {lastSaved.toLocaleTimeString()}
+                </span>
+              )}
+              {isSaving && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  Saving...
+                </span>
+              )}
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleReset}>

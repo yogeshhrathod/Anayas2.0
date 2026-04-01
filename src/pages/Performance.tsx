@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play,
   Square,
-  Activity,
   AlertCircle,
   ArrowLeft,
   Settings2,
@@ -21,6 +20,7 @@ import {
   XCircle,
   Loader2,
   Search,
+  Terminal,
 } from 'lucide-react';
 import {
   XAxis,
@@ -184,17 +184,19 @@ const LiveProgress: React.FC<{ elapsed: number; total: number; running: boolean 
 
 // ─── Resolve CSS variables for chart (Recharts SVG doesn't resolve vars) ──
 function useCssVar(variable: string): string {
-  const [value, setValue] = React.useState(() => {
-    if (typeof window === 'undefined') return '';
-    return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
-  });
+  const [value, setValue] = React.useState('');
 
   useEffect(() => {
     const update = () => {
-      setValue(getComputedStyle(document.documentElement).getPropertyValue(variable).trim());
+      let val = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+      // If it's a raw HSL string (like "215.4 16.3% 46.9%"), wrap it for SVG stroke/fill
+      if (val && !val.startsWith('#') && !val.startsWith('rgb') && !val.startsWith('hsl')) {
+          val = `hsl(${val})`;
+      }
+      setValue(val);
     };
     update();
-    // Re-read when theme changes (class toggle on :root / html)
+    // Re-read when theme changes
     const observer = new MutationObserver(update);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
     return () => observer.disconnect();
@@ -252,6 +254,14 @@ const PerformancePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [requestSearch, setRequestSearch] = useState('');
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Ensure search input keeps focus while typing and filtering
+  React.useEffect(() => {
+    if (searchInputRef.current) {
+        searchInputRef.current.focus();
+    }
+  });
 
   // ── Auto-select from target ──
   useEffect(() => {
@@ -340,7 +350,7 @@ const PerformancePage: React.FC = () => {
   // ── Live stats ──
   const liveStats = useMemo(() => {
     if (performanceProgress.length === 0)
-      return { rps: 0, latency: 0, throughput: 0, errors: 0, timeouts: 0 };
+      return { rps: 0, latency: 0, throughput: 0, errors: 0, timeouts: 0, statusCodes: {} as Record<number, number> };
     
     // We want to show the current rate of change for some stats
     const last = performanceProgress[performanceProgress.length - 1];
@@ -351,6 +361,7 @@ const PerformancePage: React.FC = () => {
       throughput: last.throughput,
       errors: last.errors,
       timeouts: last.timeouts,
+      statusCodes: last.statusCodes || {},
     };
   }, [performanceProgress]);
 
@@ -450,90 +461,77 @@ const PerformancePage: React.FC = () => {
           {/* ── Dashboard Grid ── */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             
-            {/* Configuration Card */}
-            <div className="lg:col-span-4 h-full">
-              <Card className="h-full bg-card/30 backdrop-blur-3xl border-border/10 shadow-2xl rounded-[2.5rem] overflow-hidden flex flex-col">
-                <CardHeader className="pb-4 pt-8 px-8">
-                  <CardTitle className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-3">
-                    <div className="p-2 bg-indigo-500/10 rounded-lg">
-                      <Settings2 className="h-4 w-4 text-indigo-500" />
-                    </div>
-                    Test Matrix
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-8 pb-8 space-y-8 flex-1 overflow-y-auto">
-                  {/* Target Search & Select */}
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-between">
-                      Endpoint Selection
-                      <Badge variant="outline" className="text-[8px] h-4 bg-muted/20 border-border/10">Filtered</Badge>
+            {/* Configuration Bar (Horizontal) */}
+            <div className="col-span-12">
+              <Card className="bg-card/30 backdrop-blur-3xl border-border/10 shadow-2xl rounded-[1.5rem] overflow-hidden">
+                <CardContent className="p-4 flex flex-wrap lg:flex-nowrap items-center gap-6">
+                  {/* Target Selection */}
+                  <div className="flex-[2] min-w-[280px] space-y-1.5 pl-2">
+                    <Label className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
+                      <Settings2 className="h-3 w-3" /> Target Endpoint
                     </Label>
-                    <div className="relative group">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50 group-focus-within:text-indigo-500 transition-colors" />
-                      <Input 
-                        placeholder="Search requests..." 
-                        className="pl-9 h-10 rounded-xl bg-background/40 border-border/10 focus-visible:ring-indigo-500/30 font-medium text-xs shadow-inner"
-                        value={requestSearch}
-                        onChange={e => setRequestSearch(e.target.value)}
-                      />
-                    </div>
                     <Select
                       value={String(selectedRequestId)}
                       onValueChange={setSelectedRequestId}
                     >
-                      <SelectTrigger className="bg-background/40 border-border/10 h-10 rounded-xl text-xs font-bold shadow-sm">
-                        <SelectValue placeholder="Target Selection" />
+                      <SelectTrigger className="bg-background/40 border-border/10 h-10 rounded-xl text-xs font-bold shadow-sm hover:bg-background/60 transition-colors">
+                        <SelectValue placeholder="Select Target" />
                       </SelectTrigger>
-                      <SelectContent className="max-h-[300px] rounded-2xl border-border/10">
-                        {(filteredCollections as any[]).map(c => (
-                          <React.Fragment key={c.id}>
-                            <div className="px-3 py-2 text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest bg-muted/10">{c.name}</div>
-                            {c.requests.map((r: any) => (
-                              <SelectItem key={r.id} value={String(r.id)} className="pl-6 text-xs font-semibold py-2">
-                                <div className="flex items-center gap-3">
-                                  <span className={cn(
-                                    'text-[8px] font-black w-8 shrink-0 px-1 py-0.5 rounded text-center ring-1 ring-inset',
-                                    r.method === 'GET' ? 'bg-emerald-500/10 text-emerald-500 ring-emerald-500/30' :
-                                    r.method === 'POST' ? 'bg-blue-500/10 text-blue-500 ring-blue-500/30' :
-                                    'bg-indigo-500/10 text-indigo-500 ring-indigo-500/30'
-                                  )}>{r.method}</span>
-                                  <span className="truncate opacity-80">{r.name}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </React.Fragment>
-                        ))}
-                        {filteredCollections.length === 0 && <div className="p-4 text-center text-xs text-muted-foreground">No matches found</div>}
+                      <SelectContent className="max-h-[350px] rounded-2xl border-border/10 p-0 overflow-hidden flex flex-col">
+                        <div className="p-2 border-b border-border/10 sticky top-0 bg-popover/95 backdrop-blur-sm z-10">
+                          <div className="relative">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/40" />
+                            <Input 
+                              ref={searchInputRef}
+                              placeholder="Search endpoints..." 
+                              className="pl-8 h-8 rounded-lg bg-background/50 border-border/10 text-xs focus-visible:ring-primary/20"
+                              value={requestSearch}
+                              onChange={e => setRequestSearch(e.target.value)}
+                              onKeyDown={e => {
+                                e.stopPropagation();
+                                if (e.key === ' ') e.stopPropagation();
+                              }}
+                              onPointerDown={e => e.stopPropagation()}
+                              onMouseDown={e => e.stopPropagation()}
+                              onSelect={e => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
+                        <div className="overflow-y-auto max-h-[250px] custom-scrollbar">
+                          {(filteredCollections as any[]).map(c => (
+                            <React.Fragment key={c.id}>
+                              <div className="px-3 py-1.5 text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest bg-muted/5">{c.name}</div>
+                              {c.requests.map((r: any) => (
+                                <SelectItem key={r.id} value={String(r.id)} className="pl-6 text-xs font-semibold py-2 cursor-pointer">
+                                  <div className="flex items-center gap-3">
+                                    <span className={cn(
+                                      'text-[8px] font-black w-8 shrink-0 px-1 py-0.5 rounded text-center ring-1 ring-inset',
+                                      r.method === 'GET' ? 'bg-emerald-500/10 text-emerald-500 ring-emerald-500/30' :
+                                      r.method === 'POST' ? 'bg-blue-500/10 text-blue-500 ring-blue-500/30' :
+                                      'bg-indigo-500/10 text-indigo-500 ring-indigo-500/30'
+                                    )}>{r.method}</span>
+                                    <span className="truncate opacity-80">{r.name}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </React.Fragment>
+                          ))}
+                          {filteredCollections.length === 0 && <div className="p-8 text-center text-xs text-muted-foreground italic">No matches found</div>}
+                        </div>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {/* Preview */}
-                  {selectedRequest && (
-                    <motion.div 
-                      initial={{ opacity: 0, x: -10 }} 
-                      animate={{ opacity: 1, x: 0 }}
-                      className="p-4 rounded-3xl bg-indigo-500/[0.03] border-2 border-indigo-500/10 space-y-2 shadow-inner"
-                    >
-                      <span className="text-[9px] text-indigo-500 font-black uppercase tracking-widest">Active URL</span>
-                      <p className="text-[10px] font-mono text-indigo-500/80 break-all leading-relaxed font-bold">
-                        {selectedRequest.url}
-                      </p>
-                    </motion.div>
-                  )}
+                  <Separator orientation="vertical" className="h-10 hidden lg:block opacity-20" />
 
-                  <Separator className="bg-border/5" />
-
-                  {/* Grid Inputs */}
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.12em] flex items-center gap-2">
-                        Connections
+                  {/* Config Parameters Row */}
+                  <div className="flex flex-1 items-center gap-4 min-w-[400px]">
+                    <div className="flex-1 space-y-1.5">
+                      <Label className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
+                        Streams
                         <UiTooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-3 w-3 text-muted-foreground/30 hover:text-indigo-500 cursor-help transition-colors" />
-                          </TooltipTrigger>
-                          <TooltipContent className="text-[10px] font-bold">Max concurrent HTTP streams</TooltipContent>
+                          <TooltipTrigger asChild><Info className="h-2.5 w-2.5 opacity-30" /></TooltipTrigger>
+                          <TooltipContent className="text-[10px] font-bold">Connections</TooltipContent>
                         </UiTooltip>
                       </Label>
                       <Input
@@ -543,15 +541,20 @@ const PerformancePage: React.FC = () => {
                         className="bg-background/40 border-border/10 h-10 rounded-xl font-mono text-center font-bold shadow-sm"
                       />
                     </div>
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.12em] flex items-center gap-2">
+                    <div className="flex-1 space-y-1.5">
+                      <Label className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
+                         Pipelining
+                      </Label>
+                      <Input
+                        type="number"
+                        value={pipelining}
+                        onChange={e => setPipelining(Number(e.target.value))}
+                        className="bg-background/40 border-border/10 h-10 rounded-xl font-mono text-center font-bold shadow-sm"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <Label className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
                         Duration (s)
-                        <UiTooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-3 w-3 text-muted-foreground/30 hover:text-indigo-500 cursor-help transition-colors" />
-                          </TooltipTrigger>
-                          <TooltipContent className="text-[10px] font-bold">Test runtime in seconds</TooltipContent>
-                        </UiTooltip>
                       </Label>
                       <Input
                         type="number"
@@ -562,48 +565,22 @@ const PerformancePage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.12em] flex items-center gap-2">
-                      Request Pipelining
-                      <UiTooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-3 w-3 text-muted-foreground/30 hover:text-indigo-500 cursor-help transition-colors" />
-                        </TooltipTrigger>
-                        <TooltipContent className="text-[10px] font-bold">N requests sent before first ACK</TooltipContent>
-                      </UiTooltip>
-                    </Label>
-                    <Input
-                      type="number"
-                      value={pipelining}
-                      onChange={e => setPipelining(Number(e.target.value))}
-                      className="bg-background/40 border-border/10 h-10 rounded-xl font-mono text-center font-bold shadow-sm"
-                    />
-                  </div>
+                  <Separator orientation="vertical" className="h-10 hidden xl:block opacity-20" />
 
-                  <Separator className="bg-border/5" />
-
-                  {/* Env Indicator */}
-                  <div className="flex items-center gap-4 p-5 rounded-3xl bg-indigo-500/5 border border-indigo-500/10 transition-colors hover:bg-indigo-500/10 group">
-                    <div className="p-2.5 bg-background/50 rounded-2xl shadow-sm border border-border/10 group-hover:bg-indigo-500 group-hover:text-white transition-all">
-                      <Globe className="h-4 w-4" />
-                    </div>
+                  {/* Context/Env */}
+                  <div className="hidden xl:flex items-center gap-3 px-4 py-2 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 min-w-[180px]">
+                    <Globe className="h-3 w-3 text-indigo-500/60" />
                     <div className="flex flex-col min-w-0">
-                      <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mb-0.5">Context</span>
-                      <span className="text-xs font-black truncate text-foreground/80">
-                        {currentEnvironment?.name || 'Local Environment'}
-                      </span>
-                    </div>
-                    <div className="ml-auto flex h-2 w-2 relative">
-                      <div className="animate-ping absolute inset-0 rounded-full bg-emerald-500 opacity-40" />
-                      <div className="h-full w-full rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                      <span className="text-[8px] text-muted-foreground/60 font-black uppercase tracking-widest">Context</span>
+                      <span className="text-[11px] font-black truncate max-w-[120px] opacity-80">{currentEnvironment?.name || 'Local'}</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Stats & Charts Area */}
-            <div className="lg:col-span-8 flex flex-col gap-6">
+            {/* Stats & Charts Area (Full Width) */}
+            <div className="col-span-12 flex flex-col gap-6">
               
               {/* Live Monitoring Row */}
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -780,31 +757,33 @@ const PerformancePage: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-                      {/* Latency Distribution */}
-                      <Card className="bg-card/40 border-border/10 rounded-[2rem] overflow-hidden">
+                      {/* Percentile Distribution */}
+                      <Card className="bg-card/40 border-border/10 rounded-[2rem] overflow-hidden flex flex-col">
                         <CardHeader className="pb-2 pt-8 px-8">
                           <CardTitle className="text-xs font-black uppercase text-muted-foreground tracking-widest flex gap-2">
                             <Gauge className="h-4 w-4" /> Percentile Matrix
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="px-6 pb-8 h-[250px]">
+                        <CardContent className="px-6 pb-8 h-[250px] flex-1">
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={latencyBars}>
-                              <CartesianGrid vertical={false} stroke="var(--border)" opacity={0.1} />
+                              <CartesianGrid vertical={false} stroke={chartBorder} opacity={0.1} />
                               <XAxis
                                 dataKey="name"
-                                stroke="var(--muted-foreground)"
+                                stroke={chartMuted}
                                 fontSize={10}
                                 tickLine={false}
                                 axisLine={false}
                                 padding={{ left: 20, right: 20 }}
+                                tick={{ fill: chartMuted, fontSize: 10, fontWeight: 700 }}
                               />
                               <YAxis
-                                stroke="var(--muted-foreground)"
+                                stroke={chartMuted}
                                 fontSize={9}
                                 tickLine={false}
                                 axisLine={false}
                                 tickFormatter={v => `${v}ms`}
+                                tick={{ fill: chartMuted, fontSize: 9, fontWeight: 700 }}
                               />
                               <Bar dataKey="value" radius={[12, 12, 4, 4]} barSize={40}>
                                 {latencyBars.map((entry, idx) => (
@@ -816,41 +795,52 @@ const PerformancePage: React.FC = () => {
                         </CardContent>
                       </Card>
 
-                      {/* Detailed Stats */}
-                      <Card className="bg-card/40 border-border/10 rounded-[2rem] overflow-hidden py-4">
-                        <CardHeader className="pb-4 px-8 pt-4">
+                      {/* Response Matrix (Status Codes) */}
+                      <Card className="bg-card/40 border-border/10 rounded-[2rem] overflow-hidden flex flex-col">
+                        <CardHeader className="pb-4 px-8 pt-8">
                           <CardTitle className="text-xs font-black uppercase text-muted-foreground tracking-widest flex gap-2">
-                            <Activity className="h-4 w-4" /> Telemetry Log
+                            <Hash className="h-4 w-4" /> Response Matrix
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="px-8">
+                        <CardContent className="px-8 pb-8 flex-1 overflow-y-auto">
                           <div className="space-y-4">
-                            {[
-                              { label: 'Latency', v: performanceReport.latency, unit: 'ms', type: 'time' },
-                              { label: 'Flow (RPS)', v: performanceReport.requests, unit: 'rps', type: 'num' },
-                              { label: 'Bandwidth', v: performanceReport.throughput, unit: '/s', type: 'bytes' },
-                            ].map((row, i) => (
-                              <div key={i} className="flex flex-col gap-2 p-3 rounded-2xl bg-muted/20 border border-border/5">
-                                 <div className="flex justify-between items-center px-1">
-                                   <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{row.label}</span>
-                                   <Badge variant="outline" className="text-[9px] font-bold py-0 h-4">{row.unit}</Badge>
-                                 </div>
-                                 <div className="grid grid-cols-3 text-center">
-                                    <div className="flex flex-col">
-                                      <span className="text-[8px] uppercase font-bold text-muted-foreground/50">Min</span>
-                                      <span className="text-xs font-black tabular-nums">{row.type === 'bytes' ? formatBytes(row.v.min) : row.type === 'time' ? row.v.min.toFixed(1) : row.v.min}</span>
-                                    </div>
-                                    <div className="flex flex-col border-x border-border/10 px-2">
-                                      <span className="text-[8px] uppercase font-bold text-indigo-500">Mean</span>
-                                      <span className="text-sm font-black tabular-nums text-indigo-500">{row.type === 'bytes' ? formatBytes(row.v.average) : row.type === 'time' ? row.v.average.toFixed(1) : row.v.average}</span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <span className="text-[8px] uppercase font-bold text-muted-foreground/50">Peak</span>
-                                      <span className="text-xs font-black tabular-nums">{row.type === 'bytes' ? formatBytes(row.v.max) : row.type === 'time' ? row.v.max.toFixed(1) : row.v.max}</span>
-                                    </div>
-                                 </div>
-                              </div>
-                            ))}
+                            {performanceReport.statusCodes && Object.keys(performanceReport.statusCodes).length > 0 ? (
+                               Object.entries(performanceReport.statusCodes)
+                                 .sort((a, b) => Number(a[0]) - Number(b[0]))
+                                 .map(([code, count]) => (
+                                   <div key={code} className="flex items-center justify-between group py-1 border-b border-border/5 last:border-0 hover:bg-muted/5 transition-colors px-2 -mx-2 rounded-lg">
+                                     <div className="flex items-center gap-3">
+                                       <Badge 
+                                         className={cn(
+                                           "px-2 py-0.5 font-black font-mono text-[10px] rounded-md",
+                                           code.startsWith('2') ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
+                                           code.startsWith('3') ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                                           code.startsWith('4') ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
+                                           "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                                         )}
+                                       >
+                                         {code}
+                                       </Badge>
+                                       <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                                         {Number(code) >= 500 ? 'Server Err' : Number(code) >= 400 ? 'Client Err' : Number(code) >= 300 ? 'Redirect' : 'Success'}
+                                       </span>
+                                     </div>
+                                     <div className="flex items-center gap-4">
+                                       <div className="flex flex-col items-end">
+                                         <span className="text-xs font-black tabular-nums">{formatNumber(count as number)}</span>
+                                         <span className="text-[9px] font-bold text-muted-foreground/30">
+                                           {((Number(count) / performanceReport.requests.total) * 100).toFixed(1)}%
+                                         </span>
+                                       </div>
+                                     </div>
+                                   </div>
+                                 ))
+                            ) : (
+                               <div className="flex flex-col items-center justify-center py-12 opacity-40">
+                                  <Terminal className="h-8 w-8 mb-2" />
+                                  <span className="text-[10px] font-bold uppercase tracking-widest">No Telemetry</span>
+                               </div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>

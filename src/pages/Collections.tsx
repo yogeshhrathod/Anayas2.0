@@ -281,6 +281,11 @@ export function Collections() {
     <PageLayout
       title="Collections"
       description="Organize your API requests into collections with shared environment variables"
+      showBackButton
+      onBack={() => {
+        const { setCurrentPage } = useStore.getState();
+        setCurrentPage('home');
+      }}
     >
       <div className="space-y-6">
         <CollectionActions

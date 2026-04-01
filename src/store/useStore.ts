@@ -20,6 +20,7 @@ export interface PerformanceResult {
   throughput: number;
   errors: number;
   timeouts: number;
+  statusCodes?: Record<number, number>;
 }
 
 export interface PerformanceReport {
@@ -64,6 +65,7 @@ export interface PerformanceReport {
   connections: number;
   pipelining: number;
   workers: number;
+  statusCodes?: Record<number, number>;
 }
 
 export interface UnsavedRequest {

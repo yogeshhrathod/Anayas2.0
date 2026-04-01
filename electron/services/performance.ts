@@ -35,6 +35,7 @@ export class PerformanceService {
       throughput: number;
       errors: number;
       timeouts: number;
+      statusCodes?: Record<number, number>;
     }) => void
   ): Promise<autocannon.Result> {
     if (this.activeInstance) {
@@ -92,43 +93,58 @@ export class PerformanceService {
 
     return new Promise((resolve, reject) => {
       try {
+        // Track per-tick and global metrics
+        let tickLatencySum = 0;
+        let tickResponseCount = 0;
+        let errors = 0;
+        let timeouts = 0;
+        let cumulativeBytes = 0;
+        let accumStatusCodes: Record<number, number> = {};
+        let currentTickStatusCodes: Record<number, number> = {};
+
         this.activeInstance = autocannon(autocannonOptions, (err, result) => {
           this.activeInstance = null;
           if (err) {
             logger.error('Autocannon test failed', { error: err.message });
             return reject(err);
           }
+          // Merge our tracked status codes if missing or to ensure accuracy
+          const resultAny = result as any;
+          if (resultAny && !resultAny.statusCodes) {
+             resultAny.statusCodes = { ...accumStatusCodes };
+          } else if (resultAny && resultAny.statusCodes) {
+             // If autocannon provided them, prefer ours if they are more complete, or just merge
+             Object.assign(resultAny.statusCodes, accumStatusCodes);
+          }
           resolve(result);
         });
 
-        if (onProgress) {
-          // Track per-tick latency via the 'response' event
-          // (tick event only gives counter+bytes, not latency)
-          let tickLatencySum = 0;
-          let tickResponseCount = 0;
-          let errors = 0;
-          let timeouts = 0;
-          let cumulativeBytes = 0;
+        this.activeInstance.on('response', (_client: any, statusCode: number, resBytes: number, responseTime: number) => {
+          tickLatencySum += responseTime;
+          tickResponseCount += 1;
+          cumulativeBytes += resBytes;
+          
+          // Track for the whole test
+          accumStatusCodes[statusCode] = (accumStatusCodes[statusCode] || 0) + 1;
+          // Track for the current tick (live update)
+          currentTickStatusCodes[statusCode] = (currentTickStatusCodes[statusCode] || 0) + 1;
 
-          this.activeInstance.on('response', (_client: any, statusCode: number, resBytes: number, responseTime: number) => {
-            tickLatencySum += responseTime;
-            tickResponseCount += 1;
-            cumulativeBytes += resBytes;
-            if (statusCode < 200 || statusCode >= 400) errors++;
-          });
+          if (statusCode < 200 || statusCode >= 400) errors++;
+        });
 
-          this.activeInstance.on('reqError', () => {
-            errors++;
-          });
+        this.activeInstance.on('reqError', () => {
+          errors++;
+        });
 
-          this.activeInstance.on('timeout', () => {
-            timeouts++;
-          });
+        this.activeInstance.on('timeout', () => {
+          timeouts++;
+        });
 
-          this.activeInstance.on('tick', (tick: { counter: number; bytes: number }) => {
-            const avgLatency = tickResponseCount > 0 ? tickLatencySum / tickResponseCount : 0;
-            const throughput = tick.bytes; // bytes in the last second
+        this.activeInstance.on('tick', (tick: { counter: number; bytes: number }) => {
+          const avgLatency = tickResponseCount > 0 ? tickLatencySum / tickResponseCount : 0;
+          const throughput = tick.bytes; // bytes in the last second
 
+          if (onProgress) {
             onProgress({
               timestamp: Date.now(),
               counter: tick.counter,          // Requests in the last second (actual RPS)
@@ -137,13 +153,15 @@ export class PerformanceService {
               throughput,                      // Bytes/s for the last second
               errors,
               timeouts,
+              statusCodes: { ...currentTickStatusCodes },
             });
+          }
 
-            // Reset per-tick accumulators
-            tickLatencySum = 0;
-            tickResponseCount = 0;
-          });
-        }
+          // Reset per-tick accumulators
+          tickLatencySum = 0;
+          tickResponseCount = 0;
+          currentTickStatusCodes = {};
+        });
 
         this.activeInstance.on('error', (err: Error) => {
           logger.error('Autocannon error event', { error: err.message });

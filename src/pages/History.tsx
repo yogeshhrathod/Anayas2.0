@@ -552,13 +552,24 @@ export function History() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Request History
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            View and manage your API request history
-          </p>
+        <div className="space-y-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCurrentPage('home')}
+            className="h-8 px-2 -ml-2 text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Request History
+            </h1>
+            <p className="mt-2 text-muted-foreground">
+              View and manage your API request history
+            </p>
+          </div>
         </div>
       </div>
 
@@ -597,16 +608,6 @@ export function History() {
             >
               <XCircle className="h-3.5 w-3.5" />
               Clear All
-            </Button>
-            <div className="w-px h-4 bg-border/50 mx-1" />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentPage('home')}
-              className="h-8 text-xs gap-2 hover:bg-primary/10 hover:text-primary transition-all"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back
             </Button>
           </div>
         </div>

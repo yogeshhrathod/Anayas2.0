@@ -6,14 +6,20 @@ import { Hero } from './components/Hero';
 import { Manifesto } from './components/Manifesto';
 import { Navbar } from './components/Navbar';
 import { ProductShot } from './components/ProductShot';
+import { CommandPaletteShowcase } from './components/CommandPaletteShowcase';
+import { RichResponsesShowcase } from './components/RichResponsesShowcase';
 
 import { Features } from './components/Features';
+import { PerformanceShowcase } from './components/PerformanceShowcase';
 
 function LandingPage() {
   return (
     <>
       <Hero />
       <ProductShot />
+      <PerformanceShowcase />
+      <CommandPaletteShowcase />
+      <RichResponsesShowcase />
       <Features />
       <Manifesto />
     </>

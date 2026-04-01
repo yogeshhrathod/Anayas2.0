@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Clock, Command, Globe, Layout, Zap } from 'lucide-react';
+import { Clock, Command, Globe, Layout, Zap, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const features = [
@@ -32,11 +32,18 @@ const features = [
     className: 'md:col-span-2',
   },
   {
+    title: 'Performance Benchmarking',
+    description:
+      'Run stress tests with thousands of connections and see live telemetry charts.',
+    icon: Activity,
+    className: 'md:col-span-1',
+  },
+  {
     title: 'Request History',
     description:
       'Every request is saved automatically. Search and replay in seconds.',
     icon: Clock,
-    className: 'md:col-span-3',
+    className: 'md:col-span-2',
   },
 ];
 

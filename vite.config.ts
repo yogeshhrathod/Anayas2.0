@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => {
               outDir: 'dist-electron',
               sourcemap: true,
               rollupOptions: {
-                external: ['better-sqlite3', 'electron']
+                external: ['better-sqlite3', 'electron', 'autocannon']
               }
             }
           }
@@ -59,7 +59,8 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src')
+        '@': path.resolve(__dirname, './src'),
+        'decimal.js-light': path.resolve(__dirname, 'node_modules/decimal.js-light/decimal.mjs'),
       }
     },
     server: {
@@ -67,6 +68,9 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       sourcemap: true, // Enable sourcemaps for renderer
+    },
+    optimizeDeps: {
+      include: ['recharts', 'decimal.js-light'],
     }
   };
 });
