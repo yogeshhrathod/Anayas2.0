@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
+import fuzzysort from 'fuzzysort';
 import logger from '../lib/logger';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
@@ -30,6 +32,8 @@ export function GlobalSearch() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const [parent] = useAutoAnimate();
+
 
   const collections = useStore(state => state.collections);
   const folders = useStore(state => state.folders);
@@ -68,177 +72,150 @@ export function GlobalSearch() {
       return;
     }
 
-    const searchTerm = query.toLowerCase();
+    const searchTerm = query.trim();
     const searchResults: SearchResult[] = [];
 
-    // Search requests
-    allRequests.forEach(request => {
-      const matchesName = request.name?.toLowerCase().includes(searchTerm);
-      const matchesUrl = request.url?.toLowerCase().includes(searchTerm);
-      const matchesMethod = request.method?.toLowerCase().includes(searchTerm);
-
-      if (matchesName || matchesUrl || matchesMethod) {
-        const collection = collections.find(c => c.id === request.collectionId);
-        searchResults.push({
-          id: `request-${request.id}`,
-          type: 'request',
-          title: request.name || 'Unnamed Request',
-          subtitle: `${request.method} ${request.url}${collection ? ` • ${collection.name}` : ''}`,
-          icon: Zap,
-          action: async () => {
-            const { setActiveUnsavedRequestId, setSelectedItem } = useStore.getState();
-            
-            // 1. Switch to request editor page
-            setCurrentPage('home');
-            
-            // 2. Clear any active unsaved selection to prevent split-view/selection confusion
-            setActiveUnsavedRequestId(null);
-            
-            // 3. Prepare the full request object with parsed internal fields
-            const fullRequest = {
-              ...request,
-              headers: typeof request.headers === 'string' ? JSON.parse(request.headers) : request.headers || {},
-              queryParams: typeof request.queryParams === 'string' ? JSON.parse(request.queryParams) : request.queryParams || [],
-              auth: typeof request.auth === 'string' ? JSON.parse(request.auth) : request.auth || { type: 'none' },
-            };
-            
-            // 4. Update the primary selection
-            setSelectedRequest(fullRequest);
-            
-            // 5. Update shortcut context selection (high-level sync)
-            setSelectedItem({
-              type: 'request',
-              id: request.id,
-              data: fullRequest
-            });
-            
-            handleClose();
-          },
-        });
-      }
+    // 1. Search requests using fuzzysort
+    const requestResults = fuzzysort.go(searchTerm, allRequests, {
+      keys: ['name', 'url', 'method'],
+      threshold: -10000,
+      limit: 10,
     });
 
-    // Search collections
-    collections.forEach(collection => {
-      const matchesName = collection.name?.toLowerCase().includes(searchTerm);
-      const matchesDescription = collection.description
-        ?.toLowerCase()
-        .includes(searchTerm);
-
-      if (matchesName || matchesDescription) {
-        searchResults.push({
-          id: `collection-${collection.id}`,
-          type: 'collection',
-          title: collection.name,
-          subtitle: collection.description || 'Collection',
-          icon: FolderPlus,
-          action: () => {
-            setCurrentPage('home'); // or 'collections'? sidebar shows on home
-            // Expand this collection in sidebar
-            const { setExpandedCollections, expandedCollections } = useStore.getState();
-            if (!expandedCollections.has(collection.id!)) {
-              const next = new Set(expandedCollections);
-              next.add(collection.id!);
-              setExpandedCollections(next);
-            }
-            handleClose();
-          },
-        });
-      }
+    requestResults.forEach(result => {
+      const request = result.obj;
+      const collection = collections.find(c => c.id === request.collectionId);
+      searchResults.push({
+        id: `request-${request.id}`,
+        type: 'request',
+        title: request.name || 'Unnamed Request',
+        subtitle: `${request.method} ${request.url}${collection ? ` • ${collection.name}` : ''}`,
+        icon: Zap,
+        action: async () => {
+          const { setActiveUnsavedRequestId, setSelectedItem } = useStore.getState();
+          setCurrentPage('home');
+          setActiveUnsavedRequestId(null);
+          const fullRequest = {
+            ...request,
+            headers: typeof request.headers === 'string' ? JSON.parse(request.headers) : request.headers || {},
+            queryParams: typeof request.queryParams === 'string' ? JSON.parse(request.queryParams) : request.queryParams || [],
+            auth: typeof request.auth === 'string' ? JSON.parse(request.auth) : request.auth || { type: 'none' },
+          };
+          setSelectedRequest(fullRequest);
+          setSelectedItem({ type: 'request', id: request.id, data: fullRequest });
+          handleClose();
+        },
+      });
     });
 
-    // Search folders
-    folders.forEach(folder => {
-      const matchesName = folder.name?.toLowerCase().includes(searchTerm);
-      if (matchesName) {
-        const collection = collections.find(c => c.id === folder.collectionId);
-        searchResults.push({
-          id: `folder-${folder.id}`,
-          type: 'collection', // use collection type for styling or specific folder type
-          title: folder.name,
-          subtitle: `Folder in ${collection?.name || 'Unknown Collection'}`,
-          icon: Folder,
-          action: () => {
-            setCurrentPage('home');
-            const { toggleFolderExpansion, expandedFolders, setExpandedCollections, expandedCollections } = useStore.getState();
-            
-            // Expand parent collection
-            if (folder.collectionId && !expandedCollections.has(folder.collectionId)) {
-              const cNext = new Set(expandedCollections);
-              cNext.add(folder.collectionId);
-              setExpandedCollections(cNext);
-            }
-
-            // Expand this folder
-            if (!expandedFolders.has(folder.id!)) {
-              toggleFolderExpansion(folder.id!);
-            }
-            handleClose();
-          },
-        });
-      }
+    // 2. Search collections using fuzzysort
+    const collectionResults = fuzzysort.go(searchTerm, collections, {
+      keys: ['name', 'description'],
+      limit: 5,
     });
 
-    // Search environments
-    environments.forEach(env => {
-      const matchesName = env.name?.toLowerCase().includes(searchTerm);
-      const matchesDisplayName = env.displayName
-        ?.toLowerCase()
-        .includes(searchTerm);
-
-      if (matchesName || matchesDisplayName) {
-        searchResults.push({
-          id: `environment-${env.id}`,
-          type: 'environment',
-          title: env.displayName || env.name,
-          subtitle: `${Object.keys(env.variables || {}).length} variables`,
-          icon: Globe,
-          action: () => {
-            setCurrentEnvironment(env);
-            setCurrentPage('environments');
-            handleClose();
-          },
-        });
-      }
+    collectionResults.forEach(result => {
+      const collection = result.obj;
+      searchResults.push({
+        id: `collection-${collection.id}`,
+        type: 'collection',
+        title: collection.name,
+        subtitle: collection.description || 'Collection',
+        icon: FolderPlus,
+        action: () => {
+          setCurrentPage('home');
+          const { setExpandedCollections, expandedCollections } = useStore.getState();
+          if (!expandedCollections.has(collection.id!)) {
+            const next = new Set(expandedCollections);
+            next.add(collection.id!);
+            setExpandedCollections(next);
+          }
+          handleClose();
+        },
+      });
     });
 
-    // Search history
-    requestHistory.forEach(history => {
-      const matchesUrl = history.url?.toLowerCase().includes(searchTerm);
-      const matchesMethod = history.method?.toLowerCase().includes(searchTerm);
-
-      if (matchesUrl || matchesMethod) {
-        searchResults.push({
-          id: `history-${history.id}`,
-          type: 'history',
-          title: `${history.method} ${history.url}`,
-          subtitle: `Status: ${history.status} • ${history.responseTime}ms`,
-          icon: Clock,
-          action: () => {
-            setCurrentPage('history');
-            handleClose();
-          },
-        });
-      }
+    // 3. Search folders using fuzzysort
+    const folderResults = fuzzysort.go(searchTerm, folders, {
+      keys: ['name'],
+      limit: 5,
     });
 
-    // Sort results by type and relevance
-    searchResults.sort((a, b) => {
-      const typeOrder = {
-        request: 0,
-        collection: 1,
-        environment: 2,
-        history: 3,
-      };
-      return typeOrder[a.type] - typeOrder[b.type];
+    folderResults.forEach(result => {
+      const folder = result.obj;
+      const collection = collections.find(c => c.id === folder.collectionId);
+      searchResults.push({
+        id: `folder-${folder.id}`,
+        type: 'collection',
+        title: folder.name,
+        subtitle: `Folder in ${collection?.name || 'Unknown Collection'}`,
+        icon: Folder,
+        action: () => {
+          setCurrentPage('home');
+          const { toggleFolderExpansion, expandedFolders, setExpandedCollections, expandedCollections } = useStore.getState();
+          if (folder.collectionId && !expandedCollections.has(folder.collectionId)) {
+            const cNext = new Set(expandedCollections);
+            cNext.add(folder.collectionId);
+            setExpandedCollections(cNext);
+          }
+          if (!expandedFolders.has(folder.id!)) {
+            toggleFolderExpansion(folder.id!);
+          }
+          handleClose();
+        },
+      });
     });
 
-    setResults(searchResults.slice(0, 10)); // Provide up to 10 results in the palette
+    // 4. Search environments using fuzzysort
+    const envResults = fuzzysort.go(searchTerm, environments, {
+      keys: ['name', 'displayName'],
+      limit: 5,
+    });
+
+    envResults.forEach(result => {
+      const env = result.obj;
+      searchResults.push({
+        id: `environment-${env.id}`,
+        type: 'environment',
+        title: env.displayName || env.name,
+        subtitle: `${Object.keys(env.variables || {}).length} variables`,
+        icon: Globe,
+        action: () => {
+          setCurrentEnvironment(env);
+          setCurrentPage('environments');
+          handleClose();
+        },
+      });
+    });
+
+    // 5. Search history using fuzzysort
+    const historyResults = fuzzysort.go(searchTerm, requestHistory, {
+      keys: ['url', 'method'],
+      limit: 5,
+    });
+
+    historyResults.forEach(result => {
+      const history = result.obj;
+      searchResults.push({
+        id: `history-${history.id}`,
+        type: 'history',
+        title: `${history.method} ${history.url}`,
+        subtitle: `Status: ${history.status} • ${history.responseTime}ms`,
+        icon: Clock,
+        action: () => {
+          setCurrentPage('history');
+          handleClose();
+        },
+      });
+    });
+
+    setResults(searchResults.slice(0, 15));
     setSelectedIndex(0);
   }, [
     query,
     allRequests,
     collections,
+    folders,
     environments,
     requestHistory,
     setCurrentPage,
@@ -387,7 +364,7 @@ export function GlobalSearch() {
 
               {/* Results Container */}
               {query.trim() && (
-                <div className="max-h-[60vh] overflow-y-auto p-2 scrollbar-thin">
+                <div ref={parent} className="max-h-[60vh] overflow-y-auto p-2 scrollbar-thin">
                   {results.length > 0 ? (
                     <div className="space-y-1">
                       {results.map((result, index) => {

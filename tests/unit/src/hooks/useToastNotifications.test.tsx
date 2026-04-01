@@ -1,11 +1,16 @@
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { toast } from 'sonner';
 import { useToastNotifications } from '../../../../src/hooks/useToastNotifications';
 
-// Mock useToast
-const mockToast = vi.fn();
-vi.mock('../../../../src/components/ui/use-toast', () => ({
-  useToast: () => ({ toast: mockToast })
+// Mock sonner
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+  }
 }));
 
 describe('useToastNotifications', () => {
@@ -17,10 +22,9 @@ describe('useToastNotifications', () => {
     const { result } = renderHook(() => useToastNotifications());
     result.current.showSuccess('All good');
     
-    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Success',
+    expect(toast.success).toHaveBeenCalledWith('Success', expect.objectContaining({
       description: 'All good',
-      variant: 'success'
+      duration: 3000
     }));
   });
 
@@ -28,10 +32,9 @@ describe('useToastNotifications', () => {
     const { result } = renderHook(() => useToastNotifications());
     result.current.showError('Bad request', 'Timeout');
     
-    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Error',
+    expect(toast.error).toHaveBeenCalledWith('Error', expect.objectContaining({
       description: 'Bad request: Timeout',
-      variant: 'destructive'
+      duration: 5000
     }));
   });
 
@@ -39,9 +42,10 @@ describe('useToastNotifications', () => {
     const { result } = renderHook(() => useToastNotifications());
     result.current.showWarning('Careful');
     
-    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Warning',
-      description: 'Careful'
+    expect(toast.warning).toHaveBeenCalledWith('Warning', expect.objectContaining({
+      description: 'Careful',
+      duration: 4000
     }));
   });
 });
+

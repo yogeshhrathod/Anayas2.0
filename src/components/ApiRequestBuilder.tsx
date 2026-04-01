@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useRef } from 'react';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { useRequestActions } from '../hooks/useRequestActions';
 import { useRequestState } from '../hooks/useRequestState';
 import { KEYMAP, createKeymapHandler } from '../lib/keymap';
@@ -33,6 +34,8 @@ export function ApiRequestBuilder() {
   const setSelectedRequest = useStore(state => state.setSelectedRequest);
   const setFocusedContext = useStore(state => state.setFocusedContext);
   const activeUnsavedRequestId = useStore(state => state.activeUnsavedRequestId);
+  const [parent] = useAutoAnimate();
+
 
   // Use custom hooks for state and actions
   const requestState = useRequestState(selectedRequest);
@@ -406,7 +409,7 @@ export function ApiRequestBuilder() {
           />
 
           {/* Tab Content - Fills remaining space */}
-          <div className="flex-1 min-h-0 p-3 bg-background/50 overflow-hidden flex flex-col">
+          <div ref={parent} className="flex-1 min-h-0 p-3 bg-background/50 overflow-hidden flex flex-col">
             {renderTabContent()}
           </div>
         </div>

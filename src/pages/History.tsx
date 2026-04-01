@@ -14,6 +14,7 @@ import {
     XCircle,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import {
@@ -53,6 +54,7 @@ export function History() {
     setHistoryFilter,
   } = useStore();
   const { confirm } = useConfirmation();
+  const [parent] = useAutoAnimate();
   const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -725,7 +727,7 @@ export function History() {
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent ref={parent}>
           {filteredHistory.length === 0 ? (
             <div className="text-center py-12">
               <Clock className="h-16 w-16 text-muted-foreground mx-auto mb-4" />

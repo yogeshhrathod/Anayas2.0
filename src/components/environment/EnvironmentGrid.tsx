@@ -23,6 +23,7 @@
  */
 
 import React from 'react';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { EnvironmentCard } from './EnvironmentCard';
 import { EmptyState } from '../shared/EmptyState';
 import { Button } from '../ui/button';
@@ -51,6 +52,8 @@ export const EnvironmentGrid: React.FC<EnvironmentGridProps> = ({
   onSetDefault,
   onTest,
 }) => {
+  const [parent] = useAutoAnimate();
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -79,7 +82,7 @@ export const EnvironmentGrid: React.FC<EnvironmentGridProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div ref={parent} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {environments.map(environment => (
         <EnvironmentCard
           key={environment.id}

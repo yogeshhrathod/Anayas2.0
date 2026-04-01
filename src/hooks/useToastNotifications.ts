@@ -23,7 +23,7 @@
  */
 
 import { useCallback } from 'react';
-import { useToast } from '../components/ui/use-toast';
+import { toast } from 'sonner';
 
 export interface ToastOptions {
   title?: string;
@@ -32,19 +32,14 @@ export interface ToastOptions {
 }
 
 export function useToastNotifications() {
-  const { toast } = useToast();
-
   const showSuccess = useCallback(
     (message: string, options: ToastOptions = {}) => {
-      toast({
-        title: options.title || 'Success',
+      toast.success(options.title || 'Success', {
         description: message,
-        variant: 'success',
         duration: options.duration || 3000,
-        important: true,
       });
     },
-    [toast]
+    []
   );
 
   const showError = useCallback(
@@ -53,41 +48,32 @@ export function useToastNotifications() {
         ? `${details.slice(0, 100)}...`
         : details;
 
-      toast({
-        title: options.title || 'Error',
+      toast.error(options.title || 'Error', {
         description: truncatedDetails ? `${message}: ${truncatedDetails}` : message,
-        variant: 'destructive',
         duration: options.duration || 5000,
-        important: true,
       });
     },
-    [toast]
+    []
   );
 
   const showInfo = useCallback(
     (message: string, options: ToastOptions = {}) => {
-      toast({
-        title: options.title || 'Info',
+      toast.info(options.title || 'Info', {
         description: message,
-        variant: 'default',
         duration: options.duration || 3000,
-        important: false, // Info is usually not considered "important" enough for an alert
       });
     },
-    [toast]
+    []
   );
 
   const showWarning = useCallback(
     (message: string, options: ToastOptions = {}) => {
-      toast({
-        title: options.title || 'Warning',
+      toast.warning(options.title || 'Warning', {
         description: message,
-        variant: 'warning',
         duration: options.duration || 4000,
-        important: true,
       });
     },
-    [toast]
+    []
   );
 
   return {

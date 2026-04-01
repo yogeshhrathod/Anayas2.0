@@ -23,6 +23,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import fuzzysort from 'fuzzysort';
 import { useStore } from '../store/useStore';
 import { Environment } from '../types/entities';
 import { EnvironmentFormData } from '../types/forms';
@@ -70,17 +71,12 @@ export function useEnvironmentOperations() {
       return;
     }
 
-    const filtered = environments.filter(
-      environment =>
-        environment.name
-          .toLowerCase()
-          .includes(debouncedSearchTerm.toLowerCase()) ||
-        environment.displayName
-          .toLowerCase()
-          .includes(debouncedSearchTerm.toLowerCase())
-    );
+    const results = fuzzysort.go(debouncedSearchTerm, environments, {
+      keys: ['name', 'displayName'],
+      threshold: -10000,
+    });
 
-    setFilteredEnvironments(filtered);
+    setFilteredEnvironments(results.map(r => r.obj));
   }, [environments, debouncedSearchTerm]);
 
   // Load environments on mount

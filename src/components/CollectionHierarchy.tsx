@@ -12,6 +12,7 @@
  */
 
 import { useLayoutEffect, useRef, useState, useEffect } from 'react';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCollectionDragDrop } from '../hooks/useCollectionDragDrop';
 import { useToastNotifications } from '../hooks/useToastNotifications';
@@ -31,6 +32,8 @@ export interface CollectionHierarchyProps {
 export function CollectionHierarchy({
   onRequestSelect,
 }: CollectionHierarchyProps) {
+  const [parent] = useAutoAnimate();
+
   const collections = useStore(state => state.collections);
   const setCollections = useStore(state => state.setCollections);
   const expandedCollections = useStore(state => state.expandedCollections);
@@ -506,7 +509,7 @@ export function CollectionHierarchy({
   );
 
   return (
-    <div className={cn("space-y-1", sidebarCompactMode && "space-y-0")} data-testid="collection-hierarchy" onFocus={() => setFocusedContext('sidebar')} onBlur={() => setFocusedContext(null)}>
+    <div ref={parent} className={cn("space-y-1", sidebarCompactMode && "space-y-0")} data-testid="collection-hierarchy" onFocus={() => setFocusedContext('sidebar')} onBlur={() => setFocusedContext(null)}>
       <AnimatePresence initial={false}>
         {collections.map(c => {
           const expanded = expandedCollections.has(c.id!);

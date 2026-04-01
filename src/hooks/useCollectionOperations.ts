@@ -21,6 +21,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import fuzzysort from 'fuzzysort';
 import { Collection } from '../types/entities';
 import { CollectionFormData } from '../types/forms';
 import { useToastNotifications } from './useToastNotifications';
@@ -84,17 +85,12 @@ export function useCollectionOperations() {
       return;
     }
 
-    const filtered = collections.filter(
-      collection =>
-        collection.name
-          .toLowerCase()
-          .includes(debouncedSearchTerm.toLowerCase()) ||
-        collection.description
-          ?.toLowerCase()
-          .includes(debouncedSearchTerm.toLowerCase())
-    );
+    const results = fuzzysort.go(debouncedSearchTerm, collections, {
+      keys: ['name', 'description'],
+      threshold: -10000,
+    });
 
-    setFilteredCollections(filtered);
+    setFilteredCollections(results.map(r => r.obj));
   }, [collections, debouncedSearchTerm]);
 
   // Load data on mount

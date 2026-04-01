@@ -4,6 +4,7 @@
 
 import { Key, Plus, Table2, Braces } from 'lucide-react';
 import React from 'react';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { useToastNotifications } from '../../hooks/useToastNotifications';
 import { RequestFormData } from '../../types/forms';
 import { Button } from '../ui/button';
@@ -31,6 +32,8 @@ export const HeadersTab: React.FC<HeadersTabProps> = ({
   setBulkEditJson,
 }) => {
   const { showError } = useToastNotifications();
+  const [parent] = useAutoAnimate();
+
 
   const toggleHeadersView = () => {
     if (headersViewMode === 'table') {
@@ -107,7 +110,7 @@ export const HeadersTab: React.FC<HeadersTabProps> = ({
       </div>
 
       {/* Content Area - Card with Glassmorphism */}
-      <div className="flex-1 min-h-0 bg-background/40 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl shadow-black/5 overflow-hidden flex flex-col transition-all duration-500 hover:shadow-2xl hover:border-border/60">
+      <div ref={parent} className="flex-1 min-h-0 bg-background/40 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl shadow-black/5 overflow-hidden flex flex-col transition-all duration-500 hover:shadow-2xl hover:border-border/60">
         {headersViewMode === 'table' ? (
           <div className="flex-1 min-h-0 overflow-auto scrollbar-thin scrollbar-thumb-border/40 scrollbar-track-transparent p-4">
             <HeadersKeyValueEditor

@@ -1,5 +1,6 @@
 import { FileUp, Plus, Trash2 } from 'lucide-react';
 import React from 'react';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 import logger from '../../lib/logger';
 import { Button } from './button';
 import { Input } from './input';
@@ -31,6 +32,8 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
   allowFile = false,
   className = '',
 }) => {
+  const [parent] = useAutoAnimate();
+
   const updateItem = (
     index: number,
     field: keyof KeyValueItem,
@@ -76,7 +79,7 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
           </Button>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div ref={parent} className="space-y-2">
           {items.map((item, index) => (
             <div key={index} className="flex items-center gap-2">
               {showEnabled && (

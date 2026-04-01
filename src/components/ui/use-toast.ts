@@ -1,112 +1,57 @@
 import * as React from 'react';
-import { create } from 'zustand';
+import { toast as sonnerToast } from 'sonner';
 
 export type Toast = {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
-  // an optional action element (e.g., button)
   action?: React.ReactNode;
   variant?: 'default' | 'destructive' | 'success' | 'warning';
   important?: boolean;
-  // minimal props we use from Radix toast
   open?: boolean;
   duration?: number;
 };
 
-const TOAST_LIMIT = 5;
-
-// Internal toast store
-interface ToastStore {
-  toasts: Toast[];
-  addToast: (toast: Omit<Toast, 'id'>) => void;
-  updateToast: (id: string, toast: Partial<Toast>) => void;
-  dismissToast: (id?: string) => void;
-  removeToast: (id?: string) => void;
-}
-
-export const useToastStore = create<ToastStore>((set, get) => ({
+// Keep the store for any remaining dependencies, but mark as legacy
+export const useToastStore = {
+  getState: () => ({
+    addToast: (props: any) => toast(props),
+  }),
+  subscribe: () => () => {},
   toasts: [],
-  addToast: toast => {
-    // Only show important toasts
-    const isImportant =
-      toast.important ||
-      toast.variant === 'destructive' ||
-      toast.variant === 'warning' ||
-      toast.variant === 'success';
-
-    if (!isImportant) return;
-
-    const id = Math.random().toString(36).slice(2);
-    set(state => {
-      const next = [{ ...toast, id }, ...state.toasts].slice(0, TOAST_LIMIT);
-      return { toasts: next };
-    });
-  },
-  updateToast: (id, toast) => {
-    set(state => ({
-      toasts: state.toasts.map(t => (t.id === id ? { ...t, ...toast } : t)),
-    }));
-  },
-  dismissToast: id => {
-    const { toasts } = get();
-    if (id) {
-      const t = toasts.find(t => t.id === id);
-      if (t) get().updateToast(id, { open: false });
-    } else {
-      toasts.forEach(t => get().updateToast(t.id, { open: false }));
-    }
-  },
-  removeToast: id => {
-    if (id) set(state => ({ toasts: state.toasts.filter(t => t.id !== id) }));
-    else set({ toasts: [] });
-  },
-}));
+  dismissToast: () => {},
+  removeToast: () => {},
+};
 
 export function useToast() {
-  const { addToast, dismissToast } = useToastStore();
-
   return React.useMemo(
     () => ({
-      toast: (props: Omit<Toast, 'id'>) =>
-        addToast({ duration: 4000, ...props }),
-      dismiss: dismissToast,
-      // helpers
+      toast: (props: Omit<Toast, 'id'>) => toast(props),
+      dismiss: (id?: string) => sonnerToast.dismiss(id),
       success: (title: React.ReactNode, description?: React.ReactNode) =>
-        addToast({
-          title,
-          description,
-          variant: 'success',
-          duration: 4000,
-          important: true,
-        }),
+        sonnerToast.success(String(title), { description: String(description) }),
       error: (title: React.ReactNode, description?: React.ReactNode) =>
-        addToast({
-          title,
-          description,
-          variant: 'destructive',
-          duration: 5000,
-          important: true,
-        }),
+        sonnerToast.error(String(title), { description: String(description) }),
       warning: (title: React.ReactNode, description?: React.ReactNode) =>
-        addToast({
-          title,
-          description,
-          variant: 'warning',
-          duration: 5000,
-          important: true,
-        }),
+        sonnerToast.warning(String(title), { description: String(description) }),
     }),
-    [addToast, dismissToast]
+    []
   );
 }
 
-
-/**
- * Standalone function to show a toast outside of React components.
- * Uses the store's addToast directly (no hook required).
- */
 export const toast = (props: Omit<Toast, 'id'>) => {
-  useToastStore.getState().addToast({ duration: 4000, ...props });
+  const { title, description, variant, duration } = props;
+  const options = { description: String(description), duration };
+  
+  switch (variant) {
+    case 'success':
+      return sonnerToast.success(String(title), options);
+    case 'destructive':
+      return sonnerToast.error(String(title), options);
+    case 'warning':
+      return sonnerToast.warning(String(title), options);
+    default:
+      return sonnerToast(String(title), options);
+  }
 };
 
