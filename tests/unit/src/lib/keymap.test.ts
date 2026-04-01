@@ -86,7 +86,7 @@ describe('keymap', () => {
     describe('getShortcutDisplay', () => {
         it('should show ⌘ for Mac', () => {
             Object.defineProperty(navigator, 'platform', { value: 'MacIntel', writable: true });
-            expect(getShortcutDisplay(metaConfig)).toBe('⌘+S');
+            expect(getShortcutDisplay(metaConfig)).toBe('⌘S');
         });
 
         it('should show Ctrl for non-Mac', () => {

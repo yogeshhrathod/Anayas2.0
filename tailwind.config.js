@@ -93,25 +93,25 @@ module.exports = {
         'content': '10',
         'sticky': '100',
 
-        // Interactive elements (1000-2000)
-        'dropdown': '1000',
-        'popover': '1500',
-        'context-menu': '2000',
+        // Overlays (8000-9000)
+        'modal-backdrop': '8000',
+        'modal': '8500',
+        'dialog': '8500',
 
-        // Overlays (3000-4000)
-        'modal-backdrop': '3000',
-        'modal': '3500',
-        'dialog': '3500',
-        'dialog-dropdown': '3501', // For dropdowns in dialogs
+        // Interactive elements (9000+)
+        'dropdown': '9000',
+        'popover': '9500',
+        'context-menu': '9600',
+        'dialog-dropdown': '9700', // Explicitly higher than dropdown/modal
 
-        // Floating UI (5000-6000)
-        'tooltip': '5000',
+        // Floating UI (9800+)
+        'tooltip': '9800',
 
-        // Global features (7000-8000)
-        'global-search': '7000',
+        // Global features (9900+)
+        'global-search': '9900',
 
-        // Notifications (9000-10000)
-        'toast': '9000',
+        // Notifications (10000+)
+        'toast': '10000',
       },
     },
   },

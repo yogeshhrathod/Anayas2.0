@@ -90,47 +90,68 @@ export const VariableContextMenu = forwardRef<
     <Portal>
       <div
         ref={ref}
-        className="fixed z-[9999] w-56 rounded-xl border border-border/40 bg-popover/95 backdrop-blur-md p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        className="fixed z-[9999] w-64 rounded-2xl border border-border/40 bg-popover/90 backdrop-blur-xl p-2 shadow-2xl shadow-black/20 dark:shadow-black/40 animate-in fade-in zoom-in-95 duration-200"
         style={{ left: position.x, top: position.y }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="px-2 py-1.5 mb-1.5 border-b border-border/40">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Variable Actions</p>
-          <p className="text-xs font-mono font-medium truncate text-primary/80 mt-0.5">{`{{${variableName}}}`}</p>
+        <div className="px-3 py-2 mb-2 border-b border-border/20 bg-muted/30 -mx-2 -mt-2 rounded-t-2xl flex items-center justify-between">
+           <div className="flex items-center gap-2">
+             <Eye className="h-3 w-3 text-muted-foreground/60" />
+             <p className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest">Variable Info</p>
+           </div>
+           {variable?.scope && (
+             <div className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-[9px] font-black uppercase tracking-tighter">
+               {variable.scope}
+             </div>
+           )}
         </div>
-        <button
-          onClick={handleCopyName}
-          className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-        >
-          <Copy className="h-4 w-4 opacity-70" />
-          Copy Variable Name
-        </button>
-        {isResolved && !isDynamic && (
+        
+        <div className="px-3 py-2 mb-2 bg-background/50 rounded-xl border border-border/20">
+          <p className="text-xs font-mono font-bold truncate text-foreground">{`{{${variableName}}}`}</p>
+          <p className="text-[10px] font-mono text-muted-foreground truncate mt-1 opacity-70">
+            {variable?.value || 'Unresolved or dynamic'}
+          </p>
+        </div>
+
+        <div className="space-y-1">
           <button
-            onClick={handleCopyValue}
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+            onClick={handleCopyName}
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-primary/10 hover:text-primary group"
           >
-            <Copy className="h-4 w-4 opacity-70" />
-            Copy Value
+            <Copy className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+            Copy Name
           </button>
-        )}
-        <div className="h-px bg-border/40 my-1.5" />
-        <button
-          onClick={handleViewDefinition}
-          className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-        >
-          <Eye className="h-4 w-4 opacity-70" />
-          View Definition
-        </button>
-        {!isDynamic && (
+          
+          {isResolved && !isDynamic && (
+            <button
+              onClick={handleCopyValue}
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-primary/10 hover:text-primary group"
+            >
+              <Copy className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+              Copy Value
+            </button>
+          )}
+
+          <div className="h-px bg-border/20 my-1 mx-1" />
+          
           <button
-            onClick={handleEdit}
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+            onClick={handleViewDefinition}
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-primary/10 hover:text-primary group"
           >
-            <Edit className="h-4 w-4 opacity-70" />
-            Edit Variable
+            <Eye className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+            View Definition
           </button>
-        )}
+          
+          {!isDynamic && (
+            <button
+              onClick={handleEdit}
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-primary/10 hover:text-primary group"
+            >
+              <Edit className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+              Edit Source
+            </button>
+          )}
+        </div>
       </div>
     </Portal>
   );

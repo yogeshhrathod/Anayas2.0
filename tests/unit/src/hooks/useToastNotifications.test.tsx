@@ -20,7 +20,7 @@ describe('useToastNotifications', () => {
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
       title: 'Success',
       description: 'All good',
-      variant: 'default'
+      variant: 'success'
     }));
   });
 

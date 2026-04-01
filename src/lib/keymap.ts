@@ -234,7 +234,7 @@ export const matchesKeymap = (
   let keyMatches = false;
   const isDigitKey = /^\d$/.test(keymap.key);
   
-  if (isDigitKey && event.code.startsWith('Digit')) {
+  if (isDigitKey && event.code?.startsWith('Digit')) {
     keyMatches = event.code === `Digit${keymap.key}`;
   } else {
     keyMatches = event.key.toLowerCase() === keymap.key.toLowerCase();
@@ -276,8 +276,8 @@ export const getShortcutDisplay = (keymap: KeymapConfig): string => {
   const parts = [];
   parts.push(mainSymbol);
 
-  if (keymap.altKey) parts.push(isMacPlatform ? '⌥' : 'Alt');
   if (keymap.shiftKey) parts.push(isMacPlatform ? '⇧' : 'Shift');
+  if (keymap.altKey) parts.push(isMacPlatform ? '⌥' : 'Alt');
   
   parts.push(keymap.key.toUpperCase());
 

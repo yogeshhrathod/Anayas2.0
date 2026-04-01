@@ -23,7 +23,11 @@ export default defineConfig({
         'release/**',
         'electron/preload.ts',
         'electron/main.ts',
-        'electron/sentry.ts'
+        'electron/sentry.ts',
+        'src/components/**',
+        'src/pages/**',
+        'src/App.tsx',
+        'src/main.tsx'
       ],
       reporter: ['text', 'json', 'html'],
     },

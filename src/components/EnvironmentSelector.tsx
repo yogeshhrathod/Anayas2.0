@@ -1,17 +1,28 @@
-import { Building2, Check, ChevronDown, Globe } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { useClickOutside } from '../hooks/useClickOutside';
-import logger from '../lib/logger';
+import { 
+  Building2, 
+  Check, 
+  ChevronDown, 
+  Globe, 
+  Settings2,
+  Circle
+} from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import logger from '../lib/logger';
 
 interface EnvironmentSelectorProps {
   className?: string;
+  showLabel?: boolean;
 }
 
-export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+export function EnvironmentSelector({ className, showLabel = false }: EnvironmentSelectorProps) {
   const {
     environments,
     currentEnvironment,
@@ -22,6 +33,7 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
     selectedCollectionForNewRequest,
     setCollectionEnvironmentSelection,
     triggerSidebarRefresh,
+    setCurrentPage
   } = useStore();
 
   // Determine which environments to show:
@@ -29,7 +41,7 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
   // Priority 2: collection selected for a new request (sidebar selection)
   const currentCollectionId =
     selectedRequest?.collectionId ?? selectedCollectionForNewRequest;
-  // Always read from the store so edits are immediately reflected
+  
   const currentCollection = currentCollectionId
     ? collections.find(c => c.id === currentCollectionId)
     : null;
@@ -44,7 +56,6 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
     try {
       await window.electronAPI.env.setCurrent(env.id);
       setCurrentEnvironment(env);
-      setIsOpen(false);
     } catch (error) {
       logger.error('Failed to switch environment', { error });
     }
@@ -59,21 +70,18 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
         envId
       );
       if (result?.success && result.collection) {
-        // Update the collection in the store with the updated activeEnvironmentId
         const updatedCollections = collections.map(c =>
           c.id === currentCollection.id ? result.collection : c
         );
         setCollections(updatedCollections);
         setCollectionEnvironmentSelection(currentCollection.id, envId);
-        triggerSidebarRefresh(); // Refresh sidebar to show updated state
-        setIsOpen(false);
+        triggerSidebarRefresh();
       }
     } catch (error) {
-      // Error handling is done by the IPC handler
+      logger.error('Failed to switch collection environment', { error });
     }
   };
 
-  // Get display text
   const getDisplayText = () => {
     if (activeCollectionEnv && currentEnvironment) {
       return `${activeCollectionEnv.name} / ${currentEnvironment.displayName}`;
@@ -84,113 +92,159 @@ export function EnvironmentSelector({ className }: EnvironmentSelectorProps) {
     return currentEnvironment?.displayName || 'No Environment';
   };
 
-  // Close dropdown on escape or click outside
-  useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
+  const hasActiveEnv = !!activeCollectionEnv || !!currentEnvironment;
 
   return (
-    <div
-      ref={dropdownRef}
-      className={cn('relative', className)}
-      data-testid="environment-switcher"
-    >
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          "flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent/50 hover:scale-[1.02] transition-all duration-200 w-full max-w-[200px]",
-          isOpen ? "bg-accent shadow-inner" : "shadow-sm"
-        )}
-        title="Switch environment"
-        aria-label="Environment switcher"
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-        data-testid="environment-switcher-trigger"
-      >
-        <Globe className="h-3.5 w-3.5 shrink-0 opacity-70" />
-        <span className="truncate flex-1 text-left select-none tracking-tight">
-          {getDisplayText()}
-        </span>
-        <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 opacity-50 transition-transform duration-200", isOpen && "rotate-180")} />
-      </button>
+    <div className={cn('relative inline-flex items-center gap-2', className)}>
+      {showLabel && <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 ml-1">Env</span>}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className={cn(
+              "group flex items-center gap-2.5 rounded-xl border border-border/40 bg-background/50 px-3 py-1.5 text-xs font-semibold hover:bg-accent/50 hover:border-border transition-all duration-300 min-w-[120px] max-w-[240px] shadow-sm backdrop-blur-sm",
+              !hasActiveEnv && "text-muted-foreground/60"
+            )}
+            title="Switch environment"
+          >
+            <div className="relative flex items-center justify-center">
+              <Globe className={cn("h-3.5 w-3.5 transition-colors duration-300", hasActiveEnv ? "text-primary" : "text-muted-foreground/40")} />
+              {hasActiveEnv && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
+                </span>
+              )}
+            </div>
+            
+            <span className="truncate flex-1 text-left tracking-tight">
+              {getDisplayText()}
+            </span>
+            
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-40 group-hover:opacity-70 transition-all duration-300 group-data-[state=open]:rotate-180" />
+          </button>
+        </DropdownMenuTrigger>
 
-      {isOpen && (
-        <div
-          className="absolute right-0 top-full z-popover mt-2 w-80 rounded-md border bg-popover p-2 shadow-lg"
-          role="listbox"
-        >
-          {currentCollection && collectionEnvironments.length > 0 && (
+        <DropdownMenuContent align="end" className="w-[280px] p-2">
+          {/* Header */}
+          <div className="flex items-center justify-between px-2 py-1.5 mb-1">
+             <div className="flex items-center gap-2">
+                <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/80">Environments</span>
+             </div>
+             <button 
+               onClick={() => setCurrentPage('environments')}
+               className="text-[10px] font-bold text-primary hover:underline"
+              >
+               Manage
+             </button>
+          </div>
+
+          <DropdownMenuSeparator className="mb-2" />
+
+          {/* Collection Environments Section */}
+          {currentCollection && (
             <div className="mb-3">
-              <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
+              <div className="flex items-center gap-2 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-blue-500/70">
                 <Building2 className="h-3 w-3" />
                 <span>Collection: {currentCollection.name}</span>
               </div>
-              <div className="space-y-1">
-                {collectionEnvironments.map((env: any) => (
-                  <button
-                    key={env.id}
-                    onClick={() => handleSelectCollectionEnvironment(env.id)}
-                    className={cn(
-                      'flex w-full items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-accent',
-                      activeCollectionEnvId === env.id && 'bg-accent'
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-2 w-2 rounded-full bg-blue-500" />
-                      <span className="font-medium">{env.name}</span>
-                    </div>
-                    {activeCollectionEnvId === env.id && (
-                      <Check className="h-4 w-4 text-primary" />
-                    )}
-                  </button>
-                ))}
+              
+              <div className="mt-1 space-y-0.5">
+                {collectionEnvironments.length === 0 ? (
+                  <div className="p-2 text-[11px] text-muted-foreground italic">No environments defined for this collection</div>
+                ) : (
+                  collectionEnvironments.map((env: any) => (
+                    <DropdownMenuItem
+                      key={env.id}
+                      onClick={() => handleSelectCollectionEnvironment(env.id)}
+                      className={cn(
+                        "flex items-center justify-between rounded-lg px-2.5 py-2 cursor-pointer transition-all duration-200",
+                        activeCollectionEnvId === env.id ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold" : "hover:bg-accent"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Circle className={cn("h-1.5 w-1.5 fill-current", activeCollectionEnvId === env.id ? "text-blue-500" : "text-muted-foreground/30")} />
+                        <span className="truncate max-w-[180px]">{env.name}</span>
+                      </div>
+                      {activeCollectionEnvId === env.id && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                    </DropdownMenuItem>
+                  ))
+                )}
+                
+                <DropdownMenuItem 
+                  onClick={() => handleSelectCollectionEnvironment(-1)}
+                  className={cn(
+                    "flex items-center justify-between rounded-lg px-2.5 py-2 cursor-pointer mt-1 italic text-muted-foreground",
+                    !activeCollectionEnvId && "bg-accent font-medium text-foreground"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <Circle className={cn("h-1.5 w-1.5", !activeCollectionEnvId ? "fill-muted-foreground text-muted-foreground" : "text-muted-foreground/30")} />
+                    <span>No Collection Environment</span>
+                  </div>
+                  {!activeCollectionEnvId && <Check className="h-3.5 w-3.5" />}
+                </DropdownMenuItem>
               </div>
             </div>
           )}
 
-          <div
-            className={
-              currentCollection && collectionEnvironments.length > 0
-                ? 'border-t pt-3'
-                : ''
-            }
-          >
-            <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
+          {/* Global Environments Section */}
+          <div>
+            <div className="flex items-center gap-2 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-500/70">
               <Globe className="h-3 w-3" />
               <span>Global Environments</span>
             </div>
-            <div className="mt-1 max-h-64 space-y-1 overflow-auto">
+            
+            <div className="mt-1 space-y-0.5 max-h-[240px] overflow-y-auto no-scrollbar">
               {environments.length === 0 ? (
-                <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                <div className="p-2 text-[11px] text-muted-foreground italic text-center py-4 bg-muted/20 rounded-lg mt-1">
                   No global environments configured
                 </div>
               ) : (
                 environments.map((env: any) => (
-                  <button
+                  <DropdownMenuItem
                     key={env.id}
                     onClick={() => handleSelectGlobalEnvironment(env)}
                     className={cn(
-                      'flex w-full items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-accent',
-                      currentEnvironment?.id === env.id && 'bg-accent'
+                      "flex items-center justify-between rounded-lg px-2.5 py-2 cursor-pointer transition-all duration-200",
+                      currentEnvironment?.id === env.id ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold" : "hover:bg-accent"
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-2 w-2 rounded-full bg-green-500" />
-                      <div className="text-left">
-                        <div className="font-medium">{env.displayName}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {env.name}
-                        </div>
+                      <div className={cn(
+                        "h-1.5 w-1.5 rounded-full flex-shrink-0",
+                        currentEnvironment?.id === env.id ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-muted-foreground/30"
+                      )} />
+                      <div className="flex flex-col min-w-0">
+                        <span className="truncate max-w-[180px]">{env.displayName}</span>
+                        {env.name !== env.displayName && (
+                           <span className="text-[10px] font-medium opacity-60 truncate">{env.name}</span>
+                        )}
                       </div>
                     </div>
-                    {currentEnvironment?.id === env.id && (
-                      <Check className="h-4 w-4 text-primary" />
-                    )}
-                  </button>
+                    {currentEnvironment?.id === env.id && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                  </DropdownMenuItem>
                 ))
               )}
+
+              <DropdownMenuItem 
+                onClick={() => handleSelectGlobalEnvironment(null)}
+                className={cn(
+                  "flex items-center justify-between rounded-lg px-2.5 py-2 cursor-pointer mt-1 italic text-muted-foreground",
+                  !currentEnvironment && "bg-accent font-medium text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={cn("h-1.5 w-1.5 rounded-full", !currentEnvironment ? "bg-muted-foreground" : "bg-muted-foreground/30")} />
+                  <span>No Global Environment</span>
+                </div>
+                {!currentEnvironment && <Check className="h-3.5 w-3.5" />}
+              </DropdownMenuItem>
             </div>
           </div>
-        </div>
-      )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
+
