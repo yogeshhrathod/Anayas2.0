@@ -56,6 +56,9 @@ const Settings = lazy(() =>
 const Privacy = lazy(() =>
   import('./pages/Privacy').then(module => ({ default: module.Privacy }))
 );
+const Performance = lazy(() =>
+  import('./pages/Performance').then(module => ({ default: module.Performance }))
+);
 
 // Static import for instant onboarding (no delay)
 import OnboardingFlow from './components/OnboardingFlow';
@@ -66,7 +69,8 @@ function App() {
   // Session recovery - load unsaved requests on startup
   useSessionRecovery();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const sidebarOpen = useStore(state => state.sidebarOpen);
+  const setSidebarOpen = useStore(state => state.setSidebarOpen);
   const [isResizing, setIsResizing] = useState(false);
 
   const [isAppReady, setIsAppReady] = useState(false);
@@ -719,6 +723,8 @@ function App() {
           return <Settings />;
         case 'privacy':
           return <Privacy />;
+        case 'performance':
+          return <Performance />;
         default:
           return <Homepage />;
       }

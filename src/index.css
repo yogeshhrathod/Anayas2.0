@@ -157,8 +157,8 @@ textarea {
 }
 
 :focus-visible {
-  outline: none !important;
-  @apply ring-2 ring-primary/20 ring-offset-0 !important;
+  outline: none;
+  @apply ring-2 ring-primary/20 ring-offset-0;
 }
 
 /* Smooth card transitions */

@@ -7,8 +7,8 @@
  * - Headers tab with header count
  * - Body tab with content type indicator
  */
-
 import {
+    Activity,
     Code,
     Eye,
     Fingerprint,
@@ -20,6 +20,14 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 import { ResponseData } from '../../types/entities';
 import { RequestFormData } from '../../types/forms';
+import { useStore } from '../../store/useStore';
+import { Button } from '../ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip';
 
 export interface RequestTabsProps {
   activeTab: 'params' | 'auth' | 'headers' | 'body' | 'response';
@@ -160,15 +168,42 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
         })}
       </div>
 
-      {isLoading && (
-        <div className="flex items-center gap-2 px-3 h-8 text-[11px] font-bold text-primary bg-primary/5 rounded-xl border border-primary/10 animate-in fade-in slide-in-from-right-4">
-          <div className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+      <div className="flex items-center gap-3">
+        {/* Benchmark Button */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const store = useStore.getState();
+                  store.setPerformanceTargetRequestId(requestData.id || null);
+                  store.setCurrentPage('performance');
+                }}
+                disabled={!requestData.url.trim()}
+                className="h-8 rounded-xl border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-500 font-bold text-[10px] uppercase tracking-widest px-3 gap-2 flex items-center transition-all hover:scale-105 active:scale-95"
+              >
+                <Activity className="h-3.5 w-3.5" />
+                Benchmark
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Performance Testing</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        {isLoading && (
+          <div className="flex items-center gap-2 px-3 h-8 text-[11px] font-bold text-primary bg-primary/5 rounded-xl border border-primary/10 animate-in fade-in slide-in-from-right-4 shrink-0">
+            <div className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </div>
+            <span className="uppercase tracking-[0.15em]">Live</span>
           </div>
-          <span className="uppercase tracking-[0.15em]">Live</span>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

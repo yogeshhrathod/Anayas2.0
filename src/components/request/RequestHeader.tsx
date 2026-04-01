@@ -306,6 +306,7 @@ export const RequestHeader: React.FC<RequestHeaderProps> = ({
             </Tooltip>
           </TooltipProvider>
 
+
           {/* Send / Cancel Button */}
           {isLoading ? (
             <Button

@@ -26,14 +26,14 @@ export const CollectionActions: React.FC<CollectionActionsProps> = ({
     <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between mb-10">
       {/* Search Bar Container */}
       <div className="relative flex-1 w-full max-w-md group">
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-primary/0 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition duration-500" />
+        {/* Removed glow blur effect on focus */}
         <div className="relative flex items-center">
           <Search className="absolute left-3.5 text-muted-foreground/50 h-4 w-4 group-focus-within:text-primary transition-colors" />
           <Input
             placeholder="Filter by name..."
             value={searchValue}
             onChange={e => onSearch(e.target.value)}
-            className="pl-10 h-11 bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/30 focus:border-primary/50 focus:ring-primary/10 rounded-xl transition-all font-medium w-full"
+            className="pl-10 h-11 bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/30 focus:border-primary/50 rounded-xl transition-all font-medium w-full focus-visible:ring-0"
           />
           {searchValue && (
             <button 

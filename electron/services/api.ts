@@ -109,13 +109,17 @@ export class ApiService {
       if (options.transactionId) {
         this.activeRequests.set(options.transactionId, controller);
       }
-      const timeoutId = setTimeout(
-        () => {
-          isTimeout = true;
-          controller.abort();
-        },
-        options.timeout || 30000
-      );
+
+      let timeoutId: NodeJS.Timeout | null = null;
+      if (options.timeout && options.timeout > 0) {
+        timeoutId = setTimeout(
+          () => {
+            isTimeout = true;
+            controller.abort();
+          },
+          options.timeout
+        );
+      }
 
       const { net, session } = await import('electron');
       
@@ -151,7 +155,9 @@ export class ApiService {
       if (options.transactionId) {
         this.activeRequests.delete(options.transactionId);
       }
-      clearTimeout(timeoutId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       const responseTime = Date.now() - startTime;
 
       // Extract response headers

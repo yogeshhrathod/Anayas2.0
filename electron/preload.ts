@@ -315,6 +315,14 @@ const api = {
     debug: (message: string, ...args: any[]) =>
       ipcRenderer.invoke('logger:debug', message, args),
   },
+
+  // Performance operations
+  performance: {
+    run: (options: any) => ipcRenderer.invoke('performance:run', options),
+    stop: () => ipcRenderer.invoke('performance:stop'),
+    isRunning: () => ipcRenderer.invoke('performance:isRunning'),
+    onProgress: createIpcSubscription('performance:progress'),
+  },
 };
 
 contextBridge.exposeInMainWorld('electronAPI', api);

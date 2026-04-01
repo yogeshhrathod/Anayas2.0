@@ -97,8 +97,11 @@ export function Settings() {
 
   // Number validation helpers
   const validateRequestTimeout = (value: number): string | undefined => {
-    if (isNaN(value) || value < 1000) {
-      return 'Must be at least 1,000ms (1 second)';
+    if (isNaN(value) || value < 0) {
+      return 'Must be 0 (infinite) or a positive value';
+    }
+    if (value > 0 && value < 1000) {
+      return 'Must be at least 1,000ms if not 0 (infinite)';
     }
     if (value > 300000) {
       return 'Cannot exceed 300,000ms (5 minutes)';
@@ -451,7 +454,7 @@ export function Settings() {
                 </div>
               )}
               <p className="text-xs text-muted-foreground">
-                Range: 1,000ms to 300,000ms (5 minutes)
+                Range: 1,000ms to 300,000ms (5 minutes). Set to 0 for infinite.
               </p>
             </div>
 
@@ -488,6 +491,23 @@ export function Settings() {
               )}
               <p className="text-xs text-muted-foreground">
                 Range: 1 to 10,000 records
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="httpVersion">Preferred HTTP Version</Label>
+              <select
+                id="httpVersion"
+                value={localSettings.httpVersion || 'auto'}
+                onChange={e => updateSetting('httpVersion', e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="auto">Auto (Highest Available)</option>
+                <option value="http1.1">HTTP / 1.1</option>
+                <option value="http2">HTTP / 2</option>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                The protocol version to use for API requests.
               </p>
             </div>
 

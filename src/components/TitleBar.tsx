@@ -12,7 +12,8 @@ import {
   Minus,
   Square,
   X,
-  Maximize2
+  Maximize2,
+  Activity
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
@@ -92,11 +93,12 @@ export function TitleBar() {
   ];
 
   const secondaryNavItems: Array<{
-    id: 'history' | 'settings';
+    id: 'history' | 'settings' | 'performance';
     label: string;
     icon: React.ComponentType<{ className?: string }>;
   }> = [
     { id: 'history', label: 'History', icon: HistoryIcon },
+    { id: 'performance', label: 'Performance', icon: Activity },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ];
 

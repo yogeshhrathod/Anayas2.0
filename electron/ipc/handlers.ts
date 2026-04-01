@@ -46,6 +46,7 @@ import {
 import type { ImportOptions, ImportResult } from '../lib/import';
 import { getImportFactory } from '../lib/import';
 import { apiService } from '../services/api';
+import { performanceService } from '../services/performance';
 import { createLogger } from '../services/logger';
 import { variableResolver } from '../services/variable-resolver';
 
@@ -790,19 +791,35 @@ export function registerIpcHandlers() {
         }
       }
 
-      // Safeguard against huge response sizes that crash JSON/IPC (5MB cap)
-      const MAX_RES_SIZE = 5 * 1024 * 1024;
+      // Safeguard against huge response sizes that crash JSON/IPC
+      // We allow up to 25MB for the immediate UI response to support media files,
+      // but cap history at 5MB to prevent database bloat.
+      const MAX_HISTORY_SIZE = 5 * 1024 * 1024;
+      const MAX_UI_SIZE = 25 * 1024 * 1024;
+
       let bodyToSave =
         typeof result.body === 'string'
           ? result.body
           : JSON.stringify(result.body || '');
-      let finalDataToUI = result.body;
       
-      if (bodyToSave.length > MAX_RES_SIZE) {
+      let finalDataToUI = result.body;
+
+      if (bodyToSave.length > MAX_HISTORY_SIZE) {
         bodyToSave =
-          bodyToSave.substring(0, MAX_RES_SIZE) +
-          '\n\n... [Response truncated due to exceeding 5MB size limit to prevent application crash]';
-        finalDataToUI = bodyToSave; // force string to UI
+          bodyToSave.substring(0, MAX_HISTORY_SIZE) +
+          '\n\n... [Response truncated in history due to exceeding 5MB size limit]';
+      }
+
+      if (typeof finalDataToUI === 'string' && finalDataToUI.length > MAX_UI_SIZE) {
+        finalDataToUI = 
+          finalDataToUI.substring(0, MAX_UI_SIZE) + 
+          '\n\n... [Response truncated in UI due to exceeding 25MB size limit]';
+      } else if (typeof finalDataToUI !== 'string') {
+        const stringified = JSON.stringify(finalDataToUI || '');
+        if (stringified.length > MAX_UI_SIZE) {
+          finalDataToUI = stringified.substring(0, MAX_UI_SIZE) + 
+            '\n\n... [Response truncated in UI due to exceeding 25MB size limit]';
+        }
       }
 
       // Save to history with original URL and request metadata for reference
@@ -1719,5 +1736,82 @@ export function registerIpcHandlers() {
       default:
         return 'linux';
     }
+  });
+
+  // Performance operations
+  ipcMain.handle('performance:run', async (event, options) => {
+    try {
+      const db = getDatabase();
+      const sender = event.sender;
+
+      // Get global environment
+      let globalEnv;
+      if (options.environmentId) {
+        globalEnv = db.environments.find(e => e.id === options.environmentId);
+      }
+      if (!globalEnv) {
+        globalEnv =
+          db.environments.find(e => e.isDefault === 1) || db.environments[0];
+      }
+      if (!globalEnv) {
+        throw new Error('No environment selected');
+      }
+
+      // Get collection variables
+      let collectionVariables: Record<string, string> = {};
+      if (options.collectionId) {
+        const collection = db.collections.find(
+          c => c.id === options.collectionId
+        );
+        if (
+          collection &&
+          collection.environments &&
+          collection.environments.length > 0
+        ) {
+          const activeEnvId =
+            collection.activeEnvironmentId || collection.environments[0].id;
+          const activeEnv = collection.environments.find(
+            e => e.id === activeEnvId
+          );
+          if (activeEnv) {
+            collectionVariables = activeEnv.variables || {};
+          }
+        }
+      }
+
+      const variableContext = {
+        globalVariables: globalEnv.variables || {},
+        collectionVariables,
+      };
+
+      // Merge SSL settings
+      const sslVerification = db.settings?.sslVerification !== false;
+      const finalOptions = {
+        ...options,
+        sslVerification,
+      };
+
+      const result = await performanceService.run(
+        finalOptions,
+        variableContext,
+        progress => {
+          sender.send('performance:progress', progress);
+        }
+      );
+
+      return { success: true, result };
+    } catch (error: any) {
+      logger.error('Performance test failed', { error: error.message });
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('performance:stop', async () => {
+    performanceService.stop();
+    return { success: true };
+  });
+
+  ipcMain.handle('performance:isRunning', async () => {
+    return performanceService.isRunning();
   });
 }

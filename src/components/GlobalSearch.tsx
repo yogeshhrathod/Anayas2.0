@@ -2,6 +2,7 @@ import {
     ArrowRight,
     Clock,
     FolderPlus,
+    Folder,
     Globe,
     Search,
     Zap,
@@ -31,6 +32,7 @@ export function GlobalSearch() {
   const modalRef = useRef<HTMLDivElement>(null);
 
   const collections = useStore(state => state.collections);
+  const folders = useStore(state => state.folders);
   const environments = useStore(state => state.environments);
   const requestHistory = useStore(state => state.requestHistory);
   const setCurrentPage = useStore(state => state.setCurrentPage);
@@ -128,10 +130,49 @@ export function GlobalSearch() {
           id: `collection-${collection.id}`,
           type: 'collection',
           title: collection.name,
-          subtitle: collection.description || 'No description',
+          subtitle: collection.description || 'Collection',
           icon: FolderPlus,
           action: () => {
-            setCurrentPage('collections');
+            setCurrentPage('home'); // or 'collections'? sidebar shows on home
+            // Expand this collection in sidebar
+            const { setExpandedCollections, expandedCollections } = useStore.getState();
+            if (!expandedCollections.has(collection.id!)) {
+              const next = new Set(expandedCollections);
+              next.add(collection.id!);
+              setExpandedCollections(next);
+            }
+            handleClose();
+          },
+        });
+      }
+    });
+
+    // Search folders
+    folders.forEach(folder => {
+      const matchesName = folder.name?.toLowerCase().includes(searchTerm);
+      if (matchesName) {
+        const collection = collections.find(c => c.id === folder.collectionId);
+        searchResults.push({
+          id: `folder-${folder.id}`,
+          type: 'collection', // use collection type for styling or specific folder type
+          title: folder.name,
+          subtitle: `Folder in ${collection?.name || 'Unknown Collection'}`,
+          icon: Folder,
+          action: () => {
+            setCurrentPage('home');
+            const { toggleFolderExpansion, expandedFolders, setExpandedCollections, expandedCollections } = useStore.getState();
+            
+            // Expand parent collection
+            if (folder.collectionId && !expandedCollections.has(folder.collectionId)) {
+              const cNext = new Set(expandedCollections);
+              cNext.add(folder.collectionId);
+              setExpandedCollections(cNext);
+            }
+
+            // Expand this folder
+            if (!expandedFolders.has(folder.id!)) {
+              toggleFolderExpansion(folder.id!);
+            }
             handleClose();
           },
         });
@@ -299,7 +340,7 @@ export function GlobalSearch() {
       {/* Search Input Trigger Button in TitleBar/Header */}
       <button
         onClick={() => setIsOpen(true)}
-        className="group relative flex h-8 w-64 items-center gap-2 rounded-lg border border-border/30 bg-background/40 px-3 text-sm text-muted-foreground transition-all duration-300 hover:bg-accent/50 hover:text-foreground hover:border-border/60"
+        className="group relative flex h-8 w-64 items-center gap-2 rounded-lg border border-border/30 bg-background/40 px-3 text-sm text-muted-foreground transition-all duration-300 hover:bg-accent/50 hover:text-foreground hover:border-border/60 focus:outline-none focus-visible:ring-0"
         aria-label="Open global search command palette"
       >
         <Search className="h-4 w-4 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
@@ -329,7 +370,7 @@ export function GlobalSearch() {
                   placeholder="Search requests, collections, environments..."
                   value={query}
                   onChange={e => setQuery(e.target.value)}
-                  className="h-14 w-full bg-transparent px-4 text-base text-foreground placeholder-muted-foreground focus:outline-none"
+                  className="h-14 w-full bg-transparent px-4 text-base text-foreground placeholder-muted-foreground focus:outline-none focus-visible:ring-0"
                 />
                 {query && (
                   <button

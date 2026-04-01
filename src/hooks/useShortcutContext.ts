@@ -28,7 +28,7 @@ export function useShortcutContext(): ContextState {
     selectedItem,
     selectedRequest,
     focusedElement,
-    sidebarOpen: true, // TODO: Get this from App.tsx or store
+    sidebarOpen: useStore.getState().sidebarOpen,
     focusedContext,
   };
 }

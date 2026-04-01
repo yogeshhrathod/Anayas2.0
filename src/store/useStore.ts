@@ -13,6 +13,59 @@ import {
     ResponseData,
 } from '../types/entities';
 
+export interface PerformanceResult {
+  timestamp: number;
+  requests: number;
+  latency: number;
+  throughput: number;
+  errors: number;
+  timeouts: number;
+}
+
+export interface PerformanceReport {
+  title?: string;
+  url: string;
+  requests: {
+    average: number;
+    mean: number;
+    stddev: number;
+    min: number;
+    max: number;
+    total: number;
+    sent: number;
+  };
+  latency: {
+    average: number;
+    mean: number;
+    stddev: number;
+    min: number;
+    max: number;
+    p50: number;
+    p75: number;
+    p90: number;
+    p99: number;
+    p99_9: number;
+    p99_99: number;
+    p99_999: number;
+  };
+  throughput: {
+    average: number;
+    mean: number;
+    stddev: number;
+    min: number;
+    max: number;
+    total: number;
+  };
+  errors: number;
+  timeouts: number;
+  duration: number;
+  start: string;
+  finish: string;
+  connections: number;
+  pipelining: number;
+  workers: number;
+}
+
 export interface UnsavedRequest {
   id: string;
   name: string;
@@ -160,6 +213,7 @@ interface AppState {
     | 'environments'
     | 'history'
     | 'settings'
+    | 'performance'
     | 'privacy';
   setCurrentPage: (
     page:
@@ -168,8 +222,20 @@ interface AppState {
       | 'environments'
       | 'history'
       | 'settings'
+      | 'performance'
       | 'privacy'
   ) => void;
+
+  // Performance State
+  performanceRunning: boolean;
+  performanceProgress: PerformanceResult[];
+  performanceReport: PerformanceReport | null;
+  performanceTargetRequestId: EntityId | null;
+  setPerformanceRunning: (running: boolean) => void;
+  addPerformanceProgress: (progress: PerformanceResult) => void;
+  setPerformanceReport: (report: PerformanceReport | null) => void;
+  clearPerformanceData: () => void;
+  setPerformanceTargetRequestId: (id: EntityId | null) => void;
 
   // Sidebar refresh trigger
   sidebarRefreshTrigger: number;
@@ -178,6 +244,10 @@ interface AppState {
   // Sidebar width state
   sidebarWidth: number;
   setSidebarWidth: (width: number) => void;
+
+  // Sidebar visibility state
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
 
   // Unsaved section height state for vertical resizing
   unsavedSectionHeight: number;
@@ -374,6 +444,20 @@ export const useStore = create<AppState>()(
       currentPage: 'home',
       setCurrentPage: currentPage => set({ currentPage }),
 
+      // Performance State
+      performanceRunning: false,
+      performanceProgress: [],
+      performanceReport: null,
+      performanceTargetRequestId: null,
+      setPerformanceRunning: performanceRunning => set({ performanceRunning }),
+      addPerformanceProgress: progress => 
+        set(state => ({ 
+          performanceProgress: [...state.performanceProgress, progress] 
+        })),
+      setPerformanceReport: performanceReport => set({ performanceReport }),
+      clearPerformanceData: () => set({ performanceProgress: [], performanceReport: null }),
+      setPerformanceTargetRequestId: performanceTargetRequestId => set({ performanceTargetRequestId }),
+
       // Sidebar refresh trigger
       sidebarRefreshTrigger: 0,
       triggerSidebarRefresh: () =>
@@ -382,8 +466,11 @@ export const useStore = create<AppState>()(
         })),
 
       // Sidebar width state
-      sidebarWidth: 200, // Default width (reduced from 256px)
+      sidebarWidth: 260,
       setSidebarWidth: sidebarWidth => set({ sidebarWidth }),
+
+      sidebarOpen: true,
+      setSidebarOpen: (sidebarOpen: boolean) => set({ sidebarOpen }),
 
       // Unsaved section height state for vertical resizing
       unsavedSectionHeight: 200,
@@ -551,6 +638,7 @@ export const useStore = create<AppState>()(
         currentThemeId: state.currentThemeId,
         customThemes: state.customThemes,
         sidebarWidth: state.sidebarWidth,
+        sidebarOpen: state.sidebarOpen,
         unsavedSectionHeight: state.unsavedSectionHeight,
         presetsExpanded: state.presetsExpanded,
         selectedRequest: state.selectedRequest,
