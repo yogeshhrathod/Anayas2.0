@@ -302,6 +302,7 @@ const api = {
     maximize: () => ipcRenderer.invoke('window:maximize'),
     close: () => ipcRenderer.invoke('window:close'),
     isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
+    isFullScreen: () => ipcRenderer.invoke('window:isFullScreen'),
   },
 
   // Logger operations

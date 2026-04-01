@@ -45,6 +45,7 @@ import { Button } from './ui/button';
 
 export function TitleBar() {
   const [isMaximized, setIsMaximized] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const platform = useStore(state => state.platform);
   const isMac = platform === 'mac';
   
@@ -64,16 +65,23 @@ export function TitleBar() {
   const { showSuccess, showError } = useToastNotifications();
 
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+      checkWindowState();
+    };
     window.addEventListener('resize', handleResize);
-    checkMaximized();
+    checkWindowState();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const checkMaximized = async () => {
+  const checkWindowState = async () => {
     try {
-      const maximized = await window.electronAPI.window.isMaximized();
-      setIsMaximized(maximized);
+      if (window.electronAPI?.window) {
+        const maximized = await window.electronAPI.window.isMaximized();
+        const fullscreen = await window.electronAPI.window.isFullScreen();
+        setIsMaximized(maximized);
+        setIsFullscreen(fullscreen);
+      }
     } catch (e) {
       // Ignore if not in electron
     }
@@ -208,7 +216,7 @@ export function TitleBar() {
   const handleMinimize = () => window.electronAPI.window.minimize();
   const handleMaximize = async () => {
     await window.electronAPI.window.maximize();
-    checkMaximized();
+    checkWindowState();
   };
   const handleClose = () => window.electronAPI.window.close();
 
@@ -223,8 +231,8 @@ export function TitleBar() {
         {/* Left Side (Logo + Primary Nav) */}
         <div className="flex items-center gap-1.5 shrink-0 overflow-visible" style={{ WebkitAppRegion: 'no-drag' } as any}>
           <div className="flex items-center gap-1.5">
-             {isMac && <div className="w-[72px] min-w-[72px] shrink-0 block" aria-hidden="true" />}
-             <Logo size={20} showText={!isUltraCompact} className="hover:opacity-80 transition-opacity cursor-pointer shrink-0 ml-1" onClick={() => setCurrentPage('home')} />
+             {isMac && !isFullscreen && <div className="w-[72px] min-w-[72px] shrink-0 block" aria-hidden="true" />}
+             <Logo size={20} showText={!isUltraCompact} className={cn("hover:opacity-80 transition-opacity cursor-pointer shrink-0 ml-1", isFullscreen && "ml-2")} onClick={() => setCurrentPage('home')} />
           </div>
 
           {!isUltraCompact && <div className="h-4 w-[1px] bg-border/40 mx-2 shrink-0" />}

@@ -1229,6 +1229,11 @@ export function registerIpcHandlers() {
     return window ? window.isMaximized() : false;
   });
 
+  ipcMain.handle('window:isFullScreen', () => {
+    const window = BrowserWindow.getFocusedWindow();
+    return window ? window.isFullScreen() : false;
+  });
+
   // Notification operations
   ipcMain.handle(
     'notification:show',

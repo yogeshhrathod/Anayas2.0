@@ -33,7 +33,7 @@ function createWindow() {
     },
     frame: false,
     titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 10, y: 10 },
+    trafficLightPosition: { x: 18, y: 20 },
     backgroundColor,
     show: false,
     vibrancy: 'under-window',
