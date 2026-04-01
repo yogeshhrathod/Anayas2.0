@@ -102,6 +102,10 @@ interface AppState {
   focusedContext: 'sidebar' | 'editor' | 'page' | null;
   setFocusedContext: (context: 'sidebar' | 'editor' | 'page' | null) => void;
 
+  expandedFolders: Set<number>;
+  setExpandedFolders: (expanded: Set<number>) => void;
+  toggleFolderExpansion: (folderId: number) => void;
+
   // Request History
   requestHistory: RequestHistory[];
   setRequestHistory: (history: RequestHistory[]) => void;
@@ -300,6 +304,14 @@ export const useStore = create<AppState>()(
       setSelectedItem: selectedItem => {
         set({ selectedItem });
       },
+      expandedFolders: new Set<number>(),
+      setExpandedFolders: (expandedFolders: Set<number>) => set({ expandedFolders }),
+      toggleFolderExpansion: (folderId: number) => 
+        set(state => {
+          const next = new Set(state.expandedFolders);
+          next.has(folderId) ? next.delete(folderId) : next.add(folderId);
+          return { expandedFolders: next };
+        }),
 
       // Enhanced context tracking for shortcuts
       focusedContext: null,
@@ -547,6 +559,8 @@ export const useStore = create<AppState>()(
         isWelcomeDone: state.isWelcomeDone,
         sidebarCompactMode: state.sidebarCompactMode,
         lastRequestStatuses: state.lastRequestStatuses,
+        expandedSidebarSections: Array.from(state.expandedSidebarSections || ['collections']),
+        expandedFolders: Array.from(state.expandedFolders || []),
       }),
       onRehydrateStorage: () => state => {
         if (state) {
@@ -556,6 +570,20 @@ export const useStore = create<AppState>()(
             state.expandedCollections = new Set(expandedCollections);
           } else {
             state.expandedCollections = new Set();
+          }
+
+          const expandedFolders = state.expandedFolders as any;
+          if (Array.isArray(expandedFolders)) {
+            state.expandedFolders = new Set(expandedFolders);
+          } else {
+            state.expandedFolders = new Set();
+          }
+
+          const expandedSidebarSections = state.expandedSidebarSections as any;
+          if (Array.isArray(expandedSidebarSections)) {
+            state.expandedSidebarSections = new Set(expandedSidebarSections);
+          } else {
+            state.expandedSidebarSections = new Set(['collections']);
           }
         }
       },

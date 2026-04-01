@@ -11,7 +11,7 @@
  * This refactored version is much smaller and more maintainable than the original.
  */
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCollectionDragDrop } from '../hooks/useCollectionDragDrop';
 import { useToastNotifications } from '../hooks/useToastNotifications';
@@ -38,6 +38,7 @@ export function CollectionHierarchy({
   const setCurrentPage = useStore(state => state.setCurrentPage);
   const setSelectedRequest = useStore(state => state.setSelectedRequest);
   const setSelectedItem = useStore(state => state.setSelectedItem);
+  const selectedRequest = useStore(state => state.selectedRequest);
   const setFocusedContext = useStore(state => state.setFocusedContext);
   const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
   const requests = useStore(state => state.requests);
@@ -46,15 +47,54 @@ export function CollectionHierarchy({
   const setFolders = useStore(state => state.setFolders);
 
   const { showSuccess, showError } = useToastNotifications();
-  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(
-    new Set()
-  );
+  const { expandedFolders, setExpandedFolders, toggleFolderExpansion } = useStore();
   const prevCollectionIdsRef = useRef<Set<number>>(new Set());
   // Track unsaved request drag state for visual feedback
   const [unsavedDragOver, setUnsavedDragOver] = useState<{
     type: 'collection' | 'folder';
     id: number;
   } | null>(null);
+
+  // Auto-expand and highlight on selected request
+  useEffect(() => {
+    if (!selectedRequest) return;
+    
+    // Auto-expand parents
+    if (selectedRequest.collectionId) {
+      const colId = Number(selectedRequest.collectionId);
+      if (!expandedCollections.has(colId)) {
+        setExpandedCollections(new Set([...expandedCollections, colId]));
+      }
+    }
+    
+    if (selectedRequest.folderId) {
+      const folId = Number(selectedRequest.folderId);
+      if (!expandedFolders.has(folId)) {
+        setExpandedFolders(new Set([...expandedFolders, folId]));
+      }
+    }
+
+    // Sync selectedItem for highlighting in sidebar if it's a saved request
+    if (selectedRequest.id) {
+       const { selectedItem } = useStore.getState();
+       if (selectedItem.id !== selectedRequest.id || selectedItem.type !== 'request') {
+         setSelectedItem({
+           type: 'request',
+           id: selectedRequest.id,
+           data: selectedRequest
+         });
+       }
+
+       // Scroll to the selected request in the sidebar
+       // We use a small delay to ensure expansion animation has finished/is in progress
+       setTimeout(() => {
+         const element = document.querySelector(`[data-request-id="${selectedRequest.id}"]`);
+         if (element) {
+           element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+         }
+       }, 300);
+    }
+  }, [selectedRequest?.id, selectedRequest?.collectionId, selectedRequest?.folderId]);
 
   // Auto-expand collections when new ones appear, but preserve manual collapse.
   useLayoutEffect(() => {
@@ -276,9 +316,7 @@ export function CollectionHierarchy({
   };
 
   const toggleFolder = (id: number) => {
-    const next = new Set(expandedFolders);
-    next.has(id) ? next.delete(id) : next.add(id);
-    setExpandedFolders(next);
+    toggleFolderExpansion(id);
   };
 
   const handleEditCollection = (id: number) => {

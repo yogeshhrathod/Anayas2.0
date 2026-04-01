@@ -1,7 +1,7 @@
 import {
   ChevronDown,
+  Layers,
   FileJson,
-  FolderPlus,
   Globe,
   History as HistoryIcon,
   Home,
@@ -87,7 +87,7 @@ export function TitleBar() {
     icon: React.ComponentType<{ className?: string }>;
   }> = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'collections', label: 'Collections', icon: FolderPlus },
+    { id: 'collections', label: 'Collections', icon: Layers },
     { id: 'environments', label: 'Environments', icon: Globe },
   ];
 

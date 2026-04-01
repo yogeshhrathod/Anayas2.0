@@ -1,5 +1,6 @@
 import { FileUp, Plus, Trash2 } from 'lucide-react';
 import React from 'react';
+import logger from '../../lib/logger';
 import { Button } from './button';
 import { Input } from './input';
 import { VariableInputUnified } from './variable-input-unified';
@@ -55,7 +56,7 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
         updateItem(index, 'value', `FILE::${filePath}`);
       }
     } catch (error) {
-      console.error('Failed to select file', error);
+      logger.error('Failed to select file', { error });
     }
   };
 

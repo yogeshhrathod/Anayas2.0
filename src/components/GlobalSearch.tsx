@@ -84,23 +84,32 @@ export function GlobalSearch() {
           subtitle: `${request.method} ${request.url}${collection ? ` • ${collection.name}` : ''}`,
           icon: Zap,
           action: async () => {
+            const { setActiveUnsavedRequestId, setSelectedItem } = useStore.getState();
+            
+            // 1. Switch to request editor page
             setCurrentPage('home');
-            setSelectedRequest({
+            
+            // 2. Clear any active unsaved selection to prevent split-view/selection confusion
+            setActiveUnsavedRequestId(null);
+            
+            // 3. Prepare the full request object with parsed internal fields
+            const fullRequest = {
+              ...request,
+              headers: typeof request.headers === 'string' ? JSON.parse(request.headers) : request.headers || {},
+              queryParams: typeof request.queryParams === 'string' ? JSON.parse(request.queryParams) : request.queryParams || [],
+              auth: typeof request.auth === 'string' ? JSON.parse(request.auth) : request.auth || { type: 'none' },
+            };
+            
+            // 4. Update the primary selection
+            setSelectedRequest(fullRequest);
+            
+            // 5. Update shortcut context selection (high-level sync)
+            setSelectedItem({
+              type: 'request',
               id: request.id,
-              name: request.name || '',
-              method: request.method,
-              url: request.url,
-              headers:
-                typeof request.headers === 'string'
-                  ? JSON.parse(request.headers)
-                  : request.headers || {},
-              body: request.body || '',
-              queryParams: [],
-              auth: { type: 'none' },
-              collectionId: request.collectionId,
-              isFavorite: request.isFavorite,
-              lastResponse: request.lastResponse,
+              data: fullRequest
             });
+            
             handleClose();
           },
         });
@@ -290,13 +299,13 @@ export function GlobalSearch() {
       {/* Search Input Trigger Button in TitleBar/Header */}
       <button
         onClick={() => setIsOpen(true)}
-        className="group relative flex h-8 w-64 items-center gap-2 rounded-lg border border-input/50 bg-background/50 px-3 text-sm text-muted-foreground shadow-sm transition-all duration-200 hover:bg-accent/80 hover:text-accent-foreground hover:shadow"
+        className="group relative flex h-8 w-64 items-center gap-2 rounded-lg border border-border/30 bg-background/40 px-3 text-sm text-muted-foreground transition-all duration-300 hover:bg-accent/50 hover:text-foreground hover:border-border/60"
         aria-label="Open global search command palette"
       >
-        <Search className="h-4 w-4 shrink-0 opacity-70 group-hover:opacity-100" />
-        <span className="flex-1 text-left font-medium opacity-80 group-hover:opacity-100">Search everything...</span>
-        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 transition-colors group-hover:border-border/80 group-hover:bg-background">
-          <span className="text-xs">{modKey}</span>K
+        <Search className="h-4 w-4 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
+        <span className="flex-1 text-left font-medium opacity-60 group-hover:opacity-100 transition-opacity">Search everywhere...</span>
+        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded bg-muted/50 px-1.5 font-mono text-[9px] font-medium text-muted-foreground opacity-60 group-hover:opacity-100 transition-all border border-transparent group-hover:border-border/30">
+          <span className="text-[10px]">{modKey}</span>K
         </kbd>
       </button>
 

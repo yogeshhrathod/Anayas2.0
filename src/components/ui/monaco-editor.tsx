@@ -1,5 +1,5 @@
 import { Editor } from '@monaco-editor/react';
-import { AlignLeft, Braces, Check, Copy } from 'lucide-react';
+import { Braces, Check, Copy, Minimize2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { DEFAULT_CODE_FONT_STACK } from '../../constants/fonts';
 import { useAvailableVariables } from '../../hooks/useVariableResolution';
@@ -598,6 +598,11 @@ export function MonacoEditor({
       ? settings.codeFontFamily.trim()
       : DEFAULT_CODE_FONT_STACK;
 
+  const resolvedMinimap = settings.enableMinimap !== undefined ? settings.enableMinimap : minimap;
+  const resolvedLineNumbers = settings.showLineNumbers !== undefined 
+    ? (settings.showLineNumbers ? 'on' : 'off') 
+    : lineNumbers;
+
   // Resolve which theme should be applied
   const currentTheme = resolveTheme(themeMode, currentThemeId, customThemes);
   const isDarkMode = currentTheme.type === 'dark';
@@ -634,14 +639,16 @@ export function MonacoEditor({
     }
   }, [currentTheme, monacoThemeName, themeMode]);
 
-  // Handle font family changes
+  // Handle font family and options changes
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.updateOptions({
         fontFamily: codeFontFamily,
+        minimap: { enabled: resolvedMinimap },
+        lineNumbers: resolvedLineNumbers,
       });
     }
-  }, [codeFontFamily]);
+  }, [codeFontFamily, resolvedMinimap, resolvedLineNumbers]);
 
   // Re-register completion and hover providers when variables change
   useEffect(() => {
@@ -708,9 +715,9 @@ export function MonacoEditor({
       tabSize,
       insertSpaces,
       wordWrap,
-      lineNumbers,
+      lineNumbers: resolvedLineNumbers,
       folding,
-      minimap: { enabled: minimap },
+      minimap: { enabled: resolvedMinimap },
       readOnly,
       automaticLayout: automaticLayout, // Use prop value
       scrollBeyondLastLine: false,
@@ -819,9 +826,10 @@ export function MonacoEditor({
   };
 
   const handleFormat = () => {
+    const currentValue = editorRef.current?.getValue() || value;
     if (language === 'json') {
       try {
-        const parsed = JSON.parse(value);
+        const parsed = JSON.parse(currentValue);
         const formatted = JSON.stringify(parsed, null, tabSize);
         onChange(formatted);
         success('Formatted', 'JSON has been formatted');
@@ -837,9 +845,10 @@ export function MonacoEditor({
   };
 
   const handleMinify = () => {
+    const currentValue = editorRef.current?.getValue() || value;
     if (language === 'json') {
       try {
-        const parsed = JSON.parse(value);
+        const parsed = JSON.parse(currentValue);
         const minified = JSON.stringify(parsed);
         onChange(minified);
         success('Minified', 'JSON has been minified');
@@ -899,10 +908,10 @@ export function MonacoEditor({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-all"
                           onClick={handleMinify}
                         >
-                          <AlignLeft className="h-4 w-4" />
+                          <Minimize2 className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>Minify JSON</TooltipContent>
@@ -974,7 +983,7 @@ export function MonacoEditor({
                         className="h-7 w-7"
                         onClick={handleMinify}
                       >
-                        <AlignLeft className="h-3.5 w-3.5" />
+                        <Minimize2 className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="left">Minify</TooltipContent>
@@ -1013,9 +1022,9 @@ export function MonacoEditor({
                 tabSize,
                 insertSpaces,
                 wordWrap,
-                lineNumbers,
+                lineNumbers: resolvedLineNumbers,
                 folding,
-                minimap: { enabled: minimap },
+                minimap: { enabled: resolvedMinimap },
                 readOnly,
                 automaticLayout: automaticLayout, // Automatically resize on container change
                 scrollBeyondLastLine: false,

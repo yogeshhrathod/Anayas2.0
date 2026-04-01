@@ -354,6 +354,58 @@ export function Settings() {
         </CardContent>
       </Card>
 
+      {/* Editor Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Editor Settings</CardTitle>
+          <CardDescription>Configure code editor behavior</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="enableMinimap"
+              checked={localSettings.enableMinimap ?? false}
+              onChange={e =>
+                updateSetting('enableMinimap', e.target.checked)
+              }
+              className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+            />
+            <Label htmlFor="enableMinimap" className="cursor-pointer">
+              Show minimap in code editors
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="showLineNumbers"
+              checked={localSettings.showLineNumbers ?? true}
+              onChange={e =>
+                updateSetting('showLineNumbers', e.target.checked)
+              }
+              className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+            />
+            <Label htmlFor="showLineNumbers" className="cursor-pointer">
+              Show line numbers
+            </Label>
+          </div>
+          <div className="space-y-2 pt-2">
+            <Label htmlFor="defaultResponseSubTab">Default Response Tab</Label>
+            <select
+              id="defaultResponseSubTab"
+              value={localSettings.defaultResponseSubTab || 'body'}
+              onChange={e => updateSetting('defaultResponseSubTab', e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="body">Body</option>
+              <option value="headers">Headers</option>
+              <option value="both">Split View (Both)</option>
+              <option value="console">Console</option>
+            </select>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* API Testing Settings */}
       <Card>
         <CardHeader>

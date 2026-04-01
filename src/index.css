@@ -73,7 +73,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border/40;
   }
 
   html {
@@ -157,8 +157,8 @@ textarea {
 }
 
 :focus-visible {
-  outline: 2px solid hsl(var(--ring)) !important;
-  outline-offset: 2px !important;
+  outline: none !important;
+  @apply ring-2 ring-primary/20 ring-offset-0 !important;
 }
 
 /* Smooth card transitions */

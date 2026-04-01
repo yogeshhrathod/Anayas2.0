@@ -155,6 +155,7 @@ export const RequestItem: React.FC<RequestItemProps> = ({
       )}
 
       <div
+        data-request-id={request.id}
         className={cn(
           "group flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer relative mx-1 mb-1 transition-all duration-200",
           isSelected 

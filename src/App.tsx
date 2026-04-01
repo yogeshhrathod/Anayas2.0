@@ -668,7 +668,7 @@ function App() {
       // Mark app as ready once all data is loaded
       setIsAppReady(true);
     } catch (error: any) {
-      console.error('Initial data load error detail:', error);
+      logger.error('Initial data load error detail:', { error });
       logger.error('Failed to load initial data', {
         error: error?.message || error,
       });
@@ -937,15 +937,15 @@ function App() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
-                        onClick={() => setSidebarCompactMode(!sidebarCompactMode)}
-                        className={cn(
-                          "w-full flex items-center justify-between px-2.5 py-2 rounded-md transition-all duration-200 group",
-                          sidebarCompactMode 
-                            ? "bg-primary/5 text-primary shadow-sm ring-1 ring-primary/20" 
-                            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                        )}
-                      >
+                        <button
+                          onClick={() => setSidebarCompactMode(!sidebarCompactMode)}
+                          className={cn(
+                            "w-full flex items-center justify-between px-2.5 py-2 rounded-md transition-all duration-300 group",
+                            sidebarCompactMode 
+                              ? "bg-primary/10 text-primary shadow-sm" 
+                              : "text-muted-foreground hover:bg-accent/80 hover:text-foreground"
+                          )}
+                        >
                         <div className="flex items-center gap-2.5">
                           <LayoutList className={cn(
                             "h-4 w-4 transition-transform group-hover:scale-110",
