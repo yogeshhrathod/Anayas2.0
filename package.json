@@ -37,6 +37,8 @@
     ]
   },
   "dependencies": {
+    "@emnapi/core": "^1.9.1",
+    "@emnapi/runtime": "^1.9.1",
     "@formkit/auto-animate": "^0.9.0",
     "@monaco-editor/react": "^4.6.0",
     "@radix-ui/react-context-menu": "^2.2.16",
@@ -58,6 +60,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^16.3.1",
+    "encoding": "^0.1.13",
     "esbuild": "^0.27.4",
     "framer-motion": "^12.25.0",
     "fuzzysort": "^3.1.0",
@@ -154,11 +157,7 @@
       ],
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
-      "notarize": {
-        "teamId": "BNPFD27L23"
-      }
+      "entitlements": "build/entitlements.mac.plist"
     },
     "win": {
       "icon": "build/icons/icon.png",
