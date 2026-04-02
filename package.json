@@ -157,7 +157,10 @@
       ],
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist"
+      "entitlements": "build/entitlements.mac.plist",
+      "notarytool": {
+        "teamId": "BNPFD27L23"
+      }
     },
     "win": {
       "icon": "build/icons/icon.png",
