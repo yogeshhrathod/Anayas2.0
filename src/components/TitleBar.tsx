@@ -101,10 +101,11 @@ export function TitleBar() {
   ];
 
   const secondaryNavItems: Array<{
-    id: 'history' | 'settings' | 'performance';
+    id: 'history' | 'settings' | 'performance' | 'agent';
     label: string;
     icon: React.ComponentType<{ className?: string }>;
   }> = [
+    { id: 'agent', label: 'Luna Agent', icon: Terminal },
     { id: 'history', label: 'History', icon: HistoryIcon },
     { id: 'performance', label: 'Performance', icon: Activity },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },

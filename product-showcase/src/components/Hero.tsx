@@ -221,6 +221,18 @@ export function Hero() {
               </a>
             </motion.div>
           )}
+
+          {/* Product Hunt Badge */}
+          <div className="mt-8 hover:scale-105 transition-transform duration-300">
+            <a href="https://www.producthunt.com/products/luna-16?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-luna-f3fd0a78-7c79-4ec9-b5dd-b2e4306e824d" target="_blank" rel="noopener noreferrer">
+              <img 
+                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1186054&theme=light&t=1782970925577" 
+                alt="Luna - The API client built for pure speed. | Product Hunt" 
+                width="250" 
+                height="54" 
+              />
+            </a>
+          </div>
         </motion.div>
       </motion.div>
     </section>

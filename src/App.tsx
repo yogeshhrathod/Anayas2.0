@@ -59,6 +59,9 @@ const Privacy = lazy(() =>
 const Performance = lazy(() =>
   import('./pages/Performance').then(module => ({ default: module.Performance }))
 );
+const AgenticRunner = lazy(() =>
+  import('./pages/AgenticRunner').then(module => ({ default: module.AgenticRunner }))
+);
 
 // Static import for instant onboarding (no delay)
 import OnboardingFlow from './components/OnboardingFlow';
@@ -726,6 +729,8 @@ function App() {
           return <Privacy />;
         case 'performance':
           return <Performance />;
+        case 'agent':
+          return <AgenticRunner />;
         default:
           return <Homepage />;
       }

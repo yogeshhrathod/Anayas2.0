@@ -579,6 +579,59 @@ export function Settings() {
         </CardContent>
       </Card>
 
+      {/* AI Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle>AI Configuration (Luna)</CardTitle>
+          <CardDescription>Configure local or commercial AI models for Agentic runner</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="aiEndpoint">API Endpoint</Label>
+              <Input
+                id="aiEndpoint"
+                type="text"
+                value={typeof localSettings.aiEndpoint !== 'undefined' ? localSettings.aiEndpoint : useStore.getState().aiEndpoint}
+                onChange={e => {
+                  updateSetting('aiEndpoint', e.target.value);
+                  useStore.getState().setAiConfig({ aiEndpoint: e.target.value });
+                }}
+                placeholder="http://127.0.0.1:1234"
+              />
+              <p className="text-xs text-muted-foreground">URL of your AI provider or local Ollama / LM Studio.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="aiModel">Model Name</Label>
+              <Input
+                id="aiModel"
+                type="text"
+                value={typeof localSettings.aiModel !== 'undefined' ? localSettings.aiModel : useStore.getState().aiModel}
+                onChange={e => {
+                  updateSetting('aiModel', e.target.value);
+                  useStore.getState().setAiConfig({ aiModel: e.target.value });
+                }}
+                placeholder="qwen/qwen3.5-9b"
+              />
+              <p className="text-xs text-muted-foreground">The specific model identifier to use.</p>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="aiPassword">API Key / Password (Optional)</Label>
+              <Input
+                id="aiPassword"
+                type="password"
+                value={typeof localSettings.aiPassword !== 'undefined' ? localSettings.aiPassword : useStore.getState().aiPassword}
+                onChange={e => {
+                  updateSetting('aiPassword', e.target.value);
+                  useStore.getState().setAiConfig({ aiPassword: e.target.value });
+                }}
+                placeholder="Empty for local unauthenticated servers"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Privacy & Data */}
       <Card>
         <CardHeader>

@@ -173,9 +173,14 @@ interface AppState {
   requestProgress: RequestProgress | null;
   setRequestProgress: (progress: RequestProgress | null) => void;
 
-  // Settings
   settings: Record<string, any>;
   setSettings: (settings: Record<string, any>) => void;
+
+  // AI Configuration
+  aiEndpoint: string;
+  aiModel: string;
+  aiPassword: string;
+  setAiConfig: (config: { aiEndpoint?: string; aiModel?: string; aiPassword?: string }) => void;
 
   // Global Confirmation
   confirmState: {
@@ -216,7 +221,8 @@ interface AppState {
     | 'history'
     | 'settings'
     | 'performance'
-    | 'privacy';
+    | 'privacy'
+    | 'agent';
   setCurrentPage: (
     page:
       | 'home'
@@ -226,6 +232,7 @@ interface AppState {
       | 'settings'
       | 'performance'
       | 'privacy'
+      | 'agent'
   ) => void;
 
   // Performance State
@@ -402,6 +409,12 @@ export const useStore = create<AppState>()(
       // Settings
       settings: {},
       setSettings: settings => set({ settings }),
+
+      // AI Configuration
+      aiEndpoint: 'http://127.0.0.1:1234',
+      aiModel: 'qwen/qwen3.5-9b',
+      aiPassword: '',
+      setAiConfig: config => set(state => ({ ...config })),
 
       // Global Confirmation
       confirmState: {
@@ -646,6 +659,9 @@ export const useStore = create<AppState>()(
         selectedRequest: state.selectedRequest,
         activeUnsavedRequestId: state.activeUnsavedRequestId,
         currentPage: state.currentPage,
+        aiEndpoint: state.aiEndpoint,
+        aiModel: state.aiModel,
+        aiPassword: state.aiPassword,
         isWelcomeDone: state.isWelcomeDone,
         sidebarCompactMode: state.sidebarCompactMode,
         lastRequestStatuses: state.lastRequestStatuses,
