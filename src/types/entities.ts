@@ -3,6 +3,31 @@
  * Centralized type definitions for all data models
  */
 
+export interface RequestScripts {
+  postResponse?: string;
+}
+
+export interface ScriptTestResult {
+  name: string;
+  passed: boolean;
+  error?: string;
+}
+
+export interface ScriptLogEntry {
+  level: 'log' | 'info' | 'warn' | 'error' | 'debug';
+  message: string;
+}
+
+export interface ScriptExecutionResult {
+  success: boolean;
+  error?: string;
+  tests: ScriptTestResult[];
+  logs: ScriptLogEntry[];
+  environmentUpdates: Record<string, string | null>;
+  collectionEnvironmentUpdates: Record<string, string | null>;
+  durationMs: number;
+}
+
 export interface Request {
   id?: EntityId;
   name: string;
@@ -28,6 +53,7 @@ export interface Request {
   bodyViewMode?: 'table' | 'json';
   activeTab?: string;
   splitViewRatio?: number;
+  scripts?: RequestScripts; // Post-response scripts (Postman-style tests)
   lastResponse?: ResponseData; // Saved response from last request execution
   createdAt?: string;
 }
@@ -120,6 +146,7 @@ export interface ResponseData {
   headers: Record<string, string>;
   data: any;
   time: number;
+  scriptResult?: ScriptExecutionResult; // Post-response script results (tests, logs)
   requestDetails?: {
     method: string;
     url: string;

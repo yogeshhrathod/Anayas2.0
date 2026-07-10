@@ -3,16 +3,16 @@ import { Braces, Check, Copy, Minimize2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { DEFAULT_CODE_FONT_STACK } from '../../constants/fonts';
 import { useAvailableVariables } from '../../hooks/useVariableResolution';
-import { resolveTheme, Theme } from '../../lib/themes';
+import { Theme, resolveTheme } from '../../lib/themes';
 import { cn } from '../../lib/utils';
 import { useStore } from '../../store/useStore';
 import { Button } from './button';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from './tooltip';
 import { useToast } from './use-toast';
 
@@ -553,6 +553,7 @@ interface MonacoEditorProps {
   insertSpaces?: boolean;
   automaticLayout?: boolean;
   enableEnvSuggestions?: boolean;
+  onMount?: (editor: any, monaco: any) => void;
 }
 
 export function MonacoEditor({
@@ -576,6 +577,7 @@ export function MonacoEditor({
   insertSpaces = true,
   automaticLayout = true,
   enableEnvSuggestions = true,
+  onMount,
 }: MonacoEditorProps) {
   const [isValid, setIsValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -598,10 +600,14 @@ export function MonacoEditor({
       ? settings.codeFontFamily.trim()
       : DEFAULT_CODE_FONT_STACK;
 
-  const resolvedMinimap = settings.enableMinimap !== undefined ? settings.enableMinimap : minimap;
-  const resolvedLineNumbers = settings.showLineNumbers !== undefined 
-    ? (settings.showLineNumbers ? 'on' : 'off') 
-    : lineNumbers;
+  const resolvedMinimap =
+    settings.enableMinimap !== undefined ? settings.enableMinimap : minimap;
+  const resolvedLineNumbers =
+    settings.showLineNumbers !== undefined
+      ? settings.showLineNumbers
+        ? 'on'
+        : 'off'
+      : lineNumbers;
 
   // Resolve which theme should be applied
   const currentTheme = resolveTheme(themeMode, currentThemeId, customThemes);
@@ -799,6 +805,11 @@ export function MonacoEditor({
       // Store observer cleanup function
       (editor as any)._resizeObserver = resizeObserver;
     }
+
+    // Call external onMount callback if provided
+    if (onMount) {
+      onMount(editor, monaco);
+    }
   };
 
   // Cleanup ResizeObserver on unmount
@@ -900,7 +911,9 @@ export function MonacoEditor({
                         <Braces className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Format {language.toUpperCase()}</TooltipContent>
+                    <TooltipContent>
+                      Format {language.toUpperCase()}
+                    </TooltipContent>
                   </Tooltip>
                   {language === 'json' && (
                     <Tooltip>

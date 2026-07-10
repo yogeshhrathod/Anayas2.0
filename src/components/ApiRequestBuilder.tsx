@@ -11,8 +11,8 @@
  * This refactored version is much smaller and more maintainable than the original.
  */
 
-import { useEffect, useRef } from 'react';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
+import { useEffect, useRef } from 'react';
 import { useRequestActions } from '../hooks/useRequestActions';
 import { useRequestState } from '../hooks/useRequestState';
 import { KEYMAP, createKeymapHandler } from '../lib/keymap';
@@ -26,6 +26,7 @@ import { RequestHeader } from './request/RequestHeader';
 import { RequestPresets } from './request/RequestPresets';
 import { RequestTabs } from './request/RequestTabs';
 import { ResponseTab } from './request/ResponseTab';
+import { ScriptsTab } from './request/ScriptsTab';
 import { SaveRequestDialog } from './ui/save-request-dialog';
 
 export function ApiRequestBuilder() {
@@ -33,9 +34,10 @@ export function ApiRequestBuilder() {
   const triggerSidebarRefresh = useStore(state => state.triggerSidebarRefresh);
   const setSelectedRequest = useStore(state => state.setSelectedRequest);
   const setFocusedContext = useStore(state => state.setFocusedContext);
-  const activeUnsavedRequestId = useStore(state => state.activeUnsavedRequestId);
+  const activeUnsavedRequestId = useStore(
+    state => state.activeUnsavedRequestId
+  );
   const [parent] = useAutoAnimate();
-
 
   // Use custom hooks for state and actions
   const requestState = useRequestState(selectedRequest);
@@ -93,9 +95,12 @@ export function ApiRequestBuilder() {
       requestActions.setShowCreatePresetDialog(true);
     });
 
-    const handleTogglePresets = createKeymapHandler(KEYMAP.TOGGLE_PRESETS, () => {
-      requestActions.setIsPresetsExpanded(!requestActions.isPresetsExpanded);
-    });
+    const handleTogglePresets = createKeymapHandler(
+      KEYMAP.TOGGLE_PRESETS,
+      () => {
+        requestActions.setIsPresetsExpanded(!requestActions.isPresetsExpanded);
+      }
+    );
 
     // Handlers for selecting presets 1-9
     const applyPresetToForm = (preset: any) => {
@@ -255,9 +260,8 @@ export function ApiRequestBuilder() {
         collectionId: data.collectionId,
         folderId: data.folderId,
         isFavorite: requestState.requestData.isFavorite ? 1 : 0,
+        scripts: requestState.requestData.scripts,
       });
-
-      // Update the request data with the new ID and collection info
       requestState.setRequestData({
         ...requestState.requestData,
         id: result.id,
@@ -287,6 +291,7 @@ export function ApiRequestBuilder() {
           collectionId: data.collectionId,
           folderId: data.folderId,
           isFavorite: requestState.requestData.isFavorite ? 1 : 0,
+          scripts: requestState.requestData.scripts,
         });
       }
     } catch (e: any) {
@@ -336,6 +341,13 @@ export function ApiRequestBuilder() {
       case 'auth':
         return (
           <AuthTab
+            requestData={requestState.requestData}
+            setRequestData={requestState.setRequestData}
+          />
+        );
+      case 'scripts':
+        return (
+          <ScriptsTab
             requestData={requestState.requestData}
             setRequestData={requestState.setRequestData}
           />
@@ -409,7 +421,10 @@ export function ApiRequestBuilder() {
           />
 
           {/* Tab Content - Fills remaining space */}
-          <div ref={parent} className="flex-1 min-h-0 p-3 bg-background/50 overflow-hidden flex flex-col">
+          <div
+            ref={parent}
+            className="flex-1 min-h-0 p-3 bg-background/50 overflow-hidden flex flex-col"
+          >
             {renderTabContent()}
           </div>
         </div>

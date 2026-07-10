@@ -19,6 +19,9 @@ export interface UnsavedRequest {
   bodyType?: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded';
   bodyContentType?: 'json' | 'text';
   bodyViewMode?: 'table' | 'json';
+  scripts?: {
+    postResponse?: string;
+  };
   lastResponse?: any;
   lastModified: string;
   createdAt: string;
@@ -131,10 +134,12 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
   `);
 
   logger.info('SQLite database initialized at ' + dbPath);
-  
+
   // Migration from JSON DB if it exists and SQlite is empty
   let isNewDb = true;
-  const envCount = sqliteDb.prepare('SELECT count(*) as c FROM environments').get() as { c: number };
+  const envCount = sqliteDb
+    .prepare('SELECT count(*) as c FROM environments')
+    .get() as { c: number };
   if (envCount.c > 0) isNewDb = false;
 
   const oldJsonPath = dbPath.replace('.sqlite', '.json');
@@ -154,14 +159,16 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
         settings: parsed.settings || {},
       };
       saveDatabase(); // This will populate SQLite
-    } catch(err) {
+    } catch (err) {
       logger.error('Failed to migrate from json db', { err });
     }
   } else {
     // Load from SQLite
     try {
       const loadTable = (tableName: string) => {
-        const rows = sqliteDb!.prepare(`SELECT data FROM ${tableName}`).all() as { data: string }[];
+        const rows = sqliteDb!
+          .prepare(`SELECT data FROM ${tableName}`)
+          .all() as { data: string }[];
         return rows.map(r => JSON.parse(r.data));
       };
 
@@ -170,19 +177,25 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
       dbMemory.folders = loadTable('folders');
       dbMemory.requests = loadTable('requests');
       dbMemory.request_history = loadTable('request_history');
-      
-      const unsavedRows = sqliteDb.prepare('SELECT data FROM unsaved_requests').all() as { data: string }[];
+
+      const unsavedRows = sqliteDb
+        .prepare('SELECT data FROM unsaved_requests')
+        .all() as { data: string }[];
       dbMemory.unsaved_requests = unsavedRows.map(r => JSON.parse(r.data));
 
-      const presetRows = sqliteDb.prepare('SELECT data FROM presets').all() as { data: string }[];
+      const presetRows = sqliteDb.prepare('SELECT data FROM presets').all() as {
+        data: string;
+      }[];
       dbMemory.presets = presetRows.map(r => JSON.parse(r.data));
 
-      const settingRows = sqliteDb.prepare('SELECT key, value FROM settings').all() as { key: string; value: string }[];
+      const settingRows = sqliteDb
+        .prepare('SELECT key, value FROM settings')
+        .all() as { key: string; value: string }[];
       dbMemory.settings = {};
       settingRows.forEach(r => {
         dbMemory.settings[r.key] = JSON.parse(r.value);
       });
-    } catch(err) {
+    } catch (err) {
       logger.error('Failed to load DB from SQLite', { err });
     }
   }
@@ -230,7 +243,7 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
     };
     await saveDatabase();
   }
-  
+
   if (!dbMemory.settings.telemetryId) {
     dbMemory.settings.telemetryId = uuidv4();
     await saveDatabase();
@@ -256,7 +269,8 @@ export async function initDatabase(customDbPath?: string): Promise<void> {
 
     const collectionId = addCollection({
       name: 'Sample API Collection',
-      description: 'Demo collection with example requests using JSONPlaceholder API',
+      description:
+        'Demo collection with example requests using JSONPlaceholder API',
       variables: {
         base_url: 'https://jsonplaceholder.typicode.com',
         post_id: '1',
@@ -285,10 +299,16 @@ export async function saveDatabase(): Promise<void> {
   // This allows the caller to not block if we ever move to a worker
   return new Promise((resolve, reject) => {
     try {
-      const insertMany = (tableName: string, items: any[], isTextId: boolean = false) => {
+      const insertMany = (
+        tableName: string,
+        items: any[],
+        isTextId: boolean = false
+      ) => {
         sqliteDb!.exec(`DELETE FROM ${tableName}`);
-        const insert = sqliteDb!.prepare(`INSERT INTO ${tableName} (id, data) VALUES (?, ?)`);
-        const insertManyTrans = sqliteDb!.transaction((elements) => {
+        const insert = sqliteDb!.prepare(
+          `INSERT INTO ${tableName} (id, data) VALUES (?, ?)`
+        );
+        const insertManyTrans = sqliteDb!.transaction(elements => {
           for (const el of elements) {
             insert.run(isTextId ? el.id : Number(el.id), JSON.stringify(el));
           }
@@ -304,9 +324,11 @@ export async function saveDatabase(): Promise<void> {
         insertMany('request_history', dbMemory.request_history);
         insertMany('unsaved_requests', dbMemory.unsaved_requests, true);
         insertMany('presets', dbMemory.presets, true);
-        
+
         sqliteDb!.exec('DELETE FROM settings');
-        const insertSettings = sqliteDb!.prepare('INSERT INTO settings (key, value) VALUES (?, ?)');
+        const insertSettings = sqliteDb!.prepare(
+          'INSERT INTO settings (key, value) VALUES (?, ?)'
+        );
         for (const [key, val] of Object.entries(dbMemory.settings)) {
           insertSettings.run(key, JSON.stringify(val));
         }
@@ -329,7 +351,11 @@ export async function closeDatabase(): Promise<void> {
 // ... All remaining CRUD helpers exact same ...
 export async function addEnvironment(env: any): Promise<number> {
   const id = generateUniqueId();
-  dbMemory.environments.push({ ...env, id, createdAt: new Date().toISOString() });
+  dbMemory.environments.push({
+    ...env,
+    id,
+    createdAt: new Date().toISOString(),
+  });
   await saveDatabase();
   return id;
 }
@@ -337,7 +363,11 @@ export async function addEnvironment(env: any): Promise<number> {
 export async function updateEnvironment(id: number, env: any): Promise<void> {
   const index = dbMemory.environments.findIndex(e => e.id === id);
   if (index !== -1) {
-    dbMemory.environments[index] = { ...dbMemory.environments[index], ...env, id };
+    dbMemory.environments[index] = {
+      ...dbMemory.environments[index],
+      ...env,
+      id,
+    };
     await saveDatabase();
   }
 }
@@ -358,10 +388,17 @@ export async function addCollection(collection: any): Promise<number> {
   return id;
 }
 
-export async function updateCollection(id: number, collection: any): Promise<void> {
+export async function updateCollection(
+  id: number,
+  collection: any
+): Promise<void> {
   const index = dbMemory.collections.findIndex(c => c.id === id);
   if (index !== -1) {
-    dbMemory.collections[index] = { ...dbMemory.collections[index], ...collection, id };
+    dbMemory.collections[index] = {
+      ...dbMemory.collections[index],
+      ...collection,
+      id,
+    };
     await saveDatabase();
   }
 }
@@ -405,7 +442,10 @@ export async function addFolder(folder: any): Promise<number> {
   return id;
 }
 
-export async function addFolderAfter(folder: any, afterFolderId: number): Promise<number> {
+export async function addFolderAfter(
+  folder: any,
+  afterFolderId: number
+): Promise<number> {
   const id = generateUniqueId();
   const afterFolder = dbMemory.folders.find(f => f.id === afterFolderId);
   if (!afterFolder) return addFolder(folder);
@@ -442,7 +482,10 @@ export async function updateFolder(id: number, folder: any): Promise<void> {
   }
 }
 
-export async function reorderFolder(id: number, newOrder: number): Promise<void> {
+export async function reorderFolder(
+  id: number,
+  newOrder: number
+): Promise<void> {
   const index = dbMemory.folders.findIndex(f => f.id === id);
   if (index !== -1) {
     dbMemory.folders[index].order = newOrder;
@@ -450,7 +493,10 @@ export async function reorderFolder(id: number, newOrder: number): Promise<void>
   }
 }
 
-export async function reorderRequest(id: number, newOrder: number): Promise<void> {
+export async function reorderRequest(
+  id: number,
+  newOrder: number
+): Promise<void> {
   const index = dbMemory.requests.findIndex(r => r.id === id);
   if (index !== -1) {
     dbMemory.requests[index].order = newOrder;
@@ -483,7 +529,10 @@ export async function addRequest(request: any): Promise<number> {
   return id;
 }
 
-export async function addRequestAfter(request: any, afterRequestId: number): Promise<number> {
+export async function addRequestAfter(
+  request: any,
+  afterRequestId: number
+): Promise<number> {
   const id = generateUniqueId();
   const afterRequest = dbMemory.requests.find(r => r.id === afterRequestId);
   if (!afterRequest) return await addRequest(request);
@@ -491,14 +540,17 @@ export async function addRequestAfter(request: any, afterRequestId: number): Pro
   const afterOrder = afterRequest.order || 0;
   const nextRequest = dbMemory.requests
     .filter(
-      r => r.collectionId === afterRequest.collectionId && r.folderId === afterRequest.folderId
+      r =>
+        r.collectionId === afterRequest.collectionId &&
+        r.folderId === afterRequest.folderId
     )
     .sort((a, b) => (a.order || 0) - (b.order || 0))
     .find(r => (r.order || 0) > afterOrder);
 
   let order;
   if (nextRequest) {
-    order = afterOrder + Math.floor(((nextRequest.order || 0) - afterOrder) / 2);
+    order =
+      afterOrder + Math.floor(((nextRequest.order || 0) - afterOrder) / 2);
     if (order === afterOrder) order = afterOrder + 1;
   } else {
     order = afterOrder + 1000;
@@ -522,7 +574,8 @@ export async function updateRequest(id: number, request: any): Promise<void> {
       ...dbMemory.requests[index],
       ...request,
       id,
-      queryParams: request.queryParams || dbMemory.requests[index].queryParams || [],
+      queryParams:
+        request.queryParams || dbMemory.requests[index].queryParams || [],
     };
     await saveDatabase();
   }
@@ -586,7 +639,9 @@ export async function resetSettings(): Promise<void> {
   await saveDatabase();
 }
 
-export async function addUnsavedRequest(request: Omit<UnsavedRequest, 'id' | 'createdAt'>): Promise<string> {
+export async function addUnsavedRequest(
+  request: Omit<UnsavedRequest, 'id' | 'createdAt'>
+): Promise<string> {
   const id = `unsaved-${generateUniqueId()}`;
   dbMemory.unsaved_requests.push({
     ...request,
@@ -597,7 +652,10 @@ export async function addUnsavedRequest(request: Omit<UnsavedRequest, 'id' | 'cr
   return id;
 }
 
-export async function updateUnsavedRequest(id: string, request: Partial<UnsavedRequest>): Promise<void> {
+export async function updateUnsavedRequest(
+  id: string,
+  request: Partial<UnsavedRequest>
+): Promise<void> {
   const index = dbMemory.unsaved_requests.findIndex(r => r.id === id);
   if (index !== -1) {
     dbMemory.unsaved_requests[index] = {
@@ -611,7 +669,9 @@ export async function updateUnsavedRequest(id: string, request: Partial<UnsavedR
 }
 
 export async function deleteUnsavedRequest(id: string): Promise<void> {
-  dbMemory.unsaved_requests = dbMemory.unsaved_requests.filter(r => r.id !== id);
+  dbMemory.unsaved_requests = dbMemory.unsaved_requests.filter(
+    r => r.id !== id
+  );
   await saveDatabase();
 }
 
@@ -624,7 +684,10 @@ export async function clearUnsavedRequests(): Promise<void> {
   await saveDatabase();
 }
 
-export async function promoteUnsavedRequest(id: string, requestData: any): Promise<number> {
+export async function promoteUnsavedRequest(
+  id: string,
+  requestData: any
+): Promise<number> {
   const unsaved = dbMemory.unsaved_requests.find(r => r.id === id);
   if (!unsaved) throw new Error('Unsaved request not found');
 

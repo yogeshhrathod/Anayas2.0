@@ -51,6 +51,9 @@ export interface Request {
   isFavorite?: number;
   order?: number;
   lastUsed?: string;
+  scripts?: {
+    postResponse?: string;
+  };
   lastResponse?: any;
   createdAt?: string;
 }
@@ -83,6 +86,9 @@ export interface RequestOptions {
   requestId?: number | string; // Link to saved request for history tracking
   environmentId?: number; // Environment ID for variable resolution
   transactionId?: string; // Request abort tracker
+  scripts?: {
+    postResponse?: string;
+  }; // Post-response scripts (Postman-style tests)
 }
 
 export interface SidebarState {
