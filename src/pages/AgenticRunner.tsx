@@ -1,10 +1,9 @@
-import { Bot, Send, User, Zap, Activity, AlertTriangle, Play } from 'lucide-react';
-import React, { useState, useRef, useEffect } from 'react';
+import { AlertTriangle, Bot, Send, User, Zap } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { useStore } from '../store/useStore';
 import { useToastNotifications } from '../hooks/useToastNotifications';
+import { useStore } from '../store/useStore';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -15,11 +14,15 @@ export function AgenticRunner() {
   const { aiEndpoint, aiModel, aiPassword } = useStore(state => ({
     aiEndpoint: state.aiEndpoint || 'http://127.0.0.1:1234',
     aiModel: state.aiModel || 'qwen/qwen3.5-9b',
-    aiPassword: state.aiPassword || ''
+    aiPassword: state.aiPassword || '',
   }));
 
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'Hello! I am Luna, your Agentic API Runner. How can I help you test or sequence APIs today?' }
+    {
+      role: 'assistant',
+      content:
+        'Hello! I am Luna, your Agentic API Runner. How can I help you test or sequence APIs today?',
+    },
   ]);
   const [inputVal, setInputVal] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -52,17 +55,21 @@ export function AgenticRunner() {
       const payload = {
         model: aiModel,
         messages: [
-          { role: 'system', content: 'You are Luna, a highly capable API testing agent. You assist the user with drafting JSON payloads, explaining Swagger specs, and writing curl commands.' },
+          {
+            role: 'system',
+            content:
+              'You are Luna, a highly capable API testing agent. You assist the user with drafting JSON payloads, explaining Swagger specs, and writing curl commands.',
+          },
           ...messages,
-          userMessage
+          userMessage,
         ],
-        stream: false
+        stream: false,
       };
 
       const res = await fetch(url, {
         method: 'POST',
         headers,
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -72,12 +79,25 @@ export function AgenticRunner() {
       const data = await res.json();
       const assistantMessage = data.choices[0].message.content;
 
-      setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
-
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: assistantMessage },
+      ]);
     } catch (e: any) {
       console.error('AgenticRunner Error:', e);
-      showError('Agent Error', e.message || 'Failed to communicate with local AI server.');
-      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Could not reach the local AI engine. Make sure your local server (e.g., LM Studio, Ollama) is running at ' + aiEndpoint }]);
+      showError(
+        'Agent Error',
+        e.message || 'Failed to communicate with local AI server.'
+      );
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          content:
+            '⚠️ Could not reach the local AI engine. Make sure your local server (e.g., LM Studio, Ollama) is running at ' +
+            aiEndpoint,
+        },
+      ]);
     } finally {
       setIsGenerating(false);
     }
@@ -98,26 +118,28 @@ export function AgenticRunner() {
         </div>
         <div>
           <h1 className="text-2xl font-bold">Luna Agentic Runner</h1>
-          <p className="text-sm text-muted-foreground">Local model: {aiModel} via {aiEndpoint}</p>
+          <p className="text-sm text-muted-foreground">
+            Local model: {aiModel} via {aiEndpoint}
+          </p>
         </div>
       </div>
 
       <div className="flex-1 flex flex-col min-h-0 bg-card border rounded-lg shadow-sm">
-        <div 
-          ref={scrollRef} 
-          className="flex-1 overflow-y-auto p-4 space-y-4"
-        >
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((m, i) => (
-            <div key={i} className={`flex gap-3 max-w-[85%] ${m.role === 'user' ? 'ml-auto' : ''}`}>
+            <div
+              key={i}
+              className={`flex gap-3 max-w-[85%] ${m.role === 'user' ? 'ml-auto' : ''}`}
+            >
               {m.role === 'assistant' && (
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <Bot className="h-4 w-4 text-primary" />
                 </div>
               )}
-              <div 
+              <div
                 className={`p-3 rounded-lg text-sm whitespace-pre-wrap flex-1 shadow-sm ${
-                  m.role === 'user' 
-                    ? 'bg-primary text-primary-foreground' 
+                  m.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
                     : 'bg-muted/50 text-foreground border border-border/50'
                 }`}
               >
@@ -137,8 +159,18 @@ export function AgenticRunner() {
               </div>
               <div className="p-3 rounded-lg bg-muted/50 text-sm flex gap-1 items-center">
                 <span className="animate-bounce">.</span>
-                <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>.</span>
-                <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>.</span>
+                <span
+                  className="animate-bounce"
+                  style={{ animationDelay: '0.2s' }}
+                >
+                  .
+                </span>
+                <span
+                  className="animate-bounce"
+                  style={{ animationDelay: '0.4s' }}
+                >
+                  .
+                </span>
               </div>
             </div>
           )}
@@ -146,7 +178,7 @@ export function AgenticRunner() {
 
         <div className="p-4 border-t bg-card/50">
           <div className="relative flex items-center gap-2">
-            <Input 
+            <Input
               value={inputVal}
               onChange={e => setInputVal(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -154,9 +186,9 @@ export function AgenticRunner() {
               className="flex-1 h-12 pr-12 text-sm shadow-sm"
               disabled={isGenerating}
             />
-            <Button 
-              size="icon" 
-              className="absolute right-2 h-8 w-8" 
+            <Button
+              size="icon"
+              className="absolute right-2 h-8 w-8"
               onClick={handleSend}
               disabled={!inputVal.trim() || isGenerating}
             >
@@ -164,8 +196,13 @@ export function AgenticRunner() {
             </Button>
           </div>
           <div className="mt-2 text-xs text-muted-foreground flex gap-4">
-             <span className="flex items-center gap-1"><Zap className="h-3 w-3 text-yellow-500" /> On-Demand Execution</span>
-             <span className="flex items-center gap-1"><AlertTriangle className="h-3 w-3 text-orange-500" /> Destructive actions require approval</span>
+            <span className="flex items-center gap-1">
+              <Zap className="h-3 w-3 text-yellow-500" /> On-Demand Execution
+            </span>
+            <span className="flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3 text-orange-500" /> Destructive
+              actions require approval
+            </span>
           </div>
         </div>
       </div>

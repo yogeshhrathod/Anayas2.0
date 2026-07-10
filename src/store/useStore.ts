@@ -4,13 +4,13 @@ import { persist } from 'zustand/middleware';
 import logger from '../lib/logger';
 import { Theme } from '../lib/themes';
 import {
-    Collection,
-    EntityId,
-    Environment,
-    Folder,
-    Request,
-    RequestHistory,
-    ResponseData,
+  Collection,
+  EntityId,
+  Environment,
+  Folder,
+  Request,
+  RequestHistory,
+  ResponseData,
 } from '../types/entities';
 
 export interface PerformanceResult {
@@ -180,7 +180,11 @@ interface AppState {
   aiEndpoint: string;
   aiModel: string;
   aiPassword: string;
-  setAiConfig: (config: { aiEndpoint?: string; aiModel?: string; aiPassword?: string }) => void;
+  setAiConfig: (config: {
+    aiEndpoint?: string;
+    aiModel?: string;
+    aiPassword?: string;
+  }) => void;
 
   // Global Confirmation
   confirmState: {
@@ -384,8 +388,9 @@ export const useStore = create<AppState>()(
         set({ selectedItem });
       },
       expandedFolders: new Set<number>(),
-      setExpandedFolders: (expandedFolders: Set<number>) => set({ expandedFolders }),
-      toggleFolderExpansion: (folderId: number) => 
+      setExpandedFolders: (expandedFolders: Set<number>) =>
+        set({ expandedFolders }),
+      toggleFolderExpansion: (folderId: number) =>
         set(state => {
           const next = new Set(state.expandedFolders);
           next.has(folderId) ? next.delete(folderId) : next.add(folderId);
@@ -414,7 +419,7 @@ export const useStore = create<AppState>()(
       aiEndpoint: 'http://127.0.0.1:1234',
       aiModel: 'qwen/qwen3.5-9b',
       aiPassword: '',
-      setAiConfig: config => set(state => ({ ...config })),
+      setAiConfig: config => set({ ...config }),
 
       // Global Confirmation
       confirmState: {
@@ -422,9 +427,10 @@ export const useStore = create<AppState>()(
         options: null,
         resolve: null,
       },
-      setConfirmState: state => set(prev => ({ 
-        confirmState: { ...prev.confirmState, ...state } 
-      })),
+      setConfirmState: state =>
+        set(prev => ({
+          confirmState: { ...prev.confirmState, ...state },
+        })),
 
       // Unsaved Requests
       unsavedRequests: [],
@@ -465,13 +471,15 @@ export const useStore = create<AppState>()(
       performanceReport: null,
       performanceTargetRequestId: null,
       setPerformanceRunning: performanceRunning => set({ performanceRunning }),
-      addPerformanceProgress: progress => 
-        set(state => ({ 
-          performanceProgress: [...state.performanceProgress, progress] 
+      addPerformanceProgress: progress =>
+        set(state => ({
+          performanceProgress: [...state.performanceProgress, progress],
         })),
       setPerformanceReport: performanceReport => set({ performanceReport }),
-      clearPerformanceData: () => set({ performanceProgress: [], performanceReport: null }),
-      setPerformanceTargetRequestId: performanceTargetRequestId => set({ performanceTargetRequestId }),
+      clearPerformanceData: () =>
+        set({ performanceProgress: [], performanceReport: null }),
+      setPerformanceTargetRequestId: performanceTargetRequestId =>
+        set({ performanceTargetRequestId }),
 
       // Sidebar refresh trigger
       sidebarRefreshTrigger: 0,
@@ -552,7 +560,10 @@ export const useStore = create<AppState>()(
       // App State
       appVersion: '',
       setAppVersion: appVersion => set({ appVersion }),
-      isWelcomeDone: typeof localStorage !== 'undefined' ? localStorage.getItem('luna_welcome_seen') === 'true' : false,
+      isWelcomeDone:
+        typeof localStorage !== 'undefined'
+          ? localStorage.getItem('luna_welcome_seen') === 'true'
+          : false,
       setIsWelcomeDone: isWelcomeDone => set({ isWelcomeDone }),
 
       // Active Requests
@@ -582,10 +593,13 @@ export const useStore = create<AppState>()(
       // Request Navigation History (browser-style back/forward)
       requestNavHistory: [],
       requestNavIndex: -1,
-      pushRequestNav: (request) =>
+      pushRequestNav: request =>
         set(state => {
           // If we're in the middle of history, truncate forward entries
-          const history = state.requestNavHistory.slice(0, state.requestNavIndex + 1);
+          const history = state.requestNavHistory.slice(
+            0,
+            state.requestNavIndex + 1
+          );
           // Don't push duplicates of the current entry
           const current = history[history.length - 1];
           if (current?.id === request?.id && current?.id !== undefined) {
@@ -665,7 +679,9 @@ export const useStore = create<AppState>()(
         isWelcomeDone: state.isWelcomeDone,
         sidebarCompactMode: state.sidebarCompactMode,
         lastRequestStatuses: state.lastRequestStatuses,
-        expandedSidebarSections: Array.from(state.expandedSidebarSections || ['collections']),
+        expandedSidebarSections: Array.from(
+          state.expandedSidebarSections || ['collections']
+        ),
         expandedFolders: Array.from(state.expandedFolders || []),
       }),
       onRehydrateStorage: () => state => {
