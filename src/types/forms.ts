@@ -61,6 +61,9 @@ export interface RequestFormData {
   bodyViewMode?: 'table' | 'json';
   activeTab?: string;
   splitViewRatio?: number;
+  scripts?: {
+    postResponse?: string;
+  };
 }
 
 export interface SettingsFormData {

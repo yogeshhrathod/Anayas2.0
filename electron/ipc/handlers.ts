@@ -1,53 +1,54 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import fs from 'fs';
 import {
-    addCollection,
-    addEnvironment,
-    addFolder,
-    addFolderAfter,
-    addPreset,
-    addRequest,
-    addRequestAfter,
-    addRequestHistory,
-    addUnsavedRequest,
-    clearAllRequestHistory,
-    clearUnsavedRequests,
-    deleteCollection,
-    deleteEnvironment,
-    deleteFolder,
-    deletePreset,
-    deleteRequest,
-    deleteRequestHistory,
-    deleteUnsavedRequest,
-    generateUniqueId,
-    getAllPresets,
-    getAllSettings,
-    getAllUnsavedRequests,
-    getDatabase,
-    getSetting,
-    promoteUnsavedRequest,
-    reorderFolder,
-    reorderRequest,
-    resetSettings,
-    saveDatabase,
-    setSetting,
-    updateCollection,
-    updateEnvironment,
-    updateFolder,
-    updateRequest,
-    updateUnsavedRequest,
+  addCollection,
+  addEnvironment,
+  addFolder,
+  addFolderAfter,
+  addPreset,
+  addRequest,
+  addRequestAfter,
+  addRequestHistory,
+  addUnsavedRequest,
+  clearAllRequestHistory,
+  clearUnsavedRequests,
+  deleteCollection,
+  deleteEnvironment,
+  deleteFolder,
+  deletePreset,
+  deleteRequest,
+  deleteRequestHistory,
+  deleteUnsavedRequest,
+  generateUniqueId,
+  getAllPresets,
+  getAllSettings,
+  getAllUnsavedRequests,
+  getDatabase,
+  getSetting,
+  promoteUnsavedRequest,
+  reorderFolder,
+  reorderRequest,
+  resetSettings,
+  saveDatabase,
+  setSetting,
+  updateCollection,
+  updateEnvironment,
+  updateFolder,
+  updateRequest,
+  updateUnsavedRequest,
 } from '../database';
 import { generateCurlCommand } from '../lib/curl-generator';
 import { parseCurlCommand, parseCurlCommands } from '../lib/curl-parser';
 import {
-    EnvironmentExportGenerator,
-    getEnvironmentImportFactory,
+  EnvironmentExportGenerator,
+  getEnvironmentImportFactory,
 } from '../lib/environment';
 import type { ImportOptions, ImportResult } from '../lib/import';
 import { getImportFactory } from '../lib/import';
 import { apiService } from '../services/api';
-import { performanceService } from '../services/performance';
 import { createLogger } from '../services/logger';
+import { performanceService } from '../services/performance';
+import { runPostResponseScript } from '../services/script-runner';
 import { variableResolver } from '../services/variable-resolver';
 
 const logger = createLogger('ipc-handlers');
@@ -62,11 +63,15 @@ export function registerIpcHandlers() {
   // Environment operations
   ipcMain.handle('env:list', async () => {
     const db = getDatabase();
-    return JSON.parse(JSON.stringify(db.environments.sort((a, b) => {
-      const aTime = a.lastUsed ? new Date(a.lastUsed).getTime() : 0;
-      const bTime = b.lastUsed ? new Date(b.lastUsed).getTime() : 0;
-      return bTime - aTime;
-    })));
+    return JSON.parse(
+      JSON.stringify(
+        db.environments.sort((a, b) => {
+          const aTime = a.lastUsed ? new Date(a.lastUsed).getTime() : 0;
+          const bTime = b.lastUsed ? new Date(b.lastUsed).getTime() : 0;
+          return bTime - aTime;
+        })
+      )
+    );
   });
 
   ipcMain.handle('env:save', async (_, env) => {
@@ -303,11 +308,15 @@ export function registerIpcHandlers() {
   // Collection operations
   ipcMain.handle('collection:list', async () => {
     const db = getDatabase();
-    return JSON.parse(JSON.stringify(db.collections.sort((a, b) => {
-      const aTime = a.lastUsed ? new Date(a.lastUsed).getTime() : 0;
-      const bTime = b.lastUsed ? new Date(b.lastUsed).getTime() : 0;
-      return bTime - aTime;
-    })));
+    return JSON.parse(
+      JSON.stringify(
+        db.collections.sort((a, b) => {
+          const aTime = a.lastUsed ? new Date(a.lastUsed).getTime() : 0;
+          const bTime = b.lastUsed ? new Date(b.lastUsed).getTime() : 0;
+          return bTime - aTime;
+        })
+      )
+    );
   });
 
   ipcMain.handle('collection:save', async (_, collection) => {
@@ -472,14 +481,18 @@ export function registerIpcHandlers() {
     );
 
     // Sort by order field, then by id as fallback
-    return JSON.parse(JSON.stringify(filteredFolders.sort((a, b) => {
-      const orderA = a.order || 0;
-      const orderB = b.order || 0;
-      if (orderA !== orderB) {
-        return orderA - orderB;
-      }
-      return (a.id || 0) - (b.id || 0);
-    })));
+    return JSON.parse(
+      JSON.stringify(
+        filteredFolders.sort((a, b) => {
+          const orderA = a.order || 0;
+          const orderB = b.order || 0;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+          return (a.id || 0) - (b.id || 0);
+        })
+      )
+    );
   });
 
   ipcMain.handle('folder:save', async (_, folder) => {
@@ -536,14 +549,18 @@ export function registerIpcHandlers() {
     });
 
     // Sort by order field, then by id as fallback
-    return JSON.parse(JSON.stringify(filteredRequests.sort((a, b) => {
-      const orderA = a.order || 0;
-      const orderB = b.order || 0;
-      if (orderA !== orderB) {
-        return orderA - orderB;
-      }
-      return (a.id || 0) - (b.id || 0);
-    })));
+    return JSON.parse(
+      JSON.stringify(
+        filteredRequests.sort((a, b) => {
+          const orderA = a.order || 0;
+          const orderB = b.order || 0;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+          return (a.id || 0) - (b.id || 0);
+        })
+      )
+    );
   });
 
   ipcMain.handle('request:get', async (_, id) => {
@@ -569,6 +586,7 @@ export function registerIpcHandlers() {
         bodyType: request.bodyType || 'raw',
         bodyContentType: request.bodyContentType || 'json',
         bodyViewMode: request.bodyViewMode || 'json',
+        scripts: request.scripts || null,
         lastResponse: request.lastResponse || null,
       });
       broadcast('requests:updated');
@@ -589,6 +607,7 @@ export function registerIpcHandlers() {
         bodyType: request.bodyType || 'raw',
         bodyContentType: request.bodyContentType || 'json',
         bodyViewMode: request.bodyViewMode || 'json',
+        scripts: request.scripts || null,
         lastResponse: request.lastResponse || null,
       });
       broadcast('requests:updated');
@@ -657,6 +676,8 @@ export function registerIpcHandlers() {
       // Get collection variables if request has a collection
       // CRITICAL: Match frontend fallback logic - use first env if no activeEnvironmentId
       let collectionVariables: Record<string, string> = {};
+      let activeCollection: any = null;
+      let activeCollectionEnv: any = null;
       if (options.collectionId) {
         const collection = db.collections.find(
           c => c.id === options.collectionId
@@ -682,6 +703,8 @@ export function registerIpcHandlers() {
 
           if (activeEnv) {
             collectionVariables = activeEnv.variables || {};
+            activeCollection = collection;
+            activeCollectionEnv = activeEnv;
           }
         }
       }
@@ -715,20 +738,35 @@ export function registerIpcHandlers() {
       const resolvedAuth = { ...options.auth };
       if (resolvedAuth) {
         if (resolvedAuth.type === 'bearer' && resolvedAuth.token) {
-          resolvedAuth.token = variableResolver.resolve(resolvedAuth.token, variableContext);
+          resolvedAuth.token = variableResolver.resolve(
+            resolvedAuth.token,
+            variableContext
+          );
         } else if (resolvedAuth.type === 'basic') {
           if (resolvedAuth.username) {
-            resolvedAuth.username = variableResolver.resolve(resolvedAuth.username, variableContext);
+            resolvedAuth.username = variableResolver.resolve(
+              resolvedAuth.username,
+              variableContext
+            );
           }
           if (resolvedAuth.password) {
-            resolvedAuth.password = variableResolver.resolve(resolvedAuth.password, variableContext);
+            resolvedAuth.password = variableResolver.resolve(
+              resolvedAuth.password,
+              variableContext
+            );
           }
         } else if (resolvedAuth.type === 'apikey') {
           if (resolvedAuth.apiKey) {
-            resolvedAuth.apiKey = variableResolver.resolve(resolvedAuth.apiKey, variableContext);
+            resolvedAuth.apiKey = variableResolver.resolve(
+              resolvedAuth.apiKey,
+              variableContext
+            );
           }
           if (resolvedAuth.apiKeyHeader) {
-            resolvedAuth.apiKeyHeader = variableResolver.resolve(resolvedAuth.apiKeyHeader, variableContext);
+            resolvedAuth.apiKeyHeader = variableResolver.resolve(
+              resolvedAuth.apiKeyHeader,
+              variableContext
+            );
           }
         }
       }
@@ -736,22 +774,37 @@ export function registerIpcHandlers() {
       // Inject auth headers into resolvedHeaders
       if (resolvedAuth && resolvedAuth.type !== 'none') {
         const authType = resolvedAuth.type;
-        
+
         // Only inject if the user hasn't manually set the header
         if (authType === 'bearer' && resolvedAuth.token) {
-          const hasAuthHeader = Object.keys(resolvedHeaders).some(h => h.toLowerCase() === 'authorization');
+          const hasAuthHeader = Object.keys(resolvedHeaders).some(
+            h => h.toLowerCase() === 'authorization'
+          );
           if (!hasAuthHeader) {
             resolvedHeaders['Authorization'] = `Bearer ${resolvedAuth.token}`;
           }
-        } else if (authType === 'basic' && (resolvedAuth.username || resolvedAuth.password)) {
-          const hasAuthHeader = Object.keys(resolvedHeaders).some(h => h.toLowerCase() === 'authorization');
+        } else if (
+          authType === 'basic' &&
+          (resolvedAuth.username || resolvedAuth.password)
+        ) {
+          const hasAuthHeader = Object.keys(resolvedHeaders).some(
+            h => h.toLowerCase() === 'authorization'
+          );
           if (!hasAuthHeader) {
-            const credentials = Buffer.from(`${resolvedAuth.username || ''}:${resolvedAuth.password || ''}`).toString('base64');
+            const credentials = Buffer.from(
+              `${resolvedAuth.username || ''}:${resolvedAuth.password || ''}`
+            ).toString('base64');
             resolvedHeaders['Authorization'] = `Basic ${credentials}`;
           }
-        } else if (authType === 'apikey' && resolvedAuth.apiKey && resolvedAuth.apiKeyHeader) {
+        } else if (
+          authType === 'apikey' &&
+          resolvedAuth.apiKey &&
+          resolvedAuth.apiKeyHeader
+        ) {
           const headerName = resolvedAuth.apiKeyHeader;
-          const hasApiKeyHeader = Object.keys(resolvedHeaders).some(h => h.toLowerCase() === headerName.toLowerCase());
+          const hasApiKeyHeader = Object.keys(resolvedHeaders).some(
+            h => h.toLowerCase() === headerName.toLowerCase()
+          );
           if (!hasApiKeyHeader) {
             resolvedHeaders[headerName] = resolvedAuth.apiKey;
           }
@@ -759,12 +812,14 @@ export function registerIpcHandlers() {
       }
 
       // Execute HTTP request using apiService with resolved values
-      let result: any;
       const method = options.method || 'GET';
 
-      const isJsonBody = 
-        (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE') && 
-        !!resolvedBody && 
+      const isJsonBody =
+        (method === 'POST' ||
+          method === 'PUT' ||
+          method === 'PATCH' ||
+          method === 'DELETE') &&
+        !!resolvedBody &&
         typeof resolvedBody === 'string';
 
       const sslVerification = db.settings?.sslVerification !== false;
@@ -780,7 +835,7 @@ export function registerIpcHandlers() {
         timeout: requestTimeout,
       };
 
-      result = await apiService.request(resolvedUrl, requestOptions);
+      const result = await apiService.request(resolvedUrl, requestOptions);
 
       // Get request name if requestId exists
       let requestName: string | undefined;
@@ -801,7 +856,7 @@ export function registerIpcHandlers() {
         typeof result.body === 'string'
           ? result.body
           : JSON.stringify(result.body || '');
-      
+
       let finalDataToUI = result.body;
 
       if (bodyToSave.length > MAX_HISTORY_SIZE) {
@@ -810,15 +865,92 @@ export function registerIpcHandlers() {
           '\n\n... [Response truncated in history due to exceeding 5MB size limit]';
       }
 
-      if (typeof finalDataToUI === 'string' && finalDataToUI.length > MAX_UI_SIZE) {
-        finalDataToUI = 
-          finalDataToUI.substring(0, MAX_UI_SIZE) + 
+      if (
+        typeof finalDataToUI === 'string' &&
+        finalDataToUI.length > MAX_UI_SIZE
+      ) {
+        finalDataToUI =
+          finalDataToUI.substring(0, MAX_UI_SIZE) +
           '\n\n... [Response truncated in UI due to exceeding 25MB size limit]';
       } else if (typeof finalDataToUI !== 'string') {
         const stringified = JSON.stringify(finalDataToUI || '');
         if (stringified.length > MAX_UI_SIZE) {
-          finalDataToUI = stringified.substring(0, MAX_UI_SIZE) + 
+          finalDataToUI =
+            stringified.substring(0, MAX_UI_SIZE) +
             '\n\n... [Response truncated in UI due to exceeding 25MB size limit]';
+        }
+      }
+
+      // Run post-response script (Postman-style "Tests") if defined.
+      // Fully guarded: a broken user script must never break the request flow.
+      let scriptResult: any = null;
+      const postResponseScript = options.scripts?.postResponse;
+      if (typeof postResponseScript === 'string' && postResponseScript.trim()) {
+        try {
+          scriptResult = runPostResponseScript(postResponseScript, {
+            response: {
+              status: result.status,
+              statusText: result.statusText,
+              headers: result.headers || {},
+              body: result.body,
+              responseTime: result.responseTime,
+            },
+            request: {
+              method,
+              url: resolvedUrl,
+              headers: resolvedHeaders,
+              body: resolvedBody,
+            },
+            globalVariables: globalEnv.variables || {},
+            collectionVariables,
+          });
+
+          // Persist environment variable changes made by the script
+          const envUpdates = scriptResult.environmentUpdates || {};
+          if (Object.keys(envUpdates).length > 0 && globalEnv.id) {
+            const newVars = { ...(globalEnv.variables || {}) };
+            for (const [key, value] of Object.entries(envUpdates)) {
+              if (value === null) delete newVars[key];
+              else newVars[key] = value as string;
+            }
+            await updateEnvironment(globalEnv.id, { variables: newVars });
+          }
+
+          const collectionEnvUpdates =
+            scriptResult.collectionEnvironmentUpdates || {};
+          if (
+            Object.keys(collectionEnvUpdates).length > 0 &&
+            activeCollection &&
+            activeCollectionEnv
+          ) {
+            const newVars = { ...(activeCollectionEnv.variables || {}) };
+            for (const [key, value] of Object.entries(collectionEnvUpdates)) {
+              if (value === null) delete newVars[key];
+              else newVars[key] = value as string;
+            }
+            const updatedEnvironments = (
+              activeCollection.environments || []
+            ).map((e: any) =>
+              e.id === activeCollectionEnv.id ? { ...e, variables: newVars } : e
+            );
+            await updateCollection(activeCollection.id, {
+              environments: updatedEnvironments,
+            });
+            broadcast('collections:updated');
+          }
+        } catch (scriptError: any) {
+          logger.error('Post-response script execution failed', {
+            error: scriptError?.message,
+          });
+          scriptResult = {
+            success: false,
+            error: scriptError?.message || 'Script execution failed',
+            tests: [],
+            logs: [],
+            environmentUpdates: {},
+            collectionEnvironmentUpdates: {},
+            durationMs: 0,
+          };
         }
       }
 
@@ -854,6 +986,7 @@ export function registerIpcHandlers() {
         status: result.status,
         statusText: result.statusText,
         headers: result.headers,
+        scriptResult,
         requestDetails: {
           method: method,
           url: resolvedUrl,
@@ -976,9 +1109,12 @@ export function registerIpcHandlers() {
             })
           );
 
-          const isJsonBody = 
-            (request.method === 'POST' || request.method === 'PUT' || request.method === 'PATCH' || request.method === 'DELETE') && 
-            !!resolvedBody && 
+          const isJsonBody =
+            (request.method === 'POST' ||
+              request.method === 'PUT' ||
+              request.method === 'PATCH' ||
+              request.method === 'DELETE') &&
+            !!resolvedBody &&
             typeof resolvedBody === 'string';
 
           const requestOptions = {
@@ -997,7 +1133,8 @@ export function registerIpcHandlers() {
               ? result.body
               : JSON.stringify(result.body || '');
           if (bodyToSave.length > MAX_RES_SIZE) {
-            bodyToSave = bodyToSave.substring(0, MAX_RES_SIZE) + 
+            bodyToSave =
+              bodyToSave.substring(0, MAX_RES_SIZE) +
               '\n\n... [Response truncated due to exceeding 5MB size limit to prevent application crash]';
           }
 
@@ -1277,6 +1414,7 @@ export function registerIpcHandlers() {
           bodyType: request.bodyType || 'raw',
           bodyContentType: request.bodyContentType || 'json',
           bodyViewMode: request.bodyViewMode || 'json',
+          scripts: request.scripts || undefined,
           lastResponse: request.lastResponse,
         });
         return { success: true, id: request.id };
@@ -1289,6 +1427,7 @@ export function registerIpcHandlers() {
           body: request.body || '',
           queryParams: request.queryParams || [],
           auth: request.auth || null,
+          scripts: request.scripts || undefined,
           lastResponse: request.lastResponse,
           lastModified: new Date().toISOString(),
         });
@@ -1511,7 +1650,9 @@ export function registerIpcHandlers() {
       const results = parseCurlCommands(commands);
       return { success: true, results };
     } catch (error: any) {
-      logger.error('Failed to parse bulk cURL commands', { error: error.message });
+      logger.error('Failed to parse bulk cURL commands', {
+        error: error.message,
+      });
       return { success: false, error: error.message };
     }
   });

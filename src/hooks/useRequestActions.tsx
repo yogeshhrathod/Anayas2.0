@@ -26,8 +26,8 @@ import { getStatusText, safeStringifyBody } from '../lib/response-utils';
 import { useStore } from '../store/useStore';
 import { RequestPreset, ResponseData } from '../types/entities';
 import { RequestFormData } from '../types/forms';
-import { useToastNotifications } from './useToastNotifications';
 import { useConfirmation } from './useConfirmation';
+import { useToastNotifications } from './useToastNotifications';
 
 export interface RequestActionsState {
   response: ResponseData | null;
@@ -68,7 +68,9 @@ export function useRequestActions(requestData: RequestFormData) {
   const setSelectedRequest = useStore(state => state.setSelectedRequest);
   const selectedRequest = useStore(state => state.selectedRequest);
   const currentEnvironment = useStore(state => state.currentEnvironment);
-  const activeUnsavedRequestId = useStore(state => state.activeUnsavedRequestId);
+  const activeUnsavedRequestId = useStore(
+    state => state.activeUnsavedRequestId
+  );
   const presetsExpanded = useStore(state => state.presetsExpanded);
   const setPresetsExpanded = useStore(state => state.setPresetsExpanded);
   const { showSuccess, showError } = useToastNotifications();
@@ -106,7 +108,7 @@ export function useRequestActions(requestData: RequestFormData) {
     const loadPresets = async () => {
       try {
         const requestId = requestData.id;
-        
+
         if (!requestId) {
           setState(prev => ({
             ...prev,
@@ -141,9 +143,11 @@ export function useRequestActions(requestData: RequestFormData) {
   const cancelRequest = useCallback(async () => {
     setState(prev => {
       if (prev.activeTransactionId) {
-        window.electronAPI.request.cancel(prev.activeTransactionId).catch((err: any) => {
-          logger.error('Cancel request failed', { error: err });
-        });
+        window.electronAPI.request
+          .cancel(prev.activeTransactionId)
+          .catch((err: any) => {
+            logger.error('Cancel request failed', { error: err });
+          });
       }
       return { ...prev, isLoading: false, activeTransactionId: null };
     });
@@ -155,13 +159,21 @@ export function useRequestActions(requestData: RequestFormData) {
       return;
     }
 
-    const transactionId = Date.now().toString() + Math.random().toString(36).substring(7);
-    const trackingId = String(requestData.id || activeUnsavedRequestId || 'new_request');
-    
+    const transactionId =
+      Date.now().toString() + Math.random().toString(36).substring(7);
+    const trackingId = String(
+      requestData.id || activeUnsavedRequestId || 'new_request'
+    );
+
     const startTime = Date.now();
     useStore.getState().setLoadingRequest(trackingId, true);
     useStore.getState().setRequestStartTime(trackingId, startTime);
-    setState(prev => ({ ...prev, isLoading: true, response: null, activeTransactionId: transactionId }));
+    setState(prev => ({
+      ...prev,
+      isLoading: true,
+      response: null,
+      activeTransactionId: transactionId,
+    }));
 
     try {
       const result = await window.electronAPI.request.send({
@@ -175,6 +187,7 @@ export function useRequestActions(requestData: RequestFormData) {
         requestId: requestData.id || activeUnsavedRequestId || undefined, // Link to saved request for history
         environmentId: currentEnvironment?.id,
         transactionId,
+        scripts: requestData.scripts,
       });
 
       // Convert response to ResponseData format
@@ -184,6 +197,7 @@ export function useRequestActions(requestData: RequestFormData) {
         headers: result.headers ?? {},
         data: result.data ?? null,
         time: result.responseTime ?? 0,
+        scriptResult: result.scriptResult ?? undefined,
         requestDetails: result.requestDetails,
       };
 
@@ -202,9 +216,27 @@ export function useRequestActions(requestData: RequestFormData) {
 
       // Show appropriate notification based on success/failure
       if (result.success) {
-        showSuccess('Request completed', {
-          description: `Status: ${response.status}`,
-        });
+        const tests = response.scriptResult?.tests || [];
+        const failedTests = tests.filter(t => !t.passed).length;
+        if (response.scriptResult?.error) {
+          showError(
+            'Script Error',
+            `Request completed (${response.status}) but the post-response script failed: ${response.scriptResult.error}`
+          );
+        } else if (failedTests > 0) {
+          showError(
+            'Tests Failed',
+            `Status: ${response.status} — ${failedTests} of ${tests.length} test${tests.length === 1 ? '' : 's'} failed`
+          );
+        } else if (tests.length > 0) {
+          showSuccess('Request completed', {
+            description: `Status: ${response.status} — All ${tests.length} test${tests.length === 1 ? '' : 's'} passed`,
+          });
+        } else {
+          showSuccess('Request completed', {
+            description: `Status: ${response.status}`,
+          });
+        }
       } else {
         showError('Request Failed', result.error || response.statusText);
       }
@@ -240,7 +272,9 @@ export function useRequestActions(requestData: RequestFormData) {
             await window.electronAPI.unsavedRequest.getAll();
           useStore.getState().setUnsavedRequests(updatedUnsaved);
         } catch (error) {
-          logger.error('Failed to save response for unsaved request', { error });
+          logger.error('Failed to save response for unsaved request', {
+            error,
+          });
         }
       }
     } catch (err: any) {
@@ -264,7 +298,14 @@ export function useRequestActions(requestData: RequestFormData) {
       useStore.getState().setLoadingRequest(trackingId, false);
       useStore.getState().setRequestStartTime(trackingId, null);
     }
-  }, [requestData, showSuccess, showError, selectedRequest, activeUnsavedRequestId, currentEnvironment]);
+  }, [
+    requestData,
+    showSuccess,
+    showError,
+    selectedRequest,
+    activeUnsavedRequestId,
+    currentEnvironment,
+  ]);
 
   const saveRequest = useCallback(async () => {
     if (!requestData.name.trim()) {
@@ -285,6 +326,7 @@ export function useRequestActions(requestData: RequestFormData) {
         collectionId: requestData.collectionId,
         folderId: requestData.folderId,
         isFavorite: requestData.isFavorite ? 1 : 0,
+        scripts: requestData.scripts,
       });
 
       showSuccess('Request saved', {
@@ -444,7 +486,11 @@ export function useRequestActions(requestData: RequestFormData) {
         title: 'Delete Preset',
         message: (
           <span>
-            Are you sure you want to delete the preset <strong className="font-bold text-foreground underline decoration-destructive/30 underline-offset-4">"{preset?.name}"</strong>?
+            Are you sure you want to delete the preset{' '}
+            <strong className="font-bold text-foreground underline decoration-destructive/30 underline-offset-4">
+              "{preset?.name}"
+            </strong>
+            ?
           </span>
         ),
         variant: 'destructive',
@@ -466,45 +512,54 @@ export function useRequestActions(requestData: RequestFormData) {
     [confirm, state.presets, showSuccess, showError]
   );
 
-  const actions: RequestActionsActions = useMemo(() => ({
-    sendRequest,
-    cancelRequest,
-    saveRequest,
-    copyResponse,
-    downloadResponse,
-    createPreset,
-    applyPreset,
-    deletePreset,
-    setShowCreatePresetDialog: show =>
-      setState(prev => ({ ...prev, showCreatePresetDialog: show })),
-    setShowSaveRequestDialog: show =>
-      setState(prev => ({ ...prev, showSaveRequestDialog: show })),
-    setNewPresetName: name =>
-      setState(prev => ({ ...prev, newPresetName: name })),
-    setNewPresetDescription: description =>
-      setState(prev => ({ ...prev, newPresetDescription: description })),
-    setIsPresetsExpanded: expanded => {
-      setPresetsExpanded(expanded);
-      setState(prev => ({ ...prev, isPresetsExpanded: expanded }));
-    },
-    setActivePresetId: id =>
-      setState(prev => ({ ...prev, activePresetId: id })),
-  }), [
-    sendRequest,
-    cancelRequest,
-    saveRequest,
-    copyResponse,
-    downloadResponse,
-    createPreset,
-    applyPreset,
-    deletePreset,
-    setPresetsExpanded,
-  ]);
+  const actions: RequestActionsActions = useMemo(
+    () => ({
+      sendRequest,
+      cancelRequest,
+      saveRequest,
+      copyResponse,
+      downloadResponse,
+      createPreset,
+      applyPreset,
+      deletePreset,
+      setShowCreatePresetDialog: show =>
+        setState(prev => ({ ...prev, showCreatePresetDialog: show })),
+      setShowSaveRequestDialog: show =>
+        setState(prev => ({ ...prev, showSaveRequestDialog: show })),
+      setNewPresetName: name =>
+        setState(prev => ({ ...prev, newPresetName: name })),
+      setNewPresetDescription: description =>
+        setState(prev => ({ ...prev, newPresetDescription: description })),
+      setIsPresetsExpanded: expanded => {
+        setPresetsExpanded(expanded);
+        setState(prev => ({ ...prev, isPresetsExpanded: expanded }));
+      },
+      setActivePresetId: id =>
+        setState(prev => ({ ...prev, activePresetId: id })),
+    }),
+    [
+      sendRequest,
+      cancelRequest,
+      saveRequest,
+      copyResponse,
+      downloadResponse,
+      createPreset,
+      applyPreset,
+      deletePreset,
+      setPresetsExpanded,
+    ]
+  );
 
-  const reqTrackingId = String(requestData.id || activeUnsavedRequestId || 'new_request');
-  const globalIsLoadingFromStore = useStore(state => !!state.loadingRequests[reqTrackingId]);
-  const globalStartTimeFromStore = useStore(state => state.requestStartTimes[reqTrackingId] || null);
-  
+  const reqTrackingId = String(
+    requestData.id || activeUnsavedRequestId || 'new_request'
+  );
+  const globalIsLoadingFromStore = useStore(
+    state => !!state.loadingRequests[reqTrackingId]
+  );
+  const globalStartTimeFromStore = useStore(
+    state => state.requestStartTimes[reqTrackingId] || null
+  );
+
   const globalIsLoading = globalIsLoadingFromStore || state.isLoading;
   const globalStartTime = globalStartTimeFromStore || state.startTime;
 

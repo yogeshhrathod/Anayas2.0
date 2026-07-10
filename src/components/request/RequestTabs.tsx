@@ -7,20 +7,21 @@
  * - Headers tab with header count
  * - Body tab with content type indicator
  */
-import {
-    Activity,
-    Code,
-    Eye,
-    Fingerprint,
-    Key,
-    Zap,
-} from 'lucide-react';
 import { motion } from 'framer-motion';
+import {
+  Activity,
+  Code,
+  Eye,
+  Fingerprint,
+  FlaskConical,
+  Key,
+  Zap,
+} from 'lucide-react';
 import React from 'react';
 import { cn } from '../../lib/utils';
+import { useStore } from '../../store/useStore';
 import { ResponseData } from '../../types/entities';
 import { RequestFormData } from '../../types/forms';
-import { useStore } from '../../store/useStore';
 import { Button } from '../ui/button';
 import {
   Tooltip,
@@ -30,9 +31,9 @@ import {
 } from '../ui/tooltip';
 
 export interface RequestTabsProps {
-  activeTab: 'params' | 'auth' | 'headers' | 'body' | 'response';
+  activeTab: 'params' | 'auth' | 'headers' | 'body' | 'scripts' | 'response';
   setActiveTab: (
-    tab: 'params' | 'auth' | 'headers' | 'body' | 'response'
+    tab: 'params' | 'auth' | 'headers' | 'body' | 'scripts' | 'response'
   ) => void;
   requestData: RequestFormData;
   bodyContentType: 'json' | 'text';
@@ -84,7 +85,16 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
       label: 'Body',
       icon: Code,
       color: 'text-blue-500',
-      badge: requestData.body.trim() ? bodyContentType.toUpperCase() : undefined,
+      badge: requestData.body.trim()
+        ? bodyContentType.toUpperCase()
+        : undefined,
+    },
+    {
+      id: 'scripts' as const,
+      label: 'Scripts',
+      icon: FlaskConical,
+      color: 'text-violet-500',
+      badge: requestData.scripts?.postResponse?.trim() ? 'JS' : undefined,
     },
     {
       id: 'response' as const,
@@ -102,11 +112,14 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
 
   return (
     <div className="flex-shrink-0 bg-transparent px-3 py-2 flex items-center justify-between">
-      <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-2xl border border-border/10 shadow-inner overflow-x-auto relative no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+      <div
+        className="flex items-center gap-1 p-1 bg-muted/30 rounded-2xl border border-border/10 shadow-inner overflow-x-auto relative no-scrollbar"
+        style={{ scrollbarWidth: 'none' }}
+      >
         {tabs.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
-          
+
           return (
             <button
               key={tab.id}
@@ -128,36 +141,52 @@ export const RequestTabs: React.FC<RequestTabsProps> = ({
                 <motion.div
                   layoutId="active-tab-bg"
                   className="absolute inset-0 bg-background rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.06)] border border-border/40 -z-10"
-                  transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                  transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
                 />
               )}
 
-              <div className={cn(
-                'flex items-center justify-center transition-all duration-300',
-                isActive ? 'scale-110' : 'group-hover:scale-110 group-hover:-translate-y-[1px]'
-              )}>
-                <Icon className={cn(
-                  'h-3.5 w-3.5 transition-colors duration-300',
-                  isActive ? tab.color : cn(tab.color, 'opacity-60 group-hover:opacity-100')
-                )} />
+              <div
+                className={cn(
+                  'flex items-center justify-center transition-all duration-300',
+                  isActive
+                    ? 'scale-110'
+                    : 'group-hover:scale-110 group-hover:-translate-y-[1px]'
+                )}
+              >
+                <Icon
+                  className={cn(
+                    'h-3.5 w-3.5 transition-colors duration-300',
+                    isActive
+                      ? tab.color
+                      : cn(tab.color, 'opacity-60 group-hover:opacity-100')
+                  )}
+                />
               </div>
-              
-              <span className={cn(
-                "tracking-tight transition-all duration-300",
-                isActive ? "font-bold" : "font-medium opacity-90 group-hover:opacity-100 group-hover:translate-x-[1px]"
-              )}>
+
+              <span
+                className={cn(
+                  'tracking-tight transition-all duration-300',
+                  isActive
+                    ? 'font-bold'
+                    : 'font-medium opacity-90 group-hover:opacity-100 group-hover:translate-x-[1px]'
+                )}
+              >
                 {tab.label}
               </span>
-              
+
               {tab.badge && (
                 <div
                   className={cn(
                     'h-4.5 px-1.5 min-w-[18px] flex items-center justify-center text-[10px] font-black rounded-md transition-all duration-300 ring-1 ring-inset',
-                    isActive 
-                      ? 'bg-primary/10 text-primary ring-primary/20' 
+                    isActive
+                      ? 'bg-primary/10 text-primary ring-primary/20'
                       : 'bg-muted/50 text-muted-foreground ring-border/50 group-hover:text-foreground',
-                    tab.isSpecial && response?.status && response.status >= 400 ? 'bg-rose-500/10 text-rose-600 ring-rose-500/30' : '',
-                    tab.isSpecial && response?.status && response.status < 300 ? 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/30' : ''
+                    tab.isSpecial && response?.status && response.status >= 400
+                      ? 'bg-rose-500/10 text-rose-600 ring-rose-500/30'
+                      : '',
+                    tab.isSpecial && response?.status && response.status < 300
+                      ? 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/30'
+                      : ''
                   )}
                 >
                   {tab.badge}

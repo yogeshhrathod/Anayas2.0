@@ -28,7 +28,7 @@ import { RequestFormData } from '../types/forms';
 
 export interface RequestState {
   requestData: RequestFormData;
-  activeTab: 'params' | 'auth' | 'headers' | 'body' | 'response';
+  activeTab: 'params' | 'auth' | 'headers' | 'body' | 'scripts' | 'response';
   bodyType: 'none' | 'raw' | 'form-data' | 'x-www-form-urlencoded';
   bodyContentType: 'json' | 'text';
   bodyViewMode: 'table' | 'json';
@@ -36,7 +36,7 @@ export interface RequestState {
   paramsViewMode: 'table' | 'json';
   headersViewMode: 'table' | 'json';
   bulkEditJson: string;
-  responseSubTab: 'headers' | 'body' | 'both' | 'console';
+  responseSubTab: 'headers' | 'body' | 'both' | 'console' | 'tests';
   splitViewRatio: number;
   isSaved: boolean;
   lastSavedAt: Date | null;
@@ -56,7 +56,9 @@ export interface RequestStateActions {
   setParamsViewMode: (mode: RequestState['paramsViewMode']) => void;
   setHeadersViewMode: (mode: RequestState['headersViewMode']) => void;
   setBulkEditJson: (json: string) => void;
-  setResponseSubTab: (tab: 'headers' | 'body' | 'both' | 'console') => void;
+  setResponseSubTab: (
+    tab: 'headers' | 'body' | 'both' | 'console' | 'tests'
+  ) => void;
   setSplitViewRatio: (ratio: number) => void;
   setIsSaved: (saved: boolean) => void;
   setLastSavedAt: (date: Date | null) => void;
@@ -104,8 +106,12 @@ export function useRequestState(selectedRequest: Request | null) {
 
   // Load default responseSubTab from settings (defaults to 'headers' if not set)
   const defaultResponseSubTab =
-    (settings?.defaultResponseSubTab as 'headers' | 'body' | 'both' | 'console') ||
-    'headers';
+    (settings?.defaultResponseSubTab as
+      | 'headers'
+      | 'body'
+      | 'both'
+      | 'console'
+      | 'tests') || 'headers';
 
   const [state, setState] = useState<RequestState>(() => {
     const initialRequestData: RequestFormData = selectedRequest
@@ -122,17 +128,26 @@ export function useRequestState(selectedRequest: Request | null) {
           folderId: selectedRequest.folderId,
           isFavorite: Boolean(selectedRequest.isFavorite),
           bodyType: selectedRequest.bodyType as RequestFormData['bodyType'],
-          bodyContentType: selectedRequest.bodyContentType as RequestFormData['bodyContentType'],
-          bodyViewMode: selectedRequest.bodyViewMode as RequestFormData['bodyViewMode'],
+          bodyContentType:
+            selectedRequest.bodyContentType as RequestFormData['bodyContentType'],
+          bodyViewMode:
+            selectedRequest.bodyViewMode as RequestFormData['bodyViewMode'],
+          scripts: selectedRequest.scripts,
         }
       : defaultRequestData;
 
-    const bodyType = initialRequestData.bodyType || (initialRequestData.body ? 'raw' : 'none');
+    const bodyType =
+      initialRequestData.bodyType || (initialRequestData.body ? 'raw' : 'none');
     const bodyViewMode = initialRequestData.bodyViewMode || 'json';
-    
+
     // Parse body for table view if needed
-    let bodyFormData: Array<{ key: string; value: string; enabled: boolean }> = [];
-    if (bodyType === 'form-data' || bodyType === 'x-www-form-urlencoded' || bodyViewMode === 'table') {
+    let bodyFormData: Array<{ key: string; value: string; enabled: boolean }> =
+      [];
+    if (
+      bodyType === 'form-data' ||
+      bodyType === 'x-www-form-urlencoded' ||
+      bodyViewMode === 'table'
+    ) {
       try {
         const parsed = JSON.parse(initialRequestData.body || '{}');
         bodyFormData = Object.entries(parsed).map(([key, value]) => ({
@@ -204,15 +219,28 @@ export function useRequestState(selectedRequest: Request | null) {
       prevSelectedRevRef.current = revToken;
 
       setState(prev => {
-        const bodyType = (selectedRequest as any).bodyType || (selectedRequest.body ? 'raw' : 'none');
-        const bodyViewMode = (selectedRequest as any).bodyViewMode || (bodyType === 'raw' ? 'json' : 'table');
-        const bodyContentType = (selectedRequest as any).bodyContentType || 'json';
+        const bodyType =
+          (selectedRequest as any).bodyType ||
+          (selectedRequest.body ? 'raw' : 'none');
+        const bodyViewMode =
+          (selectedRequest as any).bodyViewMode ||
+          (bodyType === 'raw' ? 'json' : 'table');
+        const bodyContentType =
+          (selectedRequest as any).bodyContentType || 'json';
         const activeTab = (selectedRequest as any).activeTab || 'params';
         const splitViewRatio = (selectedRequest as any).splitViewRatio || 50;
 
         // Parse body for table view if it exists
-        let bodyFormData: Array<{ key: string; value: string; enabled: boolean }> = [];
-        if (bodyType === 'form-data' || bodyType === 'x-www-form-urlencoded' || bodyViewMode === 'table') {
+        let bodyFormData: Array<{
+          key: string;
+          value: string;
+          enabled: boolean;
+        }> = [];
+        if (
+          bodyType === 'form-data' ||
+          bodyType === 'x-www-form-urlencoded' ||
+          bodyViewMode === 'table'
+        ) {
           try {
             const parsed = JSON.parse(selectedRequest.body || '{}');
             bodyFormData = Object.entries(parsed).map(([key, value]) => ({
@@ -245,6 +273,7 @@ export function useRequestState(selectedRequest: Request | null) {
             bodyType: bodyType,
             bodyContentType: bodyContentType,
             bodyViewMode: bodyViewMode,
+            scripts: selectedRequest.scripts,
           },
           activeTab,
           bodyType,
@@ -257,8 +286,8 @@ export function useRequestState(selectedRequest: Request | null) {
         };
       });
     }
-  // Disable exhaustive-deps: we intentionally only react to selectedRequest reference changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Disable exhaustive-deps: we intentionally only react to selectedRequest reference changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRequest]);
 
   // Auto-save functionality for saved requests
@@ -284,6 +313,7 @@ export function useRequestState(selectedRequest: Request | null) {
         collectionId: state.requestData.collectionId,
         folderId: state.requestData.folderId,
         isFavorite: state.requestData.isFavorite ? 1 : 0,
+        scripts: state.requestData.scripts,
       });
 
       setState(prev => ({
@@ -329,6 +359,7 @@ export function useRequestState(selectedRequest: Request | null) {
         body: state.requestData.body || '',
         queryParams: state.requestData.queryParams,
         auth: state.requestData.auth,
+        scripts: state.requestData.scripts,
         lastResponse: selectedRequest?.lastResponse,
       });
 
@@ -414,12 +445,15 @@ export function useRequestState(selectedRequest: Request | null) {
     if (selectedRequestRef.current) {
       const currentInStore = selectedRequestRef.current;
       // Only update if there are meaningful changes to avoid loops
-      const hasDataChanges = 
+      const hasDataChanges =
         currentInStore.url !== state.requestData.url ||
         currentInStore.method !== state.requestData.method ||
         currentInStore.body !== state.requestData.body ||
-        JSON.stringify(currentInStore.headers) !== JSON.stringify(state.requestData.headers);
-        
+        JSON.stringify(currentInStore.headers) !==
+          JSON.stringify(state.requestData.headers) ||
+        JSON.stringify(currentInStore.scripts || {}) !==
+          JSON.stringify(state.requestData.scripts || {});
+
       const hasUIChanges =
         (currentInStore as any).activeTab !== state.activeTab ||
         (currentInStore as any).splitViewRatio !== state.splitViewRatio ||
@@ -439,179 +473,200 @@ export function useRequestState(selectedRequest: Request | null) {
         } as any);
       }
     }
-  }, [state.requestData, state.activeTab, state.splitViewRatio, state.bodyType, state.bodyViewMode, setSelectedRequest]);
+  }, [
+    state.requestData,
+    state.activeTab,
+    state.splitViewRatio,
+    state.bodyType,
+    state.bodyViewMode,
+    setSelectedRequest,
+  ]);
 
-  const actions: RequestStateActions = useMemo(() => ({
-    setRequestData: data => {
-      setState(prev => ({
-        ...prev,
-        requestData: typeof data === 'function' ? data(prev.requestData) : data,
-        isSaved: false,
-      }));
-    },
-    setActiveTab: tab => setState(prev => ({ ...prev, activeTab: tab })),
-    setBodyType: type => setState(prev => ({ 
-      ...prev, 
-      bodyType: type,
-      requestData: { ...prev.requestData, bodyType: type } 
-    })),
-    setBodyContentType: type =>
-      setState(prev => ({ 
-        ...prev, 
-        bodyContentType: type,
-        requestData: { ...prev.requestData, bodyContentType: type }
-      })),
-    setBodyViewMode: mode =>
-      setState(prev => ({ 
-        ...prev, 
-        bodyViewMode: mode,
-        requestData: { ...prev.requestData, bodyViewMode: mode }
-      })),
-    setBodyFormData: data =>
-      setState(prev => {
-        let newBody = prev.requestData.body;
-        // Keep request data body in sync with form data
-        if (prev.bodyType === 'form-data' || prev.bodyType === 'x-www-form-urlencoded' || prev.bodyViewMode === 'table') {
-          const jsonObj: Record<string, string> = {};
-          data.forEach(item => {
-            if (item.enabled && item.key.trim()) {
-              jsonObj[item.key] = item.value;
-            }
-          });
-          newBody = JSON.stringify(jsonObj, null, 2);
-        }
-        return { 
-          ...prev, 
-          bodyFormData: data,
-          requestData: { 
-            ...prev.requestData, 
-            body: newBody,
-            bodyType: prev.bodyType,
-            bodyContentType: prev.bodyContentType,
-            bodyViewMode: prev.bodyViewMode
-          },
-          isSaved: false 
-        };
-      }),
-    setParamsViewMode: mode =>
-      setState(prev => ({ ...prev, paramsViewMode: mode })),
-    setHeadersViewMode: mode =>
-      setState(prev => ({ ...prev, headersViewMode: mode })),
-    setBulkEditJson: json =>
-      setState(prev => ({ ...prev, bulkEditJson: json })),
-    setResponseSubTab: tab => {
-      setState(prev => ({ ...prev, responseSubTab: tab }));
-      // Save preference to settings
-      window.electronAPI.settings
-        .set('defaultResponseSubTab', tab)
-        .catch((err: any) => {
-          logger.error('Failed to save response sub-tab preference', { error: err });
-        });
-    },
-    setSplitViewRatio: ratio =>
-      setState(prev => ({ ...prev, splitViewRatio: ratio })),
-    setIsSaved: saved => setState(prev => ({ ...prev, isSaved: saved })),
-    setLastSavedAt: date => setState(prev => ({ ...prev, lastSavedAt: date })),
-    setIsEditingName: editing =>
-      setState(prev => ({ ...prev, isEditingName: editing })),
-    setTempName: name => setState(prev => ({ ...prev, tempName: name })),
-
-    startNameEdit: () => {
-      setState(prev => ({
-        ...prev,
-        isEditingName: true,
-        tempName: prev.requestData.name,
-      }));
-    },
-
-    cancelNameEdit: () => {
-      setState(prev => ({
-        ...prev,
-        isEditingName: false,
-        tempName: prev.requestData.name,
-      }));
-    },
-
-    saveNameEdit: async () => {
-      if (!state.tempName.trim()) {
-        actions.cancelNameEdit();
-        return;
-      }
-
-      if (state.tempName.trim() === state.requestData.name) {
-        actions.cancelNameEdit();
-        return;
-      }
-
-      try {
-        // Check if this is an unsaved request (no id and no collectionId)
-        const isUnsaved =
-          !state.requestData.id && !state.requestData.collectionId;
-
-        if (isUnsaved) {
-          // Update unsaved request name
-          const result = await window.electronAPI.unsavedRequest.save({
-            id: activeUnsavedRequestId || undefined,
-            name: state.tempName.trim(),
-            method: state.requestData.method,
-            url: state.requestData.url,
-            headers: state.requestData.headers,
-            body: state.requestData.body || '',
-            queryParams: state.requestData.queryParams,
-            auth: state.requestData.auth,
-            lastResponse: selectedRequest?.lastResponse,
-          });
-
-          // Update active unsaved request ID if it was newly created
-          if (!activeUnsavedRequestId && result.id) {
-            setActiveUnsavedRequestId(result.id);
-          }
-
-          // Reload unsaved requests to update sidebar
-          const allUnsaved = await window.electronAPI.unsavedRequest.getAll();
-          setUnsavedRequests(allUnsaved);
-        } else {
-          // Update saved request name
-          await window.electronAPI.request.save({
-            id: state.requestData.id,
-            name: state.tempName.trim(),
-            method: state.requestData.method,
-            url: state.requestData.url,
-            headers: state.requestData.headers,
-            body: state.requestData.body,
-            queryParams: state.requestData.queryParams,
-            auth: state.requestData.auth,
-            collectionId: state.requestData.collectionId,
-            folderId: state.requestData.folderId,
-            isFavorite: state.requestData.isFavorite ? 1 : 0,
-          });
-
-          // Trigger sidebar refresh for real-time updates
-          triggerSidebarRefresh();
-        }
-
+  const actions: RequestStateActions = useMemo(
+    () => ({
+      setRequestData: data => {
         setState(prev => ({
           ...prev,
-          requestData: { ...prev.requestData, name: prev.tempName.trim() },
-          isSaved: true,
-          lastSavedAt: new Date(),
-          isEditingName: false,
+          requestData:
+            typeof data === 'function' ? data(prev.requestData) : data,
+          isSaved: false,
         }));
-      } catch (e: any) {
-        logger.error('Failed to update request name', { error: e });
-        actions.cancelNameEdit();
-        throw e;
-      }
-    },
-  }), [
-    state.tempName,
-    state.requestData,
-    activeUnsavedRequestId,
-    setActiveUnsavedRequestId,
-    setUnsavedRequests,
-    selectedRequest?.lastResponse,
-    triggerSidebarRefresh,
-  ]);
+      },
+      setActiveTab: tab => setState(prev => ({ ...prev, activeTab: tab })),
+      setBodyType: type =>
+        setState(prev => ({
+          ...prev,
+          bodyType: type,
+          requestData: { ...prev.requestData, bodyType: type },
+        })),
+      setBodyContentType: type =>
+        setState(prev => ({
+          ...prev,
+          bodyContentType: type,
+          requestData: { ...prev.requestData, bodyContentType: type },
+        })),
+      setBodyViewMode: mode =>
+        setState(prev => ({
+          ...prev,
+          bodyViewMode: mode,
+          requestData: { ...prev.requestData, bodyViewMode: mode },
+        })),
+      setBodyFormData: data =>
+        setState(prev => {
+          let newBody = prev.requestData.body;
+          // Keep request data body in sync with form data
+          if (
+            prev.bodyType === 'form-data' ||
+            prev.bodyType === 'x-www-form-urlencoded' ||
+            prev.bodyViewMode === 'table'
+          ) {
+            const jsonObj: Record<string, string> = {};
+            data.forEach(item => {
+              if (item.enabled && item.key.trim()) {
+                jsonObj[item.key] = item.value;
+              }
+            });
+            newBody = JSON.stringify(jsonObj, null, 2);
+          }
+          return {
+            ...prev,
+            bodyFormData: data,
+            requestData: {
+              ...prev.requestData,
+              body: newBody,
+              bodyType: prev.bodyType,
+              bodyContentType: prev.bodyContentType,
+              bodyViewMode: prev.bodyViewMode,
+            },
+            isSaved: false,
+          };
+        }),
+      setParamsViewMode: mode =>
+        setState(prev => ({ ...prev, paramsViewMode: mode })),
+      setHeadersViewMode: mode =>
+        setState(prev => ({ ...prev, headersViewMode: mode })),
+      setBulkEditJson: json =>
+        setState(prev => ({ ...prev, bulkEditJson: json })),
+      setResponseSubTab: tab => {
+        setState(prev => ({ ...prev, responseSubTab: tab }));
+        // Save preference to settings
+        window.electronAPI.settings
+          .set('defaultResponseSubTab', tab)
+          .catch((err: any) => {
+            logger.error('Failed to save response sub-tab preference', {
+              error: err,
+            });
+          });
+      },
+      setSplitViewRatio: ratio =>
+        setState(prev => ({ ...prev, splitViewRatio: ratio })),
+      setIsSaved: saved => setState(prev => ({ ...prev, isSaved: saved })),
+      setLastSavedAt: date =>
+        setState(prev => ({ ...prev, lastSavedAt: date })),
+      setIsEditingName: editing =>
+        setState(prev => ({ ...prev, isEditingName: editing })),
+      setTempName: name => setState(prev => ({ ...prev, tempName: name })),
+
+      startNameEdit: () => {
+        setState(prev => ({
+          ...prev,
+          isEditingName: true,
+          tempName: prev.requestData.name,
+        }));
+      },
+
+      cancelNameEdit: () => {
+        setState(prev => ({
+          ...prev,
+          isEditingName: false,
+          tempName: prev.requestData.name,
+        }));
+      },
+
+      saveNameEdit: async () => {
+        if (!state.tempName.trim()) {
+          actions.cancelNameEdit();
+          return;
+        }
+
+        if (state.tempName.trim() === state.requestData.name) {
+          actions.cancelNameEdit();
+          return;
+        }
+
+        try {
+          // Check if this is an unsaved request (no id and no collectionId)
+          const isUnsaved =
+            !state.requestData.id && !state.requestData.collectionId;
+
+          if (isUnsaved) {
+            // Update unsaved request name
+            const result = await window.electronAPI.unsavedRequest.save({
+              id: activeUnsavedRequestId || undefined,
+              name: state.tempName.trim(),
+              method: state.requestData.method,
+              url: state.requestData.url,
+              headers: state.requestData.headers,
+              body: state.requestData.body || '',
+              queryParams: state.requestData.queryParams,
+              auth: state.requestData.auth,
+              scripts: state.requestData.scripts,
+              lastResponse: selectedRequest?.lastResponse,
+            });
+
+            // Update active unsaved request ID if it was newly created
+            if (!activeUnsavedRequestId && result.id) {
+              setActiveUnsavedRequestId(result.id);
+            }
+
+            // Reload unsaved requests to update sidebar
+            const allUnsaved = await window.electronAPI.unsavedRequest.getAll();
+            setUnsavedRequests(allUnsaved);
+          } else {
+            // Update saved request name
+            await window.electronAPI.request.save({
+              id: state.requestData.id,
+              name: state.tempName.trim(),
+              method: state.requestData.method,
+              url: state.requestData.url,
+              headers: state.requestData.headers,
+              body: state.requestData.body,
+              queryParams: state.requestData.queryParams,
+              auth: state.requestData.auth,
+              collectionId: state.requestData.collectionId,
+              folderId: state.requestData.folderId,
+              isFavorite: state.requestData.isFavorite ? 1 : 0,
+              scripts: state.requestData.scripts,
+            });
+
+            // Trigger sidebar refresh for real-time updates
+            triggerSidebarRefresh();
+          }
+
+          setState(prev => ({
+            ...prev,
+            requestData: { ...prev.requestData, name: prev.tempName.trim() },
+            isSaved: true,
+            lastSavedAt: new Date(),
+            isEditingName: false,
+          }));
+        } catch (e: any) {
+          logger.error('Failed to update request name', { error: e });
+          actions.cancelNameEdit();
+          throw e;
+        }
+      },
+    }),
+    [
+      state.tempName,
+      state.requestData,
+      activeUnsavedRequestId,
+      setActiveUnsavedRequestId,
+      setUnsavedRequests,
+      selectedRequest?.lastResponse,
+      triggerSidebarRefresh,
+    ]
+  );
 
   return {
     ...state,
